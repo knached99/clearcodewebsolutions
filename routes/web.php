@@ -1,10 +1,10 @@
 <?php
 
+use App\Http\Controllers\GuestTicketAttachmentController;
+use App\Http\Controllers\Teams\TicketAttachmentController;
 use App\Http\Controllers\Teams\TicketController as TeamTicketController;
 use App\Http\Controllers\TicketController as GuestTicketController;
 use App\Livewire\Home\Tickets\TicketSearch;
-use App\Http\Controllers\Teams\TicketAttachmentController;
-use App\Http\Controllers\GuestTicketAttachmentController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
@@ -77,4 +77,4 @@ Route::prefix('{current_team}')
         )->name('team.tickets.show');
     });
 
-require __DIR__ . '/settings.php';
+require __DIR__.'/settings.php';

@@ -3,12 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Carbon;
 
 class TicketVerification extends Model
 {
-
     protected $table = 'ticket_verifications';
+
     protected $fillable = [
         'email',
         'code_hash',

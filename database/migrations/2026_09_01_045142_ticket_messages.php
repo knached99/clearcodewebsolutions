@@ -12,19 +12,19 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('ticket_messages', function (Blueprint $table) {
-        $table->id();
+            $table->id();
 
-        $table->foreignId('ticket_id')
-            ->constrained()
-            ->cascadeOnDelete();
+            $table->foreignId('ticket_id')
+                ->constrained()
+                ->cascadeOnDelete();
 
-        $table->string('author_type')->default('guest');
+            $table->string('author_type')->default('guest');
 
-        $table->string('author_name');
+            $table->string('author_name');
 
-        $table->text('message');
+            $table->text('message');
 
-        $table->timestamps();
+            $table->timestamps();
         });
     }
 

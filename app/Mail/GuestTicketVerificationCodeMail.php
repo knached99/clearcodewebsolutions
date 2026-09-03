@@ -15,8 +15,7 @@ class GuestTicketVerificationCodeMail extends Mailable
     public function __construct(
         public string $code,
         public \DateTimeInterface $expiresAt,
-    ) {
-    }
+    ) {}
 
     public function envelope(): Envelope
     {

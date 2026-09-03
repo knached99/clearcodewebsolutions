@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Teams;
 use App\Http\Controllers\Controller;
 use App\Models\Team;
 use App\Models\TicketMessageAttachment;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class TicketAttachmentController extends Controller
@@ -47,8 +46,8 @@ class TicketAttachmentController extends Controller
             200,
             [
                 'Content-Type' => $attachment->mime_type ?: 'application/octet-stream',
-                'Content-Disposition' => 'inline; filename="' .
-                    addslashes($attachment->original_name) .
+                'Content-Disposition' => 'inline; filename="'.
+                    addslashes($attachment->original_name).
                     '"',
                 'Cache-Control' => 'private, max-age=3600',
             ]

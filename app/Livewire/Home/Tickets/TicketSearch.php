@@ -3,36 +3,66 @@
 namespace App\Livewire\Home\Tickets;
 
 use App\Services\TicketService;
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Component;
 
 class TicketSearch extends Component
 {
-    /*
-    |--------------------------------------------------------------------------
-    | Ticket Number
-    |--------------------------------------------------------------------------
-    */
-
     public string $ticketNumber = '';
 
-    /*
-    |--------------------------------------------------------------------------
-    | Email Authentication
-    |--------------------------------------------------------------------------
-    */
-
     public string $email = '';
+
     public string $verificationCode = '';
+
     public bool $emailVerificationSent = false;
 
+    public array $verifiedTicketIds = [];
+
+    public bool $showTicketSelection = false;
+
     /*
     |--------------------------------------------------------------------------
-    | Ticket Selection After Email Verification
+    | Rate Limiting
     |--------------------------------------------------------------------------
     */
 
-    public array $verifiedTicketIds = [];
-    public bool $showTicketSelection = false;
+    protected function rateLimitKey(string $action, ?string $value = null): string
+    {
+        $ip = request()->ip() ?? 'unknown';
+
+        $value = $value
+            ? strtolower(trim($value))
+            : '';
+
+        return sprintf(
+            'ticket-search:%s:%s:%s',
+            $action,
+            $ip,
+            $value
+        );
+    }
+
+    protected function ensureRateLimit(
+        string $action,
+        int $maxAttempts,
+        int $decaySeconds,
+        ?string $value = null,
+    ): void {
+        $key = $this->rateLimitKey($action, $value);
+
+        if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {
+            $seconds = RateLimiter::availableIn($key);
+
+            $minutes = max(1, (int) ceil($seconds / 60));
+
+            abort(
+                429,
+                "Too many attempts. Please try again in {$minutes} minute(s)."
+            );
+        }
+
+        RateLimiter::hit($key, $decaySeconds);
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -40,66 +70,56 @@ class TicketSearch extends Component
     |--------------------------------------------------------------------------
     */
 
-  public function search(
-    TicketService $ticketService
-): void {
-    $this->validate([
-        'ticketNumber' => [
-            'required',
-            'string',
-            'max:100',
-        ],
-    ]);
+    public function search(
+        TicketService $ticketService
+    ): void {
+        $this->validate([
+            'ticketNumber' => [
+                'required',
+                'string',
+                'max:100',
+            ],
+        ]);
 
-    $ticket = $ticketService->findGuestTicketByNumber(
-        ticketNumber: $this->ticketNumber,
-    );
-
-    if (! $ticket) {
-        $this->addError(
-            'ticketNumber',
-            "We couldn't find a ticket with that number."
+        // 10 ticket searches per IP/ticket number per 10 minutes.
+        $this->ensureRateLimit(
+            action: 'search',
+            maxAttempts: 10,
+            decaySeconds: 600,
+            value: $this->ticketNumber,
         );
 
-        return;
+        $ticket = $ticketService->findGuestTicket(
+            ticketNumber: $this->ticketNumber,
+        );
+
+        if (! $ticket) {
+            $this->addError(
+                'ticketNumber',
+                "We couldn't find a ticket with that number."
+            );
+
+            return;
+        }
+
+        $token = $ticketService->createEmailTicketAccessToken(
+            ticket: $ticket,
+            minutes: 60,
+        );
+
+        $ticketService->grantGuestTicketAccess(
+            ticket: $ticket,
+            minutes: 60,
+        );
+
+        $this->redirectRoute(
+            'tickets.show',
+            [
+                'ticketNumber' => $ticket->ticket_number,
+                'token' => $token,
+            ]
+        );
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Generate temporary access token
-    |--------------------------------------------------------------------------
-    */
-
-    $token = $ticketService->createEmailTicketAccessToken(
-        ticket: $ticket,
-        minutes: 60,
-    );
-
-    /*
-    |--------------------------------------------------------------------------
-    | Grant session access
-    |--------------------------------------------------------------------------
-    */
-
-    $ticketService->grantGuestTicketAccess(
-        ticket: $ticket,
-        minutes: 60,
-    );
-
-    /*
-    |--------------------------------------------------------------------------
-    | Redirect to tokenized ticket URL
-    |--------------------------------------------------------------------------
-    */
-
-    $this->redirectRoute(
-        'tickets.show',
-        [
-            'ticketNumber' => $ticket->ticket_number,
-            'token' => $token,
-        ]
-    );
-}
 
     /*
     |--------------------------------------------------------------------------
@@ -117,6 +137,14 @@ class TicketSearch extends Component
                 'max:255',
             ],
         ]);
+
+        // 3 requests per email/IP every 15 minutes.
+        $this->ensureRateLimit(
+            action: 'send-verification',
+            maxAttempts: 3,
+            decaySeconds: 900,
+            value: $this->email,
+        );
 
         $sent = $ticketService->sendGuestTicketVerificationCode(
             email: $this->email,
@@ -160,6 +188,14 @@ class TicketSearch extends Component
             ],
         ]);
 
+        // 5 verification attempts per email/IP every 15 minutes.
+        $this->ensureRateLimit(
+            action: 'verify-email',
+            maxAttempts: 5,
+            decaySeconds: 900,
+            value: $this->email,
+        );
+
         $tickets = $ticketService->verifyGuestTicketVerificationCode(
             email: $this->email,
             code: $this->verificationCode,
@@ -182,12 +218,6 @@ class TicketSearch extends Component
             )
             ->values()
             ->all();
-
-        /*
-        |--------------------------------------------------------------------------
-        | One ticket
-        |--------------------------------------------------------------------------
-        */
 
         if (count($this->verifiedTicketIds) === 1) {
             $ticket = $tickets[0];
@@ -212,12 +242,6 @@ class TicketSearch extends Component
 
             return;
         }
-
-        /*
-        |--------------------------------------------------------------------------
-        | Multiple tickets
-        |--------------------------------------------------------------------------
-        */
 
         $this->showTicketSelection = true;
 
@@ -250,12 +274,6 @@ class TicketSearch extends Component
         if (! $ticket) {
             abort(404);
         }
-
-        /*
-        |--------------------------------------------------------------------------
-        | Generate temporary token for selected ticket
-        |--------------------------------------------------------------------------
-        */
 
         $token = $ticketService->createEmailTicketAccessToken(
             ticket: $ticket,

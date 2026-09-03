@@ -92,9 +92,9 @@ class TicketService
     ): ?Ticket {
         $ticketNumber = trim($ticketNumber);
 
-        $ipKey = 'guest-ticket-search:ip:' . $ipAddress;
+        $ipKey = 'guest-ticket-search:ip:'.$ipAddress;
 
-        $ticketKey = 'guest-ticket-search:ticket:' . hash(
+        $ticketKey = 'guest-ticket-search:ticket:'.hash(
             'sha256',
             Str::lower($ticketNumber)
         );
@@ -135,7 +135,7 @@ class TicketService
         int $minutes = 60
     ): void {
         session()->put(
-            'guest_ticket_access.' . $ticket->id,
+            'guest_ticket_access.'.$ticket->id,
             now()->addMinutes($minutes)->timestamp
         );
     }
@@ -143,7 +143,7 @@ class TicketService
     public function hasGuestTicketAccess(Ticket $ticket): bool
     {
         $expiresAt = session(
-            'guest_ticket_access.' . $ticket->id
+            'guest_ticket_access.'.$ticket->id
         );
 
         if (! $expiresAt) {
@@ -181,7 +181,7 @@ class TicketService
     public function revokeGuestTicketAccess(Ticket $ticket): void
     {
         session()->forget(
-            'guest_ticket_access.' . $ticket->id
+            'guest_ticket_access.'.$ticket->id
         );
     }
 
@@ -204,12 +204,12 @@ class TicketService
             return false;
         }
 
-        $emailKey = 'guest-ticket-email:' . hash(
+        $emailKey = 'guest-ticket-email:'.hash(
             'sha256',
             $email
         );
 
-        $ipKey = 'guest-ticket-email-ip:' . $ipAddress;
+        $ipKey = 'guest-ticket-email-ip:'.$ipAddress;
 
         if (
             RateLimiter::tooManyAttempts($emailKey, 3) ||
@@ -301,12 +301,12 @@ class TicketService
             return null;
         }
 
-        $emailKey = 'guest-ticket-code:' . hash(
+        $emailKey = 'guest-ticket-code:'.hash(
             'sha256',
             $email
         );
 
-        $ipKey = 'guest-ticket-code-ip:' . $ipAddress;
+        $ipKey = 'guest-ticket-code-ip:'.$ipAddress;
 
         if (
             RateLimiter::tooManyAttempts($emailKey, 10) ||
@@ -494,7 +494,7 @@ class TicketService
     {
         do {
             $ticketNumber =
-                'TCKT-' . strtoupper(
+                'TCKT-'.strtoupper(
                     Str::random(8)
                 );
         } while (

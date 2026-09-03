@@ -58,7 +58,7 @@ class GuestTicketAttachmentController extends Controller
             200,
             [
                 'Content-Type' => $mime,
-                'Content-Disposition' => 'inline; filename="' . $filename . '"',
+                'Content-Disposition' => 'inline; filename="'.$filename.'"',
                 'Cache-Control' => 'private, max-age=3600',
             ]
         );

@@ -18,7 +18,7 @@ html {
     color: #cee57a;
     font-size: 11px;
     font-weight: 700;
-    letter-spacing: .16em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
 }
 
@@ -31,7 +31,7 @@ html {
 
 .cc-section-intro {
     display: grid;
-    grid-template-columns: 1.3fr .7fr;
+    grid-template-columns: 1.3fr 0.7fr;
     gap: 80px;
     align-items: end;
     margin-bottom: 90px;
@@ -47,8 +47,8 @@ html {
     color: #fff;
 
     font-size: clamp(48px, 7vw, 100px);
-    line-height: .92;
-    letter-spacing: -.055em;
+    line-height: 0.92;
+    letter-spacing: -0.055em;
 }
 
 .cc-section-intro h2 span,
@@ -56,19 +56,18 @@ html {
 .cc-testimonials__top h2 span,
 .cc-contact__copy h2 span {
     display: block;
-    color: rgba(255,255,255,.3);
+    color: rgba(255, 255, 255, 0.3);
 }
 
 .cc-section-intro > p {
     max-width: 440px;
     margin: 0;
 
-    color: rgba(255,255,255,.55);
+    color: rgba(255, 255, 255, 0.55);
 
     font-size: 17px;
     line-height: 1.7;
 }
-
 
 /* =========================================================
    SERVICES
@@ -87,7 +86,7 @@ html {
     grid-template-columns: repeat(2, 1fr);
     gap: 2px;
 
-    border: 1px solid rgba(255,255,255,.08);
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .cc-service-card {
@@ -100,11 +99,11 @@ html {
 
     background: #0d0d11;
 
-    border: 1px solid rgba(255,255,255,.04);
+    border: 1px solid rgba(255, 255, 255, 0.04);
 
     transition:
-        transform .5s cubic-bezier(.16,1,.3,1),
-        background .5s ease;
+        transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+        background 0.5s ease;
 }
 
 .cc-service-card::before {
@@ -113,16 +112,15 @@ html {
     position: absolute;
     inset: -100px;
 
-    background:
-        radial-gradient(
-            circle at 70% 30%,
-            rgba(157,78,221,.28),
-            transparent 45%
-        );
+    background: radial-gradient(
+        circle at 70% 30%,
+        rgba(157, 78, 221, 0.28),
+        transparent 45%
+    );
 
     opacity: 0;
 
-    transition: opacity .5s ease;
+    transition: opacity 0.5s ease;
 }
 
 .cc-service-card:hover {
@@ -140,9 +138,9 @@ html {
 }
 
 .cc-service-card__number {
-    color: rgba(255,255,255,.3);
+    color: rgba(255, 255, 255, 0.3);
     font-size: 12px;
-    letter-spacing: .1em;
+    letter-spacing: 0.1em;
 }
 
 .cc-service-card__icon {
@@ -156,26 +154,21 @@ html {
     align-items: center;
     justify-content: center;
 
-    border: 1px solid rgba(255,255,255,.15);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 50%;
 
     color: #cee57a;
     font-size: 25px;
 
     transition:
-        transform .5s ease,
-        background .5s ease;
+        transform 0.5s ease,
+        background 0.5s ease;
 }
 
 .cc-service-card:hover .cc-service-card__icon {
     transform: rotate(12deg) scale(1.1);
 
-    background:
-        linear-gradient(
-            135deg,
-            #7c3aed,
-            #c026d3
-        );
+    background: linear-gradient(135deg, #7c3aed, #c026d3);
 
     border-color: transparent;
     color: #fff;
@@ -187,13 +180,13 @@ html {
     color: #fff;
 
     font-size: clamp(28px, 3vw, 42px);
-    letter-spacing: -.04em;
+    letter-spacing: -0.04em;
 }
 
 .cc-service-card p {
     max-width: 430px;
 
-    color: rgba(255,255,255,.5);
+    color: rgba(255, 255, 255, 0.5);
 
     line-height: 1.7;
 }
@@ -209,14 +202,14 @@ html {
 .cc-service-card__tags span {
     padding: 7px 11px;
 
-    border: 1px solid rgba(255,255,255,.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 100px;
 
-    color: rgba(255,255,255,.45);
+    color: rgba(255, 255, 255, 0.45);
 
     font-size: 10px;
     text-transform: uppercase;
-    letter-spacing: .08em;
+    letter-spacing: 0.08em;
 }
 
 .cc-service-card__arrow {
@@ -224,19 +217,18 @@ html {
     right: 40px;
     bottom: 35px;
 
-    color: rgba(255,255,255,.35);
+    color: rgba(255, 255, 255, 0.35);
     font-size: 28px;
 
     transition:
-        transform .4s ease,
-        color .4s ease;
+        transform 0.4s ease,
+        color 0.4s ease;
 }
 
 .cc-service-card:hover .cc-service-card__arrow {
-    transform: translate(5px,-5px);
+    transform: translate(5px, -5px);
     color: #cee57a;
 }
-
 
 /* =========================================================
    WORK
@@ -266,17 +258,17 @@ html {
 
     color: #cee57a;
 
-    transition: transform .3s ease;
+    transition: transform 0.3s ease;
 }
 
 .cc-text-link:hover span {
     display: inline-block;
-    transform: translate(5px,-5px);
+    transform: translate(5px, -5px);
 }
 
 .cc-work-grid {
     display: grid;
-    grid-template-columns: 1.35fr .65fr;
+    grid-template-columns: 1.35fr 0.65fr;
     gap: 24px;
 }
 
@@ -306,7 +298,7 @@ html {
 
     object-fit: cover;
 
-    transition: transform 1s cubic-bezier(.16,1,.3,1);
+    transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .cc-project:hover .cc-project__image img {
@@ -317,12 +309,7 @@ html {
     position: absolute;
     inset: 0;
 
-    background:
-        linear-gradient(
-            to top,
-            rgba(0,0,0,.9),
-            transparent 60%
-        );
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent 60%);
 }
 
 .cc-project__content {
@@ -341,7 +328,7 @@ html {
 
     font-size: 10px;
     font-weight: 700;
-    letter-spacing: .15em;
+    letter-spacing: 0.15em;
 }
 
 .cc-project h3 {
@@ -349,18 +336,18 @@ html {
     margin: 10px 0 0;
 
     font-size: clamp(28px, 4vw, 55px);
-    line-height: .95;
-    letter-spacing: -.04em;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
 }
 
 .cc-project__arrow {
     font-size: 35px;
 
-    transition: transform .4s ease;
+    transition: transform 0.4s ease;
 }
 
 .cc-project:hover .cc-project__arrow {
-    transform: translate(7px,-7px);
+    transform: translate(7px, -7px);
 }
 
 /* =========================================================
@@ -383,7 +370,6 @@ html {
     margin: 0 auto;
 }
 
-
 /* =========================================================
    HEADER
    ========================================================= */
@@ -395,7 +381,7 @@ html {
 
     padding-bottom: 90px;
 
-    border-bottom: 1px solid rgba(255,255,255,.09);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.09);
 }
 
 .clearcode-team__eyebrow {
@@ -404,10 +390,10 @@ html {
     font-size: 11px;
     font-weight: 600;
 
-    letter-spacing: .16em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
 
-    color: rgba(255,255,255,.42);
+    color: rgba(255, 255, 255, 0.42);
 }
 
 .clearcode-team__eyebrow span {
@@ -421,7 +407,6 @@ html {
     font-size: 13px;
 }
 
-
 .clearcode-team__heading h2 {
     max-width: 850px;
 
@@ -429,11 +414,11 @@ html {
 
     font-size: clamp(48px, 7vw, 92px);
 
-    line-height: .94;
+    line-height: 0.94;
 
     font-weight: 500;
 
-    letter-spacing: -.06em;
+    letter-spacing: -0.06em;
 }
 
 .clearcode-team__heading h2 em {
@@ -441,12 +426,7 @@ html {
 
     font-style: normal;
 
-    background: linear-gradient(
-        100deg,
-        #a855f7,
-        #d946ef,
-        #ec4899
-    );
+    background: linear-gradient(100deg, #a855f7, #d946ef, #ec4899);
 
     -webkit-background-clip: text;
     background-clip: text;
@@ -463,9 +443,8 @@ html {
 
     line-height: 1.8;
 
-    color: rgba(255,255,255,.5);
+    color: rgba(255, 255, 255, 0.5);
 }
-
 
 /* =========================================================
    TEAM GRID
@@ -474,14 +453,12 @@ html {
 .clearcode-team__grid {
     display: grid;
 
-    grid-template-columns:
-        repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 
     gap: 24px;
 
     padding: 90px 0 110px;
 }
-
 
 /* =========================================================
    MEMBER
@@ -490,7 +467,6 @@ html {
 .clearcode-team__member {
     min-width: 0;
 }
-
 
 /* =========================================================
    IMAGE
@@ -505,7 +481,7 @@ html {
 
     background: #15151b;
 
-    border: 1px solid rgba(255,255,255,.08);
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .clearcode-team__image img {
@@ -521,10 +497,9 @@ html {
     transform: scale(1.01);
 
     transition:
-        transform .8s cubic-bezier(.16,1,.3,1),
-        filter .8s ease;
+        transform 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+        filter 0.8s ease;
 }
-
 
 /* =========================================================
    IMAGE GRADIENT
@@ -537,36 +512,31 @@ html {
 
     pointer-events: none;
 
-    background:
-        linear-gradient(
-            180deg,
-            rgba(0,0,0,.15),
-            transparent 35%,
-            rgba(0,0,0,.75)
-        );
+    background: linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.15),
+        transparent 35%,
+        rgba(0, 0, 0, 0.75)
+    );
 
-    opacity: .7;
+    opacity: 0.7;
 
-    transition: opacity .5s ease;
+    transition: opacity 0.5s ease;
 }
-
 
 /* =========================================================
    HOVER
    ========================================================= */
 
-.clearcode-team__member:hover
-.clearcode-team__image img {
+.clearcode-team__member:hover .clearcode-team__image img {
     transform: scale(1.07);
 
     filter: grayscale(0%);
 }
 
-.clearcode-team__member:hover
-.clearcode-team__image-overlay {
-    opacity: .35;
+.clearcode-team__member:hover .clearcode-team__image-overlay {
+    opacity: 0.35;
 }
-
 
 /* =========================================================
    NUMBER
@@ -587,18 +557,17 @@ html {
     align-items: center;
     justify-content: center;
 
-    border: 1px solid rgba(255,255,255,.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 
-    background: rgba(10,10,15,.4);
+    background: rgba(10, 10, 15, 0.4);
 
     backdrop-filter: blur(12px);
 
     font-family: monospace;
     font-size: 11px;
 
-    color: rgba(255,255,255,.8);
+    color: rgba(255, 255, 255, 0.8);
 }
-
 
 /* =========================================================
    SOCIAL BUTTON
@@ -619,11 +588,11 @@ html {
     align-items: center;
     justify-content: center;
 
-    border: 1px solid rgba(255,255,255,.18);
+    border: 1px solid rgba(255, 255, 255, 0.18);
 
     border-radius: 50%;
 
-    background: rgba(10,10,15,.4);
+    background: rgba(10, 10, 15, 0.4);
 
     backdrop-filter: blur(12px);
 
@@ -638,28 +607,22 @@ html {
     transform: translateY(10px);
 
     transition:
-        opacity .4s ease,
-        transform .4s ease,
-        background .4s ease;
+        opacity 0.4s ease,
+        transform 0.4s ease,
+        background 0.4s ease;
 }
 
-.clearcode-team__member:hover
-.clearcode-team__social {
+.clearcode-team__member:hover .clearcode-team__social {
     opacity: 1;
 
     transform: translateY(0);
 }
 
 .clearcode-team__social:hover {
-    background: linear-gradient(
-        135deg,
-        #7c3aed,
-        #ec4899
-    );
+    background: linear-gradient(135deg, #7c3aed, #ec4899);
 
     border-color: transparent;
 }
-
 
 /* =========================================================
    INFO
@@ -683,7 +646,7 @@ html {
 
     font-weight: 500;
 
-    letter-spacing: -.02em;
+    letter-spacing: -0.02em;
 }
 
 .clearcode-team__info p {
@@ -693,13 +656,12 @@ html {
 
     font-weight: 600;
 
-    letter-spacing: .12em;
+    letter-spacing: 0.12em;
 
     text-transform: uppercase;
 
-    color: rgba(255,255,255,.38);
+    color: rgba(255, 255, 255, 0.38);
 }
-
 
 /* =========================================================
    ARROW
@@ -714,33 +676,27 @@ html {
     width: 42px;
     height: 42px;
 
-    border: 1px solid rgba(255,255,255,.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 
     border-radius: 50%;
 
-    color: rgba(255,255,255,.45);
+    color: rgba(255, 255, 255, 0.45);
 
     transition:
-        transform .4s ease,
-        background .4s ease,
-        color .4s ease;
+        transform 0.4s ease,
+        background 0.4s ease,
+        color 0.4s ease;
 }
 
-.clearcode-team__member:hover
-.clearcode-team__arrow {
+.clearcode-team__member:hover .clearcode-team__arrow {
     transform: rotate(-45deg);
 
-    background: linear-gradient(
-        135deg,
-        #7c3aed,
-        #ec4899
-    );
+    background: linear-gradient(135deg, #7c3aed, #ec4899);
 
     color: #fff;
 
     border-color: transparent;
 }
-
 
 /* =========================================================
    FOOTER STATEMENT
@@ -755,7 +711,7 @@ html {
 
     padding-top: 55px;
 
-    border-top: 1px solid rgba(255,255,255,.09);
+    border-top: 1px solid rgba(255, 255, 255, 0.09);
 }
 
 .clearcode-team__footer-label {
@@ -765,11 +721,11 @@ html {
 
     font-weight: 600;
 
-    letter-spacing: .15em;
+    letter-spacing: 0.15em;
 
     text-transform: uppercase;
 
-    color: rgba(255,255,255,.35);
+    color: rgba(255, 255, 255, 0.35);
 }
 
 .clearcode-team__footer p {
@@ -781,9 +737,9 @@ html {
 
     line-height: 1.05;
 
-    letter-spacing: -.045em;
+    letter-spacing: -0.045em;
 
-    color: rgba(255,255,255,.55);
+    color: rgba(255, 255, 255, 0.55);
 }
 
 .clearcode-team__footer strong {
@@ -792,13 +748,11 @@ html {
     font-weight: 500;
 }
 
-
 /* =========================================================
    TABLET
    ========================================================= */
 
 @media (max-width: 991px) {
-
     .clearcode-team {
         padding: 100px 0;
     }
@@ -819,12 +773,6 @@ html {
         gap: 30px;
     }
 
-    .clearcode-team__member:last-child {
-        grid-column: 1 / -1;
-
-        max-width: calc(50% - 15px);
-    }
-
     .clearcode-team__footer {
         grid-template-columns: 1fr;
 
@@ -832,13 +780,11 @@ html {
     }
 }
 
-
 /* =========================================================
    MOBILE
    ========================================================= */
 
 @media (max-width: 600px) {
-
     .clearcode-team {
         padding: 75px 0;
     }
@@ -917,7 +863,7 @@ html {
     max-width: 500px;
     margin-top: 35px;
 
-    color: rgba(255,255,255,.5);
+    color: rgba(255, 255, 255, 0.5);
 
     font-size: 17px;
     line-height: 1.7;
@@ -940,7 +886,7 @@ html {
 
     width: 1px;
 
-    background: rgba(255,255,255,.1);
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .cc-timeline__progress {
@@ -950,13 +896,7 @@ html {
     width: 100%;
     height: 0;
 
-    background:
-        linear-gradient(
-            to bottom,
-            #7c3aed,
-            #c026d3,
-            #cee57a
-        );
+    background: linear-gradient(to bottom, #7c3aed, #c026d3, #cee57a);
 
     animation: ccTimelineProgress linear both;
     animation-timeline: scroll();
@@ -984,18 +924,18 @@ html {
     align-items: center;
     justify-content: center;
 
-    border: 1px solid rgba(255,255,255,.15);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 50%;
 
     background: #09090c;
 
-    color: rgba(255,255,255,.5);
+    color: rgba(255, 255, 255, 0.5);
 
     transition:
-        border-color .4s ease,
-        background .4s ease,
-        color .4s ease,
-        transform .4s ease;
+        border-color 0.4s ease,
+        background 0.4s ease,
+        color 0.4s ease,
+        transform 0.4s ease;
 }
 
 .cc-process-step:hover .cc-process-step__marker {
@@ -1003,12 +943,7 @@ html {
 
     border-color: #a855f7;
 
-    background:
-        linear-gradient(
-            135deg,
-            #7c3aed,
-            #c026d3
-        );
+    background: linear-gradient(135deg, #7c3aed, #c026d3);
 
     color: #fff;
 }
@@ -1022,7 +957,7 @@ html {
 
     font-size: 11px;
     font-weight: 700;
-    letter-spacing: .15em;
+    letter-spacing: 0.15em;
 }
 
 .cc-process-step h3 {
@@ -1031,14 +966,14 @@ html {
     color: #fff;
 
     font-size: clamp(35px, 5vw, 65px);
-    line-height: .95;
-    letter-spacing: -.05em;
+    line-height: 0.95;
+    letter-spacing: -0.05em;
 }
 
 .cc-process-step p {
     max-width: 560px;
 
-    color: rgba(255,255,255,.45);
+    color: rgba(255, 255, 255, 0.45);
 
     font-size: 16px;
     line-height: 1.8;
@@ -1049,7 +984,6 @@ html {
         height: 100%;
     }
 }
-
 
 /* =========================================================
    CLEARCODE ABOUT
@@ -1072,7 +1006,6 @@ html {
     margin: 0 auto;
 }
 
-
 /* -----------------------------------------
    TOP
    ----------------------------------------- */
@@ -1084,7 +1017,7 @@ html {
 
     padding-bottom: 90px;
 
-    border-bottom: 1px solid rgba(255,255,255,.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .clearcode-about__label {
@@ -1092,10 +1025,10 @@ html {
 
     font-size: 11px;
     font-weight: 600;
-    letter-spacing: .16em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
 
-    color: rgba(255,255,255,.45);
+    color: rgba(255, 255, 255, 0.45);
 }
 
 .clearcode-about__label span {
@@ -1109,17 +1042,16 @@ html {
     font-size: 13px;
 }
 
-
 .clearcode-about__heading h2 {
     max-width: 950px;
 
     margin: 0;
 
     font-size: clamp(48px, 7vw, 92px);
-    line-height: .95;
+    line-height: 0.95;
 
     font-weight: 500;
-    letter-spacing: -.055em;
+    letter-spacing: -0.055em;
 }
 
 .clearcode-about__heading h2 em {
@@ -1127,12 +1059,7 @@ html {
 
     font-style: normal;
 
-    background: linear-gradient(
-        100deg,
-        #a855f7 0%,
-        #d946ef 45%,
-        #ec4899 100%
-    );
+    background: linear-gradient(100deg, #a855f7 0%, #d946ef 45%, #ec4899 100%);
 
     -webkit-background-clip: text;
     background-clip: text;
@@ -1148,9 +1075,8 @@ html {
     font-size: 16px;
     line-height: 1.8;
 
-    color: rgba(255,255,255,.55);
+    color: rgba(255, 255, 255, 0.55);
 }
-
 
 /* -----------------------------------------
    BODY
@@ -1166,21 +1092,19 @@ html {
 
 .clearcode-about__big-number {
     font-size: clamp(80px, 10vw, 150px);
-    line-height: .8;
+    line-height: 0.8;
 
     font-weight: 600;
-    letter-spacing: -.08em;
+    letter-spacing: -0.08em;
 
-    color: rgba(255,255,255,.06);
+    color: rgba(255, 255, 255, 0.06);
 }
-
 
 .clearcode-about__content {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 20px;
 }
-
 
 /* -----------------------------------------
    CARDS
@@ -1193,27 +1117,26 @@ html {
 
     padding: 32px;
 
-    border: 1px solid rgba(255,255,255,.09);
+    border: 1px solid rgba(255, 255, 255, 0.09);
 
-    background: rgba(255,255,255,.025);
+    background: rgba(255, 255, 255, 0.025);
 
     transition:
-        transform .4s ease,
-        border-color .4s ease,
-        background .4s ease;
+        transform 0.4s ease,
+        border-color 0.4s ease,
+        background 0.4s ease;
 }
 
 .clearcode-about__card:hover {
     transform: translateY(-8px);
 
-    border-color: rgba(168,85,247,.5);
+    border-color: rgba(168, 85, 247, 0.5);
 
-    background:
-        linear-gradient(
-            145deg,
-            rgba(168,85,247,.12),
-            rgba(255,255,255,.025)
-        );
+    background: linear-gradient(
+        145deg,
+        rgba(168, 85, 247, 0.12),
+        rgba(255, 255, 255, 0.025)
+    );
 }
 
 .clearcode-about__card > span {
@@ -1242,9 +1165,8 @@ html {
     font-size: 14px;
     line-height: 1.75;
 
-    color: rgba(255,255,255,.48);
+    color: rgba(255, 255, 255, 0.48);
 }
-
 
 /* -----------------------------------------
    BOTTOM STATS
@@ -1254,7 +1176,7 @@ html {
     display: grid;
     grid-template-columns: repeat(3, 1fr) 1.5fr;
 
-    border-top: 1px solid rgba(255,255,255,.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .clearcode-about__bottom > div {
@@ -1262,7 +1184,7 @@ html {
 
     padding: 30px;
 
-    border-right: 1px solid rgba(255,255,255,.1);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .clearcode-about__bottom > div:first-child {
@@ -1282,19 +1204,18 @@ html {
     line-height: 1;
 
     font-weight: 500;
-    letter-spacing: -.04em;
+    letter-spacing: -0.04em;
 }
 
 .clearcode-about__bottom span {
     font-size: 10px;
     font-weight: 600;
 
-    letter-spacing: .15em;
+    letter-spacing: 0.15em;
     text-transform: uppercase;
 
-    color: rgba(255,255,255,.4);
+    color: rgba(255, 255, 255, 0.4);
 }
-
 
 /* -----------------------------------------
    TAGLINE
@@ -1311,22 +1232,20 @@ html {
 .clearcode-about__tagline span {
     font-size: 18px;
 
-    letter-spacing: -.02em;
+    letter-spacing: -0.02em;
 
-    color: rgba(255,255,255,.7);
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .clearcode-about__tagline span:last-child {
     color: #a855f7;
 }
 
-
 /* -----------------------------------------
    TABLET
    ----------------------------------------- */
 
 @media (max-width: 991px) {
-
     .clearcode-about {
         padding: 90px 0;
     }
@@ -1370,13 +1289,11 @@ html {
     }
 }
 
-
 /* -----------------------------------------
    MOBILE
    ----------------------------------------- */
 
 @media (max-width: 600px) {
-
     .clearcode-about {
         padding: 75px 0;
     }
@@ -1435,10 +1352,9 @@ html {
     .clearcode-about__tagline {
         grid-column: 1 / -1;
 
-        border-top: 1px solid rgba(255,255,255,.1);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
 }
-
 
 /* =========================================================
    TESTIMONIALS
@@ -1456,42 +1372,41 @@ html {
 
 .cc-testimonial-grid {
     display: grid;
-    grid-template-columns: repeat(2,1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 20px;
 }
 
 .cc-testimonial {
     padding: 55px;
 
-    border: 1px solid rgba(255,255,255,.08);
+    border: 1px solid rgba(255, 255, 255, 0.08);
 
-    background: rgba(255,255,255,.025);
+    background: rgba(255, 255, 255, 0.025);
 
     transition:
-        transform .5s cubic-bezier(.16,1,.3,1),
-        border-color .5s ease;
+        transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+        border-color 0.5s ease;
 }
 
 .cc-testimonial:hover {
     transform: translateY(-8px);
 
-    border-color: rgba(168,85,247,.4);
+    border-color: rgba(168, 85, 247, 0.4);
 }
 
 .cc-testimonial--featured {
-    background:
-        linear-gradient(
-            145deg,
-            rgba(124,58,237,.18),
-            rgba(255,255,255,.02)
-        );
+    background: linear-gradient(
+        145deg,
+        rgba(124, 58, 237, 0.18),
+        rgba(255, 255, 255, 0.02)
+    );
 }
 
 .cc-testimonial__quote {
     color: #cee57a;
 
     font-size: 70px;
-    line-height: .5;
+    line-height: 0.5;
 }
 
 .cc-testimonial blockquote {
@@ -1501,7 +1416,7 @@ html {
 
     font-size: clamp(25px, 3vw, 38px);
     line-height: 1.15;
-    letter-spacing: -.03em;
+    letter-spacing: -0.03em;
 }
 
 .cc-testimonial__author {
@@ -1521,12 +1436,7 @@ html {
 
     border-radius: 50%;
 
-    background:
-        linear-gradient(
-            135deg,
-            #7c3aed,
-            #c026d3
-        );
+    background: linear-gradient(135deg, #7c3aed, #c026d3);
 
     color: #fff;
 
@@ -1546,11 +1456,10 @@ html {
 .cc-testimonial__author span {
     margin-top: 5px;
 
-    color: rgba(255,255,255,.4);
+    color: rgba(255, 255, 255, 0.4);
 
     font-size: 12px;
 }
-
 
 /* =========================================================
    CONTACT
@@ -1568,7 +1477,7 @@ html {
 
 .cc-contact__inner {
     display: grid;
-    grid-template-columns: .9fr 1.1fr;
+    grid-template-columns: 0.9fr 1.1fr;
     gap: 100px;
 }
 
@@ -1577,7 +1486,7 @@ html {
 
     margin: 40px 0;
 
-    color: rgba(255,255,255,.5);
+    color: rgba(255, 255, 255, 0.5);
 
     font-size: 17px;
     line-height: 1.7;
@@ -1601,14 +1510,14 @@ html {
 .cc-contact-form {
     padding: 50px;
 
-    border: 1px solid rgba(255,255,255,.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 
-    background: rgba(255,255,255,.025);
+    background: rgba(255, 255, 255, 0.025);
 }
 
 .cc-form-row {
     display: grid;
-    grid-template-columns: repeat(2,1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 20px;
 }
 
@@ -1621,11 +1530,11 @@ html {
 
     margin-bottom: 10px;
 
-    color: rgba(255,255,255,.45);
+    color: rgba(255, 255, 255, 0.45);
 
     font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: .12em;
+    letter-spacing: 0.12em;
 }
 
 .cc-form-field input,
@@ -1635,7 +1544,7 @@ html {
     padding: 17px 0;
 
     border: 0;
-    border-bottom: 1px solid rgba(255,255,255,.15);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
     outline: none;
 
     background: transparent;
@@ -1646,7 +1555,7 @@ html {
 
     resize: vertical;
 
-    transition: border-color .3s ease;
+    transition: border-color 0.3s ease;
 }
 
 .cc-form-field input:focus,
@@ -1656,7 +1565,7 @@ html {
 
 .cc-form-field input::placeholder,
 .cc-form-field textarea::placeholder {
-    color: rgba(255,255,255,.25);
+    color: rgba(255, 255, 255, 0.25);
 }
 
 .cc-contact-form__submit {
@@ -1670,12 +1579,7 @@ html {
 
     border: 0;
 
-    background:
-        linear-gradient(
-            100deg,
-            #7c3aed,
-            #c026d3
-        );
+    background: linear-gradient(100deg, #7c3aed, #c026d3);
 
     color: #fff;
 
@@ -1685,24 +1589,21 @@ html {
     font-weight: 600;
 
     transition:
-        transform .4s ease,
-        box-shadow .4s ease;
+        transform 0.4s ease,
+        box-shadow 0.4s ease;
 }
 
 .cc-contact-form__submit:hover {
     transform: translateY(-4px);
 
-    box-shadow:
-        0 20px 60px rgba(124,58,237,.25);
+    box-shadow: 0 20px 60px rgba(124, 58, 237, 0.25);
 }
-
 
 /* =========================================================
    RESPONSIVE
 ========================================================= */
 
 @media (max-width: 900px) {
-
     .cc-container {
         width: min(100% - 32px, 1400px);
     }
@@ -1742,11 +1643,9 @@ html {
     .cc-form-row {
         grid-template-columns: 1fr;
     }
-
 }
 
 @media (max-width: 600px) {
-
     .cc-services,
     .cc-work,
     .cc-team,
@@ -1795,7 +1694,6 @@ html {
     .cc-testimonial {
         padding: 32px;
     }
-
 }
 
 /* =========================================
@@ -1812,7 +1710,7 @@ html {
     border-radius: 14px;
     background: rgba(255, 255, 255, 0.035);
     color: #fff;
-    animation: ccStatusIn 0.5s cubic-bezier(.22, 1, .36, 1) both;
+    animation: ccStatusIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .cc-form-status__icon {
@@ -1858,7 +1756,6 @@ html {
     color: #ff7892;
 }
 
-
 /* =========================================
    CONTACT FIELD VALIDATION
 ========================================= */
@@ -1891,13 +1788,13 @@ html {
     gap: 6px;
     margin-top: 8px;
     color: #ff7892;
-    font-size: 12px;
+    font-size: 15px;
     line-height: 1.4;
-    animation: ccErrorIn 0.3s cubic-bezier(.22, 1, .36, 1) both;
+    animation: ccErrorIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .cc-form-error::before {
-    content: '!';
+    content: "!";
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1909,7 +1806,6 @@ html {
     font-size: 9px;
     font-weight: 700;
 }
-
 
 /* =========================================
    ANIMATIONS
@@ -2007,12 +1903,11 @@ html {
 .cc-select-wrap select:focus {
     border-color: rgba(160, 100, 255, 0.75);
 
-    background:
-        linear-gradient(
-            135deg,
-            rgba(130, 70, 255, 0.08),
-            rgba(255, 255, 255, 0.035)
-        );
+    background: linear-gradient(
+        135deg,
+        rgba(130, 70, 255, 0.08),
+        rgba(255, 255, 255, 0.035)
+    );
 
     box-shadow:
         0 0 0 3px rgba(140, 80, 255, 0.1),
@@ -2091,7 +1986,6 @@ html {
 ========================================= */
 
 @keyframes ccStatusIn {
-
     from {
         opacity: 0;
         transform: translateY(12px) scale(0.98);
@@ -2101,7 +1995,6 @@ html {
         opacity: 1;
         transform: translateY(0) scale(1);
     }
-
 }
 
 @keyframes ccSpinner {
@@ -2141,7 +2034,7 @@ html {
     gap: 6px;
     margin-top: 8px;
     color: #ff4d6d;
-    font-size: 0.75rem;
+    font-size: 12px;
     font-weight: 500;
     letter-spacing: 0.01em;
     animation: cc-error-in 0.25s ease-out;
@@ -2172,7 +2065,7 @@ html {
     }
 }
 
-   /* =========================================================
+/* =========================================================
     CUSTOM SELECT
    ========================================================= */
 
@@ -2183,7 +2076,6 @@ html {
     position: relative;
     width: 100%;
 }
-
 
 /* =========================================================
    HIDDEN NATIVE SELECT
@@ -2200,7 +2092,6 @@ html {
     white-space: nowrap;
     border: 0;
 }
-
 
 /* =========================================================
    TRIGGER
@@ -2221,12 +2112,11 @@ html {
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 6px;
 
-    background:
-        linear-gradient(
-            135deg,
-            rgba(255, 255, 255, 0.055),
-            rgba(255, 255, 255, 0.018)
-        );
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.055),
+        rgba(255, 255, 255, 0.018)
+    );
 
     color: #fff;
 
@@ -2245,21 +2135,17 @@ html {
         transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-
 .cc-select__trigger:hover {
     border-color: rgba(206, 229, 122, 0.45);
 
-    background:
-        linear-gradient(
-            135deg,
-            rgba(206, 229, 122, 0.055),
-            rgba(255, 255, 255, 0.025)
-        );
+    background: linear-gradient(
+        135deg,
+        rgba(206, 229, 122, 0.055),
+        rgba(255, 255, 255, 0.025)
+    );
 
-    box-shadow:
-        0 10px 35px rgba(0, 0, 0, 0.16);
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.16);
 }
-
 
 .cc-select__trigger:focus-visible {
     outline: none;
@@ -2271,21 +2157,17 @@ html {
         0 15px 45px rgba(0, 0, 0, 0.2);
 }
 
-
 .cc-select__trigger.is-open {
     border-color: rgba(206, 229, 122, 0.55);
 
-    background:
-        linear-gradient(
-            135deg,
-            rgba(206, 229, 122, 0.07),
-            rgba(255, 255, 255, 0.025)
-        );
+    background: linear-gradient(
+        135deg,
+        rgba(206, 229, 122, 0.07),
+        rgba(255, 255, 255, 0.025)
+    );
 
-    box-shadow:
-        0 12px 45px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 12px 45px rgba(0, 0, 0, 0.2);
 }
-
 
 /* Green accent line */
 .cc-select__trigger::after {
@@ -2313,13 +2195,11 @@ html {
         opacity 0.3s ease;
 }
 
-
 .cc-select__trigger.is-open::after,
 .cc-select__trigger:focus-visible::after {
     transform: scaleX(1);
     opacity: 1;
 }
-
 
 /* =========================================================
    VALUE
@@ -2335,15 +2215,12 @@ html {
 
     color: #fff;
 
-    transition:
-        color 0.25s ease;
+    transition: color 0.25s ease;
 }
-
 
 .cc-select__value.is-placeholder {
     color: rgba(255, 255, 255, 0.42);
 }
-
 
 /* =========================================================
    ARROW
@@ -2373,7 +2250,6 @@ html {
         border-color 0.35s ease;
 }
 
-
 .cc-select__arrow svg {
     width: 16px;
     height: 16px;
@@ -2381,12 +2257,10 @@ html {
     transition: transform 0.3s ease;
 }
 
-
 .cc-select__trigger:hover .cc-select__arrow {
     border-color: rgba(206, 229, 122, 0.45);
     color: var(--cc-green);
 }
-
 
 .cc-select__trigger.is-open .cc-select__arrow {
     transform: rotate(180deg);
@@ -2396,7 +2270,6 @@ html {
 
     color: #111;
 }
-
 
 /* =========================================================
    DROPDOWN PANEL
@@ -2413,17 +2286,17 @@ html {
 
     padding: 8px;
 
-    overflow: hidden;
+    max-height: 340px;
+    overflow-y: auto;
 
     border: 1px solid rgba(255, 255, 255, 0.13);
-    border-radius: 8px;
+    border-radius: 10px;
 
-    background:
-        linear-gradient(
-            145deg,
-            rgba(27, 27, 27, 0.98),
-            rgba(10, 10, 10, 0.99)
-        );
+    background: linear-gradient(
+        145deg,
+        rgba(27, 27, 27, 0.98),
+        rgba(10, 10, 10, 0.99)
+    );
 
     box-shadow:
         0 30px 80px rgba(0, 0, 0, 0.5),
@@ -2434,8 +2307,29 @@ html {
     -webkit-backdrop-filter: blur(22px);
 
     transform-origin: top center;
+
+    /* Custom scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(206, 229, 122, 0.3) transparent;
 }
 
+.cc-select__menu::-webkit-scrollbar {
+    width: 6px;
+}
+
+.cc-select__menu::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 8px 0;
+}
+
+.cc-select__menu::-webkit-scrollbar-thumb {
+    background: rgba(206, 229, 122, 0.3);
+    border-radius: 10px;
+}
+
+.cc-select__menu::-webkit-scrollbar-thumb:hover {
+    background: rgba(206, 229, 122, 0.5);
+}
 
 /* subtle glow behind menu */
 .cc-select__menu::before {
@@ -2456,7 +2350,6 @@ html {
     pointer-events: none;
 }
 
-
 /* =========================================================
    BIGGER OPTIONS
    ========================================================= */
@@ -2469,14 +2362,14 @@ html {
 
     width: 100%;
 
-    min-height: 62px;
+    min-height: 48px;
 
     padding: 0 18px;
 
     margin: 2px 0;
 
     border: 0;
-    border-radius: 5px;
+    border-radius: 6px;
 
     background: transparent;
 
@@ -2499,7 +2392,6 @@ html {
         transform 0.25s ease;
 }
 
-
 /* =========================================================
    HOVER
    ========================================================= */
@@ -2514,12 +2406,10 @@ html {
 
     color: #111;
 
-    box-shadow:
-        0 5px 20px rgba(206, 229, 122, 0.12);
+    box-shadow: 0 5px 20px rgba(206, 229, 122, 0.12);
 
     transform: translateX(2px);
 }
-
 
 /* =========================================================
    SELECTED
@@ -2532,16 +2422,13 @@ html {
 
     font-weight: 600;
 
-    box-shadow:
-        0 5px 25px rgba(206, 229, 122, 0.12);
+    box-shadow: 0 5px 25px rgba(206, 229, 122, 0.12);
 }
-
 
 .cc-select__option.is-selected:hover,
 .cc-select__option.is-selected:focus-visible {
     background: var(--cc-green-dark);
 }
-
 
 /* =========================================================
    CHECK MARK
@@ -2565,12 +2452,10 @@ html {
         transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-
 .cc-select__option.is-selected::after {
     opacity: 1;
     transform: translateX(0);
 }
-
 
 /* =========================================================
    OPTION ENTRANCE ANIMATION
@@ -2579,10 +2464,8 @@ html {
 .cc-select-enter .cc-select__option {
     animation: ccSelectOptionIn 0.45s both;
 
-    animation-delay:
-        calc(var(--option-index) * 40ms);
+    animation-delay: calc(var(--option-index) * 40ms);
 }
-
 
 @keyframes ccSelectOptionIn {
     from {
@@ -2596,7 +2479,6 @@ html {
     }
 }
 
-
 /* =========================================================
    OPEN / CLOSE
    ========================================================= */
@@ -2607,18 +2489,15 @@ html {
         transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-
 .cc-select-enter-start {
     opacity: 0;
     transform: translateY(-12px) scale(0.98);
 }
 
-
 .cc-select-enter-end {
     opacity: 1;
     transform: translateY(0) scale(1);
 }
-
 
 .cc-select-leave {
     transition:
@@ -2626,18 +2505,15 @@ html {
         transform 0.2s ease;
 }
 
-
 .cc-select-leave-start {
     opacity: 1;
     transform: translateY(0) scale(1);
 }
 
-
 .cc-select-leave-end {
     opacity: 0;
     transform: translateY(-7px) scale(0.985);
 }
-
 
 /* =========================================================
    VALID / ERROR
@@ -2647,18 +2523,15 @@ html {
     border-color: rgba(206, 229, 122, 0.45);
 }
 
-
 .cc-select__trigger.cc-input-valid .cc-select__arrow {
     background: var(--cc-green);
     border-color: var(--cc-green);
     color: #111;
 }
 
-
 .cc-select__trigger.cc-input-error {
     border-color: rgba(255, 100, 100, 0.5);
 }
-
 
 /* =========================================================
    MOBILE
@@ -2666,20 +2539,20 @@ html {
 
 @media (max-width: 640px) {
     .cc-select__trigger {
-        min-height: 60px;
+        min-height: 56px;
     }
 
     .cc-select__option {
-        min-height: 60px;
+        min-height: 46px;
 
-        font-size: 0.98rem;
+        font-size: 0.95rem;
     }
 
     .cc-select__menu {
-        padding: 7px;
+        padding: 6px;
+        max-height: 280px;
     }
 }
-
 
 /* =========================================================
    REDUCED MOTION
@@ -2695,7 +2568,176 @@ html {
     }
 }
 
-
 [x-cloak] {
     display: none !important;
+}
+
+/* =========================================================
+   FLIP CARD
+   ========================================================= */
+
+.clearcode-team__flip-card {
+    perspective: 1200px;
+    cursor: pointer;
+}
+
+.clearcode-team__flip-inner {
+    position: relative;
+    width: 100%;
+    transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    transform-style: preserve-3d;
+}
+
+.clearcode-team__flip-inner.is-flipped {
+    transform: rotateY(180deg);
+}
+
+.clearcode-team__flip-front,
+.clearcode-team__flip-back {
+    width: 100%;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+.clearcode-team__flip-front {
+    position: relative;
+    z-index: 2;
+}
+
+.clearcode-team__flip-back {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    transform: rotateY(180deg);
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    padding: 40px 35px;
+
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    background:
+        linear-gradient(
+            160deg,
+            rgba(124, 58, 237, 0.85) 0%,
+            rgba(192, 38, 211, 0.7) 40%,
+            rgba(206, 229, 122, 0.5) 100%
+        ),
+        #0a0a0f;
+
+    overflow: hidden;
+}
+
+/* subtle radial glow */
+.clearcode-team__flip-back::before {
+    content: "";
+    position: absolute;
+    top: -40%;
+    right: -30%;
+    width: 80%;
+    height: 80%;
+    background: radial-gradient(circle, rgba(206, 229, 122, 0.25), transparent 70%);
+    pointer-events: none;
+}
+
+.clearcode-team__flip-back::after {
+    content: "";
+    position: absolute;
+    bottom: -30%;
+    left: -20%;
+    width: 60%;
+    height: 60%;
+    background: radial-gradient(circle, rgba(124, 58, 237, 0.35), transparent 70%);
+    pointer-events: none;
+}
+
+.clearcode-team__back-content {
+    position: relative;
+    z-index: 2;
+}
+
+.clearcode-team__back-content h3 {
+    margin: 0 0 8px;
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: #fff;
+}
+
+.clearcode-team__back-content .back-role {
+    display: inline-block;
+    margin-bottom: 20px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(8px);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.clearcode-team__back-content p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 400;
+}
+
+.clearcode-team__back-content .back-skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 20px;
+}
+
+.clearcode-team__back-content .back-skill {
+    padding: 5px 12px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 11px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.75);
+    letter-spacing: 0.02em;
+}
+
+.clearcode-team__back-hint {
+    position: absolute;
+    bottom: 20px;
+    right: 25px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 0.05em;
+}
+
+/* Hover glow on front when not flipped */
+.clearcode-team__flip-card:hover .clearcode-team__flip-front .clearcode-team__image::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(160deg, rgba(124, 58, 237, 0.15), transparent 60%);
+    pointer-events: none;
+    z-index: 4;
+}
+
+@media (max-width: 600px) {
+    .clearcode-team__flip-back {
+        padding: 28px 22px;
+    }
+
+    .clearcode-team__back-content h3 {
+        font-size: 22px;
+    }
+
+    .clearcode-team__back-content p {
+        font-size: 13px;
+    }
 }

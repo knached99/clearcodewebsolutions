@@ -108,9 +108,9 @@ class Team extends Model
     }
 
     public function tickets(): HasMany
-{
-    return $this->hasMany(Ticket::class);
-}
+    {
+        return $this->hasMany(Ticket::class);
+    }
 
     /**
      * Get the route key for the model.

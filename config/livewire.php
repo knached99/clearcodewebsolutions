@@ -128,29 +128,29 @@ return [
     |
     */
 
-'temporary_file_upload' => [
-    'disk' => 'local',
-     'rules' => 'file|mimes:jpg,jpeg,png,webp,gif|max:20480',
-    'directory' => null,
-    'middleware' => 'throttle:60,1',
-    'preview_mimes' => [
-        'png',
-        'gif',
-        'bmp',
-        'svg',
-        'wav',
-        'mp4',
-        'mov',
-        'avi',
-        'wmv',
-        'mp3',
-        'm4a',
-        'jpg',
-        'jpeg',
-        'webp',
+    'temporary_file_upload' => [
+        'disk' => 'local',
+        'rules' => 'file|mimes:jpg,jpeg,png,webp,gif|max:20480',
+        'directory' => null,
+        'middleware' => 'throttle:60,1',
+        'preview_mimes' => [
+            'png',
+            'gif',
+            'bmp',
+            'svg',
+            'wav',
+            'mp4',
+            'mov',
+            'avi',
+            'wmv',
+            'mp3',
+            'm4a',
+            'jpg',
+            'jpeg',
+            'webp',
+        ],
+        'max_upload_time' => 5,
     ],
-    'max_upload_time' => 5,
-],
 
     /*
     |---------------------------------------------------------------------------

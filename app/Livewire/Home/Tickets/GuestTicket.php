@@ -92,7 +92,7 @@ class GuestTicket extends Component
 
             foreach ($this->attachments as $attachment) {
                 $path = $attachment->store(
-                    'tickets/' . $ticket->id,
+                    'tickets/'.$ticket->id,
                     'public'
                 );
 
@@ -107,6 +107,9 @@ class GuestTicket extends Component
             $ticket->update([
                 'last_activity_at' => now(),
             ]);
+
+            \Illuminate\Support\Facades\Notification::route('mail', config('mail.admin_address'))
+                ->notify(new \App\Notifications\NewTicketReplyNotification($ticket, $message, true));
         });
 
         $this->ticket = $ticket

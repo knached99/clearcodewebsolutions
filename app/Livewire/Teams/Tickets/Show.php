@@ -3,7 +3,6 @@
 namespace App\Livewire\Teams\Tickets;
 
 use App\Models\Ticket;
-use App\Models\TicketMessage;
 use App\Models\TicketMessageAttachment;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -142,7 +141,7 @@ class Show extends Component
 
             foreach ($this->attachments as $attachment) {
                 $path = $attachment->store(
-                    'tickets/' . $this->ticket->id,
+                    'tickets/'.$this->ticket->id,
                     'public'
                 );
 
@@ -157,6 +156,9 @@ class Show extends Component
             $this->ticket->update([
                 'last_activity_at' => now(),
             ]);
+
+            \Illuminate\Support\Facades\Notification::route('mail', $this->ticket->email)
+                ->notify(new \App\Notifications\NewTicketReplyNotification($this->ticket, $message, false));
         });
 
         $this->reset([
@@ -240,8 +242,8 @@ class Show extends Component
             200,
             [
                 'Content-Type' => $mime,
-                'Content-Disposition' => 'inline; filename="' .
-                    addslashes($attachment->original_name) .
+                'Content-Disposition' => 'inline; filename="'.
+                    addslashes($attachment->original_name).
                     '"',
                 'Cache-Control' => 'private, max-age=3600',
             ]

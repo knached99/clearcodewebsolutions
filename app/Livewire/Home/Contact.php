@@ -2,9 +2,9 @@
 
 namespace App\Livewire\Home;
 
-use App\Services\TicketService;
 use App\Notifications\NewTicketNotification;
 use App\Notifications\TicketReceivedNotification;
+use App\Services\TicketService;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
@@ -33,43 +33,43 @@ class Contact extends Component
         $this->formLoadedAt = now()->timestamp;
     }
 
-  protected function rules(): array
-{
-    return [
-        'name' => [
-            'required',
-            'string',
-            'min:2',
-            'max:80',
-            'regex:/^[\pL\pM\s\'\-.]+$/u',
-        ],
+    protected function rules(): array
+    {
+        return [
+            'name' => [
+                'required',
+                'string',
+                'min:2',
+                'max:80',
+                'regex:/^[\pL\pM\s\'\-.]+$/u',
+            ],
 
-        'email' => [
-            'required',
-            'string',
-            'lowercase',
-            'max:254',
-            'email:rfc,dns,spoof',
-        ],
+            'email' => [
+                'required',
+                'string',
+                'lowercase',
+                'max:254',
+                'email:rfc,dns,spoof',
+            ],
 
-        'subject' => [
-            'required',
-            'string',
-            'in:Website Design,Website Development,Mobile App Development,E-Commerce,Website Redesign,Maintenance & Support,Other',
-        ],
+            'subject' => [
+                'required',
+                'string',
+                'in:Website Design,Website Development,Mobile App Development,E-Commerce,Website Redesign,Maintenance & Support,Other',
+            ],
 
-        'message' => [
-            'required',
-            'string',
-            'min:20',
-            'max:5000',
-        ],
+            'message' => [
+                'required',
+                'string',
+                'min:20',
+                'max:5000',
+            ],
 
-        'website' => [
-            'prohibited',
-        ],
-    ];
-}
+            'website' => [
+                'prohibited',
+            ],
+        ];
+    }
 
     public function updated($property): void
     {
@@ -106,7 +106,7 @@ class Contact extends Component
             'subject' => [
                 'required',
                 'string',
-                'in:Website Design,Website Development,Mobile App Development,E-Commerce,Website Redesign,Maintenance & Support,Other'
+                'in:Website Design,Website Development,Mobile App Development,E-Commerce,Website Redesign,Maintenance & Support,Other',
             ],
 
             'message' => [
@@ -124,39 +124,32 @@ class Contact extends Component
     {
         $this->submitted = false;
 
-
         if ($this->website !== '') {
             return;
         }
-
 
         if (
             $this->formLoadedAt &&
             now()->timestamp - $this->formLoadedAt < 3
         ) {
             throw ValidationException::withMessages([
-                'message' =>
-                    'Please take a moment to review your message.',
+                'message' => 'Please take a moment to review your message.',
             ]);
         }
 
-
-        $key = 'contact-form:' . request()->ip();
+        $key = 'contact-form:'.request()->ip();
 
         if (RateLimiter::tooManyAttempts($key, 3)) {
             $seconds = RateLimiter::availableIn($key);
 
             throw ValidationException::withMessages([
-                'email' =>
-                    "Too many attempts. Please try again in {$seconds} seconds.",
+                'email' => "Too many attempts. Please try again in {$seconds} seconds.",
             ]);
         }
 
         RateLimiter::hit($key, 60);
 
-
         $validated = $this->validate();
-
 
         $result = $ticketService->createTicket(
             $validated
@@ -165,7 +158,6 @@ class Contact extends Component
         $ticket = $result['ticket'];
 
         $token = $result['token'];
-
 
         // Customer email
         Notification::route(
@@ -185,7 +177,6 @@ class Contact extends Component
         )->notify(
             new NewTicketNotification($ticket)
         );
-
 
         $this->ticketNumber = $ticket->ticket_number;
 
