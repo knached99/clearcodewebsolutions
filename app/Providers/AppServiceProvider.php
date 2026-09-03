@@ -32,7 +32,7 @@ class AppServiceProvider extends ServiceProvider
 
         Livewire::setUpdateRoute(function ($handle, $path) {
         return Route::post($path, $handle)
-            ->middleware(['web', 'auth'])
+            ->middleware(['web'])
             ->name('livewire.update.custom');
     });
     }
