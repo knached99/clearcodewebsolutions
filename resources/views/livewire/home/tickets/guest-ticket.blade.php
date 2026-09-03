@@ -1778,8 +1778,12 @@
                 </strong>
 
                 <p>
+                    @if ($ticket->status === 'closed')
+                        This ticket is closed. If you need further assistance, please open a new ticket.
+                    @else
                     Reply to this ticket and our team will get back to you
                     as soon as possible.
+                    @endif
                 </p>
 
             </section>
