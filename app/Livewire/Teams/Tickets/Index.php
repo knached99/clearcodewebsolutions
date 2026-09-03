@@ -12,9 +12,34 @@ class Index extends Component
     use WithPagination;
 
     public string $status = 'all';
+
     public string $priority = 'all';
+
     public string $search = '';
+
     public string $sort = 'latest';
+
+    /**
+     * Persist the team across Livewire requests.
+     *
+     * The initial page request has the `current_team` route parameter,
+     * but subsequent Livewire requests hit the Livewire update route,
+     * which does not contain that parameter.
+     */
+    public int $teamId;
+
+    public function mount(): void
+    {
+        $currentTeam = request()->route('current_team');
+
+        $team = $currentTeam instanceof Team
+            ? $currentTeam
+            : Team::query()
+                ->where('slug', $currentTeam)
+                ->firstOrFail();
+
+        $this->teamId = $team->id;
+    }
 
     public function updatedSearch(): void
     {
@@ -39,15 +64,17 @@ class Index extends Component
     public function moveTicket(int|string $ticketId, string $status): void
     {
         abort_unless(
-            in_array($status, ['open', 'pending', 'resolved', 'closed'], true),
+            in_array(
+                $status,
+                ['open', 'pending', 'resolved', 'closed'],
+                true
+            ),
             422
         );
 
-        $team = $this->team();
-
         $ticket = Ticket::query()
             ->whereKey($ticketId)
-            ->where('team_id', $team->id)
+            ->where('team_id', $this->teamId)
             ->firstOrFail();
 
         if ($ticket->status === $status) {
@@ -59,19 +86,17 @@ class Index extends Component
             'last_activity_at' => now(),
         ]);
 
-        $this->dispatch('ticket-moved', ticketId: $ticket->id, status: $status);
+        $this->dispatch(
+            'ticket-moved',
+            ticketId: $ticket->id,
+            status: $status
+        );
     }
 
     protected function team(): Team
     {
-        $currentTeam = request()->route('current_team');
-
-        if ($currentTeam instanceof Team) {
-            return $currentTeam;
-        }
-
         return Team::query()
-            ->where('slug', $currentTeam)
+            ->whereKey($this->teamId)
             ->firstOrFail();
     }
 
@@ -80,54 +105,80 @@ class Index extends Component
         $team = $this->team();
 
         $tickets = Ticket::query()
-            ->where('team_id', $team->id)
+            ->where('team_id', $this->teamId)
             ->withCount('messages')
-            ->when($this->search, function ($query) {
-                $search = '%' . $this->search . '%';
+            ->when(
+                $this->search,
+                function ($query) {
+                    $search = '%' . $this->search . '%';
 
-                $query->where(function ($query) use ($search) {
-                    $query
-                        ->where('ticket_number', 'like', $search)
-                        ->orWhere('name', 'like', $search)
-                        ->orWhere('email', 'like', $search)
-                        ->orWhere('subject', 'like', $search);
-                });
-            })
+                    $query->where(function ($query) use ($search) {
+                        $query
+                            ->where('ticket_number', 'like', $search)
+                            ->orWhere('name', 'like', $search)
+                            ->orWhere('email', 'like', $search)
+                            ->orWhere('subject', 'like', $search);
+                    });
+                }
+            )
             ->when(
                 $this->status !== 'all',
-                fn ($query) => $query->where('status', $this->status)
+                fn ($query) => $query->where(
+                    'status',
+                    $this->status
+                )
             )
             ->when(
                 $this->priority !== 'all',
-                fn ($query) => $query->where('priority', $this->priority)
+                fn ($query) => $query->where(
+                    'priority',
+                    $this->priority
+                )
             )
             ->when(
                 $this->sort === 'oldest',
-                fn ($query) => $query->oldest('last_activity_at'),
-                fn ($query) => $query->latest('last_activity_at')
+                fn ($query) => $query->oldest(
+                    'last_activity_at'
+                ),
+                fn ($query) => $query->latest(
+                    'last_activity_at'
+                )
             )
             ->paginate(50);
 
         $counts = [
-            'all' => Ticket::where('team_id', $team->id)->count(),
-            'open' => Ticket::where('team_id', $team->id)
+            'all' => Ticket::query()
+                ->where('team_id', $this->teamId)
+                ->count(),
+
+            'open' => Ticket::query()
+                ->where('team_id', $this->teamId)
                 ->where('status', 'open')
                 ->count(),
-            'pending' => Ticket::where('team_id', $team->id)
+
+            'pending' => Ticket::query()
+                ->where('team_id', $this->teamId)
                 ->where('status', 'pending')
                 ->count(),
-            'resolved' => Ticket::where('team_id', $team->id)
+
+            'resolved' => Ticket::query()
+                ->where('team_id', $this->teamId)
                 ->where('status', 'resolved')
                 ->count(),
-            'closed' => Ticket::where('team_id', $team->id)
+
+            'closed' => Ticket::query()
+                ->where('team_id', $this->teamId)
                 ->where('status', 'closed')
                 ->count(),
         ];
 
-        return view('livewire.teams.tickets.index', [
-            'tickets' => $tickets,
-            'counts' => $counts,
-            'team' => $team,
-        ]);
+        return view(
+            'livewire.teams.tickets.index',
+            [
+                'tickets' => $tickets,
+                'counts' => $counts,
+                'team' => $team,
+            ]
+        );
     }
 }

@@ -18,6 +18,10 @@
 
 @push('styles')
 <style>
+    [x-cloak] {
+        display: none !important;
+    }
+
     .ticket-page {
         min-height: 100vh;
         background:
@@ -313,9 +317,8 @@
         overflow-wrap: anywhere;
     }
 
-    /*
-     * Saved message attachments
-     */
+    /* Saved message attachments */
+
     .message-attachments {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -340,21 +343,58 @@
         transform: translateY(-1px);
     }
 
+    .message-attachment-preview {
+        display: block;
+        width: 100%;
+        border: 0;
+        padding: 0;
+        background: transparent;
+        cursor: zoom-in;
+        text-align: left;
+    }
+
     .message-attachment-image {
         display: block;
         width: 100%;
         height: 180px;
         object-fit: cover;
+        transition: transform .2s ease;
+    }
+
+    .message-attachment-preview:hover .message-attachment-image {
+        transform: scale(1.02);
+    }
+
+    .message-attachment-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 8px 10px;
     }
 
     .message-attachment-name {
         display: block;
+        min-width: 0;
         overflow: hidden;
-        padding: 8px 10px;
         color: rgba(255,255,255,.5);
         font-size: 10px;
         text-overflow: ellipsis;
         white-space: nowrap;
+    }
+
+    .message-attachment-download {
+        flex-shrink: 0;
+        color: #a78bfa;
+        font-size: 10px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: .2s ease;
+    }
+
+    .message-attachment-download:hover {
+        color: #c4b5fd;
+        text-decoration: underline;
     }
 
     .empty-conversation {
@@ -434,9 +474,8 @@
         box-shadow: 0 0 0 3px rgba(139,92,246,.08);
     }
 
-    /*
-     * Upload area
-     */
+    /* Upload area */
+
     .upload-area {
         width: 100%;
         margin-top: 18px;
@@ -672,9 +711,8 @@
         font-size: 10px;
     }
 
-    /*
-     * Sidebar
-     */
+    /* Sidebar */
+
     .ticket-sidebar {
         width: 100%;
         min-width: 0;
@@ -822,9 +860,8 @@
         line-height: 1.65;
     }
 
-    /*
-     * Edit section
-     */
+    /* Edit section */
+
     .edit-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -865,9 +902,8 @@
         border-top: 1px solid rgba(255,255,255,.05);
     }
 
-    /*
-     * Flash message
-     */
+    /* Flash message */
+
     .ticket-success {
         display: flex;
         align-items: center;
@@ -881,9 +917,76 @@
         font-size: 12px;
     }
 
-    /*
-     * Responsive
-     */
+    /* Lightbox */
+
+    .ticket-lightbox {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: rgba(0,0,0,.92);
+        backdrop-filter: blur(8px);
+    }
+
+    .ticket-lightbox-image {
+        display: block;
+        max-width: min(95vw, 1400px);
+        max-height: 90vh;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        border-radius: 12px;
+        box-shadow: 0 30px 100px rgba(0,0,0,.55);
+    }
+
+    .ticket-lightbox-close {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        padding: 0;
+        border: 1px solid rgba(255,255,255,.12);
+        border-radius: 999px;
+        background: rgba(0,0,0,.55);
+        color: white;
+        font-size: 25px;
+        line-height: 1;
+        cursor: pointer;
+        transition: .2s ease;
+    }
+
+    .ticket-lightbox-close:hover {
+        background: rgba(255,255,255,.1);
+        border-color: rgba(255,255,255,.25);
+    }
+
+    .ticket-lightbox-name {
+        position: absolute;
+        left: 50%;
+        bottom: 20px;
+        max-width: calc(100% - 40px);
+        transform: translateX(-50%);
+        overflow: hidden;
+        padding: 8px 12px;
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 8px;
+        background: rgba(0,0,0,.6);
+        color: rgba(255,255,255,.65);
+        font-size: 11px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* Responsive */
+
     @media (max-width: 900px) {
         .ticket-layout {
             grid-template-columns: 1fr;
@@ -974,13 +1077,32 @@
 </style>
 @endpush
 
-<div class="guest-ticket">
+<div
+    class="guest-ticket"
+    x-data="{
+        lightbox: false,
+        lightboxSrc: '',
+        lightboxName: '',
 
+        openLightbox(src, name = '') {
+            this.lightboxSrc = src;
+            this.lightboxName = name;
+            this.lightbox = true;
+            document.body.classList.add('overflow-hidden');
+        },
+
+        closeLightbox() {
+            this.lightbox = false;
+            this.lightboxSrc = '';
+            this.lightboxName = '';
+            document.body.classList.remove('overflow-hidden');
+        }
+    }"
+    x-on:keydown.escape.window="closeLightbox()"
+>
     {{-- Header --}}
     <header class="ticket-header">
-
         <div class="ticket-header-main">
-
             <div class="ticket-eyebrow">
                 CUSTOMER SUPPORT
             </div>
@@ -990,7 +1112,6 @@
             </h1>
 
             <div class="ticket-meta">
-
                 <span class="ticket-number">
                     {{ $ticket->ticket_number }}
                 </span>
@@ -998,44 +1119,32 @@
                 <span>
                     Opened {{ $ticket->created_at?->diffForHumans() }}
                 </span>
-
             </div>
-
         </div>
 
         <div class="ticket-header-side">
-
             <div class="ticket-status {{ $statusClass }}">
                 <span></span>
+
                 {{ ucfirst($status) }}
             </div>
-
         </div>
-
     </header>
-
 
     {{-- Flash --}}
     @if (session('ticket-success'))
-
         <div class="ticket-success">
             <flux:icon.check-circle class="size-4" />
 
             {{ session('ticket-success') }}
         </div>
-
     @endif
-
 
     {{-- Edit ticket --}}
     @if ($showEditTicket)
-
         <section class="ticket-panel ticket-edit-panel">
-
             <div class="panel-heading">
-
                 <div>
-
                     <h2>
                         Edit ticket
                     </h2>
@@ -1043,15 +1152,11 @@
                     <p>
                         Update the ticket information.
                     </p>
-
                 </div>
-
             </div>
 
             <div class="edit-grid">
-
                 <div class="field field-full">
-
                     <label for="ticket-subject">
                         Subject
                     </label>
@@ -1067,11 +1172,9 @@
                             {{ $message }}
                         </span>
                     @enderror
-
                 </div>
 
                 <div class="field">
-
                     <label for="ticket-status">
                         Status
                     </label>
@@ -1102,11 +1205,9 @@
                             {{ $message }}
                         </span>
                     @enderror
-
                 </div>
 
                 <div class="field">
-
                     <label for="ticket-priority">
                         Priority
                     </label>
@@ -1137,13 +1238,10 @@
                             {{ $message }}
                         </span>
                     @enderror
-
                 </div>
-
             </div>
 
             <div class="edit-actions">
-
                 <button
                     type="button"
                     wire:click="cancelEditTicket"
@@ -1158,7 +1256,6 @@
                     wire:loading.attr="disabled"
                     class="button-primary"
                 >
-
                     <span
                         wire:loading.remove
                         wire:target="editTicket"
@@ -1172,15 +1269,10 @@
                     >
                         Saving...
                     </span>
-
                 </button>
-
             </div>
-
         </section>
-
     @endif
-
 
     {{-- Main --}}
     <div class="ticket-layout">
@@ -1189,31 +1281,24 @@
         <section class="ticket-panel">
 
             <div class="panel-heading">
-
                 <div>
-
                     <h2>
                         Conversation
                     </h2>
 
                     <p>
                         {{ $ticket->messages->count() }}
-
                         {{ $ticket->messages->count() === 1 ? 'message' : 'messages' }}
                     </p>
-
                 </div>
 
                 <span class="last-activity">
                     {{ $ticket->last_activity_at?->diffForHumans() }}
                 </span>
-
             </div>
-
 
             {{-- Messages --}}
             <div class="messages">
-
                 @forelse ($ticket->messages as $message)
 
                     @php
@@ -1228,7 +1313,6 @@
                         class="message"
                         wire:key="message-{{ $message->id }}"
                     >
-
                         <div class="message-avatar">
                             {{ $initial ?: 'C' }}
                         </div>
@@ -1236,7 +1320,6 @@
                         <div class="message-body">
 
                             <div class="message-top">
-
                                 <strong>
                                     {{ $authorName }}
                                 </strong>
@@ -1244,15 +1327,12 @@
                                 <time>
                                     {{ $message->created_at?->diffForHumans() }}
                                 </time>
-
                             </div>
-
 
                             <div class="message-bubble">
 
                                 {{-- Message text --}}
                                 {!! nl2br(e($message->message)) !!}
-
 
                                 {{-- Saved attachments --}}
                                 @if ($message->attachments->isNotEmpty())
@@ -1261,26 +1341,103 @@
 
                                         @foreach ($message->attachments as $attachment)
 
-                                            <a
-                                                href="{{ asset('storage/' . $attachment->path) }}"
-                                                target="_blank"
-                                                rel="noopener noreferrer"
+                                            @php
+                                                $mime = strtolower(
+                                                    (string) $attachment->mime_type
+                                                );
+
+                                                $isImage = str_starts_with(
+                                                    $mime,
+                                                    'image/'
+                                                );
+
+                                                $isPdf = $mime === 'application/pdf';
+
+                                                $previewUrl = route(
+                                                    'guest.ticket.attachments.preview',
+                                                    [
+                                                        'attachment' => $attachment->id,
+                                                    ]
+                                                );
+
+                                                $downloadUrl = route(
+                                                    'guest.ticket.attachments.download',
+                                                    [
+                                                        'attachment' => $attachment->id,
+                                                    ]
+                                                );
+                                            @endphp
+
+                                            <div
                                                 class="message-attachment"
                                                 wire:key="message-attachment-{{ $attachment->id }}"
                                             >
 
-                                                <img
-                                                    src="{{ asset('storage/' . $attachment->path) }}"
-                                                    alt="{{ $attachment->original_name }}"
-                                                    class="message-attachment-image"
-                                                    loading="lazy"
-                                                >
+                                               @if ($isImage)
+                                        <button
+                                            type="button"
+                                            x-on:click.stop="openLightbox(
+                                                @js($previewUrl),
+                                                @js($attachment->original_name)
+                                            )"
+                                            class="block w-full cursor-zoom-in text-left"
+                                        >
+                                            <img
+                                                src="{{ $previewUrl }}"
+                                                alt="{{ $attachment->original_name }}"
+                                                class="message-attachment-image"
+                                                loading="lazy"
+                                            >
+                                        </button>
+                                    @elseif ($isPdf)
+                                        <a
+                                            href="{{ $previewUrl }}"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            class="flex min-h-[180px] items-center justify-center"
+                                        >
+                                            <div class="text-center">
+                                                <flux:icon.document-text class="mx-auto size-10" />
 
-                                                <span class="message-attachment-name">
-                                                    {{ $attachment->original_name }}
-                                                </span>
+                                                <div class="mt-2 text-xs text-white/60">
+                                                    Preview PDF
+                                                </div>
+                                            </div>
+                                        </a>
+                                    @else
+                                        <a
+                                            href="{{ $downloadUrl }}"
+                                            class="flex min-h-[180px] items-center justify-center"
+                                        >
+                                            <div class="text-center">
+                                                <flux:icon.document class="mx-auto size-10" />
 
-                                            </a>
+                                                <div class="mt-2 text-xs text-white/60">
+                                                    Download file
+                                                </div>
+                                            </div>
+                                        </a>
+                                    @endif
+
+                                                <div class="message-attachment-footer">
+
+                                                    <span
+                                                        class="message-attachment-name"
+                                                        title="{{ $attachment->original_name }}"
+                                                    >
+                                                        {{ $attachment->original_name }}
+                                                    </span>
+
+                                                    <a
+                                                        href="{{ $downloadUrl }}"
+                                                        class="message-attachment-download"
+                                                    >
+                                                        Download
+                                                    </a>
+
+                                                </div>
+
+                                            </div>
 
                                         @endforeach
 
@@ -1291,16 +1448,12 @@
                             </div>
 
                         </div>
-
                     </article>
 
                 @empty
 
                     <div class="empty-conversation">
-
-                        <flux:icon.chat-bubble-left-right
-                            class="size-7"
-                        />
+                        <flux:icon.chat-bubble-left-right class="size-7" />
 
                         <strong>
                             No messages yet
@@ -1309,13 +1462,10 @@
                         <span>
                             Send a reply below to start the conversation.
                         </span>
-
                     </div>
 
                 @endforelse
-
             </div>
-
 
             {{-- Reply --}}
             @if ($ticket->status !== 'closed')
@@ -1323,9 +1473,7 @@
                 <div class="reply">
 
                     <div class="reply-heading">
-
                         <div>
-
                             <strong>
                                 Reply to support
                             </strong>
@@ -1333,11 +1481,8 @@
                             <span>
                                 Send us a message and we'll get back to you.
                             </span>
-
                         </div>
-
                     </div>
-
 
                     {{-- Message --}}
                     <textarea
@@ -1345,25 +1490,19 @@
                         rows="6"
                         placeholder="Write your message..."
                         class="reply-textarea @error('message') border-red-500 @enderror"
-                      
                     ></textarea>
 
                     @error('message')
-
                         <div class="field-error">
                             {{ $message }}
                         </div>
-
                     @enderror
-
 
                     {{-- Attachments --}}
                     <div class="upload-area">
 
                         <div class="upload-heading">
-
                             <div>
-
                                 <strong>
                                     Attach images
                                 </strong>
@@ -1371,21 +1510,17 @@
                                 <span>
                                     JPG, PNG, WEBP, GIF · Max 10 MB each
                                 </span>
-
                             </div>
 
                             <span class="upload-count">
                                 {{ count($attachments) }} / 10
                             </span>
-
                         </div>
-
 
                         <label
                             for="ticket-attachments"
                             class="upload-box"
                         >
-
                             <flux:icon.paper-clip />
 
                             <strong>
@@ -1403,9 +1538,7 @@
                                 multiple
                                 accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif"
                             >
-
                         </label>
-
 
                         {{-- Upload loading --}}
                         <div
@@ -1413,24 +1546,18 @@
                             wire:target="attachments"
                             class="upload-loading"
                         >
-
                             <div class="upload-spinner"></div>
 
                             <span>
                                 Uploading images...
                             </span>
-
                         </div>
 
-
                         @error('attachments')
-
                             <div class="field-error">
                                 {{ $message }}
                             </div>
-
                         @enderror
-
 
                         {{-- Temporary attachment previews --}}
                         @if (count($attachments) > 0)
@@ -1445,17 +1572,13 @@
                                     >
 
                                         <div class="attachment-preview">
-
                                             <img
                                                 src="{{ $attachment->temporaryUrl() }}"
                                                 alt="{{ $attachment->getClientOriginalName() }}"
                                             >
-
                                         </div>
 
-
                                         <div class="attachment-info">
-
                                             <strong>
                                                 {{ $attachment->getClientOriginalName() }}
                                             </strong>
@@ -1464,9 +1587,7 @@
                                                 {{ number_format($attachment->getSize() / 1024 / 1024, 2) }}
                                                 MB
                                             </span>
-
                                         </div>
-
 
                                         <button
                                             type="button"
@@ -1474,20 +1595,15 @@
                                             wire:click="removeAttachment({{ $index }})"
                                             aria-label="Remove attachment"
                                         >
-
                                             <flux:icon.x-mark />
-
                                         </button>
 
                                     </div>
 
-
                                     @error("attachments.$index")
-
                                         <div class="field-error">
                                             {{ $message }}
                                         </div>
-
                                     @enderror
 
                                 @endforeach
@@ -1497,7 +1613,6 @@
                         @endif
 
                     </div>
-
 
                     {{-- Reply footer --}}
                     <div class="reply-footer">
@@ -1518,11 +1633,9 @@
                                 wire:loading.remove
                                 wire:target="sendReply"
                             >
-
                                 <flux:icon.paper-airplane class="size-4" />
 
                                 Send reply
-
                             </span>
 
                             <span
@@ -1558,7 +1671,6 @@
 
         </section>
 
-
         {{-- Sidebar --}}
         <aside class="ticket-sidebar">
 
@@ -1591,7 +1703,6 @@
 
             </section>
 
-
             {{-- Ticket details --}}
             <section class="ticket-sidebar-card">
 
@@ -1602,7 +1713,6 @@
                 <div class="ticket-detail-list">
 
                     <div class="ticket-detail-row">
-
                         <span>
                             Ticket
                         </span>
@@ -1610,12 +1720,9 @@
                         <strong>
                             {{ $ticket->ticket_number }}
                         </strong>
-
                     </div>
 
-
                     <div class="ticket-detail-row">
-
                         <span>
                             Status
                         </span>
@@ -1623,12 +1730,9 @@
                         <strong>
                             {{ ucfirst($ticket->status) }}
                         </strong>
-
                     </div>
 
-
                     <div class="ticket-detail-row">
-
                         <span>
                             Priority
                         </span>
@@ -1636,12 +1740,9 @@
                         <strong>
                             {{ ucfirst($ticket->priority) }}
                         </strong>
-
                     </div>
 
-
                     <div class="ticket-detail-row">
-
                         <span>
                             Created
                         </span>
@@ -1649,12 +1750,9 @@
                         <strong>
                             {{ $ticket->created_at?->format('M j, Y') }}
                         </strong>
-
                     </div>
 
-
                     <div class="ticket-detail-row">
-
                         <span>
                             Last activity
                         </span>
@@ -1662,21 +1760,17 @@
                         <strong>
                             {{ $ticket->last_activity_at?->diffForHumans() ?? '—' }}
                         </strong>
-
                     </div>
 
                 </div>
 
             </section>
 
-
             {{-- Help --}}
             <section class="ticket-sidebar-card ticket-help-card">
 
                 <div class="ticket-help-icon">
-
                     <flux:icon.sparkles />
-
                 </div>
 
                 <strong>
@@ -1693,5 +1787,43 @@
         </aside>
 
     </div>
+
+    {{-- Image lightbox --}}
+    <template x-teleport="body">
+
+       <div
+    x-show="lightbox"
+    x-cloak
+    x-transition.opacity
+    class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4"
+    x-on:click.self="closeLightbox()"
+>
+    <button
+        type="button"
+        x-on:click="closeLightbox()"
+        class="absolute right-5 top-5 flex size-10 cursor-pointer items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+        aria-label="Close preview"
+    >
+        <flux:icon.x-mark class="size-5" />
+    </button>
+
+    <div
+        class="flex max-h-[95vh] max-w-[95vw] flex-col items-center gap-3"
+        x-on:click.stop
+    >
+        <img
+            :src="lightboxSrc"
+            :alt="lightboxName"
+            class="max-h-[88vh] max-w-[95vw] rounded-xl object-contain shadow-2xl"
+        >
+
+        <div
+            x-text="lightboxName"
+            class="max-w-full truncate text-xs text-white/60"
+        ></div>
+    </div>
+</div>
+
+    </template>
 
 </div>

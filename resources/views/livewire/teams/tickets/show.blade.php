@@ -19,214 +19,180 @@
         }
     }"
     x-on:keydown.escape.window="closeLightbox()"
-    class="min-h-screen bg-[#f7f5fb] text-zinc-900 dark:bg-[#09070f] dark:text-white"
+    class="min-h-screen bg-[#faf9fc] text-[#27232f] antialiased dark:bg-[#0d0b11] dark:text-white"
 >
-
     {{-- ================================================================
         LIGHTBOX
     ================================================================= --}}
+
     <template x-teleport="body">
         <div
             x-show="lightbox"
             x-cloak
-            x-transition.opacity.duration.200ms
-            class="fixed inset-0 z-[9999] flex items-center justify-center bg-[#08050d]/95 p-5 backdrop-blur-xl"
+            x-transition.opacity
+            class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4 backdrop-blur-xl"
         >
-
             <button
                 type="button"
                 x-on:click="closeLightbox()"
-                class="absolute right-5 top-5 z-30 flex size-11 items-center justify-center rounded-2xl border border-white/10 bg-white/10 text-white backdrop-blur-xl transition hover:bg-white/20"
+                class="absolute right-4 top-4 z-30 flex size-12 items-center justify-center rounded-2xl border border-white/10 bg-white/10 text-white backdrop-blur-xl transition hover:bg-white/20"
             >
                 <flux:icon.x-mark class="size-5" />
             </button>
 
-            <div
-                class="absolute bottom-6 left-1/2 z-30 max-w-[80vw] -translate-x-1/2 rounded-full border border-white/10 bg-white/10 px-4 py-2 backdrop-blur-xl"
-            >
-                <span
-                    x-text="lightboxName"
-                    class="block truncate text-xs font-medium text-white/70"
-                ></span>
-            </div>
-
             <button
                 type="button"
                 x-on:click="closeLightbox()"
-                class="absolute inset-0"
-                aria-label="Close"
+                class="absolute inset-0 cursor-default"
+                aria-label="Close image"
             ></button>
 
             <img
                 :src="lightboxSrc"
                 :alt="lightboxName"
                 x-on:click.stop
-                class="relative z-10 max-h-[88vh] max-w-[94vw] rounded-2xl object-contain shadow-[0_30px_100px_rgba(0,0,0,.5)]"
+                class="relative z-10 max-h-[90vh] max-w-[94vw] rounded-3xl object-contain shadow-2xl"
             />
+
+            <div
+                class="absolute bottom-5 left-1/2 z-30 max-w-[90vw] -translate-x-1/2 rounded-full bg-white/10 px-4 py-2 backdrop-blur-xl"
+            >
+                <span
+                    x-text="lightboxName"
+                    class="block truncate text-sm font-medium text-white/80"
+                ></span>
+            </div>
         </div>
     </template>
 
 
     {{-- ================================================================
-        TOP HEADER
+        HEADER
     ================================================================= --}}
-    <header class="sticky top-0 z-40 border-b border-violet-200/60 bg-white/80 backdrop-blur-2xl dark:border-violet-900/20 dark:bg-[#0b0812]/80">
 
-        <div class="mx-auto flex h-[72px] max-w-[1500px] items-center justify-between px-4 sm:px-6 lg:px-8">
+    <header class="sticky top-0 z-50 border-b border-[#eae6f0]/80 bg-[#faf9fc]/90 backdrop-blur-2xl dark:border-white/5 dark:bg-[#0d0b11]/90">
+
+        <div class="mx-auto flex min-h-[76px] max-w-[1580px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
 
             <div class="flex min-w-0 items-center gap-3">
 
                 <a
                     href="{{ route('dashboard') }}"
                     wire:navigate
-                    class="group flex size-10 shrink-0 items-center justify-center rounded-2xl border border-zinc-200 bg-white text-zinc-500 shadow-sm transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:border-violet-800 dark:hover:bg-violet-950/30 dark:hover:text-violet-300"
+                    class="group flex size-11 shrink-0 items-center justify-center rounded-2xl border border-[#e5e0eb] bg-white text-[#706a79] shadow-[0_3px_12px_rgba(40,30,60,.04)] transition hover:border-[#cfc4e5] hover:bg-[#f7f3ff] hover:text-[#7865b5] dark:border-white/10 dark:bg-white/5 dark:text-white/50"
                 >
                     <flux:icon.arrow-left class="size-4 transition group-hover:-translate-x-0.5" />
                 </a>
 
-                <div class="hidden h-7 w-px bg-zinc-200 dark:bg-zinc-800 sm:block"></div>
+                <div class="hidden h-8 w-px bg-[#e6e1eb] sm:block dark:bg-white/10"></div>
 
                 <div class="min-w-0">
-
-                    <div class="flex items-center gap-2">
-
-                        <h1 class="truncate text-sm font-semibold tracking-tight text-zinc-950 dark:text-white">
+                    <div class="flex min-w-0 items-center gap-2">
+                        <h1 class="truncate text-base font-semibold tracking-[-0.02em] text-[#24202b] sm:text-lg dark:text-white">
                             {{ $ticket->subject }}
                         </h1>
 
-                        <span class="hidden rounded-lg bg-violet-50 px-2 py-1 font-mono text-[9px] font-bold text-violet-600 sm:inline dark:bg-violet-950/40 dark:text-violet-300">
+                        <span class="hidden rounded-lg bg-[#f1edfa] px-2.5 py-1 font-mono text-[10px] font-semibold text-[#7969a1] md:inline">
                             {{ $ticket->ticket_number }}
                         </span>
-
                     </div>
 
-                    <div class="mt-0.5 text-[10px] text-zinc-400">
+                    <div class="mt-0.5 truncate text-xs text-[#8e8996] sm:text-sm">
                         {{ $ticket->name }}
                     </div>
-
                 </div>
-
             </div>
 
 
-            {{-- Status --}}
-            <div class="flex items-center gap-2">
+            {{-- Header status --}}
+            <div class="hidden items-center gap-3 sm:flex">
 
-                <div class="hidden items-center gap-2 rounded-full border border-violet-100 bg-violet-50 px-3 py-2 dark:border-violet-900/40 dark:bg-violet-950/30 sm:flex">
-
+                <div
+                    class="flex items-center gap-2 rounded-full border border-[#e8e1f4] bg-white px-3.5 py-2 text-sm font-semibold shadow-sm dark:border-white/10 dark:bg-white/5"
+                >
                     <span
-                        class="size-1.5 rounded-full
-                        {{ match($ticket->status) {
-                            'open' => 'bg-emerald-500',
-                            'pending' => 'bg-amber-500',
-                            'resolved' => 'bg-blue-500',
-                            'closed' => 'bg-zinc-400',
-                            default => 'bg-zinc-400',
-                        } }}"
+                        class="size-2 rounded-full
+                            {{ match($ticket->status) {
+                                'open' => 'bg-emerald-500',
+                                'pending' => 'bg-amber-500',
+                                'resolved' => 'bg-blue-500',
+                                'closed' => 'bg-zinc-400',
+                                default => 'bg-zinc-400',
+                            } }}"
                     ></span>
 
-                    <span class="text-[10px] font-bold text-violet-700 dark:text-violet-300">
+                    <span class="text-[#625b6c] dark:text-white/70">
                         {{ ucfirst($ticket->status) }}
                     </span>
-
-                </div>
-
-
-                <div class="relative">
-
-                    <select
-                        wire:model.change="status"
-                        wire:loading.attr="disabled"
-                        wire:target="status"
-                        class="appearance-none rounded-xl border border-zinc-200 bg-white py-2.5 pl-3 pr-8 text-xs font-semibold text-zinc-800 shadow-sm outline-none transition hover:border-violet-300 focus:border-violet-400 focus:ring-4 focus:ring-violet-100 disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 dark:focus:border-violet-700 dark:focus:ring-violet-950"
-                    >
-                        <option value="open">Open</option>
-                        <option value="pending">Pending</option>
-                        <option value="resolved">Resolved</option>
-                        <option value="closed">Closed</option>
-                    </select>
-
-                    <flux:icon.chevron-down
-                        class="pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 text-zinc-400"
-                    />
-
                 </div>
 
             </div>
 
         </div>
-
     </header>
 
 
     {{-- ================================================================
         PAGE
     ================================================================= --}}
-    <main class="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8">
 
-        <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_310px]">
+    <main class="mx-auto w-full max-w-[1580px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+
+        <div class="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_350px]">
 
 
             {{-- ========================================================
-                CONVERSATION
+                MAIN COLUMN
             ========================================================= --}}
+
             <section class="min-w-0">
 
+                {{-- Conversation heading --}}
 
-                {{-- Conversation intro --}}
-                <div class="mb-5 flex items-end justify-between">
+                <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
 
                     <div>
+                        <div class="mb-2 flex items-center gap-2.5">
 
-                        <div class="mb-2 flex items-center gap-2">
-
-                            <span class="flex size-6 items-center justify-center rounded-lg bg-violet-600 text-white shadow-lg shadow-violet-500/20">
-                                <flux:icon.chat-bubble-left class="size-3" />
+                            <span class="flex size-8 items-center justify-center rounded-xl bg-[#eee9f8] text-[#8875b6]">
+                                <flux:icon.chat-bubble-left class="size-4" />
                             </span>
 
-                            <span class="text-[9px] font-bold uppercase tracking-[0.2em] text-violet-500">
+                            <span class="text-[11px] font-bold uppercase tracking-[0.16em] text-[#8875b6]">
                                 Conversation
                             </span>
 
                         </div>
 
-                        <h2 class="text-2xl font-bold tracking-[-0.04em] text-zinc-950 dark:text-white">
+                        <h2 class="text-3xl font-bold tracking-[-0.045em] text-[#26222d] sm:text-4xl dark:text-white">
                             {{ $ticket->messages->count() }}
-                            <span class="font-normal text-zinc-400">
+
+                            <span class="font-normal text-[#aaa5b0]">
                                 {{ Str::plural('message', $ticket->messages->count()) }}
                             </span>
                         </h2>
-
                     </div>
 
-                    <div class="hidden text-right sm:block">
-
-                        <div class="text-[9px] font-bold uppercase tracking-widest text-zinc-400">
+                    <div class="sm:text-right">
+                        <div class="text-[10px] font-bold uppercase tracking-[0.14em] text-[#aaa5b0]">
                             Last activity
                         </div>
 
-                        <div class="mt-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                        <div class="mt-1 text-sm font-medium text-[#625c69] dark:text-white/60">
                             {{ $ticket->last_activity_at?->diffForHumans() ?? '—' }}
                         </div>
-
                     </div>
 
                 </div>
 
 
                 {{-- ====================================================
-                    MESSAGE PANEL
+                    CONVERSATION CARD
                 ===================================================== --}}
-                <div class="relative overflow-hidden rounded-[2rem] border border-violet-100 bg-white shadow-[0_20px_70px_-35px_rgba(109,40,217,.25)] dark:border-violet-900/20 dark:bg-[#100c18]">
 
-                    {{-- Purple ambient glow --}}
-                    <div class="pointer-events-none absolute -right-32 -top-32 size-96 rounded-full bg-violet-500/10 blur-3xl"></div>
+                <div class="overflow-hidden rounded-[28px] border border-[#e9e4ef] bg-white shadow-[0_20px_60px_-40px_rgba(55,40,80,.30)] dark:border-white/10 dark:bg-[#151219]">
 
-                    <div class="pointer-events-none absolute -bottom-40 -left-40 size-96 rounded-full bg-fuchsia-500/[0.06] blur-3xl"></div>
-
-
-                    {{-- Message stream --}}
-                    <div class="relative">
+                    <div class="divide-y divide-[#f0edf3] dark:divide-white/5">
 
                         @forelse($ticket->messages as $message)
 
@@ -243,93 +209,84 @@
                             @endphp
 
 
-                            {{-- Date --}}
+                            {{-- Date divider --}}
+
                             @if(
                                 $loop->first ||
                                 !$message->created_at->isSameDay(
                                     $ticket->messages[$loop->index - 1]->created_at
                                 )
                             )
+                                <div class="flex items-center gap-4 px-5 py-6 sm:px-8">
 
-                                <div class="flex items-center gap-4 px-5 py-7 sm:px-8">
+                                    <div class="h-px flex-1 bg-[#eeeaf1] dark:bg-white/5"></div>
 
-                                    <div class="h-px flex-1 bg-zinc-100 dark:bg-zinc-800"></div>
-
-                                    <span class="rounded-full border border-violet-100 bg-violet-50 px-3 py-1 text-[8px] font-bold uppercase tracking-[0.18em] text-violet-500 dark:border-violet-900/30 dark:bg-violet-950/30 dark:text-violet-300">
+                                    <span class="rounded-full border border-[#e7e0f2] bg-[#faf8fd] px-3 py-1.5 text-[10px] font-semibold text-[#9186a3] dark:border-white/10 dark:bg-white/5">
                                         {{ $message->created_at->format('M j, Y') }}
                                     </span>
 
-                                    <div class="h-px flex-1 bg-zinc-100 dark:bg-zinc-800"></div>
+                                    <div class="h-px flex-1 bg-[#eeeaf1] dark:bg-white/5"></div>
 
                                 </div>
-
                             @endif
 
 
-                            {{-- =================================================
-                                MESSAGE
-                            ================================================== --}}
-                            <div
-                                class="group relative px-5 py-5 sm:px-8 sm:py-6"
-                            >
+                            {{-- Message --}}
 
-                                <div
-                                    class="flex gap-3.5
-                                    {{ $isCustomer ? '' : 'flex-row-reverse' }}"
-                                >
+                            <div class="px-5 py-6 sm:px-8 sm:py-7">
+
+                                <div class="flex gap-4 {{ $isCustomer ? '' : 'flex-row-reverse' }}">
 
                                     {{-- Avatar --}}
+
                                     <div
-                                        class="relative flex size-9 shrink-0 items-center justify-center rounded-xl text-[10px] font-bold shadow-sm
+                                        class="relative flex size-11 shrink-0 items-center justify-center rounded-2xl text-sm font-bold
                                         {{ $isCustomer
-                                            ? 'bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300'
-                                            : 'bg-gradient-to-br from-violet-600 to-fuchsia-600 text-white shadow-violet-500/20'
+                                            ? 'bg-[#eeeaf7] text-[#756694] dark:bg-[#2a2235] dark:text-[#c8b8e7]'
+                                            : 'bg-[#8875b6] text-white shadow-[0_8px_20px_-8px_rgba(136,117,182,.8)]'
                                         }}"
                                     >
                                         {{ $initial }}
 
                                         @if(!$isCustomer)
-                                            <span class="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full border-2 border-white bg-emerald-500 dark:border-[#100c18]"></span>
+                                            <span class="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-white bg-emerald-500 dark:border-[#151219]"></span>
                                         @endif
                                     </div>
 
 
-                                    {{-- Body --}}
-                                    <div class="min-w-0 max-w-[88%] sm:max-w-[80%]">
+                                    {{-- Message body --}}
 
-                                        {{-- Meta --}}
-                                        <div
-                                            class="mb-2 flex items-center gap-2
-                                            {{ $isCustomer ? '' : 'justify-end' }}"
-                                        >
+                                    <div class="min-w-0 max-w-[88%] sm:max-w-[78%]">
 
-                                            <span class="text-[11px] font-bold text-zinc-800 dark:text-zinc-200">
+                                        <div class="mb-2.5 flex flex-wrap items-center gap-2 {{ $isCustomer ? '' : 'justify-end' }}">
+
+                                            <span class="text-sm font-semibold text-[#403b47] dark:text-white/90">
                                                 {{ $message->author_name }}
                                             </span>
 
                                             @if(!$isCustomer)
-                                                <span class="rounded-full bg-violet-100 px-2 py-0.5 text-[7px] font-bold uppercase tracking-widest text-violet-600 dark:bg-violet-950/60 dark:text-violet-300">
+                                                <span class="rounded-full bg-[#f0ebf8] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#806ea7]">
                                                     Team
                                                 </span>
                                             @endif
 
-                                            <span class="text-[9px] text-zinc-400">
+                                            <span class="text-xs text-[#aaa5b0]">
                                                 {{ $message->created_at->format('g:i A') }}
                                             </span>
 
                                         </div>
 
 
-                                        {{-- Text bubble --}}
                                         @if(filled($message->message))
 
                                             <div
                                                 class="
                                                 {{ $isCustomer
-                                                    ? 'rounded-2xl rounded-tl-md border border-zinc-200 bg-zinc-50 text-zinc-800 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200'
-                                                    : 'rounded-2xl rounded-tr-md bg-gradient-to-br from-violet-600 to-violet-700 text-white shadow-lg shadow-violet-600/10'
+                                                    ? 'rounded-2xl rounded-tl-md border border-[#e7e3e9] bg-[#faf9fb] text-[#47424d] dark:border-white/10 dark:bg-white/5 dark:text-white/80'
+                                                    : 'rounded-2xl rounded-tr-md bg-[#8b78b9] text-white shadow-[0_12px_30px_-18px_rgba(105,84,155,.8)]'
                                                 }}
-                                                px-4 py-3.5 text-sm leading-6"
+                                                px-5 py-4 text-[15px] leading-7 sm:text-base
+                                                "
                                             >
                                                 <div class="whitespace-pre-wrap break-words">
                                                     {{ $message->message }}
@@ -339,12 +296,11 @@
                                         @endif
 
 
-                                        {{-- =================================================
-                                            INLINE ATTACHMENTS
-                                        ================================================== --}}
+                                        {{-- Attachments --}}
+
                                         @if($message->attachments->isNotEmpty())
 
-                                            <div class="mt-3 space-y-2.5">
+                                            <div class="mt-3 space-y-3">
 
                                                 @foreach($message->attachments as $attachment)
 
@@ -376,118 +332,101 @@
                                                     @endphp
 
 
-                                                    {{-- =============================================
-                                                        REAL IMAGE
-                                                    ============================================== --}}
                                                     @if($isImage)
 
-                                                        <div
-                                                            class="group/image relative overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-100 shadow-md dark:border-zinc-700 dark:bg-zinc-900"
-                                                            style="max-width: 680px;"
-                                                        >
+                                                        <div class="group/image max-w-[720px] overflow-hidden rounded-2xl border border-[#e7e3eb] bg-[#f7f5f9] dark:border-white/10 dark:bg-white/5">
 
-                                                            {{-- IMAGE --}}
                                                             <button
                                                                 type="button"
                                                                 x-on:click="openLightbox(
                                                                     @js($previewUrl),
-                                                                    @js($attachment->file_name)
+                                                                    @js($attachment->original_name)
                                                                 )"
                                                                 class="relative block w-full cursor-zoom-in"
                                                             >
-
                                                                 <img
                                                                     src="{{ $previewUrl }}"
-                                                                    alt="{{ $attachment->file_name }}"
+                                                                    alt="{{ $attachment->original_name }}"
                                                                     loading="lazy"
-                                                                    class="block max-h-[600px] w-full object-cover"
+                                                                    class="block max-h-[620px] w-full object-cover transition duration-500 group-hover/image:scale-[1.015]"
                                                                 />
 
-                                                                {{-- Hover controls --}}
-                                                                <div class="pointer-events-none absolute inset-0 flex items-center justify-center bg-violet-950/0 transition duration-300 group-hover/image:bg-violet-950/25">
+                                                                <div class="pointer-events-none absolute inset-0 flex items-center justify-center bg-[#4d3e68]/0 transition group-hover/image:bg-[#4d3e68]/20">
 
-                                                                    <span class="flex size-12 scale-90 items-center justify-center rounded-2xl bg-white/95 text-violet-700 opacity-0 shadow-2xl backdrop-blur-xl transition duration-300 group-hover/image:scale-100 group-hover/image:opacity-100">
+                                                                    <span class="flex size-12 scale-90 items-center justify-center rounded-2xl bg-white text-[#77659d] opacity-0 shadow-2xl transition group-hover/image:scale-100 group-hover/image:opacity-100">
                                                                         <flux:icon.arrows-pointing-out class="size-5" />
                                                                     </span>
 
                                                                 </div>
-
                                                             </button>
 
+                                                            <div class="flex items-center justify-between border-t border-[#e8e3eb] bg-white px-4 py-3 dark:border-white/5 dark:bg-[#18151d]">
 
-                                                            {{-- Image footer --}}
-                                                            <div class="flex items-center justify-between border-t border-black/5 bg-white/95 px-3 py-2.5 backdrop-blur dark:border-white/5 dark:bg-zinc-950/95">
+                                                                <div class="flex min-w-0 items-center gap-3">
 
-                                                                <div class="flex min-w-0 items-center gap-2">
-
-                                                                    <span class="flex size-7 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-violet-500 dark:bg-violet-950/40 dark:text-violet-300">
-                                                                        <flux:icon.photo class="size-3.5" />
-                                                                    </span>
+                                                                    <div class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#f0ebf8] text-[#8875b6]">
+                                                                        <flux:icon.photo class="size-4" />
+                                                                    </div>
 
                                                                     <div class="min-w-0">
 
-                                                                        <div class="max-w-[250px] truncate text-[10px] font-semibold text-zinc-700 dark:text-zinc-300">
-                                                                            {{ $attachment->file_name }}
+                                                                        <div class="max-w-[300px] truncate text-xs font-semibold text-[#514c57] dark:text-white/80">
+                                                                            {{ $attachment->original_name }}
                                                                         </div>
 
-                                                                        <div class="text-[8px] text-zinc-400">
-                                                                            {{ number_format($attachment->file_size / 1024, 1) }} KB
+                                                                        <div class="mt-0.5 text-[10px] text-[#aaa5b0]">
+                                                                            {{ number_format($attachment->size / 1024, 1) }} KB
                                                                         </div>
 
                                                                     </div>
 
                                                                 </div>
 
-
                                                                 <a
                                                                     href="{{ $downloadUrl }}"
-                                                                    class="flex size-8 shrink-0 items-center justify-center rounded-xl text-zinc-400 transition hover:bg-violet-50 hover:text-violet-600 dark:hover:bg-violet-950/40 dark:hover:text-violet-300"
+                                                                    class="flex size-9 items-center justify-center rounded-xl text-[#aaa5b0] transition hover:bg-[#f2eef8] hover:text-[#806da8]"
                                                                     title="Download"
                                                                 >
-                                                                    <flux:icon.arrow-down-tray class="size-3.5" />
+                                                                    <flux:icon.arrow-down-tray class="size-4" />
                                                                 </a>
 
                                                             </div>
 
                                                         </div>
 
-
-                                                    {{-- =============================================
-                                                        OTHER FILE
-                                                    ============================================== --}}
                                                     @else
 
                                                         <a
                                                             href="{{ $downloadUrl }}"
-                                                            class="group/file flex max-w-lg items-center gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-3 transition hover:-translate-y-0.5 hover:border-violet-200 hover:bg-white hover:shadow-lg hover:shadow-violet-500/10 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-violet-800 dark:hover:bg-zinc-800"
+                                                            class="group/file flex max-w-xl items-center gap-3 rounded-2xl border border-[#e7e3eb] bg-[#faf9fb] p-3.5 transition hover:-translate-y-0.5 hover:border-[#d8cdea] hover:bg-white hover:shadow-lg dark:border-white/10 dark:bg-white/5"
                                                         >
 
-                                                            <div class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm dark:bg-zinc-800">
+                                                            <div class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm dark:bg-white/10">
 
                                                                 @if($isPdf)
                                                                     <flux:icon.document-text class="size-5 text-red-500" />
                                                                 @else
-                                                                    <flux:icon.paper-clip class="size-5 text-violet-500" />
+                                                                    <flux:icon.paper-clip class="size-5 text-[#8875b6]" />
                                                                 @endif
 
                                                             </div>
 
                                                             <div class="min-w-0 flex-1">
 
-                                                                <div class="truncate text-xs font-semibold text-zinc-800 dark:text-zinc-200">
-                                                                    {{ $attachment->file_name }}
+                                                                <div class="truncate text-sm font-semibold text-[#46414c] dark:text-white/80">
+                                                                    {{ $attachment->original_name }}
                                                                 </div>
 
-                                                                <div class="mt-1 text-[9px] text-zinc-400">
-                                                                    {{ number_format($attachment->file_size / 1024, 1) }} KB
+                                                                <div class="mt-1 text-xs text-[#aaa5b0]">
+                                                                    {{ number_format($attachment->size / 1024, 1) }} KB
                                                                     <span class="mx-1">·</span>
-                                                                    {{ strtoupper(pathinfo($attachment->file_name, PATHINFO_EXTENSION)) }}
+                                                                    {{ strtoupper(pathinfo($attachment->original_name, PATHINFO_EXTENSION)) }}
                                                                 </div>
 
                                                             </div>
 
-                                                            <div class="flex size-8 items-center justify-center rounded-xl bg-violet-100 text-violet-600 transition group-hover/file:bg-violet-600 group-hover/file:text-white dark:bg-violet-950/50 dark:text-violet-300">
-                                                                <flux:icon.arrow-down-tray class="size-3.5" />
+                                                            <div class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#eee9f7] text-[#806da8] transition group-hover/file:bg-[#8875b6] group-hover/file:text-white">
+                                                                <flux:icon.arrow-down-tray class="size-4" />
                                                             </div>
 
                                                         </a>
@@ -501,11 +440,7 @@
                                         @endif
 
 
-                                        {{-- Time --}}
-                                        <div
-                                            class="mt-2 text-[9px] text-zinc-400
-                                            {{ $isCustomer ? '' : 'text-right' }}"
-                                        >
+                                        <div class="mt-2 text-xs text-[#aaa5b0] {{ $isCustomer ? '' : 'text-right' }}">
                                             {{ $message->created_at->diffForHumans() }}
                                         </div>
 
@@ -519,18 +454,16 @@
 
                             <div class="px-6 py-24 text-center">
 
-                                <div class="mx-auto mb-5 flex size-16 items-center justify-center rounded-3xl bg-violet-100 dark:bg-violet-950/40">
-
-                                    <flux:icon.chat-bubble-left-right class="size-7 text-violet-500" />
-
+                                <div class="mx-auto mb-5 flex size-16 items-center justify-center rounded-3xl bg-[#f0ebf8] text-[#8875b6]">
+                                    <flux:icon.chat-bubble-left-right class="size-7" />
                                 </div>
 
-                                <h3 class="text-sm font-bold text-zinc-900 dark:text-white">
+                                <h3 class="text-lg font-semibold text-[#36313d] dark:text-white">
                                     Nothing here yet
                                 </h3>
 
-                                <p class="mx-auto mt-1 max-w-xs text-xs leading-5 text-zinc-500">
-                                    Send a reply to start the conversation.
+                                <p class="mx-auto mt-2 max-w-sm text-sm leading-6 text-[#938e99]">
+                                    Send a reply below to start the conversation.
                                 </p>
 
                             </div>
@@ -540,41 +473,40 @@
                     </div>
 
 
-                    {{-- ====================================================
+                    {{-- ==================================================
                         COMPOSER
-                    ===================================================== --}}
-                    <div class="border-t border-violet-100 bg-gradient-to-b from-violet-50/50 to-white p-3 dark:border-violet-900/20 dark:from-violet-950/10 dark:to-[#0d0a13] sm:p-5">
+                    =================================================== --}}
 
-                        <div class="overflow-hidden rounded-[1.5rem] border border-violet-100 bg-white shadow-[0_15px_50px_-25px_rgba(109,40,217,.35)] focus-within:border-violet-300 focus-within:ring-4 focus-within:ring-violet-100 dark:border-zinc-800 dark:bg-zinc-900 dark:focus-within:border-violet-800 dark:focus-within:ring-violet-950/30">
+                    <div class="border-t border-[#ebe7ef] bg-[#fbfafc] p-3 sm:p-5 dark:border-white/5 dark:bg-[#111016]">
+
+                        <div class="overflow-hidden rounded-[24px] border border-[#e5e0e9] bg-white shadow-[0_12px_40px_-25px_rgba(50,40,65,.35)] focus-within:border-[#cfc1e5] focus-within:ring-4 focus-within:ring-[#eee9f7] dark:border-white/10 dark:bg-[#18151d] dark:focus-within:ring-[#261e30]">
 
                             <textarea
                                 wire:model="newMessage"
                                 rows="4"
                                 placeholder="Write a reply to {{ $ticket->name }}..."
-                                class="block w-full resize-none border-0 bg-transparent px-5 pt-5 text-sm leading-6 text-zinc-900 outline-none ring-0 placeholder:text-zinc-400 focus:border-0 focus:ring-0 dark:text-white"
+                                class="block min-h-[130px] w-full resize-none border-0 bg-transparent px-5 py-5 text-[15px] leading-7 text-[#332e39] outline-none placeholder:text-[#aaa5af] focus:border-0 focus:ring-0 sm:text-base dark:text-white"
                             ></textarea>
 
 
-                            {{-- Selected files --}}
                             @if(count($attachments))
 
-                                <div class="border-t border-violet-100 px-4 py-4 dark:border-zinc-800">
+                                <div class="border-t border-[#eeeaf1] px-4 py-4 dark:border-white/5">
 
                                     <div class="mb-3 flex items-center justify-between">
 
-                                        <span class="text-[9px] font-bold uppercase tracking-[0.18em] text-violet-500">
+                                        <span class="text-[10px] font-bold uppercase tracking-[0.14em] text-[#8875b6]">
                                             Ready to send
                                         </span>
 
-                                        <span class="text-[9px] text-zinc-400">
+                                        <span class="text-xs text-[#aaa5b0]">
                                             {{ count($attachments) }}
                                             {{ Str::plural('file', count($attachments)) }}
                                         </span>
 
                                     </div>
 
-
-                                    <div class="grid gap-2 sm:grid-cols-3">
+                                    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
 
                                         @foreach($attachments as $index => $attachment)
 
@@ -591,41 +523,39 @@
                                                     );
                                                 @endphp
 
-                                                <div class="group relative overflow-hidden rounded-xl border border-violet-100 bg-violet-50/40 dark:border-violet-900/30 dark:bg-violet-950/20">
+                                                <div class="group relative overflow-hidden rounded-2xl border border-[#e8e2ef] bg-[#faf8fc] dark:border-white/10 dark:bg-white/5">
 
                                                     @if($uploadIsImage)
 
                                                         <div class="aspect-[16/10] overflow-hidden">
-
                                                             <img
                                                                 src="{{ $attachment->temporaryUrl() }}"
                                                                 alt="{{ $attachment->getClientOriginalName() }}"
                                                                 class="h-full w-full object-cover"
                                                             />
-
                                                         </div>
 
                                                     @else
 
                                                         <div class="flex h-20 items-center gap-3 px-3">
 
-                                                            <div class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white dark:bg-zinc-900">
+                                                            <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white dark:bg-white/10">
 
                                                                 @if($uploadMime === 'application/pdf')
-                                                                    <flux:icon.document-text class="size-4 text-red-500" />
+                                                                    <flux:icon.document-text class="size-5 text-red-500" />
                                                                 @else
-                                                                    <flux:icon.paper-clip class="size-4 text-violet-500" />
+                                                                    <flux:icon.paper-clip class="size-5 text-[#8875b6]" />
                                                                 @endif
 
                                                             </div>
 
                                                             <div class="min-w-0">
 
-                                                                <div class="truncate text-[10px] font-semibold text-zinc-700 dark:text-zinc-300">
+                                                                <div class="truncate text-xs font-semibold text-[#57515e] dark:text-white/70">
                                                                     {{ $attachment->getClientOriginalName() }}
                                                                 </div>
 
-                                                                <div class="mt-0.5 text-[9px] text-zinc-400">
+                                                                <div class="mt-1 text-[10px] text-[#aaa5b0]">
                                                                     {{ number_format($attachment->getSize() / 1024, 1) }} KB
                                                                 </div>
 
@@ -635,13 +565,12 @@
 
                                                     @endif
 
-
                                                     <button
                                                         type="button"
                                                         wire:click="removeAttachment({{ $index }})"
-                                                        class="absolute right-2 top-2 flex size-7 items-center justify-center rounded-lg bg-black/70 text-white opacity-0 shadow-lg backdrop-blur transition group-hover:opacity-100 hover:bg-red-500"
+                                                        class="absolute right-2 top-2 flex size-8 items-center justify-center rounded-xl bg-black/70 text-white opacity-0 shadow-lg transition group-hover:opacity-100 hover:bg-red-500"
                                                     >
-                                                        <flux:icon.x-mark class="size-3" />
+                                                        <flux:icon.x-mark class="size-3.5" />
                                                     </button>
 
                                                 </div>
@@ -658,27 +587,29 @@
 
 
                             {{-- Uploading --}}
+
                             <div
                                 wire:loading
                                 wire:target="attachments"
-                                class="border-t border-violet-100 px-5 py-3 dark:border-zinc-800"
+                                class="border-t border-[#eeeaf1] px-5 py-3 dark:border-white/5"
                             >
-                                <div class="flex items-center gap-2 text-[10px] font-medium text-violet-500">
-                                    <flux:icon.arrow-path class="size-3 animate-spin" />
+                                <div class="flex items-center gap-2 text-xs font-medium text-[#8875b6]">
+                                    <flux:icon.arrow-path class="size-4 animate-spin" />
                                     Uploading attachments…
                                 </div>
                             </div>
 
 
-                            {{-- Footer --}}
-                            <div class="flex items-center justify-between gap-3 border-t border-violet-100 px-3 py-3 dark:border-zinc-800">
+                            {{-- Composer footer --}}
 
-                                <div class="flex items-center gap-1">
+                            <div class="flex flex-col gap-3 border-t border-[#eeeaf1] px-3 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-white/5">
 
-                                    <label class="group flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-[10px] font-bold text-zinc-500 transition hover:bg-violet-50 hover:text-violet-600 dark:hover:bg-violet-950/30 dark:hover:text-violet-300">
+                                <div class="flex items-center justify-between gap-2 sm:justify-start">
 
-                                        <span class="flex size-7 items-center justify-center rounded-lg bg-violet-50 text-violet-500 transition group-hover:bg-violet-100 dark:bg-violet-950/40 dark:text-violet-300">
-                                            <flux:icon.paper-clip class="size-3.5" />
+                                    <label class="group flex cursor-pointer items-center gap-2 rounded-xl px-2 py-2 text-sm font-semibold text-[#716b78] transition hover:bg-[#f4f0f8] hover:text-[#806da8]">
+
+                                        <span class="flex size-9 items-center justify-center rounded-xl bg-[#f1ecf8] text-[#8875b6]">
+                                            <flux:icon.paper-clip class="size-4" />
                                         </span>
 
                                         Attach
@@ -693,56 +624,53 @@
 
                                     </label>
 
-                                    <span class="hidden text-[9px] text-zinc-400 sm:inline">
+                                    <span class="hidden text-xs text-[#aaa5b0] sm:inline">
                                         Images & files · 10 MB max
                                     </span>
 
                                 </div>
 
 
-                                <flux:button
-                                    wire:click="sendMessage"
-                                    wire:loading.attr="disabled"
+                               <flux:button
+                                wire:click="sendMessage"
+                                wire:loading.attr="disabled"
+                                wire:target="sendMessage"
+                                variant="primary"
+                                class="min-h-11 cursor-pointer rounded-xl bg-[#8875b6] px-5 text-sm font-semibold shadow-[0_10px_25px_-12px_rgba(120,100,165,.8)] transition-colors duration-200 hover:bg-black hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                <flux:icon.paper-airplane
+                                    wire:loading.remove
                                     wire:target="sendMessage"
-                                    variant="primary"
-                                    class="rounded-xl bg-violet-600 px-4 shadow-lg shadow-violet-500/20 hover:bg-violet-700"
-                                >
+                                    class="size-4"
+                                />
 
-                                    <flux:icon.paper-airplane
-                                        wire:loading.remove
-                                        wire:target="sendMessage"
-                                        class="size-3.5"
-                                    />
+                                <flux:icon.arrow-path
+                                    wire:loading
+                                    wire:target="sendMessage"
+                                    class="size-4 animate-spin"
+                                />
 
-                                    <flux:icon.arrow-path
-                                        wire:loading
-                                        wire:target="sendMessage"
-                                        class="size-3.5 animate-spin"
-                                    />
+                                <span wire:loading.remove wire:target="sendMessage">
+                                    Send reply
+                                </span>
 
-                                    <span wire:loading.remove wire:target="sendMessage">
-                                        Send reply
-                                    </span>
-
-                                    <span wire:loading wire:target="sendMessage">
-                                        Sending…
-                                    </span>
-
-                                </flux:button>
-
+                                <span wire:loading wire:target="sendMessage">
+                                    Sending…
+                                </span>
+                            </flux:button>
                             </div>
 
                         </div>
 
 
                         @error('newMessage')
-                            <div class="mt-2 px-2 text-[10px] font-medium text-red-600">
+                            <div class="mt-2 px-2 text-xs font-medium text-red-600">
                                 {{ $message }}
                             </div>
                         @enderror
 
                         @error('attachments.*')
-                            <div class="mt-2 px-2 text-[10px] font-medium text-red-600">
+                            <div class="mt-2 px-2 text-xs font-medium text-red-600">
                                 {{ $message }}
                             </div>
                         @enderror
@@ -757,38 +685,35 @@
             {{-- ========================================================
                 SIDEBAR
             ========================================================= --}}
-            <aside class="space-y-4 xl:sticky xl:top-24 xl:self-start">
 
+            <aside class="space-y-5 xl:sticky xl:top-24 xl:self-start">
 
-                {{-- Customer --}}
-                <div class="overflow-hidden rounded-[1.75rem] border border-violet-100 bg-white shadow-sm dark:border-violet-900/20 dark:bg-[#100c18]">
+                {{-- ====================================================
+                    CUSTOMER
+                ===================================================== --}}
 
-                    <div class="relative overflow-hidden bg-gradient-to-br from-violet-600 via-violet-700 to-fuchsia-700 px-5 py-6 text-white">
+                <div class="overflow-hidden rounded-[26px] border border-[#e8e3ed] bg-white shadow-[0_12px_40px_-30px_rgba(50,40,65,.3)] dark:border-white/10 dark:bg-[#151219]">
 
-                        <div class="absolute -right-10 -top-10 size-32 rounded-full bg-white/10 blur-2xl"></div>
+                    <div class="border-b border-[#eeeaf1] p-5 dark:border-white/5">
 
-                        <div class="relative">
+                        <div class="mb-5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#9a91a5]">
+                            Customer
+                        </div>
 
-                            <div class="mb-4 text-[8px] font-bold uppercase tracking-[0.2em] text-violet-200">
-                                Customer
+                        <div class="flex items-center gap-3">
+
+                            <div class="flex size-13 shrink-0 items-center justify-center rounded-2xl bg-[#eee9f7] text-lg font-bold text-[#806da8]">
+                                {{ strtoupper(substr($ticket->name, 0, 1)) }}
                             </div>
 
-                            <div class="flex items-center gap-3">
+                            <div class="min-w-0">
 
-                                <div class="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-sm font-bold ring-1 ring-white/20 backdrop-blur">
-                                    {{ strtoupper(substr($ticket->name, 0, 1)) }}
+                                <div class="truncate text-base font-semibold text-[#35303b] dark:text-white">
+                                    {{ $ticket->name }}
                                 </div>
 
-                                <div class="min-w-0">
-
-                                    <div class="truncate text-sm font-bold">
-                                        {{ $ticket->name }}
-                                    </div>
-
-                                    <div class="mt-0.5 truncate text-[10px] text-violet-200">
-                                        {{ $ticket->email }}
-                                    </div>
-
+                                <div class="mt-1 truncate text-sm text-[#9a949f]">
+                                    {{ $ticket->email }}
                                 </div>
 
                             </div>
@@ -797,14 +722,13 @@
 
                     </div>
 
-
                     <div class="p-4">
 
                         <a
                             href="mailto:{{ $ticket->email }}"
-                            class="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-50 py-2.5 text-[10px] font-bold text-violet-700 transition hover:bg-violet-100 dark:bg-violet-950/30 dark:text-violet-300 dark:hover:bg-violet-950/50"
+                            class="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#f2edf9] text-sm font-semibold text-[#75629e] transition hover:bg-[#eae3f5]"
                         >
-                            <flux:icon.envelope class="size-3.5" />
+                            <flux:icon.envelope class="size-4" />
                             Email customer
                         </a>
 
@@ -813,111 +737,289 @@
                 </div>
 
 
-                {{-- Ticket details --}}
-                <div class="rounded-[1.75rem] border border-violet-100 bg-white p-5 shadow-sm dark:border-violet-900/20 dark:bg-[#100c18]">
+                {{-- ====================================================
+                    TICKET DETAILS
+                ===================================================== --}}
 
-                    <div class="mb-5 flex items-center justify-between">
+                <div class="rounded-[26px] border border-[#e8e3ed] bg-white p-5 shadow-[0_12px_40px_-30px_rgba(50,40,65,.3)] dark:border-white/10 dark:bg-[#151219]">
+
+                    <div class="mb-6 flex items-center justify-between">
 
                         <div>
-                            <div class="text-sm font-bold text-zinc-900 dark:text-white">
+                            <div class="text-base font-semibold text-[#35303b] dark:text-white">
                                 Ticket details
                             </div>
 
-                            <div class="mt-0.5 text-[9px] text-zinc-400">
+                            <div class="mt-1 text-xs text-[#9a949f]">
                                 Request information
                             </div>
                         </div>
 
-                        <div class="flex size-8 items-center justify-center rounded-xl bg-violet-50 text-violet-500 dark:bg-violet-950/40 dark:text-violet-300">
-                            <flux:icon.ticket class="size-4" />
+                        <div class="flex size-10 items-center justify-center rounded-xl bg-[#f1ecf8] text-[#8875b6]">
+                            <flux:icon.ticket class="size-5" />
                         </div>
 
                     </div>
 
 
-                    <div class="space-y-4">
+                    <div class="space-y-5">
 
-                        <div class="flex items-center justify-between">
-
-                            <span class="text-[10px] text-zinc-400">
-                                Status
-                            </span>
-
-                            <span class="flex items-center gap-2 text-[10px] font-bold text-zinc-700 dark:text-zinc-200">
-
-                                <span
-                                    class="size-1.5 rounded-full
-                                    {{ match($ticket->status) {
-                                        'open' => 'bg-emerald-500',
-                                        'pending' => 'bg-amber-500',
-                                        'resolved' => 'bg-blue-500',
-                                        'closed' => 'bg-zinc-400',
-                                        default => 'bg-zinc-400',
-                                    } }}"
-                                ></span>
-
-                                {{ ucfirst($ticket->status) }}
-
-                            </span>
-
-                        </div>
-
-
-                        <div class="h-px bg-zinc-100 dark:bg-zinc-800"></div>
-
-
-                        <div class="flex items-center justify-between">
-
-                            <span class="text-[10px] text-zinc-400">
-                                Priority
-                            </span>
-
-                            <span class="rounded-full bg-violet-50 px-2.5 py-1 text-[9px] font-bold text-violet-600 dark:bg-violet-950/40 dark:text-violet-300">
-                                {{ ucfirst($ticket->priority) }}
-                            </span>
-
-                        </div>
-
-
-                        <div class="h-px bg-zinc-100 dark:bg-zinc-800"></div>
-
+                        {{-- =================================================
+                            STATUS DROPDOWN
+                        ================================================== --}}
 
                         <div>
+                            <div class="mb-2 text-xs font-medium text-[#9b95a0]">
+                                Status
+                            </div>
 
-                            <div class="text-[10px] text-zinc-400">
+                            <div
+                                x-data="{ open: false }"
+                                x-on:click.outside="open = false"
+                                class="relative"
+                            >
+
+                                <button
+                                    type="button"
+                                    x-on:click="open = !open"
+                                    class="flex min-h-12 w-full items-center justify-between rounded-2xl border border-[#e4dfea] bg-[#fcfbfd] px-4 text-sm font-semibold text-[#48424f] transition hover:border-[#cfc2e2] hover:bg-white focus:outline-none focus:ring-4 focus:ring-[#f0ebf8] dark:border-white/10 dark:bg-white/5 dark:text-white"
+                                >
+
+                                    <span class="flex items-center gap-3">
+
+                                        <span
+                                            class="size-2.5 rounded-full
+                                            {{ match($status) {
+                                                'open' => 'bg-emerald-500',
+                                                'pending' => 'bg-amber-500',
+                                                'resolved' => 'bg-blue-500',
+                                                'closed' => 'bg-zinc-400',
+                                                default => 'bg-zinc-400',
+                                            } }}"
+                                        ></span>
+
+                                        {{ ucfirst($status) }}
+
+                                    </span>
+
+                                    <flux:icon.chevron-down
+                                        class="size-4 text-[#9d96a5] transition"
+                                        x-bind:class="open && 'rotate-180'"
+                                    />
+
+                                </button>
+
+
+                                <div
+                                    x-show="open"
+                                    x-cloak
+                                    x-transition.origin.top
+                                    class="absolute left-0 right-0 z-50 mt-2 overflow-hidden rounded-2xl border border-[#e4dfea] bg-white p-1.5 shadow-[0_20px_50px_-20px_rgba(40,30,55,.3)] dark:border-white/10 dark:bg-[#1d1922]"
+                                >
+
+                                    @foreach([
+                                        'open' => 'Open',
+                                        'pending' => 'Pending',
+                                        'resolved' => 'Resolved',
+                                        'closed' => 'Closed',
+                                    ] as $value => $label)
+
+                                        <button
+                                            type="button"
+                                            wire:click="updateStatus('{{ $value }}')"
+                                            x-on:click="open = false"
+                                            wire:loading.attr="disabled"
+                                            wire:target="updateStatus('{{ $value }}')"
+                                            class="flex w-full items-center justify-between rounded-xl px-3.5 py-3 text-left text-sm font-medium transition hover:bg-[#f5f1f9] dark:hover:bg-white/5"
+                                        >
+
+                                            <span class="flex items-center gap-3">
+
+                                                <span
+                                                    class="size-2.5 rounded-full
+                                                    {{ match($value) {
+                                                        'open' => 'bg-emerald-500',
+                                                        'pending' => 'bg-amber-500',
+                                                        'resolved' => 'bg-blue-500',
+                                                        'closed' => 'bg-zinc-400',
+                                                    } }}"
+                                                ></span>
+
+                                                {{ $label }}
+
+                                            </span>
+
+                                            @if($status === $value)
+                                                <flux:icon.check class="size-4 text-[#8875b6]" />
+                                            @endif
+
+                                        </button>
+
+                                    @endforeach
+
+                                </div>
+
+                            </div>
+                        </div>
+
+
+                        {{-- =================================================
+                            PRIORITY DROPDOWN
+                        ================================================== --}}
+
+                        <div class="border-t border-[#eeeaf1] pt-5 dark:border-white/5">
+
+                            <div class="mb-2 text-xs font-medium text-[#9b95a0]">
+                                Priority
+                            </div>
+
+                            <div
+                                x-data="{ open: false }"
+                                x-on:click.outside="open = false"
+                                class="relative"
+                            >
+
+                                <button
+                                    type="button"
+                                    x-on:click="open = !open"
+                                    class="flex min-h-12 w-full items-center justify-between rounded-2xl border border-[#e4dfea] bg-[#fcfbfd] px-4 text-sm font-semibold text-[#48424f] transition hover:border-[#cfc2e2] hover:bg-white focus:outline-none focus:ring-4 focus:ring-[#f0ebf8] dark:border-white/10 dark:bg-white/5 dark:text-white"
+                                >
+
+                                    <span class="flex items-center gap-3">
+
+                                        <span
+                                            class="flex size-7 items-center justify-center rounded-lg
+                                            {{ match($priority) {
+                                                'urgent' => 'bg-red-50 text-red-600',
+                                                'high' => 'bg-orange-50 text-orange-600',
+                                                'normal' => 'bg-[#eee9f7] text-[#806da8]',
+                                                'low' => 'bg-zinc-100 text-zinc-500',
+                                                default => 'bg-zinc-100 text-zinc-500',
+                                            } }}"
+                                        >
+                                            <flux:icon.flag class="size-3.5" />
+                                        </span>
+
+                                        {{ ucfirst($priority ?: 'normal') }}
+
+                                    </span>
+
+                                    <flux:icon.chevron-down
+                                        class="size-4 text-[#9d96a5] transition"
+                                        x-bind:class="open && 'rotate-180'"
+                                    />
+
+                                </button>
+
+
+                                <div
+                                    x-show="open"
+                                    x-cloak
+                                    x-transition.origin.top
+                                    class="absolute left-0 right-0 z-50 mt-2 overflow-hidden rounded-2xl border border-[#e4dfea] bg-white p-1.5 shadow-[0_20px_50px_-20px_rgba(40,30,55,.3)] dark:border-white/10 dark:bg-[#1d1922]"
+                                >
+
+                                    @foreach([
+                                        'low' => [
+                                            'label' => 'Low',
+                                            'description' => 'Can wait',
+                                            'class' => 'bg-zinc-100 text-zinc-500',
+                                        ],
+                                        'normal' => [
+                                            'label' => 'Normal',
+                                            'description' => 'Standard request',
+                                            'class' => 'bg-[#eee9f7] text-[#806da8]',
+                                        ],
+                                        'high' => [
+                                            'label' => 'High',
+                                            'description' => 'Needs attention',
+                                            'class' => 'bg-orange-50 text-orange-600',
+                                        ],
+                                        'urgent' => [
+                                            'label' => 'Urgent',
+                                            'description' => 'Needs immediate action',
+                                            'class' => 'bg-red-50 text-red-600',
+                                        ],
+                                    ] as $value => $option)
+
+                                        <button
+                                            type="button"
+                                            wire:click="updatePriority('{{ $value }}')"
+                                            x-on:click="open = false"
+                                            wire:loading.attr="disabled"
+                                            class="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-[#f5f1f9] dark:hover:bg-white/5"
+                                        >
+
+                                            <span class="flex size-8 shrink-0 items-center justify-center rounded-lg {{ $option['class'] }}">
+                                                <flux:icon.flag class="size-3.5" />
+                                            </span>
+
+                                            <span class="min-w-0 flex-1">
+
+                                                <span class="block text-sm font-semibold text-[#49434f] dark:text-white/90">
+                                                    {{ $option['label'] }}
+                                                </span>
+
+                                                <span class="block text-[11px] text-[#aaa4af]">
+                                                    {{ $option['description'] }}
+                                                </span>
+
+                                            </span>
+
+                                            @if($priority === $value)
+                                                <flux:icon.check class="size-4 shrink-0 text-[#8875b6]" />
+                                            @endif
+
+                                        </button>
+
+                                    @endforeach
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        {{-- Ticket number --}}
+
+                        <div class="border-t border-[#eeeaf1] pt-5 dark:border-white/5">
+
+                            <div class="text-xs font-medium text-[#9b95a0]">
                                 Ticket number
                             </div>
 
-                            <div class="mt-1.5 font-mono text-[10px] font-bold text-zinc-800 dark:text-zinc-200">
+                            <div class="mt-2 font-mono text-sm font-semibold text-[#4a4451] dark:text-white/80">
                                 {{ $ticket->ticket_number }}
                             </div>
 
                         </div>
 
 
-                        <div class="h-px bg-zinc-100 dark:bg-zinc-800"></div>
+                        {{-- Created --}}
 
+                        <div class="border-t border-[#eeeaf1] pt-5 dark:border-white/5">
 
-                        <div>
-
-                            <div class="text-[10px] text-zinc-400">
+                            <div class="text-xs font-medium text-[#9b95a0]">
                                 Created
                             </div>
 
-                            <div class="mt-1.5 text-[10px] font-bold text-zinc-700 dark:text-zinc-200">
+                            <div class="mt-2 text-sm font-semibold text-[#4a4451] dark:text-white/80">
                                 {{ $ticket->created_at->format('M j, Y · g:i A') }}
                             </div>
 
                         </div>
 
 
+                        {{-- Last activity --}}
+
                         <div>
 
-                            <div class="text-[10px] text-zinc-400">
+                            <div class="text-xs font-medium text-[#9b95a0]">
                                 Last activity
                             </div>
 
-                            <div class="mt-1.5 text-[10px] font-bold text-zinc-700 dark:text-zinc-200">
+                            <div class="mt-2 text-sm font-semibold text-[#4a4451] dark:text-white/80">
                                 {{ $ticket->last_activity_at?->diffForHumans() ?? '—' }}
                             </div>
 
@@ -928,32 +1030,34 @@
                 </div>
 
 
-                {{-- Activity --}}
-                <div class="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-violet-700 via-violet-800 to-fuchsia-800 p-5 text-white shadow-xl shadow-violet-900/20">
+                {{-- ====================================================
+                    ACTIVITY CARD
+                ===================================================== --}}
 
-                    <div class="absolute -right-16 -top-16 size-44 rounded-full bg-white/10 blur-3xl"></div>
+                <div class="relative overflow-hidden rounded-[26px] bg-[#62547d] p-6 text-white shadow-[0_20px_50px_-30px_rgba(80,60,110,.7)]">
+
+                    <div class="absolute -right-20 -top-20 size-48 rounded-full bg-white/[0.07] blur-3xl"></div>
 
                     <div class="relative">
 
-                        <div class="mb-5 flex items-center justify-between">
+                        <div class="mb-7 flex items-center justify-between">
 
-                            <span class="text-[8px] font-bold uppercase tracking-[0.2em] text-violet-200">
+                            <span class="text-[10px] font-bold uppercase tracking-[0.16em] text-white/60">
                                 Activity
                             </span>
 
-                            <span class="flex size-8 items-center justify-center rounded-xl bg-white/10">
-                                <flux:icon.bolt class="size-3.5" />
-                            </span>
+                            <div class="flex size-9 items-center justify-center rounded-xl bg-white/10">
+                                <flux:icon.bolt class="size-4" />
+                            </div>
 
                         </div>
 
-                        <div class="text-4xl font-bold tracking-tight">
+                        <div class="text-5xl font-bold tracking-[-0.04em]">
                             {{ $ticket->messages->count() }}
                         </div>
 
-                        <div class="mt-1 text-[10px] text-violet-200">
-                            {{ Str::plural('message', $ticket->messages->count()) }}
-                            exchanged
+                        <div class="mt-2 text-sm text-white/60">
+                            {{ Str::plural('message', $ticket->messages->count()) }} exchanged
                         </div>
 
                     </div>
@@ -965,5 +1069,4 @@
         </div>
 
     </main>
-
 </div>

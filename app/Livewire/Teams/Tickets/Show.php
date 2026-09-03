@@ -4,9 +4,12 @@ namespace App\Livewire\Teams\Tickets;
 
 use App\Models\Ticket;
 use App\Models\TicketMessage;
+use App\Models\TicketMessageAttachment;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class Show extends Component
 {
@@ -16,6 +19,8 @@ class Show extends Component
 
     public string $status = '';
 
+    public string $priority = '';
+
     public string $newMessage = '';
 
     public array $attachments = [];
@@ -24,7 +29,8 @@ class Show extends Component
     {
         $this->ticket = $ticket;
 
-        $this->status = $ticket->status;
+        $this->status = (string) $ticket->status;
+        $this->priority = (string) $ticket->priority;
 
         $this->loadTicket();
     }
@@ -35,27 +41,76 @@ class Show extends Component
     |--------------------------------------------------------------------------
     */
 
-    public function updatedStatus(string $value): void
+    public function updateStatus(string $value): void
     {
-        $this->validate([
-            'status' => [
-                'required',
-                'in:open,pending,resolved,closed',
-            ],
-        ]);
+        $value = strtolower(trim($value));
 
-        if ($this->status === $this->ticket->status) {
+        validator(
+            ['status' => $value],
+            [
+                'status' => [
+                    'required',
+                    'in:open,pending,resolved,closed',
+                ],
+            ]
+        )->validate();
+
+        if ($value === $this->ticket->status) {
+            $this->status = $value;
+
             return;
         }
 
         $this->ticket->update([
-            'status' => $this->status,
+            'status' => $value,
             'last_activity_at' => now(),
         ]);
 
         $this->ticket->refresh();
 
+        $this->status = (string) $this->ticket->status;
+        $this->priority = (string) $this->ticket->priority;
+
         $this->dispatch('ticket-status-updated');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Priority
+    |--------------------------------------------------------------------------
+    */
+
+    public function updatePriority(string $value): void
+    {
+        $value = strtolower(trim($value));
+
+        validator(
+            ['priority' => $value],
+            [
+                'priority' => [
+                    'required',
+                    'in:low,normal,high,urgent',
+                ],
+            ]
+        )->validate();
+
+        if ($value === $this->ticket->priority) {
+            $this->priority = $value;
+
+            return;
+        }
+
+        $this->ticket->update([
+            'priority' => $value,
+            'last_activity_at' => now(),
+        ]);
+
+        $this->ticket->refresh();
+
+        $this->priority = (string) $this->ticket->priority;
+        $this->status = (string) $this->ticket->status;
+
+        $this->dispatch('ticket-priority-updated');
     }
 
     /*
@@ -92,10 +147,10 @@ class Show extends Component
                 );
 
                 $message->attachments()->create([
-                    'file_name' => $attachment->getClientOriginalName(),
-                    'file_path' => $path,
+                    'original_name' => $attachment->getClientOriginalName(),
+                    'path' => $path,
                     'mime_type' => $attachment->getMimeType(),
-                    'file_size' => $attachment->getSize(),
+                    'size' => $attachment->getSize(),
                 ]);
             }
 
@@ -132,7 +187,113 @@ class Show extends Component
 
     /*
     |--------------------------------------------------------------------------
-    | Reload ticket
+    | Remove attachment
+    |--------------------------------------------------------------------------
+    */
+
+    public function removeAttachment(int $index): void
+    {
+        if (isset($this->attachments[$index])) {
+            unset($this->attachments[$index]);
+
+            $this->attachments = array_values($this->attachments);
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Attachment Preview
+    |--------------------------------------------------------------------------
+    */
+
+    public function preview(
+        TicketMessageAttachment $attachment
+    ): StreamedResponse {
+        $this->authorizeAttachment($attachment);
+
+        $disk = Storage::disk('public');
+
+        abort_unless(
+            $disk->exists($attachment->path),
+            404,
+            'Attachment file not found.'
+        );
+
+        $mime = $attachment->mime_type
+            ?: $disk->mimeType($attachment->path)
+            ?: 'application/octet-stream';
+
+        return response()->stream(
+            function () use ($disk, $attachment) {
+                $stream = $disk->readStream($attachment->path);
+
+                abort_unless(
+                    $stream !== false,
+                    404,
+                    'Unable to read attachment.'
+                );
+
+                fpassthru($stream);
+
+                fclose($stream);
+            },
+            200,
+            [
+                'Content-Type' => $mime,
+                'Content-Disposition' => 'inline; filename="' .
+                    addslashes($attachment->original_name) .
+                    '"',
+                'Cache-Control' => 'private, max-age=3600',
+            ]
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Attachment Download
+    |--------------------------------------------------------------------------
+    */
+
+    public function download(
+        TicketMessageAttachment $attachment
+    ): StreamedResponse {
+        $this->authorizeAttachment($attachment);
+
+        $disk = Storage::disk('public');
+
+        abort_unless(
+            $disk->exists($attachment->path),
+            404,
+            'Attachment file not found.'
+        );
+
+        return $disk->download(
+            $attachment->path,
+            $attachment->original_name
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Attachment authorization
+    |--------------------------------------------------------------------------
+    */
+
+    protected function authorizeAttachment(
+        TicketMessageAttachment $attachment
+    ): void {
+        $attachment->loadMissing('message');
+
+        abort_unless(
+            $attachment->message &&
+            (int) $attachment->message->ticket_id === (int) $this->ticket->id,
+            404
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Reload
     |--------------------------------------------------------------------------
     */
 
@@ -142,12 +303,6 @@ class Show extends Component
             'messages.attachments',
         ]);
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Render
-    |--------------------------------------------------------------------------
-    */
 
     public function render()
     {

@@ -4,7 +4,7 @@ use App\Http\Controllers\Teams\TicketController as TeamTicketController;
 use App\Http\Controllers\TicketController as GuestTicketController;
 use App\Livewire\Home\Tickets\TicketSearch;
 use App\Http\Controllers\Teams\TicketAttachmentController;
-
+use App\Http\Controllers\GuestTicketAttachmentController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
@@ -31,6 +31,16 @@ Route::get('/tickets/{ticketNumber}/{token}', [
     GuestTicketController::class,
     'guestShow',
 ])->name('tickets.show');
+
+Route::get(
+    '/tickets/attachments/{attachment}/preview',
+    [GuestTicketAttachmentController::class, 'preview']
+)->name('guest.ticket.attachments.preview');
+
+Route::get(
+    '/tickets/attachments/{attachment}/download',
+    [GuestTicketAttachmentController::class, 'download']
+)->name('guest.ticket.attachments.download');
 
 /*
 |--------------------------------------------------------------------------

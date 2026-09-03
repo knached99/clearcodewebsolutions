@@ -135,53 +135,124 @@
                 </div>
 
                 <div class="cc-form-field">
+
+
+   <div class="cc-form-field">
     <label for="contact-subject">
         What can we help you with?
     </label>
 
-    <div class="cc-select-wrap">
+    <div
+        class="cc-select"
+        x-data="{
+            open: false,
+            selected: @entangle('subject').live,
+            options: [
+                'Website Design',
+                'Website Development',
+                'Mobile App Development',
+                'E-Commerce',
+                'Website Redesign',
+                'Maintenance & Support',
+                'Other'
+            ],
+            select(option) {
+                this.selected = option;
+                this.open = false;
+            }
+        }"
+        x-on:click.outside="open = false"
+        x-on:keydown.escape.window="open = false"
+    >
+        {{-- Hidden native select keeps the form accessible / compatible --}}
         <select
             id="contact-subject"
             wire:model.live="subject"
-            class="@error('subject') cc-input-error @elseif($subject) cc-input-valid @endif"
+            class="cc-select__native"
+            tabindex="-1"
+            aria-hidden="true"
         >
-            <option value="">
-                Select a subject
-            </option>
-
-            <option value="Website Design">
-                Website Design
-            </option>
-
-            <option value="Website Development">
-                Website Development
-            </option>
-
-            <option value="Mobile App Development">
-                Mobile App Development
-            </option>
-
-            <option value="E-Commerce">
-                E-Commerce
-            </option>
-
-            <option value="Website Redesign">
-                Website Redesign
-            </option>
-
-            <option value="Maintenance & Support">
-                Maintenance & Support
-            </option>
-
-            <option value="Other">
-                Other
-            </option>
+            <option value="">Select a subject</option>
+            <option value="Website Design">Website Design</option>
+            <option value="Website Development">Website Development</option>
+            <option value="Mobile App Development">Mobile App Development</option>
+            <option value="E-Commerce">E-Commerce</option>
+            <option value="Website Redesign">Website Redesign</option>
+            <option value="Maintenance & Support">Maintenance & Support</option>
+            <option value="Other">Other</option>
         </select>
 
-        <span class="cc-select-arrow">
-            ↓
-        </span>
+        {{-- Custom trigger --}}
+        <button
+            type="button"
+            class="cc-select__trigger"
+            :class="{
+                'is-open': open,
+                'cc-input-valid': selected,
+                'cc-input-error': @js($errors->has('subject'))
+            }"
+            @click="open = !open"
+            @keydown.arrow-down.prevent="open = true"
+            @keydown.arrow-up.prevent="open = true"
+            :aria-expanded="open"
+            aria-haspopup="listbox"
+            aria-controls="contact-subject-options"
+        >
+            <span
+                class="cc-select__value"
+                :class="{ 'is-placeholder': !selected }"
+                x-text="selected || 'Select a subject'"
+            ></span>
+
+            <span class="cc-select__arrow" aria-hidden="true">
+                <svg viewBox="0 0 16 16" fill="none">
+                    <path
+                        d="M4 6L8 10L12 6"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
+                </svg>
+            </span>
+        </button>
+
+        {{-- Animated options --}}
+        <div
+            id="contact-subject-options"
+            class="cc-select__menu"
+            x-show="open"
+            x-transition:enter="cc-select-enter"
+            x-transition:enter-start="cc-select-enter-start"
+            x-transition:enter-end="cc-select-enter-end"
+            x-transition:leave="cc-select-leave"
+            x-transition:leave-start="cc-select-leave-start"
+            x-transition:leave-end="cc-select-leave-end"
+            role="listbox"
+            aria-label="Select a subject"
+            x-cloak
+        >
+            <template x-for="(option, index) in options" :key="option">
+                <button
+                    type="button"
+                    class="cc-select__option"
+                    :class="{ 'is-selected': selected === option }"
+                    role="option"
+                    :aria-selected="selected === option"
+                    @click="select(option)"
+                    x-text="option"
+                    :style="`--option-index: ${index}`"
+                ></button>
+            </template>
+        </div>
     </div>
+
+    @error('subject')
+        <span class="cc-form-error">
+            {{ $message }}
+        </span>
+    @enderror
+</div>
 
     @error('subject')
         <span class="cc-form-error">

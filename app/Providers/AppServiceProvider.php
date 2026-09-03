@@ -23,14 +23,18 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      */
+   
     public function boot(): void
     {
         $this->configureDefaults();
+
         Schema::defaultStringLength(191);
-         Livewire::setUpdateRoute(function ($handle, $path) {
-            return Route::post($path, $handle)
-                ->name('livewire.update.custom');
-        });
+
+        Livewire::setUpdateRoute(function ($handle, $path) {
+        return Route::post($path, $handle)
+            ->middleware(['web', 'auth'])
+            ->name('livewire.update.custom');
+    });
     }
 
     /**

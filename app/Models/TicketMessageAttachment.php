@@ -3,10 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class TicketMessageAttachment extends Model
 {
+    protected $table = 'ticket_message_attachments';
+
     protected $fillable = [
         'ticket_message_id',
         'path',
@@ -15,8 +16,11 @@ class TicketMessageAttachment extends Model
         'size',
     ];
 
-    public function message(): BelongsTo
+    public function message()
     {
-        return $this->belongsTo(TicketMessage::class);
+        return $this->belongsTo(
+            TicketMessage::class,
+            'ticket_message_id'
+        );
     }
 }

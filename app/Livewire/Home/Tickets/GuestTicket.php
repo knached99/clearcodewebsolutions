@@ -16,7 +16,6 @@ class GuestTicket extends Component
 
     public string $message = '';
 
-    /** @var array */
     public array $attachments = [];
 
     public bool $showEditTicket = false;
@@ -52,19 +51,15 @@ class GuestTicket extends Component
         ];
     }
 
-    /**
-     * The ticket is already securely resolved by TicketController.
-     *
-     * The TicketService check here provides an additional authorization
-     * layer before the ticket is loaded into the Livewire component.
-     */
     public function mount(
         Ticket $ticket,
         TicketService $ticketService
     ): void {
         $ticketService->requireGuestTicketAccess($ticket);
 
-        $this->ticket = $ticket->load('messages.attachments');
+        $this->ticket = $ticket->load(
+            'messages.attachments'
+        );
 
         $this->subject = (string) $ticket->subject;
         $this->status = (string) $ticket->status;
@@ -74,12 +69,6 @@ class GuestTicket extends Component
     public function sendReply(
         TicketService $ticketService
     ): void {
-        /*
-         * Never trust the public Livewire model property.
-         *
-         * Re-query the ticket and verify access on every state-changing
-         * request.
-         */
         $ticket = Ticket::query()->find($this->ticket->id);
 
         if (! $ticket) {
@@ -94,11 +83,11 @@ class GuestTicket extends Component
 
         $this->validate();
 
-        DB::transaction(function () use ($ticket) {
+        DB::transaction(function () use ($ticket): void {
             $message = $ticket->messages()->create([
                 'author_type' => 'guest',
                 'author_name' => $ticket->name,
-                'message' => $this->message,
+                'message' => trim($this->message),
             ]);
 
             foreach ($this->attachments as $attachment) {
@@ -153,12 +142,6 @@ class GuestTicket extends Component
     public function render(
         TicketService $ticketService
     ) {
-        /*
-         * Defense in depth.
-         *
-         * Every Livewire request must still have authorization to
-         * access this exact ticket.
-         */
         $ticket = Ticket::query()->find($this->ticket->id);
 
         if (! $ticket) {
