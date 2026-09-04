@@ -17,16 +17,29 @@
 @endphp
 
 @push('styles')
+
 <style>
     [x-cloak] {
         display: none !important;
     }
 
+    /* =========================================================
+       PAGE
+       ========================================================= */
+
     .ticket-page {
         min-height: 100vh;
         background:
-            radial-gradient(circle at 15% 0%, rgba(124, 58, 237, .12), transparent 32rem),
-            radial-gradient(circle at 90% 15%, rgba(192, 38, 211, .08), transparent 30rem),
+            radial-gradient(
+                circle at 15% 0%,
+                rgba(124, 58, 237, .12),
+                transparent 32rem
+            ),
+            radial-gradient(
+                circle at 90% 15%,
+                rgba(192, 38, 211, .08),
+                transparent 30rem
+            ),
             #07060b;
     }
 
@@ -41,26 +54,30 @@
         align-items: center;
         gap: 8px;
         margin-bottom: 18px;
-        color: rgba(255,255,255,.35);
+        color: rgba(255, 255, 255, .35);
         font-size: 12px;
         text-decoration: none;
     }
 
     .ticket-back:hover {
-        color: rgba(255,255,255,.75);
+        color: rgba(255, 255, 255, .75);
     }
 
     .guest-ticket {
         color: white;
     }
 
+    /* =========================================================
+       HEADER / PANELS
+       ========================================================= */
+
     .ticket-header,
     .ticket-panel {
-        border: 1px solid rgba(255,255,255,.07);
-        background: rgba(255,255,255,.035);
+        border: 1px solid rgba(255, 255, 255, .07);
+        background: rgba(255, 255, 255, .035);
         box-shadow:
-            0 25px 80px rgba(0,0,0,.25),
-            inset 0 1px 0 rgba(255,255,255,.025);
+            0 25px 80px rgba(0, 0, 0, .25),
+            inset 0 1px 0 rgba(255, 255, 255, .025);
         backdrop-filter: blur(20px);
     }
 
@@ -96,16 +113,16 @@
         align-items: center;
         gap: 10px;
         margin-top: 15px;
-        color: rgba(255,255,255,.3);
+        color: rgba(255, 255, 255, .3);
         font-size: 11px;
     }
 
     .ticket-number {
         padding: 6px 9px;
-        border: 1px solid rgba(255,255,255,.07);
+        border: 1px solid rgba(255, 255, 255, .07);
         border-radius: 8px;
-        background: rgba(255,255,255,.04);
-        color: rgba(255,255,255,.6);
+        background: rgba(255, 255, 255, .04);
+        color: rgba(255, 255, 255, .6);
         font-family: monospace;
     }
 
@@ -137,28 +154,32 @@
 
     .status-open {
         color: #6ee7b7;
-        background: rgba(16,185,129,.08);
-        border-color: rgba(52,211,153,.2);
+        background: rgba(16, 185, 129, .08);
+        border-color: rgba(52, 211, 153, .2);
     }
 
     .status-pending {
         color: #fcd34d;
-        background: rgba(245,158,11,.08);
-        border-color: rgba(251,191,36,.2);
+        background: rgba(245, 158, 11, .08);
+        border-color: rgba(251, 191, 36, .2);
     }
 
     .status-resolved {
         color: #93c5fd;
-        background: rgba(59,130,246,.08);
-        border-color: rgba(96,165,250,.2);
+        background: rgba(59, 130, 246, .08);
+        border-color: rgba(96, 165, 250, .2);
     }
 
     .status-closed,
     .status-default {
-        color: rgba(255,255,255,.45);
-        background: rgba(255,255,255,.04);
-        border-color: rgba(255,255,255,.1);
+        color: rgba(255, 255, 255, .45);
+        background: rgba(255, 255, 255, .04);
+        border-color: rgba(255, 255, 255, .1);
     }
+
+    /* =========================================================
+       BUTTONS
+       ========================================================= */
 
     .ticket-edit-button,
     .button-primary,
@@ -178,26 +199,41 @@
 
     .ticket-edit-button,
     .button-secondary {
-        border: 1px solid rgba(255,255,255,.08);
-        background: rgba(255,255,255,.04);
-        color: rgba(255,255,255,.6);
+        border: 1px solid rgba(255, 255, 255, .08);
+        background: rgba(255, 255, 255, .04);
+        color: rgba(255, 255, 255, .6);
     }
 
     .ticket-edit-button:hover,
     .button-secondary:hover {
-        background: rgba(255,255,255,.08);
+        background: rgba(255, 255, 255, .08);
         color: white;
     }
 
     .button-primary {
         border: 0;
-        background: linear-gradient(135deg, #7c3aed, #c026d3);
+        background: linear-gradient(
+            135deg,
+            #7c3aed,
+            #a855f7 50%,
+            #c026d3
+        );
         color: white;
-        box-shadow: 0 10px 30px rgba(124,58,237,.2);
+        box-shadow:
+            0 10px 30px rgba(124, 58, 237, .24),
+            inset 0 1px 0 rgba(255, 255, 255, .16);
+        transition:
+            transform .2s ease,
+            box-shadow .2s ease,
+            filter .2s ease;
     }
 
     .button-primary:hover {
-        transform: translateY(-1px);
+        transform: translateY(-2px);
+        filter: brightness(1.08);
+        box-shadow:
+            0 15px 40px rgba(124, 58, 237, .32),
+            inset 0 1px 0 rgba(255, 255, 255, .18);
     }
 
     .button-primary:disabled,
@@ -207,6 +243,10 @@
         cursor: not-allowed;
         transform: none;
     }
+
+    /* =========================================================
+       LAYOUT
+       ========================================================= */
 
     .ticket-layout {
         display: grid;
@@ -220,131 +260,390 @@
         overflow: hidden;
     }
 
+    .ticket-layout > .ticket-panel {
+        position: relative;
+        overflow: hidden;
+        border-color: rgba(255, 255, 255, .075);
+        background:
+            radial-gradient(
+                circle at 12% 0%,
+                rgba(124, 58, 237, .065),
+                transparent 30rem
+            ),
+            radial-gradient(
+                circle at 95% 48%,
+                rgba(217, 70, 239, .045),
+                transparent 26rem
+            ),
+            rgba(255, 255, 255, .028);
+        box-shadow:
+            0 30px 100px rgba(0, 0, 0, .28),
+            inset 0 1px 0 rgba(255, 255, 255, .035);
+    }
+
+    .ticket-layout > .ticket-panel::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: linear-gradient(
+            120deg,
+            rgba(255, 255, 255, .025),
+            transparent 28%
+        );
+    }
+
+    /* =========================================================
+       PANEL HEADER
+       ========================================================= */
+
     .panel-heading {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 15px;
-        padding: 20px 22px;
-        border-bottom: 1px solid rgba(255,255,255,.06);
+        padding: 22px 26px;
+        border-bottom: 1px solid rgba(255, 255, 255, .06);
+        background: rgba(255, 255, 255, .018);
+        backdrop-filter: blur(18px);
     }
 
     .panel-heading h2 {
         margin: 0;
-        color: rgba(255,255,255,.85);
+        color: rgba(255, 255, 255, .85);
         font-size: 14px;
+        letter-spacing: -.025em;
     }
 
     .panel-heading p {
-        margin: 4px 0 0;
-        color: rgba(255,255,255,.25);
+        margin: 5px 0 0;
+        color: rgba(255, 255, 255, .30);
         font-size: 10px;
     }
 
     .last-activity {
-        color: rgba(255,255,255,.2);
+        color: rgba(255, 255, 255, .2);
         font-size: 10px;
     }
 
+    /* =========================================================
+       PREMIUM CONVERSATION
+       
+       CUSTOMER = RIGHT
+       SUPPORT = LEFT
+       ========================================================= */
+
     .messages {
-        padding: 22px;
+        position: relative;
+        padding: 28px 26px 32px;
+    }
+
+    .messages::before {
+        content: "";
+        position: absolute;
+        top: 24px;
+        bottom: 24px;
+        left: 45px;
+        width: 1px;
+        pointer-events: none;
+        background: linear-gradient(
+            to bottom,
+            transparent,
+            rgba(255, 255, 255, .07) 10%,
+            rgba(255, 255, 255, .07) 90%,
+            transparent
+        );
     }
 
     .message {
+        position: relative;
         display: flex;
-        gap: 12px;
-        margin-bottom: 22px;
+        align-items: flex-start;
+        gap: 13px;
+        width: 100%;
+        margin-bottom: 28px;
+        z-index: 1;
     }
 
     .message:last-child {
         margin-bottom: 0;
     }
 
-    .message-avatar,
-    .customer-avatar {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        border: 1px solid rgba(255,255,255,.08);
-        background: linear-gradient(
-            135deg,
-            rgba(139,92,246,.2),
-            rgba(217,70,239,.12)
-        );
-        color: #ddd6fe;
-        font-weight: 800;
+    .message-body {
+        min-width: 0;
+        max-width: min(78%, 720px);
     }
 
     .message-avatar {
-        width: 36px;
-        height: 36px;
-        border-radius: 11px;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        flex: 0 0 38px;
+        border-radius: 12px;
         font-size: 11px;
+        font-weight: 800;
+        transition:
+            transform .2s ease,
+            box-shadow .2s ease;
     }
 
-    .message-body {
-        min-width: 0;
-        flex: 1;
+    .message:hover .message-avatar {
+        transform: translateY(-1px);
     }
+
+    /* =========================================================
+       SUPPORT — LEFT
+       ========================================================= */
+
+    .message-support {
+        justify-content: flex-start;
+        flex-direction: row;
+    }
+
+    .message-support .message-avatar {
+        color: #f5d0fe;
+        border: 1px solid rgba(217, 70, 239, .30);
+        background: linear-gradient(
+            145deg,
+            rgba(192, 38, 211, .32),
+            rgba(124, 58, 237, .16)
+        );
+        box-shadow:
+            0 8px 26px rgba(192, 38, 211, .13),
+            inset 0 1px 0 rgba(255, 255, 255, .11);
+    }
+
+    .message-support .message-body {
+        order: 0;
+        text-align: left;
+    }
+
+    .message-support .message-top {
+        justify-content: flex-start;
+        flex-direction: row;
+        text-align: left;
+    }
+
+    .message-support .message-bubble {
+        text-align: left;
+        border-radius: 5px 18px 18px 18px;
+        border-color: rgba(217, 70, 239, .20);
+        background: linear-gradient(
+            145deg,
+            rgba(192, 38, 211, .14),
+            rgba(124, 58, 237, .08)
+        );
+        box-shadow:
+            0 14px 40px rgba(124, 58, 237, .10),
+            inset 0 1px 0 rgba(255, 255, 255, .045);
+    }
+
+    /* =========================================================
+       CUSTOMER — RIGHT
+       ========================================================= */
+
+    .message-customer {
+        justify-content: flex-start;
+        flex-direction: row-reverse;
+    }
+
+    .message-customer .message-avatar {
+        color: #ddd6fe;
+        border: 1px solid rgba(167, 139, 250, .28);
+        background: linear-gradient(
+            145deg,
+            rgba(124, 58, 237, .30),
+            rgba(168, 85, 247, .12)
+        );
+        box-shadow:
+            0 8px 24px rgba(124, 58, 237, .12),
+            inset 0 1px 0 rgba(255, 255, 255, .10);
+    }
+
+    .message-customer .message-body {
+        order: 0;
+        text-align: right;
+    }
+
+    .message-customer .message-top {
+        justify-content: flex-end;
+        flex-direction: row-reverse;
+        text-align: right;
+    }
+
+    .message-customer .message-bubble {
+        text-align: left;
+        border-radius: 18px 5px 18px 18px;
+        border-color: rgba(167, 139, 250, .15);
+        background: linear-gradient(
+            145deg,
+            rgba(124, 58, 237, .105),
+            rgba(255, 255, 255, .035)
+        );
+        box-shadow:
+            0 12px 35px rgba(0, 0, 0, .14),
+            inset 0 1px 0 rgba(255, 255, 255, .035);
+    }
+
+    /* =========================================================
+       MESSAGE HEADER
+       ========================================================= */
 
     .message-top {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 10px;
-        margin-bottom: 7px;
+        gap: 12px;
+        min-height: 18px;
+        margin-bottom: 8px;
+    }
+
+    .message-author {
+        display: flex;
+        align-items: center;
+        gap: 7px;
     }
 
     .message-top strong {
-        color: rgba(255,255,255,.72);
+        color: rgba(255, 255, 255, .82);
         font-size: 12px;
+        font-weight: 700;
+        letter-spacing: -.01em;
+    }
+
+    .message-role {
+        display: inline-flex;
+        align-items: center;
+        min-height: 18px;
+        padding: 0 7px;
+        border-radius: 999px;
+        font-size: 8px;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    .message-customer .message-role {
+        color: #c4b5fd;
+        border: 1px solid rgba(167, 139, 250, .18);
+        background: rgba(124, 58, 237, .10);
+    }
+
+    .message-support .message-role {
+        color: #f0abfc;
+        border: 1px solid rgba(217, 70, 239, .20);
+        background: rgba(192, 38, 211, .10);
     }
 
     .message-top time {
-        color: rgba(255,255,255,.2);
-        font-size: 10px;
+        flex-shrink: 0;
+        color: rgba(255, 255, 255, .25);
+        font-size: 9px;
     }
 
+    /* =========================================================
+       MESSAGE BUBBLE
+       ========================================================= */
+
     .message-bubble {
-        padding: 14px 16px;
-        border: 1px solid rgba(255,255,255,.06);
-        border-radius: 5px 17px 17px 17px;
-        background: rgba(255,255,255,.035);
-        color: rgba(255,255,255,.65);
+        position: relative;
+        padding: 15px 17px;
+        border: 1px solid rgba(255, 255, 255, .06);
+        color: rgba(255, 255, 255, .72);
         font-size: 13px;
         line-height: 1.75;
         overflow-wrap: anywhere;
+        transition:
+            border-color .2s ease,
+            background .2s ease,
+            transform .2s ease,
+            box-shadow .2s ease;
     }
 
-    /* Saved message attachments */
+    .message:hover .message-bubble {
+        transform: translateY(-1px);
+    }
+
+    .message-customer:hover .message-bubble {
+        border-color: rgba(167, 139, 250, .27);
+        box-shadow:
+            0 16px 45px rgba(124, 58, 237, .13),
+            inset 0 1px 0 rgba(255, 255, 255, .04);
+    }
+
+    .message-support:hover .message-bubble {
+        border-color: rgba(217, 70, 239, .32);
+        box-shadow:
+            0 16px 45px rgba(192, 38, 211, .13),
+            inset 0 1px 0 rgba(255, 255, 255, .05);
+    }
+
+    /* =========================================================
+       MESSAGE ACCENT
+       ========================================================= */
+
+    .message-customer .message-bubble::before,
+    .message-support .message-bubble::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        border-radius: 10px;
+        opacity: .7;
+    }
+
+    .message-customer .message-bubble::before {
+        right: 0;
+        background: linear-gradient(
+            to bottom,
+            #8b5cf6,
+            transparent
+        );
+    }
+
+    .message-support .message-bubble::before {
+        left: 0;
+        background: linear-gradient(
+            to bottom,
+            #d946ef,
+            transparent
+        );
+    }
+
+    /* =========================================================
+       MESSAGE ATTACHMENTS
+       ========================================================= */
 
     .message-attachments {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
-        margin-top: 12px;
+        margin-top: 14px;
     }
 
     .message-attachment {
-        display: block;
         min-width: 0;
         overflow: hidden;
-        border: 1px solid rgba(255,255,255,.08);
-        border-radius: 12px;
-        background: rgba(0,0,0,.18);
-        text-decoration: none;
-        transition: .2s ease;
+        border: 1px solid rgba(255, 255, 255, .08);
+        border-radius: 14px;
+        background: rgba(0, 0, 0, .16);
+        box-shadow: 0 10px 28px rgba(0, 0, 0, .14);
+        transition:
+            border-color .2s ease,
+            transform .2s ease;
     }
 
     .message-attachment:hover {
-        border-color: rgba(168,85,247,.45);
-        background: rgba(255,255,255,.04);
+        border-color: rgba(168, 85, 247, .35);
         transform: translateY(-1px);
     }
 
     .message-attachment-preview {
-        display: block;
+        display: block !important;
         width: 100%;
         border: 0;
         padding: 0;
@@ -356,28 +655,33 @@
     .message-attachment-image {
         display: block;
         width: 100%;
-        height: 180px;
+        max-height: 360px;
         object-fit: cover;
-        transition: transform .2s ease;
+        transition:
+            transform .25s ease,
+            filter .25s ease;
     }
 
-    .message-attachment-preview:hover .message-attachment-image {
-        transform: scale(1.02);
+    .message-attachment:hover .message-attachment-image {
+        transform: scale(1.015);
+        filter: brightness(1.04);
     }
 
     .message-attachment-footer {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 12px;
-        padding: 8px 10px;
+        gap: 10px;
+        padding: 9px 11px;
+        border-top: 1px solid rgba(255, 255, 255, .06);
+        background: rgba(255, 255, 255, .025);
     }
 
     .message-attachment-name {
         display: block;
         min-width: 0;
         overflow: hidden;
-        color: rgba(255,255,255,.5);
+        color: rgba(255, 255, 255, .58);
         font-size: 10px;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -385,17 +689,20 @@
 
     .message-attachment-download {
         flex-shrink: 0;
-        color: #a78bfa;
+        color: #c4b5fd;
         font-size: 10px;
         font-weight: 700;
         text-decoration: none;
-        transition: .2s ease;
     }
 
     .message-attachment-download:hover {
-        color: #c4b5fd;
+        color: #f0abfc;
         text-decoration: underline;
     }
+
+    /* =========================================================
+       EMPTY CONVERSATION
+       ========================================================= */
 
     .empty-conversation {
         display: flex;
@@ -404,12 +711,12 @@
         justify-content: center;
         min-height: 240px;
         gap: 8px;
-        color: rgba(255,255,255,.2);
+        color: rgba(255, 255, 255, .2);
         text-align: center;
     }
 
     .empty-conversation strong {
-        color: rgba(255,255,255,.45);
+        color: rgba(255, 255, 255, .45);
         font-size: 13px;
     }
 
@@ -417,28 +724,72 @@
         font-size: 11px;
     }
 
+    /* =========================================================
+       REPLY
+       ========================================================= */
+
     .reply {
-        margin: 0 18px 18px;
-        padding: 18px;
-        border: 1px solid rgba(255,255,255,.07);
-        border-radius: 18px;
-        background: rgba(255,255,255,.025);
+        position: relative;
+        margin: 4px 18px 18px;
+        padding: 20px;
+        border: 1px solid rgba(167, 139, 250, .13);
+        border-radius: 20px;
+        background: linear-gradient(
+            145deg,
+            rgba(124, 58, 237, .055),
+            rgba(255, 255, 255, .025)
+        );
+        box-shadow:
+            0 20px 60px rgba(0, 0, 0, .18),
+            inset 0 1px 0 rgba(255, 255, 255, .035);
+    }
+
+    .reply::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 22px;
+        right: 22px;
+        height: 1px;
+        background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(167, 139, 250, .45),
+            transparent
+        );
     }
 
     .reply-heading {
-        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+
+    .reply-heading::before {
+        content: "✦";
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        flex: 0 0 30px;
+        border-radius: 9px;
+        color: #e9d5ff;
+        background: rgba(124, 58, 237, .13);
+        border: 1px solid rgba(167, 139, 250, .16);
     }
 
     .reply-heading strong {
         display: block;
-        color: rgba(255,255,255,.75);
+        color: rgba(255, 255, 255, .75);
         font-size: 12px;
     }
 
     .reply-heading span {
         display: block;
         margin-top: 3px;
-        color: rgba(255,255,255,.23);
+        color: rgba(255, 255, 255, .23);
         font-size: 10px;
     }
 
@@ -446,17 +797,17 @@
     .field input,
     .field select {
         width: 100%;
-        border: 1px solid rgba(255,255,255,.08);
+        border: 1px solid rgba(255, 255, 255, .08);
         outline: none;
-        background: rgba(0,0,0,.2);
-        color: rgba(255,255,255,.8);
+        background: rgba(0, 0, 0, .2);
+        color: rgba(255, 255, 255, .8);
         transition: .2s ease;
     }
 
     .reply-textarea {
-        min-height: 150px;
+        min-height: 135px;
         padding: 14px;
-        border-radius: 13px;
+        border-radius: 15px;
         resize: vertical;
         font: inherit;
         font-size: 13px;
@@ -464,17 +815,39 @@
     }
 
     .reply-textarea::placeholder {
-        color: rgba(255,255,255,.2);
+        color: rgba(255, 255, 255, .2);
     }
 
     .reply-textarea:focus,
     .field input:focus,
     .field select:focus {
-        border-color: rgba(139,92,246,.5);
-        box-shadow: 0 0 0 3px rgba(139,92,246,.08);
+        border-color: rgba(139, 92, 246, .5);
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, .08);
     }
 
-    /* Upload area */
+    .reply-textarea:focus {
+        background: rgba(0, 0, 0, .28);
+        box-shadow:
+            0 0 0 4px rgba(139, 92, 246, .07),
+            0 15px 40px rgba(124, 58, 237, .08);
+    }
+
+    .reply-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        margin-top: 15px;
+    }
+
+    .reply-footer > span {
+        color: rgba(255, 255, 255, .22);
+        font-size: 10px;
+    }
+
+    /* =========================================================
+       UPLOAD
+       ========================================================= */
 
     .upload-area {
         width: 100%;
@@ -502,7 +875,7 @@
     }
 
     .upload-heading span {
-        color: rgba(255,255,255,.45);
+        color: rgba(255, 255, 255, .45);
         font-size: 12px;
     }
 
@@ -512,24 +885,36 @@
 
     .upload-box {
         position: relative;
-        min-height: 150px;
+        min-height: 120px;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         gap: 7px;
         padding: 25px;
-        border: 1px dashed rgba(168,85,247,.45);
-        border-radius: 16px;
-        background: rgba(255,255,255,.025);
-        color: rgba(255,255,255,.55);
+        border: 1px dashed rgba(167, 139, 250, .24);
+        border-radius: 15px;
+        background: linear-gradient(
+            145deg,
+            rgba(124, 58, 237, .035),
+            rgba(255, 255, 255, .018)
+        );
+        color: rgba(255, 255, 255, .55);
         cursor: pointer;
-        transition: .2s ease;
+        transition:
+            border-color .2s ease,
+            background .2s ease,
+            box-shadow .2s ease;
     }
 
     .upload-box:hover {
-        border-color: rgba(217,70,239,.8);
-        background: rgba(168,85,247,.06);
+        border-color: rgba(192, 132, 252, .65);
+        background: linear-gradient(
+            145deg,
+            rgba(124, 58, 237, .09),
+            rgba(217, 70, 239, .035)
+        );
+        box-shadow: 0 12px 35px rgba(124, 58, 237, .08);
     }
 
     .upload-box strong {
@@ -538,7 +923,7 @@
     }
 
     .upload-box span {
-        color: rgba(255,255,255,.45);
+        color: rgba(255, 255, 255, .45);
         font-size: 12px;
     }
 
@@ -549,7 +934,7 @@
         padding: 0;
         margin: -1px;
         overflow: hidden;
-        clip: rect(0,0,0,0);
+        clip: rect(0, 0, 0, 0);
         white-space: nowrap;
         border: 0;
     }
@@ -569,9 +954,9 @@
         min-height: 80px;
         padding: 10px;
         box-sizing: border-box;
-        border: 1px solid rgba(255,255,255,.1);
+        border: 1px solid rgba(255, 255, 255, .1);
         border-radius: 14px;
-        background: rgba(255,255,255,.04);
+        background: rgba(255, 255, 255, .04);
     }
 
     .attachment-preview {
@@ -614,7 +999,7 @@
     }
 
     .attachment-info span {
-        color: rgba(255,255,255,.4);
+        color: rgba(255, 255, 255, .4);
         font-size: 11px;
     }
 
@@ -628,9 +1013,9 @@
         height: 34px;
         flex: 0 0 34px;
         padding: 0;
-        border: 1px solid rgba(248,113,113,.25);
+        border: 1px solid rgba(248, 113, 113, .25);
         border-radius: 9px;
-        background: rgba(248,113,113,.08);
+        background: rgba(248, 113, 113, .08);
         color: #fca5a5;
         cursor: pointer;
         pointer-events: auto !important;
@@ -638,8 +1023,8 @@
     }
 
     .attachment-remove:hover {
-        background: rgba(248,113,113,.16);
-        border-color: rgba(248,113,113,.5);
+        background: rgba(248, 113, 113, .16);
+        border-color: rgba(248, 113, 113, .5);
     }
 
     .upload-loading {
@@ -647,14 +1032,14 @@
         align-items: center;
         gap: 9px;
         margin-top: 10px;
-        color: rgba(255,255,255,.55);
+        color: rgba(255, 255, 255, .55);
         font-size: 12px;
     }
 
     .upload-spinner {
         width: 15px;
         height: 15px;
-        border: 2px solid rgba(255,255,255,.15);
+        border: 2px solid rgba(255, 255, 255, .15);
         border-top-color: #c084fc;
         border-radius: 50%;
         animation: ticket-upload-spin .7s linear infinite;
@@ -672,18 +1057,9 @@
         font-size: 12px;
     }
 
-    .reply-footer {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 15px;
-        margin-top: 15px;
-    }
-
-    .reply-footer > span {
-        color: rgba(255,255,255,.22);
-        font-size: 10px;
-    }
+    /* =========================================================
+       CLOSED TICKET
+       ========================================================= */
 
     .closed-ticket {
         display: flex;
@@ -693,25 +1069,27 @@
         gap: 8px;
         margin: 0 18px 18px;
         padding: 20px;
-        border: 1px solid rgba(255,255,255,.06);
+        border: 1px solid rgba(255, 255, 255, .06);
         border-radius: 16px;
-        background: rgba(255,255,255,.02);
-        color: rgba(255,255,255,.25);
+        background: rgba(255, 255, 255, .02);
+        color: rgba(255, 255, 255, .25);
         text-align: center;
     }
 
     .closed-ticket strong {
-        color: rgba(255,255,255,.55);
+        color: rgba(255, 255, 255, .55);
         font-size: 12px;
     }
 
     .closed-ticket span {
         width: 100%;
-        color: rgba(255,255,255,.25);
+        color: rgba(255, 255, 255, .25);
         font-size: 10px;
     }
 
-    /* Sidebar */
+    /* =========================================================
+       SIDEBAR
+       ========================================================= */
 
     .ticket-sidebar {
         width: 100%;
@@ -726,15 +1104,15 @@
         min-width: 0;
         box-sizing: border-box;
         padding: 20px;
-        border: 1px solid rgba(255,255,255,.08);
+        border: 1px solid rgba(255, 255, 255, .08);
         border-radius: 20px;
-        background: rgba(15,15,20,.72);
-        box-shadow: 0 15px 45px rgba(0,0,0,.18);
+        background: rgba(15, 15, 20, .72);
+        box-shadow: 0 15px 45px rgba(0, 0, 0, .18);
     }
 
     .ticket-sidebar-heading {
         margin-bottom: 16px;
-        color: rgba(255,255,255,.55);
+        color: rgba(255, 255, 255, .55);
         font-size: 11px;
         font-weight: 700;
         letter-spacing: .12em;
@@ -756,7 +1134,11 @@
         align-items: center;
         justify-content: center;
         border-radius: 13px;
-        background: linear-gradient(135deg, #7c3aed, #c026d3);
+        background: linear-gradient(
+            135deg,
+            #7c3aed,
+            #c026d3
+        );
         color: white;
         font-size: 16px;
         font-weight: 700;
@@ -779,7 +1161,7 @@
 
     .ticket-customer-info span {
         overflow: hidden;
-        color: rgba(255,255,255,.42);
+        color: rgba(255, 255, 255, .42);
         font-size: 12px;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -796,7 +1178,7 @@
         justify-content: space-between;
         gap: 15px;
         padding: 12px 0;
-        border-bottom: 1px solid rgba(255,255,255,.06);
+        border-bottom: 1px solid rgba(255, 255, 255, .06);
     }
 
     .ticket-detail-row:first-child {
@@ -809,14 +1191,14 @@
     }
 
     .ticket-detail-row span {
-        color: rgba(255,255,255,.42);
+        color: rgba(255, 255, 255, .42);
         font-size: 12px;
     }
 
     .ticket-detail-row strong {
         min-width: 0;
         overflow: hidden;
-        color: rgba(255,255,255,.85);
+        color: rgba(255, 255, 255, .85);
         font-size: 12px;
         font-weight: 600;
         text-align: right;
@@ -837,7 +1219,7 @@
         align-items: center;
         justify-content: center;
         border-radius: 11px;
-        background: rgba(168,85,247,.12);
+        background: rgba(168, 85, 247, .12);
         color: #d8b4fe;
     }
 
@@ -855,12 +1237,14 @@
 
     .ticket-help-card p {
         margin: 7px 0 0;
-        color: rgba(255,255,255,.42);
+        color: rgba(255, 255, 255, .42);
         font-size: 12px;
         line-height: 1.65;
     }
 
-    /* Edit section */
+    /* =========================================================
+       EDIT SECTION
+       ========================================================= */
 
     .edit-grid {
         display: grid;
@@ -880,7 +1264,7 @@
     .field label {
         display: block;
         margin-bottom: 7px;
-        color: rgba(255,255,255,.5);
+        color: rgba(255, 255, 255, .5);
         font-size: 11px;
         font-weight: 600;
     }
@@ -899,10 +1283,12 @@
         justify-content: flex-end;
         gap: 8px;
         padding: 15px 20px;
-        border-top: 1px solid rgba(255,255,255,.05);
+        border-top: 1px solid rgba(255, 255, 255, .05);
     }
 
-    /* Flash message */
+    /* =========================================================
+       FLASH MESSAGE
+       ========================================================= */
 
     .ticket-success {
         display: flex;
@@ -910,14 +1296,16 @@
         gap: 8px;
         margin-bottom: 20px;
         padding: 12px 15px;
-        border: 1px solid rgba(52,211,153,.18);
+        border: 1px solid rgba(52, 211, 153, .18);
         border-radius: 12px;
-        background: rgba(16,185,129,.07);
+        background: rgba(16, 185, 129, .07);
         color: #a7f3d0;
         font-size: 12px;
     }
 
-    /* Lightbox */
+    /* =========================================================
+       LIGHTBOX
+       ========================================================= */
 
     .ticket-lightbox {
         position: fixed;
@@ -927,7 +1315,7 @@
         align-items: center;
         justify-content: center;
         padding: 24px;
-        background: rgba(0,0,0,.92);
+        background: rgba(0, 0, 0, .92);
         backdrop-filter: blur(8px);
     }
 
@@ -939,7 +1327,7 @@
         height: auto;
         object-fit: contain;
         border-radius: 12px;
-        box-shadow: 0 30px 100px rgba(0,0,0,.55);
+        box-shadow: 0 30px 100px rgba(0, 0, 0, .55);
     }
 
     .ticket-lightbox-close {
@@ -953,9 +1341,9 @@
         width: 42px;
         height: 42px;
         padding: 0;
-        border: 1px solid rgba(255,255,255,.12);
+        border: 1px solid rgba(255, 255, 255, .12);
         border-radius: 999px;
-        background: rgba(0,0,0,.55);
+        background: rgba(0, 0, 0, .55);
         color: white;
         font-size: 25px;
         line-height: 1;
@@ -964,8 +1352,8 @@
     }
 
     .ticket-lightbox-close:hover {
-        background: rgba(255,255,255,.1);
-        border-color: rgba(255,255,255,.25);
+        background: rgba(255, 255, 255, .1);
+        border-color: rgba(255, 255, 255, .25);
     }
 
     .ticket-lightbox-name {
@@ -976,16 +1364,18 @@
         transform: translateX(-50%);
         overflow: hidden;
         padding: 8px 12px;
-        border: 1px solid rgba(255,255,255,.08);
+        border: 1px solid rgba(255, 255, 255, .08);
         border-radius: 8px;
-        background: rgba(0,0,0,.6);
-        color: rgba(255,255,255,.65);
+        background: rgba(0, 0, 0, .6);
+        color: rgba(255, 255, 255, .65);
         font-size: 11px;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
 
-    /* Responsive */
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
 
     @media (max-width: 900px) {
         .ticket-layout {
@@ -1024,12 +1414,63 @@
         }
 
         .messages {
-            padding: 17px;
+            padding: 22px 15px 26px;
+        }
+
+        .messages::before {
+            left: 31px;
+        }
+
+        .message {
+            gap: 9px;
+            margin-bottom: 22px;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            flex-basis: 32px;
+            border-radius: 10px;
+        }
+
+        .message-body {
+            max-width: calc(100% - 41px);
+        }
+
+        .message-bubble {
+            padding: 12px 14px;
+            font-size: 12px;
+            line-height: 1.7;
+        }
+
+        .message-top {
+            gap: 6px;
+        }
+
+        .message-top strong {
+            font-size: 11px;
+        }
+
+        .message-role {
+            display: none;
+        }
+
+        .message-top time {
+            font-size: 8px;
+        }
+
+        .message-attachments {
+            grid-template-columns: 1fr;
+        }
+
+        .message-attachment-image {
+            max-height: 200px;
         }
 
         .reply {
-            margin: 0 12px 12px;
-            padding: 13px;
+            margin: 4px 10px 12px;
+            padding: 15px;
+            border-radius: 16px;
         }
 
         .reply-footer {
@@ -1065,16 +1506,9 @@
             flex-direction: column;
             align-items: flex-start;
         }
-
-        .message-attachments {
-            grid-template-columns: 1fr;
-        }
-
-        .message-attachment-image {
-            height: 200px;
-        }
     }
 </style>
+
 @endpush
 
 <div
@@ -1125,7 +1559,6 @@
         <div class="ticket-header-side">
             <div class="ticket-status {{ $statusClass }}">
                 <span></span>
-
                 {{ ucfirst($status) }}
             </div>
         </div>
@@ -1135,7 +1568,6 @@
     @if (session('ticket-success'))
         <div class="ticket-success">
             <flux:icon.check-circle class="size-4" />
-
             {{ session('ticket-success') }}
         </div>
     @endif
@@ -1279,7 +1711,6 @@
 
         {{-- Conversation --}}
         <section class="ticket-panel">
-
             <div class="panel-heading">
                 <div>
                     <h2>
@@ -1300,178 +1731,170 @@
             {{-- Messages --}}
             <div class="messages">
                 @forelse ($ticket->messages as $message)
+    @php
+        $authorName = $message->author_name ?: $ticket->name;
 
-                    @php
-                        $authorName = $message->author_name ?: $ticket->name;
+        $initial = strtoupper(
+            substr((string) $authorName, 0, 1)
+        );
 
-                        $initial = strtoupper(
-                            substr((string) $authorName, 0, 1)
-                        );
-                    @endphp
+        // Customer messages use the ticket owner's name.
+        // All other named authors are treated as support replies.
+        $isCustomer = $authorName === $ticket->name;
+    @endphp
 
-                    <article
-                        class="message"
-                        wire:key="message-{{ $message->id }}"
-                    >
-                        <div class="message-avatar">
-                            {{ $initial ?: 'C' }}
-                        </div>
+    <article
+        class="message {{ $isCustomer ? 'message-customer' : 'message-support' }}"
+        wire:key="message-{{ $message->id }}"
+    >
+        <div class="message-avatar" aria-hidden="true">
+            @if ($isCustomer)
+                {{ $initial ?: 'C' }}
+            @else
+                <flux:icon.sparkles class="size-4" />
+            @endif
+        </div>
 
-                        <div class="message-body">
+        <div class="message-body">
+            <div class="message-top">
+                <div class="message-author">
+                    <strong>
+                        {{ $authorName }}
+                    </strong>
 
-                            <div class="message-top">
-                                <strong>
-                                    {{ $authorName }}
-                                </strong>
+                    <span class="message-role">
+                        {{ $isCustomer ? 'Customer' : 'Support' }}
+                    </span>
+                </div>
 
-                                <time>
-                                    {{ $message->created_at?->diffForHumans() }}
-                                </time>
-                            </div>
+                <time>
+                    {{ $message->created_at?->diffForHumans() }}
+                </time>
+            </div>
 
-                            <div class="message-bubble">
+            <div class="message-bubble">
+                {!! nl2br(e($message->message)) !!}
 
-                                {{-- Message text --}}
-                                {!! nl2br(e($message->message)) !!}
+                @if ($message->attachments->isNotEmpty())
+                    <div class="message-attachments">
+                        @foreach ($message->attachments as $attachment)
+                            @php
+                                $mime = strtolower(
+                                    (string) $attachment->mime_type
+                                );
 
-                                {{-- Saved attachments --}}
-                                @if ($message->attachments->isNotEmpty())
+                                $isImage = str_starts_with(
+                                    $mime,
+                                    'image/'
+                                );
 
-                                    <div class="message-attachments">
+                                $isPdf = $mime === 'application/pdf';
 
-                                        @foreach ($message->attachments as $attachment)
+                                $previewUrl = route(
+                                    'guest.ticket.attachments.preview',
+                                    [
+                                        'attachment' => $attachment->id,
+                                    ]
+                                );
 
-                                            @php
-                                                $mime = strtolower(
-                                                    (string) $attachment->mime_type
-                                                );
+                                $downloadUrl = route(
+                                    'guest.ticket.attachments.download',
+                                    [
+                                        'attachment' => $attachment->id,
+                                    ]
+                                );
+                            @endphp
 
-                                                $isImage = str_starts_with(
-                                                    $mime,
-                                                    'image/'
-                                                );
-
-                                                $isPdf = $mime === 'application/pdf';
-
-                                                $previewUrl = route(
-                                                    'guest.ticket.attachments.preview',
-                                                    [
-                                                        'attachment' => $attachment->id,
-                                                    ]
-                                                );
-
-                                                $downloadUrl = route(
-                                                    'guest.ticket.attachments.download',
-                                                    [
-                                                        'attachment' => $attachment->id,
-                                                    ]
-                                                );
-                                            @endphp
-
-                                            <div
-                                                class="message-attachment"
-                                                wire:key="message-attachment-{{ $attachment->id }}"
-                                            >
-
-                                               @if ($isImage)
-                                        <button
-                                            type="button"
-                                            x-on:click.stop="openLightbox(
-                                                @js($previewUrl),
-                                                @js($attachment->original_name)
-                                            )"
-                                            class="block w-full cursor-zoom-in text-left"
+                            <div
+                                class="message-attachment"
+                                wire:key="message-attachment-{{ $attachment->id }}"
+                            >
+                                @if ($isImage)
+                                    <button
+                                        type="button"
+                                        x-on:click.stop="openLightbox(
+                                            @js($previewUrl),
+                                            @js($attachment->original_name)
+                                        )"
+                                        class="block w-full cursor-zoom-in text-left"
+                                    >
+                                        <img
+                                            src="{{ $previewUrl }}"
+                                            alt="{{ $attachment->original_name }}"
+                                            class="message-attachment-image"
+                                            loading="lazy"
                                         >
-                                            <img
-                                                src="{{ $previewUrl }}"
-                                                alt="{{ $attachment->original_name }}"
-                                                class="message-attachment-image"
-                                                loading="lazy"
-                                            >
-                                        </button>
-                                    @elseif ($isPdf)
-                                        <a
-                                            href="{{ $previewUrl }}"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            class="flex min-h-[180px] items-center justify-center"
-                                        >
-                                            <div class="text-center">
-                                                <flux:icon.document-text class="mx-auto size-10" />
+                                    </button>
+                                @elseif ($isPdf)
+                                    <a
+                                        href="{{ $previewUrl }}"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="flex min-h-[180px] items-center justify-center"
+                                    >
+                                        <div class="text-center">
+                                            <flux:icon.document-text class="mx-auto size-10" />
 
-                                                <div class="mt-2 text-xs text-white/60">
-                                                    Preview PDF
-                                                </div>
+                                            <div class="mt-2 text-xs text-white/60">
+                                                Preview PDF
                                             </div>
-                                        </a>
-                                    @else
-                                        <a
-                                            href="{{ $downloadUrl }}"
-                                            class="flex min-h-[180px] items-center justify-center"
-                                        >
-                                            <div class="text-center">
-                                                <flux:icon.document class="mx-auto size-10" />
+                                        </div>
+                                    </a>
+                                @else
+                                    <a
+                                        href="{{ $downloadUrl }}"
+                                        class="flex min-h-[180px] items-center justify-center"
+                                    >
+                                        <div class="text-center">
+                                            <flux:icon.document class="mx-auto size-10" />
 
-                                                <div class="mt-2 text-xs text-white/60">
-                                                    Download file
-                                                </div>
+                                            <div class="mt-2 text-xs text-white/60">
+                                                Download file
                                             </div>
-                                        </a>
-                                    @endif
-
-                                                <div class="message-attachment-footer">
-
-                                                    <span
-                                                        class="message-attachment-name"
-                                                        title="{{ $attachment->original_name }}"
-                                                    >
-                                                        {{ $attachment->original_name }}
-                                                    </span>
-
-                                                    <a
-                                                        href="{{ $downloadUrl }}"
-                                                        class="message-attachment-download"
-                                                    >
-                                                        Download
-                                                    </a>
-
-                                                </div>
-
-                                            </div>
-
-                                        @endforeach
-
-                                    </div>
-
+                                        </div>
+                                    </a>
                                 @endif
 
+                                <div class="message-attachment-footer">
+                                    <span
+                                        class="message-attachment-name"
+                                        title="{{ $attachment->original_name }}"
+                                    >
+                                        {{ $attachment->original_name }}
+                                    </span>
+
+                                    <a
+                                        href="{{ $downloadUrl }}"
+                                        class="message-attachment-download"
+                                    >
+                                        Download
+                                    </a>
+                                </div>
                             </div>
-
-                        </div>
-                    </article>
-
-                @empty
-
-                    <div class="empty-conversation">
-                        <flux:icon.chat-bubble-left-right class="size-7" />
-
-                        <strong>
-                            No messages yet
-                        </strong>
-
-                        <span>
-                            Send a reply below to start the conversation.
-                        </span>
+                        @endforeach
                     </div>
+                @endif
+            </div>
+        </div>
+    </article>
+@empty
+    <div class="empty-conversation">
+        <flux:icon.chat-bubble-left-right class="size-7" />
 
-                @endforelse
+        <strong>
+            No messages yet
+        </strong>
+
+        <span>
+            Send a reply below to start the conversation.
+        </span>
+    </div>
+@endforelse
             </div>
 
             {{-- Reply --}}
             @if ($ticket->status !== 'closed')
-
                 <div class="reply">
-
                     <div class="reply-heading">
                         <div>
                             <strong>
@@ -1500,7 +1923,6 @@
 
                     {{-- Attachments --}}
                     <div class="upload-area">
-
                         <div class="upload-heading">
                             <div>
                                 <strong>
@@ -1561,16 +1983,12 @@
 
                         {{-- Temporary attachment previews --}}
                         @if (count($attachments) > 0)
-
                             <div class="attachments-list">
-
                                 @foreach ($attachments as $index => $attachment)
-
                                     <div
                                         class="attachment"
                                         wire:key="uploaded-attachment-{{ $index }}"
                                     >
-
                                         <div class="attachment-preview">
                                             <img
                                                 src="{{ $attachment->temporaryUrl() }}"
@@ -1597,7 +2015,6 @@
                                         >
                                             <flux:icon.x-mark />
                                         </button>
-
                                     </div>
 
                                     @error("attachments.$index")
@@ -1605,18 +2022,13 @@
                                             {{ $message }}
                                         </div>
                                     @enderror
-
                                 @endforeach
-
                             </div>
-
                         @endif
-
                     </div>
 
                     {{-- Reply footer --}}
                     <div class="reply-footer">
-
                         <span>
                             Your reply will be added to this ticket.
                         </span>
@@ -1628,13 +2040,11 @@
                             wire:target="sendReply"
                             class="button-primary"
                         >
-
                             <span
                                 wire:loading.remove
                                 wire:target="sendReply"
                             >
                                 <flux:icon.paper-airplane class="size-4" />
-
                                 Send reply
                             </span>
 
@@ -1644,17 +2054,11 @@
                             >
                                 Sending...
                             </span>
-
                         </button>
-
                     </div>
-
                 </div>
-
             @else
-
                 <div class="closed-ticket">
-
                     <flux:icon.lock-closed class="size-5" />
 
                     <strong>
@@ -1664,11 +2068,8 @@
                     <span>
                         Replies are no longer available.
                     </span>
-
                 </div>
-
             @endif
-
         </section>
 
         {{-- Sidebar --}}
@@ -1676,19 +2077,16 @@
 
             {{-- Customer --}}
             <section class="ticket-sidebar-card">
-
                 <div class="ticket-sidebar-heading">
                     Customer
                 </div>
 
                 <div class="ticket-customer">
-
                     <div class="ticket-customer-avatar">
                         {{ $customerInitial ?: 'C' }}
                     </div>
 
                     <div class="ticket-customer-info">
-
                         <strong>
                             {{ $ticket->name }}
                         </strong>
@@ -1696,22 +2094,17 @@
                         <span>
                             {{ $ticket->email }}
                         </span>
-
                     </div>
-
                 </div>
-
             </section>
 
             {{-- Ticket details --}}
             <section class="ticket-sidebar-card">
-
                 <div class="ticket-sidebar-heading">
                     Ticket details
                 </div>
 
                 <div class="ticket-detail-list">
-
                     <div class="ticket-detail-row">
                         <span>
                             Ticket
@@ -1761,14 +2154,11 @@
                             {{ $ticket->last_activity_at?->diffForHumans() ?? '—' }}
                         </strong>
                     </div>
-
                 </div>
-
             </section>
 
             {{-- Help --}}
             <section class="ticket-sidebar-card ticket-help-card">
-
                 <div class="ticket-help-icon">
                     <flux:icon.sparkles />
                 </div>
@@ -1781,53 +2171,47 @@
                     @if ($ticket->status === 'closed')
                         This ticket is closed. If you need further assistance, please open a new ticket.
                     @else
-                    Reply to this ticket and our team will get back to you
-                    as soon as possible.
+                        Reply to this ticket and our team will get back to you
+                        as soon as possible.
                     @endif
                 </p>
-
             </section>
-
         </aside>
-
     </div>
 
     {{-- Image lightbox --}}
     <template x-teleport="body">
-
-       <div
-    x-show="lightbox"
-    x-cloak
-    x-transition.opacity
-    class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4"
-    x-on:click.self="closeLightbox()"
->
-    <button
-        type="button"
-        x-on:click="closeLightbox()"
-        class="absolute right-5 top-5 flex size-10 cursor-pointer items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
-        aria-label="Close preview"
-    >
-        <flux:icon.x-mark class="size-5" />
-    </button>
-
-    <div
-        class="flex max-h-[95vh] max-w-[95vw] flex-col items-center gap-3"
-        x-on:click.stop
-    >
-        <img
-            :src="lightboxSrc"
-            :alt="lightboxName"
-            class="max-h-[88vh] max-w-[95vw] rounded-xl object-contain shadow-2xl"
-        >
-
         <div
-            x-text="lightboxName"
-            class="max-w-full truncate text-xs text-white/60"
-        ></div>
-    </div>
-</div>
+            x-show="lightbox"
+            x-cloak
+            x-transition.opacity
+            class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4"
+            x-on:click.self="closeLightbox()"
+        >
+            <button
+                type="button"
+                x-on:click="closeLightbox()"
+                class="absolute right-5 top-5 flex size-10 cursor-pointer items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+                aria-label="Close preview"
+            >
+                <flux:icon.x-mark class="size-5" />
+            </button>
 
+            <div
+                class="flex max-h-[95vh] max-w-[95vw] flex-col items-center gap-3"
+                x-on:click.stop
+            >
+                <img
+                    :src="lightboxSrc"
+                    :alt="lightboxName"
+                    class="max-h-[88vh] max-w-[95vw] rounded-xl object-contain shadow-2xl"
+                >
+
+                <div
+                    x-text="lightboxName"
+                    class="max-w-full truncate text-xs text-white/60"
+                ></div>
+            </div>
+        </div>
     </template>
-
 </div>
