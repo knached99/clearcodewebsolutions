@@ -7,9 +7,8 @@
         autoplay: null,
 
         start() {
-            if (this.total <= 1) {
-                return;
-            }
+            if (this.total <= 1) return;
+            this.stop();
 
             this.autoplay = setInterval(() => {
                 this.next();
@@ -24,24 +23,17 @@
         },
 
         next() {
-            if (this.total <= 1) {
-                return;
-            }
-
-            this.current =
-                (this.current + 1) % this.total;
+            if (this.total <= 1) return;
+            this.current = (this.current + 1) % this.total;
         },
 
         prev() {
-            if (this.total <= 1) {
-                return;
-            }
-
-            this.current =
-                (this.current - 1 + this.total) % this.total;
+            if (this.total <= 1) return;
+            this.current = (this.current - 1 + this.total) % this.total;
         },
 
         goTo(index) {
+            if (index === this.current) return;
             this.current = index;
         }
     }"
@@ -51,63 +43,80 @@
     x-on:keydown.arrow-right.window="next()"
     x-on:keydown.arrow-left.window="prev()"
 >
+    @if($testimonials->count())
 
-    <div class="cc-container">
+        <div class="cc-container">
 
-        {{-- Header --}}
-        <div class="cc-testimonials__top">
+            {{-- Header --}}
+            <div class="cc-testimonials__header">
 
-            <div>
+                <div class="cc-testimonials__heading">
+                    <div class="cc-testimonials__eyebrow">
+                        <span></span>
+                        05 / CLIENT LOVE
+                    </div>
 
-                <span class="cc-eyebrow">
-                    05 / CLIENT LOVE
-                </span>
+                    <h2>
+                        Don't just take
+                        <em>our word for it.</em>
+                    </h2>
+                </div>
 
-                <h2>
-                    Don't just take
-                    <span>our word for it.</span>
-                </h2>
+                @if($testimonials->count() > 1)
+                    <div class="cc-testimonials__controls">
+
+                        <div class="cc-testimonials__count">
+                            <strong
+                                x-text="String(current + 1).padStart(2, '0')"
+                            ></strong>
+                            <span>/</span>
+                            <span>
+                                {{ str_pad($testimonials->count(), 2, '0', STR_PAD_LEFT) }}
+                            </span>
+                        </div>
+
+                        <div class="cc-testimonials__arrows">
+                            <button
+                                type="button"
+                                aria-label="Previous testimonial"
+                                x-on:click="prev()"
+                            >
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path
+                                        d="M15 18L9 12L15 6"
+                                        stroke="currentColor"
+                                        stroke-width="1.5"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
+                                </svg>
+                            </button>
+
+                            <button
+                                type="button"
+                                aria-label="Next testimonial"
+                                x-on:click="next()"
+                            >
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path
+                                        d="M9 18L15 12L9 6"
+                                        stroke="currentColor"
+                                        stroke-width="1.5"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
+                                </svg>
+                            </button>
+                        </div>
+
+                    </div>
+                @endif
 
             </div>
 
 
-            @if($testimonials->count() > 1)
-
-                <div class="cc-testimonials__controls">
-
-                    <button
-                        type="button"
-                        class="cc-testimonials__control"
-                        @click="prev()"
-                        aria-label="Previous testimonial"
-                    >
-                        ←
-                    </button>
-
-                    <button
-                        type="button"
-                        class="cc-testimonials__control"
-                        @click="next()"
-                        aria-label="Next testimonial"
-                    >
-                        →
-                    </button>
-
-                </div>
-
-            @endif
-
-        </div>
-
-
-        @if($testimonials->isNotEmpty())
-
             {{-- Slider --}}
-            <div
-                class="cc-testimonial-slider"
-                role="region"
-                aria-label="Client testimonials"
-            >
+            <div class="cc-testimonial-slider">
 
                 <div class="cc-testimonial-track">
 
@@ -115,91 +124,86 @@
 
                         <article
                             class="cc-testimonial-slide"
+                            x-cloak
                             x-show="current === {{ $index }}"
+                            x-bind:aria-hidden="current !== {{ $index }}"
                             x-transition:enter="cc-testimonial-enter"
                             x-transition:enter-start="cc-testimonial-enter-start"
                             x-transition:enter-end="cc-testimonial-enter-end"
                             x-transition:leave="cc-testimonial-leave"
                             x-transition:leave-start="cc-testimonial-leave-start"
                             x-transition:leave-end="cc-testimonial-leave-end"
-                            @if($index !== 0)
-                                style="display:none"
-                            @endif
                         >
 
                             <div class="cc-testimonial">
 
+                                {{-- Purple ambient glow --}}
+                                <div
+                                    class="cc-testimonial__ambient"
+                                    aria-hidden="true"
+                                ></div>
+
+                                {{-- Top line --}}
+                                <div class="cc-testimonial__top">
+
+                                    <div class="cc-testimonial__stars">
+                                        @for($star = 0; $star < 5; $star++)
+                                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M12 2.5L14.93 8.44L21.5 9.4L16.75 14.02L17.87 20.55L12 17.47L6.13 20.55L7.25 14.02L2.5 9.4L9.07 8.44L12 2.5Z"/>
+                                            </svg>
+                                        @endfor
+                                    </div>
+
+                                    <span>CLIENT TESTIMONIAL</span>
+
+                                </div>
+
+
                                 {{-- Quote --}}
                                 <div class="cc-testimonial__quote">
-                                    “
+
+                                    <div
+                                        class="cc-testimonial__mark"
+                                        aria-hidden="true"
+                                    >“</div>
+
+                                    <blockquote>
+                                        {{ $testimonial->message }}
+                                    </blockquote>
+
                                 </div>
 
 
-                                {{-- Rating --}}
-                                <div
-                                    class="cc-testimonial__rating"
-                                    aria-label="{{ $testimonial->rating }} out of 5 stars"
-                                >
-                                    @for($star = 1; $star <= 5; $star++)
+                                {{-- Bottom --}}
+                                <div class="cc-testimonial__bottom">
 
-                                        <span
-                                            @class([
-                                                'is-active' => $testimonial->rating >= $star,
-                                            ])
-                                        >
-                                            ★
-                                        </span>
+                                    <div class="cc-testimonial__author">
 
-                                    @endfor
-                                </div>
+                                        <div class="cc-testimonial__avatar">
+                                            {{ strtoupper(substr($testimonial->name, 0, 1)) }}
+                                        </div>
 
+                                        <div>
+                                            <strong>
+                                                {{ $testimonial->name }}
+                                            </strong>
 
-                                {{-- Message --}}
-                                <blockquote>
-                                    {{ $testimonial->message }}
-                                </blockquote>
-
-
-                                {{-- Author --}}
-                                <div class="cc-testimonial__author">
-
-                                    <div class="cc-testimonial__avatar">
-                                        {{ $testimonial->initials }}
-                                    </div>
-
-                                    <div class="cc-testimonial__author-info">
-
-                                        <strong>
-                                            {{ $testimonial->name }}
-                                        </strong>
-
-                                        @if($testimonial->display_role)
-                                            <span>
-                                                {{ $testimonial->display_role }}
-                                            </span>
-                                        @endif
+                                            @if($testimonial->display_role)
+                                                <span>
+                                                    {{ $testimonial->display_role }}
+                                                </span>
+                                            @endif
+                                        </div>
 
                                     </div>
 
+                                    <div class="cc-testimonial__accent">
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                    </div>
+
                                 </div>
-
-                            </div>
-
-
-                            {{-- Featured panel --}}
-                            <div class="cc-testimonial-slide__aside">
-
-                                <span class="cc-testimonial-slide__number">
-                                    {{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}
-                                </span>
-
-                                <span class="cc-testimonial-slide__slash">
-                                    /
-                                </span>
-
-                                <span>
-                                    {{ str_pad($testimonials->count(), 2, '0', STR_PAD_LEFT) }}
-                                </span>
 
                             </div>
 
@@ -221,11 +225,12 @@
 
                         <button
                             type="button"
-                            @click="goTo({{ $index }})"
-                            class="cc-testimonials__dot"
-                            :class="{ 'is-active': current === {{ $index }} }"
-                            aria-label="Show testimonial {{ $index + 1 }}"
-                        ></button>
+                            aria-label="Go to testimonial {{ $index + 1 }}"
+                            x-bind:class="{ 'is-active': current === {{ $index }} }"
+                            x-on:click="goTo({{ $index }})"
+                        >
+                            <span></span>
+                        </button>
 
                     @endforeach
 
@@ -233,909 +238,952 @@
 
             @endif
 
+        </div>
 
-        @else
+    @else
 
-            {{-- Empty state --}}
+        <div class="cc-container">
             <div class="cc-testimonials__empty">
 
-                <div class="cc-testimonials__empty-icon">
-                    ★
+                <div class="cc-testimonials__eyebrow">
+                    <span></span>
+                    05 / CLIENT LOVE
                 </div>
 
-                <h3>
-                    Be our first review.
-                </h3>
+                <h2>
+                    What our clients
+                    <em>have to say.</em>
+                </h2>
 
                 <p>
-                    If you've worked with ClearCode,
-                    we'd love to hear about your experience.
+                    Testimonials will appear here once they're added.
                 </p>
 
-                <a
-                    href="#testimonial-form"
-                    class="cc-testimonials__empty-link"
-                >
-                    Share your experience
-                    <span>↗</span>
-                </a>
-
             </div>
+        </div>
 
-        @endif
-
-    </div>
-
+    @endif
 </section>
 
 
 @push('styles')
 <style>
+    [x-cloak] {
+        display: none !important;
+    }
 
-.cc-testimonials {
-    --lime: #ADD322;
-    --purple: #7c3aed;
-    --violet: #6d28d9;
 
-    position: relative;
-
-    padding: 130px 0;
-
-    overflow: hidden;
-
-    color: #fff;
-
-    background:
-        radial-gradient(
-            900px circle at 10% 15%,
-            rgba(124,58,237,.23),
-            transparent 58%
-        ),
-        radial-gradient(
-            850px circle at 92% 78%,
-            rgba(91,33,182,.19),
-            transparent 62%
-        ),
-        radial-gradient(
-            550px circle at 50% 45%,
-            rgba(139,92,246,.055),
-            transparent 70%
-        ),
-        linear-gradient(
-            135deg,
-            #020104 0%,
-            #08040f 25%,
-            #10061b 48%,
-            #08040f 72%,
-            #020204 100%
-        );
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Atmospheric glows
-|--------------------------------------------------------------------------
-*/
-
-.cc-testimonials::before {
-    content: "";
-
-    position: absolute;
-
-    width: 750px;
-    height: 750px;
-
-    top: -280px;
-    left: -350px;
-
-    border-radius: 50%;
-
-    background:
-        radial-gradient(
-            circle,
-            rgba(124,58,237,.13),
-            rgba(109,40,217,.045) 45%,
-            transparent 72%
-        );
-
-    filter: blur(100px);
-
-    pointer-events: none;
-}
-
-.cc-testimonials::after {
-    content: "";
-
-    position: absolute;
-
-    width: 650px;
-    height: 650px;
-
-    right: -320px;
-    bottom: -300px;
-
-    border-radius: 50%;
-
-    background:
-        radial-gradient(
-            circle,
-            rgba(91,33,182,.13),
-            transparent 70%
-        );
-
-    filter: blur(100px);
-
-    pointer-events: none;
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Header
-|--------------------------------------------------------------------------
-*/
-
-.cc-testimonials__top {
-    position: relative;
-
-    z-index: 1;
-
-    display: flex;
-
-    align-items: flex-end;
-
-    justify-content: space-between;
-
-    gap: 30px;
-
-    margin-bottom: 55px;
-}
-
-.cc-testimonials__top h2 {
-    max-width: 680px;
-
-    margin: 20px 0 0;
-
-    color: #fff;
-
-    font-size: clamp(44px, 6vw, 78px);
-
-    line-height: .95;
-
-    letter-spacing: -.06em;
-
-    font-weight: 700;
-}
-
-.cc-testimonials__top h2 span {
-    display: block;
-
-    color: var(--lime);
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Navigation controls
-|--------------------------------------------------------------------------
-*/
-
-.cc-testimonials__controls {
-    display: flex;
-
-    gap: 8px;
-
-    flex-shrink: 0;
-}
-
-.cc-testimonials__control {
-    display: grid;
-
-    place-items: center;
-
-    width: 48px;
-    height: 48px;
-
-    padding: 0;
-
-    border: 1px solid rgba(255,255,255,.1);
-
-    border-radius: 50%;
-
-    color: rgba(255,255,255,.68);
-
-    background:
-        linear-gradient(
-            145deg,
-            rgba(255,255,255,.035),
-            rgba(255,255,255,.01)
-        );
-
-    cursor: pointer;
-
-    font-family: inherit;
-
-    font-size: 17px;
-
-    transition:
-        border-color .25s ease,
-        color .25s ease,
-        background .25s ease,
-        transform .25s ease,
-        box-shadow .25s ease;
-}
-
-.cc-testimonials__control:hover {
-    border-color: rgba(173,211,34,.35);
-
-    color: var(--lime);
-
-    background:
-        linear-gradient(
-            145deg,
-            rgba(173,211,34,.07),
-            rgba(124,58,237,.05)
-        );
-
-    transform: translateY(-2px);
-
-    box-shadow:
-        0 10px 30px rgba(0,0,0,.25);
-}
-
-.cc-testimonials__control:active {
-    transform: translateY(0);
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Slider
-|--------------------------------------------------------------------------
-*/
-
-.cc-testimonial-slider {
-    position: relative;
-
-    z-index: 1;
-}
-
-.cc-testimonial-track {
-    position: relative;
-
-    min-height: 390px;
-}
-
-.cc-testimonial-slide {
-    display: grid;
-
-    grid-template-columns: 1fr auto;
-
-    gap: 25px;
-
-    min-height: 390px;
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Main testimonial card
-|--------------------------------------------------------------------------
-*/
-
-.cc-testimonial {
-    position: relative;
-
-    display: flex;
-
-    flex-direction: column;
-
-    justify-content: space-between;
-
-    min-height: 390px;
-
-    padding: 48px;
-
-    overflow: hidden;
-
-    border: 1px solid rgba(255,255,255,.08);
-
-    border-radius: 24px;
-
-    background:
-        radial-gradient(
-            600px circle at 88% 5%,
-            rgba(124,58,237,.20),
-            transparent 64%
-        ),
-        radial-gradient(
-            450px circle at 5% 100%,
-            rgba(91,33,182,.10),
-            transparent 68%
-        ),
-        linear-gradient(
-            145deg,
-            rgba(24,9,39,.94),
-            rgba(6,3,10,.97)
-        );
-
-    box-shadow:
-        0 35px 110px rgba(0,0,0,.46),
-        0 0 90px rgba(76,29,149,.08),
-        inset 0 1px rgba(255,255,255,.045);
-
-    transition:
-        border-color .3s ease,
-        box-shadow .3s ease;
-}
-
-.cc-testimonial:hover {
-    border-color: rgba(139,92,246,.16);
-
-    box-shadow:
-        0 40px 120px rgba(0,0,0,.5),
-        0 0 100px rgba(76,29,149,.11),
-        inset 0 1px rgba(255,255,255,.05);
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Lime accent line
-|--------------------------------------------------------------------------
-*/
-
-.cc-testimonial::before {
-    content: "";
-
-    position: absolute;
-
-    top: 0;
-    left: 0;
-
-    width: 125px;
-    height: 2px;
-
-    background:
-        linear-gradient(
-            90deg,
-            var(--lime),
-            rgba(173,211,34,.25),
-            transparent
-        );
-
-    box-shadow:
-        0 0 25px rgba(173,211,34,.3);
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Quote mark
-|--------------------------------------------------------------------------
-*/
-
-.cc-testimonial__quote {
-    position: absolute;
-
-    top: 0;
-    right: 30px;
-
-    color: rgba(124,58,237,.13);
-
-    font-family: Georgia, serif;
-
-    font-size: 170px;
-
-    line-height: .95;
-
-    pointer-events: none;
-
-    user-select: none;
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Rating
-|--------------------------------------------------------------------------
-*/
-
-.cc-testimonial__rating {
-    position: relative;
-
-    z-index: 1;
-
-    display: flex;
-
-    gap: 3px;
-
-    margin-bottom: 28px;
-}
-
-.cc-testimonial__rating span {
-    color: rgba(255,255,255,.1);
-
-    font-size: 13px;
-}
-
-.cc-testimonial__rating span.is-active {
-    color: var(--lime);
-
-    text-shadow:
-        0 0 16px rgba(173,211,34,.2);
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Quote
-|--------------------------------------------------------------------------
-*/
-
-.cc-testimonial blockquote {
-    position: relative;
-
-    z-index: 1;
-
-    max-width: 900px;
-
-    margin: 0;
-
-    color: rgba(255,255,255,.91);
-
-    font-size: clamp(24px, 3vw, 39px);
-
-    line-height: 1.2;
-
-    letter-spacing: -.025em;
-
-    font-weight: 400;
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Author
-|--------------------------------------------------------------------------
-*/
-
-.cc-testimonial__author {
-    position: relative;
-
-    z-index: 1;
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 14px;
-
-    margin-top: 35px;
-}
-
-.cc-testimonial__avatar {
-    display: grid;
-
-    place-items: center;
-
-    width: 50px;
-    height: 50px;
-
-    flex: 0 0 auto;
-
-    border: 1px solid rgba(173,211,34,.22);
-
-    border-radius: 50%;
-
-    color: var(--lime);
-
-    background:
-        linear-gradient(
-            135deg,
-            rgba(173,211,34,.1),
-            rgba(124,58,237,.13)
-        );
-
-    box-shadow:
-        0 0 25px rgba(124,58,237,.07);
-
-    font-size: 12px;
-
-    font-weight: 700;
-}
-
-.cc-testimonial__author-info {
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 4px;
-}
-
-.cc-testimonial__author-info strong {
-    color: rgba(255,255,255,.87);
-
-    font-size: 13px;
-
-    font-weight: 600;
-}
-
-.cc-testimonial__author-info span {
-    color: rgba(255,255,255,.32);
-
-    font-size: 11px;
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Slide counter
-|--------------------------------------------------------------------------
-*/
-
-.cc-testimonial-slide__aside {
-    display: flex;
-
-    flex-direction: column;
-
-    justify-content: flex-end;
-
-    align-items: center;
-
-    gap: 8px;
-
-    width: 55px;
-
-    padding-bottom: 20px;
-
-    color: rgba(255,255,255,.18);
-
-    font-size: 10px;
-}
-
-.cc-testimonial-slide__number {
-    color: var(--lime);
-
-    font-size: 12px;
-
-    font-weight: 700;
-}
-
-.cc-testimonial-slide__slash {
-    color: rgba(255,255,255,.1);
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Slider dots
-|--------------------------------------------------------------------------
-*/
-
-.cc-testimonials__dots {
-    position: relative;
-
-    z-index: 2;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    gap: 7px;
-
-    margin-top: 28px;
-}
-
-.cc-testimonials__dot {
-    width: 7px;
-    height: 7px;
-
-    padding: 0;
-
-    border: 0;
-
-    border-radius: 50%;
-
-    background: rgba(255,255,255,.14);
-
-    cursor: pointer;
-
-    transition:
-        width .3s ease,
-        background .3s ease,
-        box-shadow .3s ease;
-}
-
-.cc-testimonials__dot:hover {
-    background: rgba(173,211,34,.5);
-}
-
-.cc-testimonials__dot.is-active {
-    width: 28px;
-
-    border-radius: 10px;
-
-    background: var(--lime);
-
-    box-shadow:
-        0 0 15px rgba(173,211,34,.15);
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Empty state
-|--------------------------------------------------------------------------
-*/
-
-.cc-testimonials__empty {
-    position: relative;
-
-    z-index: 1;
-
-    display: flex;
-
-    flex-direction: column;
-
-    align-items: center;
-
-    padding: 75px 30px;
-
-    text-align: center;
-
-    border: 1px solid rgba(255,255,255,.08);
-
-    border-radius: 24px;
-
-    background:
-        radial-gradient(
-            500px circle at 50% 0%,
-            rgba(124,58,237,.13),
-            transparent 70%
-        ),
-        linear-gradient(
-            145deg,
-            rgba(23,9,36,.9),
-            rgba(5,3,9,.96)
-        );
-
-    box-shadow:
-        0 30px 90px rgba(0,0,0,.35);
-}
-
-.cc-testimonials__empty-icon {
-    display: grid;
-
-    place-items: center;
-
-    width: 58px;
-    height: 58px;
-
-    margin-bottom: 20px;
-
-    border: 1px solid rgba(173,211,34,.2);
-
-    border-radius: 50%;
-
-    color: var(--lime);
-
-    background:
-        linear-gradient(
-            145deg,
-            rgba(173,211,34,.07),
-            rgba(124,58,237,.08)
-        );
-
-    box-shadow:
-        0 0 35px rgba(173,211,34,.05);
-}
-
-.cc-testimonials__empty h3 {
-    margin: 0;
-
-    color: #fff;
-
-    font-size: 24px;
-
-    letter-spacing: -.03em;
-}
-
-.cc-testimonials__empty p {
-    max-width: 420px;
-
-    margin: 12px 0 24px;
-
-    color: rgba(255,255,255,.4);
-
-    font-size: 13px;
-
-    line-height: 1.7;
-}
-
-.cc-testimonials__empty-link {
-    display: inline-flex;
-
-    align-items: center;
-
-    gap: 10px;
-
-    color: var(--lime);
-
-    font-size: 12px;
-
-    font-weight: 600;
-
-    text-decoration: none;
-}
-
-.cc-testimonials__empty-link span {
-    transition:
-        transform .2s ease;
-}
-
-.cc-testimonials__empty-link:hover span {
-    transform: translate(3px, -3px);
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Slider transitions
-|--------------------------------------------------------------------------
-*/
-
-.cc-testimonial-enter {
-    transition:
-        opacity .4s ease,
-        transform .4s cubic-bezier(.2,.7,.2,1);
-}
-
-.cc-testimonial-enter-start {
-    opacity: 0;
-
-    transform:
-        translateX(35px)
-        scale(.985);
-}
-
-.cc-testimonial-enter-end {
-    opacity: 1;
-
-    transform:
-        translateX(0)
-        scale(1);
-}
-
-.cc-testimonial-leave {
-    transition:
-        opacity .25s ease,
-        transform .25s ease;
-}
-
-.cc-testimonial-leave-start {
-    opacity: 1;
-
-    transform:
-        translateX(0);
-}
-
-.cc-testimonial-leave-end {
-    opacity: 0;
-
-    transform:
-        translateX(-20px);
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Responsive
-|--------------------------------------------------------------------------
-*/
-
-@media (max-width: 900px) {
+    /* =========================================================
+       ROOT
+       ========================================================= */
 
     .cc-testimonials {
-        padding: 100px 0;
+        --purple: #8b5cf6;
+        --purple-bright: #a78bfa;
+        --purple-soft: rgba(139, 92, 246, 0.16);
+
+        --lime: #b9e83a;
+
+        --white: #f7f7f4;
+        --muted: rgba(247, 247, 244, 0.46);
+
+        position: relative;
+        isolation: isolate;
+
+        padding: 90px 0 100px;
+
+        overflow: hidden;
+
+        color: var(--white);
+
+        background:
+            radial-gradient(
+                600px 400px at 80% 45%,
+                rgba(124, 58, 237, 0.12),
+                transparent 70%
+            ),
+            radial-gradient(
+                500px 350px at 15% 90%,
+                rgba(139, 92, 246, 0.055),
+                transparent 70%
+            ),
+            #060507;
     }
 
-    .cc-testimonials__top {
-        align-items: flex-start;
 
-        flex-direction: column;
+    .cc-testimonials::before {
+        content: "";
 
-        margin-bottom: 40px;
+        position: absolute;
+        inset: 0;
+
+        pointer-events: none;
+
+        background:
+            linear-gradient(
+                115deg,
+                transparent 0%,
+                rgba(139, 92, 246, 0.035) 48%,
+                transparent 70%
+            );
     }
 
-    .cc-testimonial-slide {
-        grid-template-columns: 1fr;
+
+    /* =========================================================
+       HEADER
+       ========================================================= */
+
+    .cc-testimonials__header {
+        position: relative;
+        z-index: 2;
+
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+
+        gap: 30px;
+
+        margin-bottom: 42px;
     }
 
-    .cc-testimonial-slide__aside {
-        display: none;
+
+    .cc-testimonials__heading {
+        max-width: 700px;
     }
 
-}
 
-@media (max-width: 700px) {
+    .cc-testimonials__eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 9px;
 
-    .cc-testimonials {
-        padding: 85px 0;
+        margin-bottom: 17px;
+
+        color: var(--muted);
+
+        font-size: 9px;
+        font-weight: 700;
+        line-height: 1;
+
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
     }
 
-    .cc-testimonial {
-        min-height: 360px;
 
-        padding: 35px;
+    .cc-testimonials__eyebrow span {
+        width: 5px;
+        height: 5px;
 
-        border-radius: 20px;
+        border-radius: 50%;
+
+        background: var(--lime);
+
+        box-shadow:
+            0 0 12px rgba(185, 232, 58, 0.5);
     }
 
-    .cc-testimonial blockquote {
-        font-size: 27px;
+
+    .cc-testimonials__heading h2,
+    .cc-testimonials__empty h2 {
+        margin: 0;
+
+        font-size: clamp(40px, 5vw, 68px);
+        font-weight: 500;
+
+        line-height: 0.98;
+        letter-spacing: -0.055em;
     }
 
-}
 
-@media (max-width: 600px) {
+    .cc-testimonials__heading h2 em,
+    .cc-testimonials__empty h2 em {
+        display: block;
 
-    .cc-testimonials {
-        padding: 70px 0;
+        color: transparent;
+
+        font-style: normal;
+
+        background:
+            linear-gradient(
+                100deg,
+                rgba(255,255,255,0.4),
+                var(--purple-bright) 55%,
+                rgba(185, 232, 58, 0.75)
+            );
+
+        -webkit-background-clip: text;
+        background-clip: text;
     }
 
-    .cc-testimonials__top h2 {
-        font-size: 43px;
-    }
+
+    /* =========================================================
+       CONTROLS
+       ========================================================= */
 
     .cc-testimonials__controls {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+
+        flex-shrink: 0;
+    }
+
+
+    .cc-testimonials__count {
+        display: flex;
+        align-items: baseline;
+        gap: 5px;
+
+        color: rgba(255,255,255,0.22);
+
+        font-size: 10px;
+        font-weight: 600;
+
+        letter-spacing: 0.1em;
+        font-variant-numeric: tabular-nums;
+    }
+
+
+    .cc-testimonials__count strong {
+        color: var(--purple-bright);
+
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+
+    .cc-testimonials__arrows {
+        display: flex;
+        gap: 7px;
+    }
+
+
+    .cc-testimonials__arrows button {
+        display: grid;
+        place-items: center;
+
+        width: 44px;
+        height: 44px;
+
+        padding: 0;
+
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 50%;
+
+        color: rgba(255,255,255,0.6);
+
+        background: rgba(255,255,255,0.025);
+
+        cursor: pointer;
+
+        transition:
+            color 450ms ease,
+            background 450ms ease,
+            border-color 450ms ease,
+            box-shadow 450ms ease;
+    }
+
+
+    .cc-testimonials__arrows button svg {
+        width: 17px;
+        height: 17px;
+    }
+
+
+    .cc-testimonials__arrows button:hover {
+        color: var(--white);
+
+        border-color: rgba(139,92,246,0.45);
+
+        background: rgba(139,92,246,0.12);
+
+        box-shadow:
+            0 0 25px rgba(139,92,246,0.12);
+    }
+
+
+    .cc-testimonials__arrows button:focus-visible {
+        outline: none;
+
+        border-color: var(--purple);
+
+        box-shadow:
+            0 0 0 3px rgba(139,92,246,0.15);
+    }
+
+
+    /* =========================================================
+       SLIDER
+       ========================================================= */
+
+    .cc-testimonial-track {
+        display: grid;
+
         width: 100%;
     }
 
-    .cc-testimonials__control {
-        width: 44px;
-        height: 44px;
+
+    .cc-testimonial-slide {
+        grid-area: 1 / 1;
+
+        width: 100%;
+        min-width: 0;
     }
+
+
+    /* =========================================================
+       CARD
+       ========================================================= */
 
     .cc-testimonial {
-        min-height: 390px;
+        position: relative;
+        isolation: isolate;
 
-        padding: 27px;
+        display: flex;
+        flex-direction: column;
 
-        border-radius: 18px;
+        width: 100%;
+
+        /*
+         * Much smaller than before.
+         * Content can still grow naturally.
+         */
+        min-height: 365px;
+
+        padding: 34px 38px 30px;
+
+        box-sizing: border-box;
+
+        overflow: hidden;
+
+        border: 1px solid rgba(255,255,255,0.085);
+        border-radius: 24px;
+
+        background:
+            linear-gradient(
+                135deg,
+                rgba(255,255,255,0.045),
+                rgba(255,255,255,0.018) 45%,
+                rgba(88, 28, 135, 0.055)
+            );
+
+        box-shadow:
+            0 24px 70px rgba(0,0,0,0.25),
+            inset 0 1px 0 rgba(255,255,255,0.035);
+
+        /*
+         * Only visual properties transition.
+         * Absolutely NO transform here.
+         */
+        transition:
+            border-color 500ms ease,
+            background 500ms ease,
+            box-shadow 500ms ease;
     }
 
-    .cc-testimonial blockquote {
-        font-size: 23px;
 
-        line-height: 1.25;
+    .cc-testimonial:hover {
+        border-color: rgba(139,92,246,0.3);
+
+        background:
+            linear-gradient(
+                135deg,
+                rgba(255,255,255,0.05),
+                rgba(139,92,246,0.025) 48%,
+                rgba(88,28,135,0.09)
+            );
+
+        box-shadow:
+            0 26px 75px rgba(0,0,0,0.28),
+            0 0 60px rgba(109,40,217,0.045),
+            inset 0 1px 0 rgba(255,255,255,0.04);
     }
+
+
+    /* =========================================================
+       CARD TOP ACCENT
+       ========================================================= */
+
+    .cc-testimonial::before {
+        content: "";
+
+        position: absolute;
+
+        top: 0;
+        left: 13%;
+        right: 13%;
+
+        height: 1px;
+
+        background:
+            linear-gradient(
+                90deg,
+                transparent,
+                rgba(139,92,246,0.75),
+                rgba(185,232,58,0.45),
+                transparent
+            );
+
+        opacity: 0.65;
+    }
+
+
+    .cc-testimonial::after {
+        content: "";
+
+        position: absolute;
+
+        top: -120px;
+        right: -100px;
+
+        width: 260px;
+        height: 260px;
+
+        border-radius: 50%;
+
+        background: rgba(124,58,237,0.1);
+
+        filter: blur(70px);
+
+        pointer-events: none;
+        z-index: -1;
+
+        transition:
+            opacity 600ms ease;
+    }
+
+
+    .cc-testimonial:hover::after {
+        opacity: 1.25;
+    }
+
+
+    /* =========================================================
+       AMBIENT PURPLE
+       ========================================================= */
+
+    .cc-testimonial__ambient {
+        position: absolute;
+
+        bottom: -140px;
+        left: 25%;
+
+        width: 300px;
+        height: 180px;
+
+        border-radius: 50%;
+
+        background: rgba(109,40,217,0.08);
+
+        filter: blur(65px);
+
+        pointer-events: none;
+        z-index: -1;
+    }
+
+
+    /* =========================================================
+       TOP
+       ========================================================= */
+
+    .cc-testimonial__top {
+        position: relative;
+        z-index: 2;
+
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        margin-bottom: 32px;
+    }
+
+
+    .cc-testimonial__stars {
+        display: flex;
+        gap: 3px;
+
+        color: var(--lime);
+    }
+
+
+    .cc-testimonial__stars svg {
+        width: 11px;
+        height: 11px;
+    }
+
+
+    .cc-testimonial__top > span {
+        color: rgba(255,255,255,0.25);
+
+        font-size: 8px;
+        font-weight: 700;
+
+        letter-spacing: 0.17em;
+    }
+
+
+    /* =========================================================
+       QUOTE
+       ========================================================= */
 
     .cc-testimonial__quote {
-        right: 15px;
+        position: relative;
+        z-index: 2;
 
-        font-size: 105px;
+        max-width: 900px;
     }
+
+
+    .cc-testimonial__mark {
+        position: absolute;
+
+        top: -28px;
+        left: -12px;
+
+        color: rgba(139,92,246,0.12);
+
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 105px;
+        line-height: 1;
+
+        pointer-events: none;
+        user-select: none;
+    }
+
+
+    .cc-testimonial__quote blockquote {
+        position: relative;
+        z-index: 2;
+
+        margin: 0;
+
+        color: rgba(247,247,244,0.94);
+
+        font-size: clamp(22px, 2.55vw, 35px);
+        font-weight: 450;
+
+        line-height: 1.22;
+        letter-spacing: -0.035em;
+
+        overflow-wrap: anywhere;
+    }
+
+
+    /* =========================================================
+       BOTTOM / AUTHOR
+       ========================================================= */
+
+    .cc-testimonial__bottom {
+        position: relative;
+        z-index: 2;
+
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+
+        gap: 30px;
+
+        margin-top: auto;
+        padding-top: 38px;
+    }
+
 
     .cc-testimonial__author {
-        margin-top: 30px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
     }
 
-}
 
-@media (prefers-reduced-motion: reduce) {
+    .cc-testimonial__avatar {
+        display: grid;
+        place-items: center;
 
-    .cc-testimonials *,
-    .cc-testimonials *::before,
-    .cc-testimonials *::after {
-        transition: none !important;
-        animation: none !important;
+        width: 42px;
+        height: 42px;
+        flex: 0 0 42px;
+
+        border: 1px solid rgba(139,92,246,0.32);
+        border-radius: 12px;
+
+        color: var(--purple-bright);
+
+        background:
+            linear-gradient(
+                135deg,
+                rgba(139,92,246,0.18),
+                rgba(139,92,246,0.05)
+            );
+
+        font-size: 12px;
+        font-weight: 700;
+
+        box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.04);
     }
 
-}
 
+    .cc-testimonial__author > div:last-child {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+
+    .cc-testimonial__author strong {
+        color: rgba(247,247,244,0.88);
+
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+
+    .cc-testimonial__author span {
+        color: rgba(247,247,244,0.32);
+
+        font-size: 9px;
+        font-weight: 500;
+
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+
+    /* =========================================================
+       LITTLE ACCENT
+       ========================================================= */
+
+    .cc-testimonial__accent {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+
+        padding-bottom: 4px;
+    }
+
+
+    .cc-testimonial__accent span {
+        display: block;
+
+        width: 4px;
+        height: 4px;
+
+        border-radius: 50%;
+
+        background: var(--purple);
+
+        opacity: 0.35;
+    }
+
+
+    .cc-testimonial__accent span:nth-child(2) {
+        width: 18px;
+
+        border-radius: 10px;
+
+        background:
+            linear-gradient(
+                90deg,
+                var(--purple),
+                var(--lime)
+            );
+
+        opacity: 0.8;
+    }
+
+
+    .cc-testimonial__accent span:nth-child(3) {
+        background: var(--lime);
+
+        opacity: 0.45;
+    }
+
+
+    /* =========================================================
+       TRANSITION
+       ========================================================= */
+
+    .cc-testimonial-enter {
+        transition:
+            opacity 550ms cubic-bezier(0.22, 1, 0.36, 1),
+            transform 650ms cubic-bezier(0.22, 1, 0.36, 1);
+
+        will-change: opacity, transform;
+    }
+
+
+    .cc-testimonial-enter-start {
+        opacity: 0;
+
+        transform:
+            translate3d(0, 10px, 0);
+    }
+
+
+    .cc-testimonial-enter-end {
+        opacity: 1;
+
+        transform:
+            translate3d(0, 0, 0);
+    }
+
+
+    .cc-testimonial-leave {
+        transition:
+            opacity 300ms ease,
+            transform 350ms ease;
+
+        will-change: opacity, transform;
+    }
+
+
+    .cc-testimonial-leave-start {
+        opacity: 1;
+
+        transform:
+            translate3d(0, 0, 0);
+    }
+
+
+    .cc-testimonial-leave-end {
+        opacity: 0;
+
+        transform:
+            translate3d(0, -5px, 0);
+    }
+
+
+    /* =========================================================
+       DOTS
+       ========================================================= */
+
+    .cc-testimonials__dots {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        gap: 5px;
+
+        margin-top: 22px;
+    }
+
+
+    .cc-testimonials__dots button {
+        display: grid;
+        place-items: center;
+
+        width: 22px;
+        height: 16px;
+
+        padding: 0;
+
+        border: 0;
+        background: transparent;
+
+        cursor: pointer;
+    }
+
+
+    .cc-testimonials__dots button span {
+        display: block;
+
+        width: 4px;
+        height: 4px;
+
+        border-radius: 99px;
+
+        background: rgba(255,255,255,0.2);
+
+        transition:
+            width 450ms cubic-bezier(0.22,1,0.36,1),
+            background-color 450ms ease,
+            box-shadow 450ms ease;
+    }
+
+
+    .cc-testimonials__dots button:hover span {
+        background: rgba(139,92,246,0.7);
+    }
+
+
+    .cc-testimonials__dots button.is-active span {
+        width: 18px;
+
+        background:
+            linear-gradient(
+                90deg,
+                var(--purple),
+                var(--lime)
+            );
+
+        box-shadow:
+            0 0 12px rgba(139,92,246,0.3);
+    }
+
+
+    /* =========================================================
+       EMPTY
+       ========================================================= */
+
+    .cc-testimonials__empty {
+        padding: 50px;
+
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 24px;
+
+        background:
+            radial-gradient(
+                circle at 80% 20%,
+                rgba(139,92,246,0.08),
+                transparent 40%
+            ),
+            rgba(255,255,255,0.018);
+    }
+
+
+    .cc-testimonials__empty p {
+        margin: 20px 0 0;
+
+        color: var(--muted);
+
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+
+    /* =========================================================
+       TABLET
+       ========================================================= */
+
+    @media (max-width: 800px) {
+
+        .cc-testimonials {
+            padding: 75px 0 80px;
+        }
+
+
+        .cc-testimonials__header {
+            align-items: flex-start;
+            flex-direction: column;
+
+            margin-bottom: 32px;
+        }
+
+
+        .cc-testimonials__controls {
+            width: 100%;
+            justify-content: space-between;
+        }
+
+
+        .cc-testimonial {
+            min-height: 350px;
+
+            padding: 30px;
+        }
+
+
+        .cc-testimonial__quote blockquote {
+            font-size: clamp(23px, 4.5vw, 31px);
+        }
+
+    }
+
+
+    /* =========================================================
+       MOBILE
+       ========================================================= */
+
+    @media (max-width: 560px) {
+
+        .cc-testimonials {
+            padding: 65px 0 70px;
+        }
+
+
+        .cc-testimonials__heading h2,
+        .cc-testimonials__empty h2 {
+            font-size: clamp(37px, 11vw, 52px);
+        }
+
+
+        .cc-testimonial {
+            min-height: 0;
+
+            padding: 27px 24px 24px;
+
+            border-radius: 20px;
+        }
+
+
+        .cc-testimonial__top {
+            align-items: flex-start;
+            flex-direction: column;
+
+            gap: 12px;
+
+            margin-bottom: 27px;
+        }
+
+
+        .cc-testimonial__top > span {
+            font-size: 7px;
+        }
+
+
+        .cc-testimonial__quote blockquote {
+            font-size: 23px;
+            line-height: 1.24;
+        }
+
+
+        .cc-testimonial__mark {
+            top: -22px;
+            left: -8px;
+
+            font-size: 80px;
+        }
+
+
+        .cc-testimonial__bottom {
+            align-items: flex-start;
+            flex-direction: column;
+
+            gap: 20px;
+
+            margin-top: 38px;
+            padding-top: 0;
+        }
+
+
+        .cc-testimonial__accent {
+            display: none;
+        }
+
+
+        .cc-testimonials__arrows button {
+            width: 42px;
+            height: 42px;
+        }
+
+    }
+
+
+    /* =========================================================
+       REDUCED MOTION
+       ========================================================= */
+
+    @media (prefers-reduced-motion: reduce) {
+
+        .cc-testimonial,
+        .cc-testimonial::after,
+        .cc-testimonial-enter,
+        .cc-testimonial-leave,
+        .cc-testimonials__arrows button,
+        .cc-testimonials__dots button span {
+            transition: none !important;
+        }
+
+    }
 </style>
 @endpush
