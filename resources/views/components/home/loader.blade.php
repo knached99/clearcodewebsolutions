@@ -5,7 +5,7 @@
         <div class="loader__logo slideInDown">
 
             <img
-                src="{{ asset('assets/img/demo/logo-loader.svg') }}"
+                src="{{ asset('assets/img/loader.svg') }}"
                 alt="Clear Code Web Solutions"
             >
 

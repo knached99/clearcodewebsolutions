@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <style>
+      /* Base stroke configuration for the drawing effect */
+      .bracket-draw {
+        stroke-dasharray: 450;
+        stroke-dashoffset: 450;
+        fill: none;
+        stroke-width: 40;
+        stroke-linejoin: miter;
+        stroke-linecap: square;
+      }
+
+      /* Left bracket animates first */
+      .draw-left {
+        stroke: #963c96;
+        animation: drawInLeft 3s cubic-bezier(0.8, 0, 0.2, 1) infinite;
+      }
+
+      /* Right bracket animates second with a slight delay */
+      .draw-right {
+        stroke: #ADD322;
+        animation: drawInRight 3s cubic-bezier(0.8, 0, 0.2, 1) infinite;
+      }
+
+      /* Terminal cursor blinking effect */
+      .cursor-blink {
+        fill: #ADD322;
+        opacity: 0;
+        animation: blink 1s step-end infinite;
+      }
+
+      /* Text fade-in synchronization */
+      .text-reveal {
+        opacity: 0;
+        animation: fadeText 3s ease-in-out infinite;
+      }
+
+      /* Keyframes for left HTML bracket */
+      @keyframes drawInLeft {
+        0%, 10% { stroke-dashoffset: 450; }
+        40%, 100% { stroke-dashoffset: 0; }
+      }
+
+      /* Keyframes for right HTML bracket */
+      @keyframes drawInRight {
+        0%, 30% { stroke-dashoffset: 450; }
+        60%, 100% { stroke-dashoffset: 0; }
+      }
+
+      /* Keyframes for the coding cursor */
+      @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+      }
+
+      /* Keyframes for brand typography */
+      @keyframes fadeText {
+        0%, 65% { opacity: 0; transform: translateY(10px); }
+        85%, 100% { opacity: 1; transform: translateY(0); }
+      }
+    </style>
+  </defs>
+  
+  <g transform="translate(0, -30)">
+    <!-- Left HTML Bracket -->
+    <path class="bracket-draw draw-left" d="M 210,130 L 70,250 L 210,370" />
+    
+    <!-- Right HTML Bracket -->
+    <path class="bracket-draw draw-right" d="M 290,130 L 430,250 L 290,370" />
+    
+    <!-- Animated Terminal Cursor inside the brackets -->
+    <rect class="cursor-blink" x="235" y="190" width="30" height="120" />
+
+    <!-- Typography: Utilizing Monospace to reinforce the web code aesthetic -->
+    <text class="text-reveal" x="250" y="440" text-anchor="middle" font-family="'Courier New', Courier, monospace" font-size="52" font-weight="900" letter-spacing="2" fill="#963c96">CLEARCODE</text>
+    
+    <text class="text-reveal" x="250" y="480" text-anchor="middle" font-family="'Courier New', Courier, monospace" font-size="22" font-weight="600" letter-spacing="6" fill="#888888">WEBSOLUTIONS</text>
+  </g>
+</svg>
