@@ -20,9 +20,11 @@
 
         <x-home.process id="process" />
 
-        <x-home.testimonials id="testimonials" />
+        <livewire:home.testimonials.slider id="testimonials" />
 
         <x-home.about id="about" />
+        
+        <livewire:home.testimonials.form id="testimonial-form"/>
 
         <livewire:home.contact />
 

@@ -4,13 +4,12 @@ namespace App\Livewire\Teams\Tickets;
 
 use App\Models\Team;
 use App\Models\Ticket;
+use App\Notifications\TicketStatusChangedNotification;
+use Illuminate\Support\Facades\Notification;
 use Livewire\Component;
-use Livewire\WithPagination;
 
 class Index extends Component
 {
-    use WithPagination;
-
     public string $status = 'all';
 
     public string $priority = 'all';
@@ -19,46 +18,43 @@ class Index extends Component
 
     public string $sort = 'latest';
 
-    /**
-     * Persist the team across Livewire requests.
-     *
-     * The initial page request has the `current_team` route parameter,
-     * but subsequent Livewire requests hit the Livewire update route,
-     * which does not contain that parameter.
-     */
     public int $teamId;
 
     public function mount(): void
     {
         $currentTeam = request()->route('current_team');
 
-        $team = $currentTeam instanceof Team
-            ? $currentTeam
-            : Team::query()
-                ->where('slug', $currentTeam)
-                ->firstOrFail();
+        if ($currentTeam instanceof Team) {
+            $this->teamId = $currentTeam->id;
+
+            return;
+        }
+
+        $team = Team::query()
+            ->where('slug', $currentTeam)
+            ->firstOrFail();
 
         $this->teamId = $team->id;
     }
 
     public function updatedSearch(): void
     {
-        $this->resetPage();
+        //
     }
 
     public function updatedStatus(): void
     {
-        $this->resetPage();
+        //
     }
 
     public function updatedPriority(): void
     {
-        $this->resetPage();
+        //
     }
 
     public function updatedSort(): void
     {
-        $this->resetPage();
+        //
     }
 
     public function moveTicket(int|string $ticketId, string $status): void
@@ -77,7 +73,10 @@ class Index extends Component
             ->where('team_id', $this->teamId)
             ->firstOrFail();
 
-        if ($ticket->status === $status) {
+        $oldStatus = $ticket->status;
+
+        // Don't send a notification if nothing actually changed.
+        if ($oldStatus === $status) {
             return;
         }
 
@@ -85,6 +84,18 @@ class Index extends Component
             'status' => $status,
             'last_activity_at' => now(),
         ]);
+
+        // Notify the customer.
+        if ($ticket->email) {
+            Notification::route('mail', $ticket->email)
+                ->notify(
+                    new TicketStatusChangedNotification(
+                        $ticket,
+                        $oldStatus,
+                        $status
+                    )
+                );
+        }
 
         $this->dispatch(
             'ticket-moved',
@@ -108,9 +119,9 @@ class Index extends Component
             ->where('team_id', $this->teamId)
             ->withCount('messages')
             ->when(
-                $this->search,
+                $this->search !== '',
                 function ($query) {
-                    $search = '%'.$this->search.'%';
+                    $search = '%' . $this->search . '%';
 
                     $query->where(function ($query) use ($search) {
                         $query
@@ -144,7 +155,7 @@ class Index extends Component
                     'last_activity_at'
                 )
             )
-            ->paginate(50);
+            ->get();
 
         $counts = [
             'all' => Ticket::query()

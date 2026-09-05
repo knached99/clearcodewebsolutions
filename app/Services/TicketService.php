@@ -23,15 +23,9 @@ class TicketService
 
     public function createTicket(array $data): array
     {
-        $team = Team::where('is_personal', true)->firstOrFail();
+        $team = $this->resolveTicketTeam();
 
         return DB::transaction(function () use ($data, $team) {
-            /*
-             * This is the original permanent/private guest token.
-             *
-             * The raw token is returned once to the caller.
-             * Only its SHA-256 hash is stored in the database.
-             */
             $token = bin2hex(random_bytes(32));
 
             $ticket = Ticket::create([
@@ -59,12 +53,55 @@ class TicketService
         });
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Original Ticket Token Authentication
-    |--------------------------------------------------------------------------
-    */
+    protected function resolveTicketTeam(): Team
+{
+        // If we're inside a team route, use that team
+        $currentTeam = request()->route('current_team');
 
+        if ($currentTeam instanceof Team) {
+            return $currentTeam;
+        }
+
+        if (is_string($currentTeam) && $currentTeam !== '') {
+            $team = Team::where('slug', $currentTeam)->first();
+
+            if ($team) {
+                return $team;
+            }
+        }
+
+        // If the authenticated user has a current team, use it
+        if (auth()->check()) {
+            $user = auth()->user();
+
+            if ($user->current_team_id) {
+                $team = Team::find($user->current_team_id);
+
+                if ($team) {
+                    return $team;
+                }
+            }
+        }
+
+        // Deterministic fallback
+        $team = Team::query()
+            ->where('is_personal', true)
+            ->orderBy('id')
+            ->first();
+
+        if ($team) {
+            return $team;
+        }
+
+        // If absolutely nothing exists create a safe fallback
+        return Team::create([
+            'name' => 'Support',
+            'slug' => 'support',
+            'is_personal' => true,
+        ]);
+    }
+
+    
     public function findGuestTicket(
         string $ticketNumber,
     ): ?Ticket {

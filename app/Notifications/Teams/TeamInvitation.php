@@ -13,56 +13,80 @@ class TeamInvitation extends Notification implements ShouldQueue
     use Queueable;
 
     /**
-     * Create a new notification instance.
+     * Do not serialize the entire User model.
+     * The invitation ID and temporary password are all that are required.
      */
-    public function __construct(public TeamInvitationModel $invitation)
-    {
-        //
+    public function __construct(
+        public int $invitationId,
+        public string $temporaryPassword,
+    ) {
+        $this->afterCommit();
     }
 
-    /**
-     * Get the notification's delivery channels.
-     *
-     * @return array<int, string>
-     */
     public function via(object $notifiable): array
     {
         return ['mail'];
     }
 
-    /**
-     * Get the mail representation of the notification.
-     */
     public function toMail(object $notifiable): MailMessage
     {
-        $team = $this->invitation->team;
-        $inviter = $this->invitation->inviter;
+        $invitation = TeamInvitationModel::query()
+            ->with([
+                'team',
+                'inviter',
+            ])
+            ->findOrFail($this->invitationId);
 
         return (new MailMessage)
-            ->subject(__("You've been invited to join :teamName", ['teamName' => $team->name]))
-            ->line(__(':inviterName has invited you to join the :teamName team.', [
-                'inviterName' => $inviter->name,
-                'teamName' => $team->name,
+            ->subject(
+                __("You've been invited to join :teamName", [
+                    'teamName' => $invitation->team->name,
+                ])
+            )
+            ->greeting(__('You have been invited!'))
+            ->line(__(
+                ':inviterName has invited you to join the :teamName team.',
+                [
+                    'inviterName' => $invitation->inviter->name,
+                    'teamName' => $invitation->team->name,
+                ]
+            ))
+            ->line(__('Your account has been created for you.'))
+            ->line(__('Email: :email', [
+                'email' => $invitation->email,
             ]))
-            ->line(__('Log in and visit your dashboard to accept or decline this invitation.'))
+            ->line(__('Temporary password: :password', [
+                'password' => $this->temporaryPassword,
+            ]))
+            ->line(
+                __('This temporary password is valid only until you create your new password.')
+            )
             ->action(
-                __('Log in'),
-                route('login', ['invitation' => $this->invitation->code]),
+                __('Sign In'),
+                route('login', [
+                    'invitation' => $invitation->code,
+                ])
+            )
+            ->line(
+                __('For security, you will be required to create a new password before accessing your account.')
             );
     }
 
-    /**
-     * Get the array representation of the notification.
-     *
-     * @return array<string, mixed>
-     */
     public function toArray(object $notifiable): array
     {
+        $invitation = TeamInvitationModel::query()
+            ->with('team')
+            ->find($this->invitationId);
+
+        if (! $invitation) {
+            return [];
+        }
+
         return [
-            'invitation_id' => $this->invitation->id,
-            'team_id' => $this->invitation->team_id,
-            'team_name' => $this->invitation->team->name,
-            'role' => $this->invitation->role->value,
+            'invitation_id' => $invitation->id,
+            'team_id' => $invitation->team_id,
+            'team_name' => $invitation->team->name,
+            'role' => $invitation->role->value,
         ];
     }
 }

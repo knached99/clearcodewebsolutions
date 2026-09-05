@@ -22,10 +22,18 @@ use Illuminate\Support\Str;
  * @property Carbon|null $accepted_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ *
  * @property-read Team $team
  * @property-read User $inviter
  */
-#[Fillable(['team_id', 'email', 'role', 'invited_by', 'expires_at', 'accepted_at'])]
+#[Fillable([
+    'team_id',
+    'email',
+    'role',
+    'invited_by',
+    'expires_at',
+    'accepted_at',
+])]
 class TeamInvitation extends Model
 {
     /** @use HasFactory<TeamInvitationFactory> */
@@ -42,13 +50,23 @@ class TeamInvitation extends Model
             if (empty($invitation->code)) {
                 $invitation->code = Str::random(64);
             }
+
+            $invitation->email = strtolower(
+                trim($invitation->email)
+            );
+        });
+
+        static::updating(function (TeamInvitation $invitation) {
+            if ($invitation->isDirty('email')) {
+                $invitation->email = strtolower(
+                    trim($invitation->email)
+                );
+            }
         });
     }
 
     /**
-     * Get the team that the invitation belongs to.
-     *
-     * @return BelongsTo<Team, $this>
+     * Get the team that owns this invitation.
      */
     public function team(): BelongsTo
     {
@@ -57,8 +75,6 @@ class TeamInvitation extends Model
 
     /**
      * Get the user who sent the invitation.
-     *
-     * @return BelongsTo<User, $this>
      */
     public function inviter(): BelongsTo
     {
@@ -66,7 +82,7 @@ class TeamInvitation extends Model
     }
 
     /**
-     * Determine if the invitation has been accepted.
+     * Determine whether the invitation has been accepted.
      */
     public function isAccepted(): bool
     {
@@ -74,25 +90,43 @@ class TeamInvitation extends Model
     }
 
     /**
-     * Determine if the invitation is pending.
-     */
-    public function isPending(): bool
-    {
-        return $this->accepted_at === null && ! $this->isExpired();
-    }
-
-    /**
-     * Determine if the invitation has expired.
+     * Determine whether the invitation has expired.
      */
     public function isExpired(): bool
     {
-        return $this->expires_at !== null && $this->expires_at->isPast();
+        return $this->expires_at !== null
+            && $this->expires_at->isPast();
+    }
+
+    /**
+     * Determine whether the invitation is still pending.
+     */
+    public function isPending(): bool
+    {
+        return ! $this->isAccepted()
+            && ! $this->isExpired();
+    }
+
+    /**
+     * Determine whether the invitation can still be accepted.
+     */
+    public function isValid(): bool
+    {
+        return $this->isPending();
+    }
+
+    /**
+     * Mark the invitation as accepted.
+     */
+    public function accept(): void
+    {
+        $this->forceFill([
+            'accepted_at' => now(),
+        ])->save();
     }
 
     /**
      * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
      */
     protected function casts(): array
     {

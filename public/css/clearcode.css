@@ -2741,3 +2741,62 @@ html {
         font-size: 13px;
     }
 }
+
+.cc-navbar__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    text-decoration: none;
+}
+
+.cc-navbar__logo {
+    width: 36px;
+    height: 36px;
+
+    display: block;
+
+    object-fit: contain;
+    object-position: center;
+
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+
+    mix-blend-mode: normal;
+
+    filter: none;
+
+    transition:
+        transform 180ms ease,
+        opacity 180ms ease;
+}
+
+.cc-navbar__brand:hover .cc-navbar__logo {
+    transform: scale(1.04);
+}
+
+.cc-navbar__logo-name {
+    display: flex;
+    flex-direction: column;
+
+    color: #fff;
+
+    font-size: 14px;
+    font-weight: 800;
+
+    line-height: 1;
+    letter-spacing: -0.02em;
+}
+
+.cc-navbar__logo-name small {
+    margin-top: 4px;
+
+    color: #ADD322;
+
+    font-size: 7px;
+    font-weight: 700;
+
+    line-height: 1;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}

@@ -10,35 +10,52 @@ use Illuminate\Translation\PotentiallyTranslatedString;
 
 class UniqueTeamInvitation implements ValidationRule
 {
-    public function __construct(protected Team $team)
-    {
-        //
+    public function __construct(
+        protected Team $team
+    ) {
     }
 
     /**
      * Run the validation rule.
      *
-     * @param  Closure(string, ?string=): PotentiallyTranslatedString  $fail
+     * @param Closure(string, ?string=): PotentiallyTranslatedString $fail
      */
-    public function validate(string $attribute, mixed $value, Closure $fail): void
-    {
-        $email = strtolower($value);
+    public function validate(
+        string $attribute,
+        mixed $value,
+        Closure $fail
+    ): void {
+        $email = strtolower(trim((string) $value));
 
-        $isMember = $this->team->members()
+        if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return;
+        }
+
+        /*
+         * Don't allow inviting someone who is already
+         * a member of this team.
+         */
+        $isMember = $this->team
+            ->members()
             ->whereRaw('LOWER(email) = ?', [$email])
             ->exists();
 
         if ($isMember) {
             $fail(__('This user is already a member of the team.'));
-
             return;
         }
 
-        $hasPendingInvitation = TeamInvitation::where('team_id', $this->team->id)
+        /*
+         * Don't allow multiple active invitations
+         * for the same team/email combination.
+         */
+        $hasPendingInvitation = TeamInvitation::query()
+            ->where('team_id', $this->team->id)
             ->whereRaw('LOWER(email) = ?', [$email])
             ->whereNull('accepted_at')
             ->where(function ($query) {
-                $query->whereNull('expires_at')
+                $query
+                    ->whereNull('expires_at')
                     ->orWhere('expires_at', '>', now());
             })
             ->exists();

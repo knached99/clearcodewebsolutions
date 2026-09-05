@@ -4,10 +4,14 @@ use App\Http\Controllers\GuestTicketAttachmentController;
 use App\Http\Controllers\Teams\TicketAttachmentController;
 use App\Http\Controllers\Teams\TicketController as TeamTicketController;
 use App\Http\Controllers\TicketController as GuestTicketController;
+use App\Http\Controllers\WorkController;
 use App\Livewire\Home\Tickets\TicketSearch;
+use App\Livewire\Teams\Projects\Index as AdminWorksIndex;
+use App\Livewire\Teams\Testimonials\Index as AdminTestimonialsIndex;
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'welcome')->name('home');
+Route::view('/', 'welcome')
+    ->name('home');
 
 /*
 |--------------------------------------------------------------------------
@@ -44,6 +48,15 @@ Route::get(
 
 /*
 |--------------------------------------------------------------------------
+| Public Projects
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/projects/{work}', [WorkController::class, 'show'])
+    ->name('work.show');
+
+/*
+|--------------------------------------------------------------------------
 | Team / Admin
 |--------------------------------------------------------------------------
 |
@@ -61,6 +74,12 @@ Route::prefix('{current_team}')
         Route::view('dashboard', 'dashboard')
             ->name('dashboard');
 
+        /*
+        |--------------------------------------------------------------------------
+        | Ticket Attachments
+        |--------------------------------------------------------------------------
+        */
+
         Route::get(
             'tickets/attachments/{attachment}/preview',
             [TicketAttachmentController::class, 'preview']
@@ -71,10 +90,43 @@ Route::prefix('{current_team}')
             [TicketAttachmentController::class, 'download']
         )->name('ticket.attachments.download');
 
+        /*
+        |--------------------------------------------------------------------------
+        | Team Tickets
+        |--------------------------------------------------------------------------
+        */
+
         Route::get(
             'tickets/{ticket}',
             [TeamTicketController::class, 'show']
         )->name('team.tickets.show');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Projects
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get(
+            'projects',
+            AdminWorksIndex::class
+        )->name('teams.projects.index');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Testimonials
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get(
+            'testimonials',
+            AdminTestimonialsIndex::class
+        )->name('testimonials.index');
+
+        Route::get(
+            'testimonials/{testimonial}',
+            AdminTestimonialsIndex::class
+        )->name('testimonials.show');
     });
 
-require __DIR__.'/settings.php';
+require __DIR__ . '/settings.php';

@@ -22,15 +22,23 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
+ *
  * @property-read Collection<int, TeamInvitation> $invitations
  * @property-read Collection<int, Membership> $memberships
  * @property-read Collection<int, User> $members
+ * @property-read Collection<int, Ticket> $tickets
  */
-#[Fillable(['name', 'slug', 'is_personal'])]
+#[Fillable([
+    'name',
+    'slug',
+    'is_personal',
+])]
 class Team extends Model
 {
     /** @use HasFactory<TeamFactory> */
-    use GeneratesUniqueTeamSlugs, HasFactory, SoftDeletes;
+    use GeneratesUniqueTeamSlugs;
+    use HasFactory;
+    use SoftDeletes;
 
     /**
      * Bootstrap the model and its traits.
@@ -41,13 +49,18 @@ class Team extends Model
 
         static::creating(function (Team $team) {
             if (empty($team->slug)) {
-                $team->slug = static::generateUniqueTeamSlug($team->name);
+                $team->slug = static::generateUniqueTeamSlug(
+                    $team->name
+                );
             }
         });
 
         static::updating(function (Team $team) {
             if ($team->isDirty('name')) {
-                $team->slug = static::generateUniqueTeamSlug($team->name, $team->id);
+                $team->slug = static::generateUniqueTeamSlug(
+                    $team->name,
+                    $team->id
+                );
             }
         });
     }
@@ -55,7 +68,7 @@ class Team extends Model
     /**
      * Get the team owner.
      */
-    public function owner(): ?Model
+    public function owner(): ?User
     {
         return $this->members()
             ->wherePivot('role', TeamRole::Owner->value)
@@ -64,12 +77,15 @@ class Team extends Model
 
     /**
      * Get all members of this team.
-     *
-     * @return BelongsToMany<User, $this, Membership, 'pivot'>
      */
     public function members(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'team_members', 'team_id', 'user_id')
+        return $this->belongsToMany(
+            User::class,
+            'team_members',
+            'team_id',
+            'user_id'
+        )
             ->using(Membership::class)
             ->withPivot(['role'])
             ->withTimestamps();
@@ -77,8 +93,6 @@ class Team extends Model
 
     /**
      * Get all memberships for this team.
-     *
-     * @return HasMany<Membership, $this>
      */
     public function memberships(): HasMany
     {
@@ -87,8 +101,6 @@ class Team extends Model
 
     /**
      * Get all invitations for this team.
-     *
-     * @return HasMany<TeamInvitation, $this>
      */
     public function invitations(): HasMany
     {
@@ -96,20 +108,64 @@ class Team extends Model
     }
 
     /**
+     * Get all tickets belonging to this team.
+     */
+    public function tickets(): HasMany
+    {
+        return $this->hasMany(Ticket::class);
+    }
+
+    /**
+     * Determine whether a user is an administrator.
+     */
+    public function isAdmin(User $user): bool
+    {
+        return $this->members()
+            ->whereKey($user->id)
+            ->wherePivot('role', TeamRole::Admin->value)
+            ->exists();
+    }
+
+    /**
+     * Determine whether a user is a member of this team.
+     */
+    public function hasMember(User $user): bool
+    {
+        return $this->members()
+            ->whereKey($user->id)
+            ->exists();
+    }
+
+    /**
+     * Get a user's role within this team.
+     */
+    public function roleFor(User $user): ?TeamRole
+    {
+        $membership = $this->memberships()
+            ->where('user_id', $user->id)
+            ->first();
+
+        return $membership?->role;
+    }
+
+    /**
+     * Determine whether the team has an administrator.
+     */
+    public function hasAdmin(): bool
+    {
+        return $this->memberships()
+            ->where('role', TeamRole::Admin->value)
+            ->exists();
+    }
+
+    /**
      * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
      */
     protected function casts(): array
     {
         return [
             'is_personal' => 'boolean',
         ];
-    }
-
-    public function tickets(): HasMany
-    {
-        return $this->hasMany(Ticket::class);
     }
 
     /**

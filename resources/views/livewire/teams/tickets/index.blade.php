@@ -159,8 +159,8 @@
                         Low
                     </option>
 
-                    <option value="medium" class="bg-[#12101a]">
-                        Medium
+                    <option value="normal" class="bg-[#12101a]">
+                    Normala
                     </option>
 
                     <option value="high" class="bg-[#12101a]">
@@ -249,7 +249,7 @@
             ];
         @endphp
 
-        <div wire:replace class="grid min-w-[1200px] grid-cols-4 gap-4">
+        <div class="grid min-w-[1200px] grid-cols-4 gap-4">
             @foreach($columns as $column => $meta)
 
                 @php
@@ -439,9 +439,5 @@
     </div>
 
     {{-- Pagination --}}
-    @if($tickets->hasPages())
-        <div class="border-t border-white/10 px-6 py-4">
-            {{ $tickets->links() }}
-        </div>
-    @endif
+
 </div>
