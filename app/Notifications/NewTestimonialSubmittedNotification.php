@@ -4,13 +4,15 @@ namespace App\Notifications;
 
 use App\Models\Team;
 use App\Models\Testimonials;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use Illuminate\Contracts\Queue\ShouldQueue;
 
 class NewTestimonialSubmittedNotification extends Notification implements ShouldQueue
 {
-    use Queueable
+    use Queueable;
+
     public function __construct(
         public Testimonials $testimonial,
     ) {
