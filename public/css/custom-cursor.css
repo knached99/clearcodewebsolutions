@@ -1,9 +1,7 @@
 @media (hover: hover) and (pointer: fine) {
-
     /* =====================================================
        HIDE NATIVE CURSOR EVERYWHERE
     ===================================================== */
-
     html,
     html *,
     body,
@@ -11,49 +9,52 @@
         cursor: none !important;
     }
 
+    /* Keep native cursor hidden during clicks/focus states */
+    html:active,
+    html:active *,
+    body:active,
+    body:active *,
+    button:active,
+    a:active,
+    input:active,
+    textarea:active,
+    select:active,
+    [role="button"]:active {
+        cursor: none !important;
+    }
 
     /* =====================================================
        CURSOR CONTAINER
     ===================================================== */
-
     #cc-cursor {
         position: fixed;
         top: 0;
         left: 0;
-
         width: 48px;
         height: 48px;
-
         pointer-events: none;
-
         z-index: 2147483647;
-
-        opacity: 1;
+        opacity: 0;
         visibility: visible;
-
         transform: translate3d(-100px, -100px, 0);
-
         will-change: transform;
-
         isolation: isolate;
     }
 
+    #cc-cursor.is-ready {
+        opacity: 1;
+    }
 
     /* =====================================================
        NORMAL ARROW GLOW
     ===================================================== */
-
     #cc-cursor .cc-cursor__glow {
         position: absolute;
-
         top: -10px;
         left: -10px;
-
         width: 44px;
         height: 44px;
-
         border-radius: 50%;
-
         background:
             radial-gradient(
                 circle,
@@ -62,37 +63,27 @@
                 rgba(139, 92, 246, 0.07) 55%,
                 transparent 76%
             );
-
         filter: blur(5px);
-
         transition:
             opacity 160ms ease,
             transform 160ms ease;
     }
 
-
     /* =====================================================
        NORMAL ARROW
     ===================================================== */
-
     #cc-cursor .cc-cursor__arrow {
         position: absolute;
-
         top: 0;
         left: 0;
-
         width: 31px;
         height: 39px;
-
         opacity: 1;
         visibility: visible;
-
         transform:
             rotate(-5deg)
             scale(1);
-
         transform-origin: 3px 3px;
-
         filter:
             drop-shadow(
                 0 0 3px
@@ -106,7 +97,6 @@
                 0 0 18px
                 rgba(139, 92, 246, 0.65)
             );
-
         transition:
             opacity 130ms ease,
             visibility 130ms ease,
@@ -114,62 +104,46 @@
             cubic-bezier(.16, 1, .3, 1);
     }
 
-
     #cc-cursor .cc-cursor__arrow svg {
         display: block;
-
         width: 31px;
         height: 39px;
-
         overflow: visible;
     }
-
 
     /* =====================================================
        POINTER STATE — COMPLETELY HIDE ARROW
     ===================================================== */
-
     #cc-cursor.is-pointer
     .cc-cursor__arrow {
         display: none !important;
-
         opacity: 0 !important;
         visibility: hidden !important;
     }
-
 
     #cc-cursor.is-pointer
     .cc-cursor__glow {
         opacity: 0;
     }
 
-
     /* =====================================================
        MICKEY GLOVE POINTER
+       Slightly smaller: 44px instead of 48px
     ===================================================== */
-
     #cc-cursor .cc-cursor__pointer {
         position: absolute;
-
         top: -4px;
         left: -4px;
-
-        width: 48px;
-        height: 48px;
-
+        width: 44px;
+        height: 44px;
         display: none;
-
         opacity: 0;
         visibility: hidden;
-
         pointer-events: none;
-
         transform:
             rotate(-8deg)
-            scale(0.45);
-
+            scale(1);
         transform-origin: 22px 25px;
-
         filter:
             drop-shadow(
                 0 0 3px
@@ -183,7 +157,6 @@
                 0 0 20px
                 rgba(139, 92, 246, 0.75)
             );
-
         transition:
             opacity 130ms ease,
             visibility 130ms ease,
@@ -191,79 +164,57 @@
             cubic-bezier(.16, 1, .3, 1);
     }
 
-
     /* =====================================================
        SHOW MICKEY POINTER
     ===================================================== */
-
     #cc-cursor.is-pointer
     .cc-cursor__pointer {
         display: block !important;
-
         opacity: 1 !important;
         visibility: visible !important;
-
         transform:
             rotate(-8deg)
             scale(1);
     }
 
-
     /* =====================================================
        POINTER SVG
     ===================================================== */
-
     #cc-cursor .cc-cursor__pointer svg {
         display: block;
-
-        width: 48px;
-        height: 48px;
-
+        width: 44px;
+        height: 44px;
         overflow: visible;
     }
-
 
     /* =====================================================
        GLOVE
     ===================================================== */
-
     #cc-cursor .mickey-glove {
         fill: #eee6ff;
-
         stroke: #ffffff;
-
         stroke-width: 1.25;
-
         stroke-linejoin: round;
-
         stroke-linecap: round;
-
         paint-order: stroke fill;
     }
 
-
     #cc-cursor .mickey-shadow {
         fill: #171020;
-
         opacity: 0.9;
     }
 
-
     #cc-cursor .mickey-highlight {
         fill: #ffffff;
-
         opacity: 0.8;
     }
-
 
     /* =====================================================
        INDEX FINGER ANIMATION
     ===================================================== */
-
     #cc-cursor.is-pointer
     .mickey-finger {
         transform-origin: 21px 5px;
-
         animation:
             mickey-finger-point
             0.9s
@@ -271,9 +222,7 @@
             infinite;
     }
 
-
     @keyframes mickey-finger-point {
-
         0%,
         100% {
             transform:
@@ -294,15 +243,12 @@
         }
     }
 
-
     /* =====================================================
        HAND BOUNCE
     ===================================================== */
-
     #cc-cursor.is-pointer
     .mickey-hand {
         transform-origin: 22px 27px;
-
         animation:
             mickey-hand-bounce
             1.15s
@@ -310,9 +256,7 @@
             infinite;
     }
 
-
     @keyframes mickey-hand-bounce {
-
         0%,
         100% {
             transform:
@@ -325,34 +269,25 @@
         }
     }
 
-
     /* =====================================================
        POINTER GLOW RING
     ===================================================== */
-
     #cc-cursor.is-pointer::after {
         content: '';
-
         position: absolute;
-
-        top: -10px;
-        left: -10px;
-
-        width: 62px;
-        height: 62px;
-
+        top: -7px;
+        left: -7px;
+        width: 56px;
+        height: 56px;
         border-radius: 50%;
-
         border:
             1px solid
             rgba(216, 189, 255, 0.38);
-
         box-shadow:
             0 0 13px
             rgba(216, 189, 255, 0.24),
             inset 0 0 18px
             rgba(139, 92, 246, 0.08);
-
         animation:
             cc-pointer-ring
             1.55s
@@ -360,9 +295,7 @@
             infinite;
     }
 
-
     @keyframes cc-pointer-ring {
-
         0% {
             transform: scale(0.7);
             opacity: 0;
@@ -378,11 +311,9 @@
         }
     }
 
-
     /* =====================================================
        CLICK
     ===================================================== */
-
     #cc-cursor.is-clicking
     .cc-cursor__pointer {
         transform:
@@ -390,40 +321,31 @@
             scale(0.84);
     }
 
-
     /* =====================================================
        TEXT INPUT
     ===================================================== */
-
     #cc-cursor.is-text {
         width: 8px;
         height: 34px;
     }
-
 
     #cc-cursor.is-text
     .cc-cursor__arrow,
     #cc-cursor.is-text
     .cc-cursor__pointer {
         display: none !important;
-
         opacity: 0 !important;
         visibility: hidden !important;
     }
-
 
     #cc-cursor.is-text
     .cc-cursor__glow {
         top: -8px;
         left: -8px;
-
         width: 24px;
         height: 50px;
-
         opacity: 1;
-
         border-radius: 12px;
-
         background:
             radial-gradient(
                 ellipse,
@@ -433,20 +355,14 @@
             );
     }
 
-
     #cc-cursor.is-text::after {
         content: '';
-
         position: absolute;
-
         top: 0;
         left: 2px;
-
         width: 3px;
         height: 32px;
-
         border-radius: 99px;
-
         background:
             linear-gradient(
                 180deg,
@@ -455,13 +371,11 @@
                 #c9a7ff,
                 #9b6cff
             );
-
         box-shadow:
             0 0 5px #ffffff,
             0 0 12px #c9a7ff,
             0 0 25px
             rgba(139, 92, 246, 0.75);
-
         animation:
             cc-cursor-caret
             1s
@@ -469,9 +383,7 @@
             infinite;
     }
 
-
     @keyframes cc-cursor-caret {
-
         0%,
         45% {
             opacity: 1;
@@ -483,44 +395,33 @@
         }
     }
 
-
     /* =====================================================
        CLICK RIPPLE
     ===================================================== */
-
     .cc-cursor-ripple {
         position: fixed;
-
         width: 14px;
         height: 14px;
-
         border-radius: 50%;
-
         pointer-events: none;
-
         z-index: 2147483646;
-
         border:
             1px solid
             rgba(230, 215, 255, 0.85);
-
         box-shadow:
             0 0 10px
             rgba(201, 167, 255, 0.55),
             0 0 22px
             rgba(139, 92, 246, 0.25);
-
         background:
             radial-gradient(
                 circle,
                 rgba(201, 167, 255, 0.12),
                 transparent 70%
             );
-
         transform:
             translate(-50%, -50%)
             scale(0);
-
         animation:
             cc-cursor-ripple
             650ms
@@ -528,14 +429,11 @@
             forwards;
     }
 
-
     @keyframes cc-cursor-ripple {
-
         0% {
             transform:
                 translate(-50%, -50%)
                 scale(0);
-
             opacity: 0.9;
         }
 
@@ -543,19 +441,15 @@
             transform:
                 translate(-50%, -50%)
                 scale(4);
-
             opacity: 0;
         }
     }
 }
 
-
 /* =========================================================
    TOUCH DEVICES
 ========================================================= */
-
 @media (hover: none), (pointer: coarse) {
-
     #cc-cursor,
     .cc-cursor-ripple {
         display: none !important;
