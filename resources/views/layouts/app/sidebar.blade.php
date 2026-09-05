@@ -372,6 +372,419 @@
             }
         }
     </style>
+    <style>
+    .cc-order-select {
+        position: relative;
+    }
+
+    .cc-order-trigger {
+        position: relative;
+        display: flex;
+        align-items: center;
+        width: 100%;
+        min-height: 72px;
+        padding: 11px 14px;
+        gap: 12px;
+        text-align: left;
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        border-radius: 16px;
+        background:
+            linear-gradient(
+                135deg,
+                rgba(139, 92, 246, 0.12),
+                rgba(255, 255, 255, 0.035)
+            ),
+            rgba(8, 8, 13, 0.92);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.035),
+            0 12px 35px rgba(0, 0, 0, 0.2);
+        transition:
+            border-color 180ms ease,
+            box-shadow 180ms ease,
+            transform 180ms ease;
+    }
+
+    .cc-order-trigger:hover {
+        border-color: rgba(173, 211, 34, 0.28);
+        box-shadow:
+            0 0 0 1px rgba(173, 211, 34, 0.05),
+            0 15px 40px rgba(0, 0, 0, 0.28),
+            0 0 35px rgba(139, 92, 246, 0.08);
+    }
+
+    .cc-order-trigger:focus-visible {
+        outline: none;
+        border-color: rgba(173, 211, 34, 0.65);
+        box-shadow:
+            0 0 0 3px rgba(173, 211, 34, 0.08),
+            0 0 35px rgba(173, 211, 34, 0.10);
+    }
+
+    .cc-order-trigger__icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 42px;
+        width: 42px;
+        height: 42px;
+        border: 1px solid rgba(173, 211, 34, 0.16);
+        border-radius: 12px;
+        color: #ADD322;
+        background:
+            linear-gradient(
+                145deg,
+                rgba(173, 211, 34, 0.10),
+                rgba(139, 92, 246, 0.08)
+            );
+        box-shadow:
+            inset 0 0 20px rgba(173, 211, 34, 0.035),
+            0 0 25px rgba(173, 211, 34, 0.035);
+    }
+
+    .cc-order-trigger__icon svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .cc-order-trigger__content {
+        display: flex;
+        flex: 1;
+        min-width: 0;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .cc-order-trigger__eyebrow {
+        color: rgba(255, 255, 255, 0.38);
+        font-size: 9px;
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+    }
+
+    .cc-order-trigger__value {
+        overflow: hidden;
+        color: rgba(255, 255, 255, 0.94);
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.2;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .cc-order-trigger__chevron {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 32px;
+        width: 32px;
+        height: 32px;
+        color: rgba(255, 255, 255, 0.35);
+        border-radius: 9px;
+        background: rgba(255, 255, 255, 0.035);
+        transition:
+            color 180ms ease,
+            background 180ms ease,
+            transform 180ms ease;
+    }
+
+    .cc-order-trigger__chevron svg {
+        width: 17px;
+        height: 17px;
+    }
+
+    .cc-order-trigger__chevron.is-open {
+        color: #ADD322;
+        background: rgba(173, 211, 34, 0.08);
+        transform: rotate(180deg);
+    }
+
+    .cc-order-dropdown {
+        position: absolute;
+        z-index: 80;
+        top: calc(100% + 9px);
+        left: 0;
+        width: 100%;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        border-radius: 18px;
+        background:
+            radial-gradient(
+                circle at 100% 0%,
+                rgba(139, 92, 246, 0.14),
+                transparent 35%
+            ),
+            linear-gradient(
+                180deg,
+                rgba(17, 15, 25, 0.98),
+                rgba(7, 7, 11, 0.99)
+            );
+        box-shadow:
+            0 25px 80px rgba(0, 0, 0, 0.55),
+            0 0 0 1px rgba(139, 92, 246, 0.04),
+            0 0 60px rgba(139, 92, 246, 0.08);
+        backdrop-filter: blur(22px);
+        -webkit-backdrop-filter: blur(22px);
+    }
+
+    .cc-order-search {
+        position: relative;
+        display: flex;
+        align-items: center;
+        margin: 10px;
+        height: 44px;
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.035);
+    }
+
+    .cc-order-search > svg {
+        flex: 0 0 auto;
+        width: 17px;
+        height: 17px;
+        margin-left: 13px;
+        color: rgba(255, 255, 255, 0.32);
+    }
+
+    .cc-order-search__input {
+        width: 100%;
+        height: 100%;
+        padding: 0 38px 0 10px;
+        color: #fff;
+        font-size: 12px;
+        border: 0;
+        outline: 0;
+        background: transparent;
+    }
+
+    .cc-order-search__input::placeholder {
+        color: rgba(255, 255, 255, 0.28);
+    }
+
+    .cc-order-search__clear {
+        position: absolute;
+        right: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        color: rgba(255, 255, 255, 0.38);
+        font-size: 18px;
+        border-radius: 7px;
+    }
+
+    .cc-order-search__clear:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.06);
+    }
+
+    .cc-order-options {
+        max-height: 310px;
+        padding: 2px 8px 9px;
+        overflow-y: auto;
+    }
+
+    .cc-order-options::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .cc-order-options::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .cc-order-options::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.10);
+    }
+
+    .cc-order-option {
+        position: relative;
+        display: flex;
+        align-items: center;
+        width: 100%;
+        min-height: 61px;
+        padding: 9px;
+        gap: 11px;
+        text-align: left;
+        border: 1px solid transparent;
+        border-radius: 12px;
+        background: transparent;
+        transition:
+            background 150ms ease,
+            border-color 150ms ease,
+            transform 150ms ease;
+    }
+
+    .cc-order-option:hover {
+        border-color: rgba(255, 255, 255, 0.06);
+        background: rgba(255, 255, 255, 0.045);
+        transform: translateX(2px);
+    }
+
+    .cc-order-option.is-selected {
+        border-color: rgba(173, 211, 34, 0.16);
+        background:
+            linear-gradient(
+                90deg,
+                rgba(173, 211, 34, 0.09),
+                rgba(139, 92, 246, 0.05)
+            );
+    }
+
+    .cc-order-option__number {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 34px;
+        width: 34px;
+        height: 34px;
+        color: rgba(255, 255, 255, 0.38);
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.025);
+    }
+
+    .cc-order-option__number svg {
+        width: 16px;
+        height: 16px;
+        color: #ADD322;
+    }
+
+    .cc-order-option.is-selected .cc-order-option__number {
+        color: #ADD322;
+        border-color: rgba(173, 211, 34, 0.20);
+        background: rgba(173, 211, 34, 0.07);
+    }
+
+    .cc-order-option__copy {
+        display: flex;
+        flex: 1;
+        min-width: 0;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .cc-order-option__title {
+        overflow: hidden;
+        color: rgba(255, 255, 255, 0.88);
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.2;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .cc-order-option__subtitle {
+        overflow: hidden;
+        color: rgba(255, 255, 255, 0.30);
+        font-size: 9px;
+        line-height: 1.3;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .cc-order-check {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 25px;
+        width: 25px;
+        height: 25px;
+        color: #ADD322;
+        border: 1px solid rgba(173, 211, 34, 0.20);
+        border-radius: 50%;
+        background: rgba(173, 211, 34, 0.08);
+        box-shadow: 0 0 18px rgba(173, 211, 34, 0.08);
+    }
+
+    .cc-order-check svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .cc-order-divider {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 10px 7px 7px;
+    }
+
+    .cc-order-divider::before,
+    .cc-order-divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: rgba(255, 255, 255, 0.055);
+    }
+
+    .cc-order-divider span {
+        color: rgba(255, 255, 255, 0.22);
+        font-size: 7px;
+        font-weight: 900;
+        letter-spacing: 0.16em;
+        white-space: nowrap;
+    }
+
+    .cc-order-empty {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 9px;
+        padding: 30px 15px;
+        color: rgba(255, 255, 255, 0.30);
+        font-size: 11px;
+    }
+
+    .cc-order-empty__icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        color: rgba(255, 255, 255, 0.24);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-radius: 11px;
+        background: rgba(255, 255, 255, 0.025);
+    }
+
+    .cc-order-empty__icon svg {
+        width: 17px;
+        height: 17px;
+    }
+
+    .cc-form-help {
+        margin-top: 8px;
+        color: rgba(255, 255, 255, 0.34);
+        font-size: 10px;
+        line-height: 1.6;
+    }
+
+    [x-cloak] {
+        display: none !important;
+    }
+
+    @media (max-width: 640px) {
+        .cc-order-dropdown {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: min(92vw, 480px);
+            max-height: 70vh;
+            transform: translate(-50%, -50%);
+        }
+
+        .cc-order-options {
+            max-height: calc(70vh - 70px);
+        }
+    }
+</style>
 </head>
 
 <body class="min-h-screen bg-[#050507] text-white">

@@ -1281,72 +1281,458 @@
 
                                     @endif
 
+{{-- PROJECT OPTIONS --}}
+<div class="space-y-5">
 
-                                    {{-- PROJECT OPTIONS --}}
-                                    <div class="grid grid-cols-2 gap-3">
+    {{-- =========================================================
+         PLACEMENT
+    ========================================================== --}}
 
-                                        {{-- ORDER --}}
-                                        <div>
+    <div
+        x-data="{
+            open: false,
+            selected: @entangle('sort_order'),
+        }"
+        class="relative"
+        @click.outside="open = false"
+        @keydown.escape.window="open = false"
+    >
 
-                                            <label class="mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-gray-500">
-                                                Order
-                                            </label>
-
-                                            <input
-                                                type="number"
-                                                min="0"
-                                                wire:model="sort_order"
-                                                class="cc-project-input h-11 w-full rounded-xl px-4 text-sm text-white"
-                                            >
-
-                                        </div>
-
-
-                                        {{-- VISIBILITY --}}
-                                        <div>
-
-                                            <label class="mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-gray-500">
-                                                Visibility
-                                            </label>
+        <label class="mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-gray-500">
+            Project placement
+        </label>
 
 
-                                            <button
-                                                type="button"
-                                                wire:click="$set('is_published', {{ $is_published ? 'false' : 'true' }})"
-                                                class="flex h-11 w-full items-center justify-between rounded-xl border px-3.5 transition {{ $is_published ? 'border-[#ADD322]/20 bg-[#ADD322]/[0.05]' : 'border-white/[0.08] bg-white/[0.02]' }}"
-                                            >
+        {{-- =====================================================
+             SELECTED VALUE
+        ====================================================== --}}
 
-                                                <span class="flex items-center gap-2">
+        <button
+            type="button"
+            @click="open = !open"
+            class="cc-project-input flex min-h-[52px] w-full items-center justify-between rounded-xl px-3.5 py-2.5 text-left transition"
+            :class="open
+                ? 'border-[#ADD322]/40 shadow-[0_0_0_3px_rgba(173,211,34,.05)]'
+                : ''"
+        >
 
-                                                    <span class="h-1.5 w-1.5 rounded-full {{ $is_published ? 'bg-[#ADD322] shadow-[0_0_10px_#ADD322]' : 'bg-gray-600' }}"></span>
+            <div class="flex min-w-0 items-center gap-3">
 
-                                                    <span class="text-[11px] font-semibold {{ $is_published ? 'text-[#ADD322]' : 'text-gray-500' }}">
-                                                        {{ $is_published ? 'Published' : 'Draft' }}
-                                                    </span>
+                {{-- Position icon --}}
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#ADD322]/10 bg-[#ADD322]/[0.06] text-[#ADD322]">
 
-                                                </span>
+                    <svg
+                        class="h-3.5 w-3.5"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M8 6h13M8 12h13M8 18h13"
+                        />
+
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M3 6h.01M3 12h.01M3 18h.01"
+                        />
+                    </svg>
+
+                </span>
 
 
-                                                <svg
-                                                    class="h-3.5 w-3.5 {{ $is_published ? 'text-[#ADD322]' : 'text-gray-700' }}"
-                                                    viewBox="0 0 24 24"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    stroke-width="1.8"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        d="m9 18 6-6-6-6"
-                                                    />
-                                                </svg>
+                <div class="min-w-0">
 
-                                            </button>
+                    <div
+                        class="truncate text-xs font-semibold text-white"
+                        x-text="
+                            selected === null || selected === '' || selected === undefined
+                                ? 'Place at beginning'
+                                : (
+                                    @js(
+                                        collect([
+                                            [
+                                                'value' => '0',
+                                                'label' => 'Place at beginning',
+                                            ],
+                                            ...$works
+                                                ->filter(fn ($item) => !$editingId || $item->id != $editingId)
+                                                ->map(function ($item) {
+                                                    return [
+                                                        'value' => (string) ($item->sort_order + 1),
+                                                        'label' => 'After: ' . $item->title,
+                                                    ];
+                                                })
+                                                ->values()
+                                                ->all(),
+                                        ])->keyBy('value')->toArray()
+                                    )[String(selected)]?.label
+                                    ?? 'Place at end'
+                                )
+                        "
+                    ></div>
 
-                                        </div>
 
-                                    </div>
+                    <div class="mt-0.5 text-[9px] text-gray-600">
+                        Choose where this project appears in your portfolio
+                    </div>
 
+                </div>
+
+            </div>
+
+
+            <svg
+                class="h-4 w-4 shrink-0 text-gray-600 transition"
+                :class="open ? 'rotate-180 text-[#ADD322]' : ''"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="m6 9 6 6 6-6"
+                />
+            </svg>
+
+        </button>
+
+
+        {{-- =====================================================
+             DROPDOWN
+        ====================================================== --}}
+
+        <div
+            x-show="open"
+            x-cloak
+            x-transition:enter="transition ease-out duration-150"
+            x-transition:enter-start="opacity-0 -translate-y-1 scale-[.98]"
+            x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+            x-transition:leave="transition ease-in duration-100"
+            x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+            x-transition:leave-end="opacity-0 -translate-y-1 scale-[.98]"
+            class="absolute left-0 right-0 z-[100] mt-2 overflow-hidden rounded-2xl border border-white/10 bg-[#111019] shadow-2xl shadow-black/70"
+        >
+
+            <div class="cc-scrollbar max-h-[320px] overflow-y-auto p-1.5">
+
+                {{-- =================================================
+                     BEGINNING
+                ================================================== --}}
+
+                <button
+                    type="button"
+                    @click="
+                        selected = 0;
+                        open = false;
+                    "
+                    class="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-[#ADD322]/[0.07]"
+                    :class="
+                        String(selected) === '0'
+                            ? 'bg-[#ADD322]/[0.08]'
+                            : ''
+                    "
+                >
+
+                    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#ADD322]/10 bg-[#ADD322]/[0.05]">
+
+                        <svg
+                            class="h-4 w-4 text-[#ADD322]"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.7"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M5 12h14"
+                            />
+
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="m12 5 7 7-7 7"
+                            />
+                        </svg>
+
+                    </div>
+
+
+                    <div class="min-w-0 flex-1">
+
+                        <div class="text-xs font-semibold text-white">
+                            Place at beginning
+                        </div>
+
+                        <div class="mt-0.5 text-[9px] text-gray-600">
+                            Show this project first
+                        </div>
+
+                    </div>
+
+
+                    <span
+                        x-show="String(selected) === '0'"
+                        class="text-sm text-[#ADD322]"
+                    >
+                        ✓
+                    </span>
+
+                </button>
+
+
+                {{-- =================================================
+                     EXISTING PROJECTS
+                ================================================== --}}
+
+                @php
+                    $placementWorks = $works
+                        ->filter(fn ($item) => !$editingId || $item->id != $editingId)
+                        ->sortBy('sort_order')
+                        ->values();
+                @endphp
+
+
+                @foreach ($placementWorks as $placementWork)
+
+                    @php
+                        $placementValue = $placementWork->sort_order + 1;
+                    @endphp
+
+                    <button
+                        type="button"
+                        @click="
+                            selected = {{ $placementValue }};
+                            open = false;
+                        "
+                        class="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-white/[0.05]"
+                        :class="
+                            String(selected) === '{{ $placementValue }}'
+                                ? 'bg-white/[0.055]'
+                                : ''
+                        "
+                    >
+
+                        {{-- Thumbnail --}}
+                        <div class="relative h-10 w-12 shrink-0 overflow-hidden rounded-lg border border-white/[0.08] bg-black">
+
+                            @if ($placementWork->thumbnail_url)
+
+                                <img
+                                    src="{{ $placementWork->thumbnail_url }}"
+                                    alt="{{ $placementWork->title }}"
+                                    class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                                >
+
+                            @else
+
+                                <div class="flex h-full w-full items-center justify-center text-gray-700">
+
+                                    <svg
+                                        class="h-4 w-4"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="1.5"
+                                    >
+                                        <rect
+                                            x="3"
+                                            y="3"
+                                            width="18"
+                                            height="18"
+                                            rx="2"
+                                        />
+
+                                        <path d="m3 16 5-5 4 4 3-3 6 6"/>
+                                    </svg>
+
+                                </div>
+
+                            @endif
+
+                        </div>
+
+
+                        {{-- Project information --}}
+                        <div class="min-w-0 flex-1">
+
+                            <div class="truncate text-xs font-semibold text-gray-300 group-hover:text-white">
+                                After: {{ $placementWork->title }}
+                            </div>
+
+                            <div class="mt-0.5 flex items-center gap-2 text-[9px] text-gray-600">
+
+                                <span>
+                                    Position {{ $loop->iteration + 1 }}
+                                </span>
+
+                                <span class="text-gray-800">
+                                    •
+                                </span>
+
+                                <span>
+                                    {{ $placementWork->category }}
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        {{-- Selected indicator --}}
+                        <span
+                            x-show="String(selected) === '{{ $placementValue }}'"
+                            class="shrink-0 text-sm text-[#ADD322]"
+                        >
+                            ✓
+                        </span>
+
+                    </button>
+
+                @endforeach
+
+
+                {{-- =================================================
+                     END
+                ================================================== --}}
+
+                @if ($placementWorks->count())
+
+                    <div class="my-1 border-t border-white/[0.06]"></div>
+
+
+                    <button
+                        type="button"
+                        @click="
+                            selected = {{ $placementWorks->max('sort_order') + 2 }};
+                            open = false;
+                        "
+                        class="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-[#ADD322]/[0.05]"
+                        :class="
+                            String(selected) === '{{ $placementWorks->max('sort_order') + 2 }}'
+                                ? 'bg-[#ADD322]/[0.07]'
+                                : ''
+                        "
+                    >
+
+                        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/[0.07] bg-white/[0.025]">
+
+                            <svg
+                                class="h-4 w-4 text-gray-500 group-hover:text-[#ADD322]"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.7"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M5 12h14"
+                                />
+
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="m12 5 7 7-7 7"
+                                />
+                            </svg>
+
+                        </div>
+
+
+                        <div class="min-w-0 flex-1">
+
+                            <div class="text-xs font-semibold text-white">
+                                Place at end
+                            </div>
+
+                            <div class="mt-0.5 text-[9px] text-gray-600">
+                                Show this project after all other projects
+                            </div>
+
+                        </div>
+
+
+                        <span
+                            x-show="String(selected) === '{{ $placementWorks->max('sort_order') + 2 }}'"
+                            class="text-sm text-[#ADD322]"
+                        >
+                            ✓
+                        </span>
+
+                    </button>
+
+                @endif
+
+            </div>
+
+        </div>
+
+
+        <p class="mt-2 text-[9px] leading-4 text-gray-700">
+            The project order determines how projects are displayed across your portfolio.
+        </p>
+
+    </div>
+
+
+    {{-- =========================================================
+         VISIBILITY
+    ========================================================== --}}
+
+    <div>
+
+        <label class="mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-gray-500">
+            Visibility
+        </label>
+
+
+        <button
+            type="button"
+            wire:click="$set('is_published', {{ $is_published ? 'false' : 'true' }})"
+            class="flex h-11 w-full items-center justify-between rounded-xl border px-3.5 transition {{ $is_published ? 'border-[#ADD322]/20 bg-[#ADD322]/[0.05]' : 'border-white/[0.08] bg-white/[0.02]' }}"
+        >
+
+            <span class="flex items-center gap-2">
+
+                <span
+                    class="h-1.5 w-1.5 rounded-full {{ $is_published ? 'bg-[#ADD322] shadow-[0_0_10px_#ADD322]' : 'bg-gray-600' }}"
+                ></span>
+
+                <span
+                    class="text-[11px] font-semibold {{ $is_published ? 'text-[#ADD322]' : 'text-gray-500' }}"
+                >
+                    {{ $is_published ? 'Published' : 'Draft' }}
+                </span>
+
+            </span>
+
+
+            <svg
+                class="h-3.5 w-3.5 {{ $is_published ? 'text-[#ADD322]' : 'text-gray-700' }}"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="m9 18 6-6-6-6"
+                />
+            </svg>
+
+        </button>
+
+    </div>
+
+</div>
                                 </div>
 
                             </div>
