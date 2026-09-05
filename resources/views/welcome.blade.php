@@ -30,7 +30,7 @@
 
     </main>
 
-    <x-home.subscribe />
+    {{-- <x-home.subscribe /> --}}
 
     <x-home.footer />
 

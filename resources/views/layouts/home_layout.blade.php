@@ -38,19 +38,19 @@
 
     <link
         rel="icon"
-        href="{{ asset('assets/img/favicon/favicon.ico') }}"
+        href="{{ asset('assets/img/app__logo.jpg') }}"
         sizes="any"
     >
 
     <link
         rel="icon"
-        href="{{ asset('assets/img/favicon/icon.svg') }}"
+        href="{{ asset('assets/img/app__logo.jpg') }}"
         type="image/svg+xml"
     >
 
     <link
         rel="apple-touch-icon"
-        href="{{ asset('assets/img/favicon/apple-touch-icon.png') }}"
+        href="{{ asset('assets/img/app__logo.jpg') }}"
     >
 
     <link
