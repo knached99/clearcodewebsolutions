@@ -118,6 +118,12 @@
         href="{{ asset('css/clearcode.css') }}"
     >
 
+    <link
+        rel="stylesheet"
+        type="text/css"
+        href="{{asset('css/custom-cursor.css')}}"
+    >
+
     {{-- Browser Color --}}
 
     <meta name="theme-color" content="#B247B2">
@@ -146,6 +152,7 @@
     {{-- Initial Page Loader --}}
 
     <x-home.loader />
+    <x-home.custom-cursor/>
 
     {{-- Page Content --}}
     
@@ -155,6 +162,8 @@
 
     {{-- Scripts --}}
 
+    
+    <script src="{{asset('javascript/js/custom-cursor.js')}}"></script>
     <script src="{{ asset('javascript/js/demo/jquery.min.js') }}"></script>
 
     <script src="{{ asset('javascript/js/demo/modernizr.js') }}"></script>
