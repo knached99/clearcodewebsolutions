@@ -145,15 +145,21 @@
 
                                 {{-- Top line --}}
                                 <div class="cc-testimonial__top">
-
-                                    <div class="cc-testimonial__stars">
-                                        @for($star = 0; $star < 5; $star++)
-                                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <div
+                                        class="cc-testimonial__stars"
+                                        aria-label="{{ $testimonial->rating }} out of 5 stars"
+                                    >
+                                        @for($star = 1; $star <= 5; $star++)
+                                            <svg
+                                                viewBox="0 0 24 24"
+                                                fill="currentColor"
+                                                class="{{ $star <= $testimonial->rating ? 'is-filled' : 'is-empty' }}"
+                                                aria-hidden="true"
+                                            >
                                                 <path d="M12 2.5L14.93 8.44L21.5 9.4L16.75 14.02L17.87 20.55L12 17.47L6.13 20.55L7.25 14.02L2.5 9.4L9.07 8.44L12 2.5Z"/>
                                             </svg>
                                         @endfor
                                     </div>
-
                                     <span>CLIENT TESTIMONIAL</span>
 
                                 </div>
@@ -698,18 +704,30 @@
     }
 
 
-    .cc-testimonial__stars {
-        display: flex;
-        gap: 3px;
+ .cc-testimonial__stars {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
 
-        color: var(--lime);
-    }
+.cc-testimonial__stars svg {
+    width: 23px;
+    height: 23px;
+    flex: 0 0 23px;
+    transition:
+        opacity 300ms ease,
+        transform 300ms ease;
+}
 
+.cc-testimonial__stars svg.is-filled {
+    color: var(--lime);
+    opacity: 1;
+}
 
-    .cc-testimonial__stars svg {
-        width: 11px;
-        height: 11px;
-    }
+.cc-testimonial__stars svg.is-empty {
+    color: rgba(255, 255, 255, 0.14);
+    opacity: 1;
+}
 
 
     .cc-testimonial__top > span {
