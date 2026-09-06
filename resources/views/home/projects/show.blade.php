@@ -499,6 +499,7 @@
 
     .cc-project-cta-button:hover {
         background: #c4ec35;
+        color: #333 !important;
 
         transform: translateY(-2px);
 
