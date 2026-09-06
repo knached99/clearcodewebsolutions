@@ -29,7 +29,7 @@ new class extends Component
      */
     public function open(): void
     {
-        $this->authorizeAdmin();
+        $this->authorize('inviteMember', $this->team);
 
         $this->resetValidation();
 
@@ -80,13 +80,20 @@ new class extends Component
      */
     public function invite(): void
     {
-        $this->authorizeAdmin();
+        /*
+         * Authorize using TeamPolicy::inviteMember().
+         *
+         * This checks TeamPermission::CreateInvitation rather
+         * than requiring the user's pivot role to literally be
+         * "admin".
+         */
+        $this->authorize('inviteMember', $this->team);
 
         $this->validate();
 
         $email = strtolower(trim($this->inviteEmail));
 
-        /*
+        /**
          * Generate a strong temporary password.
          *
          * It is never stored in plaintext in the database.
@@ -107,14 +114,14 @@ new class extends Component
 
             abort_unless($inviter, 403);
 
-            /*
+            /**
              * Find an existing account by normalized email.
              */
             $user = User::query()
                 ->whereRaw('LOWER(email) = ?', [$email])
                 ->first();
 
-            /*
+            /**
              * Create the account if it does not exist.
              */
             if (! $user) {
@@ -125,16 +132,16 @@ new class extends Component
                     'email_verified_at' => now(),
                 ]);
 
-                /*
+                /**
                  * Force the invited account to change its password.
                  */
                 $user->forceFill([
                     'must_change_password' => true,
                 ])->save();
             } else {
-                /*
-                 * Existing users must also receive a temporary password
-                 * and be forced to change it before continuing.
+                /**
+                 * Existing users also receive a temporary password
+                 * and must change it before continuing.
                  *
                  * We deliberately do NOT overwrite their existing
                  * email verification state.
@@ -145,11 +152,12 @@ new class extends Component
                 ])->save();
             }
 
-            /*
+            /**
              * Safety check:
              *
-             * UniqueTeamInvitation normally prevents an existing member
-             * from reaching this point, but we enforce it again server-side.
+             * UniqueTeamInvitation normally prevents an existing
+             * member from reaching this point, but enforce it again
+             * server-side.
              */
             abort_if(
                 $this->team
@@ -160,36 +168,29 @@ new class extends Component
                 __('This user is already a member of the team.')
             );
 
-            /*
+            /**
              * Add the user to the team.
              */
-            $this->team->members()->attach($user->id, [
-                'role' => $this->inviteRole,
-            ]);
+           
 
-            /*
+            /**
              * Create the invitation.
              */
-            $invitation = TeamInvitation::create([
+            return TeamInvitation::create([
                 'team_id' => $this->team->id,
                 'email' => $email,
                 'role' => $this->inviteRole,
                 'invited_by' => $inviter->id,
                 'expires_at' => now()->addDays(3),
             ]);
-
-            return $invitation;
         });
 
-        /*
-         * Queue the email AFTER the transaction has successfully committed.
+        /**
+         * Queue the invitation email.
          *
-         * The notification stores only:
-         * - invitation ID
-         * - temporary password
-         *
-         * The User/TeamInvitation Eloquent models are not serialized
-         * into the queue payload.
+         * The TeamInvitation notification implements ShouldQueue
+         * and uses afterCommit(), so the email is processed by the
+         * queue after the database transaction has committed.
          */
         Notification::route('mail', $email)->notify(
             new TeamInvitationNotification(
@@ -210,24 +211,6 @@ new class extends Component
         );
 
         $this->dispatch('team-member-invited');
-    }
-
-    /**
-     * Only team admins may invite members.
-     */
-    private function authorizeAdmin(): void
-    {
-        $user = auth()->user();
-
-        abort_unless(
-            $user
-            && $this->team
-                ->members()
-                ->whereKey($user->id)
-                ->wherePivot('role', TeamRole::Admin->value)
-                ->exists(),
-            403
-        );
     }
 };
 ?>
@@ -318,7 +301,6 @@ new class extends Component
                     </flux:button>
 
                 </div>
-
             </form>
         </div>
     </flux:modal>

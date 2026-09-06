@@ -1008,7 +1008,7 @@
     </flux:header>
 
     <livewire:create-team-modal />
-
+    <livewire:pages::teams.pending-invitations-modal />
     @persist('toast')
 
         <flux:toast.group>

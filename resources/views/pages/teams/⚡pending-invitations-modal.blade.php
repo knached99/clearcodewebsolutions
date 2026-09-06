@@ -4,7 +4,8 @@ use App\Models\TeamInvitation;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -12,28 +13,60 @@ use Livewire\Component;
 new class extends Component {
     public bool $showPendingInvitationsModal = true;
 
+    public bool $showChangePasswordModal = false;
+
+    public string $newPassword = '';
+
+    public string $newPassword_confirmation = '';
+
     public function mount(): void
     {
-        if (session()->pull('team-invitation-accepted')) {
-            Flux::toast(variant: 'success', text: __('Invitation accepted.'));
+        $user = Auth::user();
+
+        if (! $user) {
+            return;
+        }
+
+        /*
+         * An invitation is always the first mandatory step.
+         */
+        if ($this->pendingInvitations->isNotEmpty()) {
+            $this->showPendingInvitationsModal = true;
+            $this->showChangePasswordModal = false;
+
+            return;
+        }
+
+        /*
+         * If there are no pending invitations but the user still
+         * needs to change their temporary password, show that modal.
+         */
+        if ($user->must_change_password) {
+            $this->showPendingInvitationsModal = false;
+            $this->showChangePasswordModal = true;
         }
     }
 
-    /**
-     * @return \Illuminate\Support\Collection<int, array{code: string, inviter_name: string, team_name: string}>
-     */
     #[Computed]
     public function pendingInvitations(): \Illuminate\Support\Collection
     {
-        $email = Str::lower(Auth::user()->email);
+        $user = Auth::user();
+
+        if (! $user) {
+            return collect();
+        }
+
+        $email = strtolower((string) $user->email);
 
         return TeamInvitation::query()
             ->with(['inviter', 'team'])
             ->whereRaw('LOWER(email) = ?', [$email])
             ->whereNull('accepted_at')
-            ->where(fn ($query) => $query
-                ->whereNull('expires_at')
-                ->orWhere('expires_at', '>=', now()))
+            ->where(function ($query) {
+                $query
+                    ->whereNull('expires_at')
+                    ->orWhere('expires_at', '>=', now());
+            })
             ->latest()
             ->get()
             ->map(fn (TeamInvitation $invitation) => [
@@ -49,7 +82,7 @@ new class extends Component {
 
         $user = Auth::user();
 
-        DB::transaction(function () use ($user, $invitation) {
+        DB::transaction(function () use ($user, $invitation): void {
             $team = $invitation->team;
 
             $team->memberships()->firstOrCreate(
@@ -57,41 +90,152 @@ new class extends Component {
                 ['role' => $invitation->role]
             );
 
-            $invitation->update(['accepted_at' => now()]);
+            $invitation->update([
+                'accepted_at' => now(),
+            ]);
 
             $user->switchTeam($team);
         });
 
-        session()->flash('team-invitation-accepted', true);
+        /*
+         * Close invitation modal and immediately open
+         * the mandatory password-change modal.
+         */
+        $this->showPendingInvitationsModal = false;
 
-        $this->redirectRoute('dashboard', navigate: true);
+        $this->resetPasswordFields();
+
+        $this->showChangePasswordModal = true;
+
+        unset($this->pendingInvitations);
+
+        Flux::toast(
+            variant: 'success',
+            text: __('Invitation accepted.')
+        );
     }
 
     public function declineInvitation(string $code): void
     {
         $invitation = $this->findPendingInvitation($code);
 
-        $invitation->delete();
+        $user = Auth::user();
 
-        Flux::toast(variant: 'success', text: __('Invitation declined.'));
+        DB::transaction(function () use ($user, $invitation): void {
+            /*
+             * Remove any membership that may have been created
+             * by an older version of the invitation flow.
+             */
+            $invitation->team
+                ->memberships()
+                ->where('user_id', $user->id)
+                ->delete();
+
+            $invitation->delete();
+
+            /*
+             * This account was created specifically for the invitation.
+             */
+            $user->delete();
+        });
+
+        Auth::logout();
+
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
+
+        $this->redirectRoute('login', navigate: true);
+    }
+
+    public function updatePassword(): void
+    {
+        $user = Auth::user();
+
+        if (! $user) {
+            abort(403);
+        }
+
+        /*
+         * Do not allow the password modal to be bypassed.
+         */
+        if (! $user->must_change_password) {
+            $this->showChangePasswordModal = false;
+
+            return;
+        }
+
+        $this->validate(
+            [
+                'newPassword' => [
+                    'required',
+                    'string',
+                    'confirmed',
+                    Password::default(),
+                ],
+            ],
+            [],
+            [
+                'newPassword' => __('new password'),
+            ]
+        );
+
+        $user->forceFill([
+            'password' => Hash::make($this->newPassword),
+            'must_change_password' => false,
+        ])->save();
+
+        $this->resetPasswordFields();
+
+        $this->showChangePasswordModal = false;
+
+        Flux::toast(
+            variant: 'success',
+            text: __('Your password has been changed successfully.')
+        );
+
+        $this->redirectRoute('dashboard', navigate: true);
+    }
+
+    private function resetPasswordFields(): void
+    {
+        $this->reset([
+            'newPassword',
+            'newPassword_confirmation',
+        ]);
+
+        $this->resetValidation();
     }
 
     private function findPendingInvitation(string $code): TeamInvitation
     {
         $invitation = TeamInvitation::query()
+            ->with('team')
             ->where('code', $code)
             ->whereNull('accepted_at')
             ->firstOrFail();
 
         if ($invitation->isExpired()) {
             throw ValidationException::withMessages([
-                'invitation' => [__('This invitation has expired.')],
+                'invitation' => [
+                    __('This invitation has expired.'),
+                ],
             ]);
         }
 
-        if (Str::lower($invitation->email) !== Str::lower(Auth::user()->email)) {
+        $user = Auth::user();
+
+        if (! $user) {
+            abort(403);
+        }
+
+        if (
+            strtolower((string) $invitation->email)
+            !== strtolower((string) $user->email)
+        ) {
             throw ValidationException::withMessages([
-                'invitation' => [__('This invitation was sent to a different email address.')],
+                'invitation' => [
+                    __('This invitation was sent to a different email address.'),
+                ],
             ]);
         }
 
@@ -101,20 +245,48 @@ new class extends Component {
 
 <div>
     @if ($this->pendingInvitations->isNotEmpty())
-        <flux:modal name="pending-invitations" wire:model="showPendingInvitationsModal" focusable class="max-w-lg">
-            <div data-test="pending-invitations-modal" class="space-y-6">
+        <flux:modal
+            name="pending-invitations"
+            wire:model="showPendingInvitationsModal"
+            focusable
+            :dismissible="false"
+            class="max-w-lg"
+        >
+            <div
+                data-test="pending-invitations-modal"
+                class="space-y-6"
+            >
                 <div>
-                    <flux:heading size="lg">{{ __('Pending team invitations') }}</flux:heading>
-                    <flux:subheading>{{ __('Accept or decline the teams you have been invited to join.') }}</flux:subheading>
+                    <flux:heading size="lg">
+                        {{ __('Pending team invitations') }}
+                    </flux:heading>
+
+                    <flux:subheading>
+                        {{ __('You must accept or decline this invitation before you can continue.') }}
+                    </flux:subheading>
                 </div>
+
+                @error('invitation')
+                    <flux:text class="text-sm text-red-600 dark:text-red-400">
+                        {{ $message }}
+                    </flux:text>
+                @enderror
 
                 <div class="grid gap-4">
                     @foreach ($this->pendingInvitations as $invitation)
-                        <div data-test="pending-invitation-row" class="rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
+                        <div
+                            data-test="pending-invitation-row"
+                            class="rounded-lg border border-zinc-200 p-4 dark:border-zinc-700"
+                        >
                             <div class="space-y-1">
-                                <p class="font-medium">{{ $invitation['team_name'] }}</p>
+                                <p class="font-medium">
+                                    {{ $invitation['team_name'] }}
+                                </p>
+
                                 <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">
-                                    {{ __(':inviter invited you to join this team.', ['inviter' => $invitation['inviter_name']]) }}
+                                    {{ __(':inviter invited you to join this team.', [
+                                        'inviter' => $invitation['inviter_name'],
+                                    ]) }}
                                 </flux:text>
                             </div>
 
@@ -141,6 +313,59 @@ new class extends Component {
                     @endforeach
                 </div>
             </div>
+        </flux:modal>
+    @endif
+
+    @if (Auth::check() && Auth::user()->must_change_password)
+        <flux:modal
+            name="change-invitation-password"
+            wire:model="showChangePasswordModal"
+            focusable
+            :dismissible="false"
+            class="max-w-lg"
+        >
+            <form
+                wire:submit="updatePassword"
+                class="space-y-6"
+            >
+                <div>
+                    <flux:heading size="lg">
+                        {{ __('Create your new password') }}
+                    </flux:heading>
+
+                    <flux:subheading>
+                        {{ __('For security, you must create a new password before you can continue.') }}
+                    </flux:subheading>
+                </div>
+
+                <flux:input
+                    wire:model="newPassword"
+                    type="password"
+                    :label="__('New password')"
+                    autocomplete="new-password"
+                    viewable
+                />
+
+                <flux:input
+                    wire:model="newPassword_confirmation"
+                    type="password"
+                    :label="__('Confirm new password')"
+                    autocomplete="new-password"
+                    viewable
+                />
+
+                <flux:error name="newPassword" />
+
+                <div class="flex justify-end">
+                    <flux:button
+                        type="submit"
+                        variant="primary"
+                        wire:loading.attr="disabled"
+                    >
+                        {{ __('Save new password') }}
+                    </flux:button>
+                </div>
+            </form>
         </flux:modal>
     @endif
 </div>
