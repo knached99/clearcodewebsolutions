@@ -145,12 +145,77 @@
         font-weight: 700;
     }
 
-    .ticket-status > span {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: currentColor;
-    }
+    .ticket-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 11px;
+    border: 1px solid;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .01em;
+}
+
+.ticket-status-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, .08);
+}
+
+.ticket-status-label {
+    line-height: 1;
+}
+
+.status-open {
+    color: #6ee7b7;
+    background: rgba(16, 185, 129, .08);
+    border-color: rgba(52, 211, 153, .2);
+}
+
+.status-open .ticket-status-icon {
+    background: rgba(16, 185, 129, .14);
+    color: #34d399;
+}
+
+.status-pending {
+    color: #fcd34d;
+    background: rgba(245, 158, 11, .08);
+    border-color: rgba(251, 191, 36, .2);
+}
+
+.status-pending .ticket-status-icon {
+    background: rgba(245, 158, 11, .14);
+    color: #fbbf24;
+}
+
+.status-resolved {
+    color: #93c5fd;
+    background: rgba(59, 130, 246, .08);
+    border-color: rgba(96, 165, 250, .2);
+}
+
+.status-resolved .ticket-status-icon {
+    background: rgba(59, 130, 246, .14);
+    color: #60a5fa;
+}
+
+.status-closed,
+.status-default {
+    color: rgba(255, 255, 255, .55);
+    background: rgba(255, 255, 255, .04);
+    border-color: rgba(255, 255, 255, .1);
+}
+
+.status-closed .ticket-status-icon,
+.status-default .ticket-status-icon {
+    background: rgba(255, 255, 255, .07);
+    color: rgba(255, 255, 255, .5);
+}
 
     .status-open {
         color: #6ee7b7;
@@ -177,6 +242,119 @@
         border-color: rgba(255, 255, 255, .1);
     }
 
+    .ticket-detail-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+    }
+
+    .ticket-detail-status-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 8px;
+        flex-shrink: 0;
+    }
+
+    .ticket-detail-status.status-open {
+        color: #059669;
+    }
+
+    .ticket-detail-status.status-open .ticket-detail-status-icon {
+        color: #059669;
+        background: rgba(16, 185, 129, .10);
+        box-shadow: inset 0 0 0 1px rgba(16, 185, 129, .14);
+    }
+
+    .ticket-detail-status.status-pending {
+        color: #d97706;
+    }
+
+    .ticket-detail-status.status-pending .ticket-detail-status-icon {
+        color: #d97706;
+        background: rgba(245, 158, 11, .10);
+        box-shadow: inset 0 0 0 1px rgba(245, 158, 11, .14);
+    }
+
+    .ticket-detail-status.status-resolved {
+        color: #2563eb;
+    }
+
+    .ticket-detail-status.status-resolved .ticket-detail-status-icon {
+        color: #2563eb;
+        background: rgba(59, 130, 246, .10);
+        box-shadow: inset 0 0 0 1px rgba(59, 130, 246, .14);
+    }
+
+    .ticket-detail-status.status-closed,
+    .ticket-detail-status.status-default {
+        color: #6b6570;
+    }
+
+    .ticket-detail-status.status-closed .ticket-detail-status-icon,
+    .ticket-detail-status.status-default .ticket-detail-status-icon {
+        color: #6b6570;
+        background: rgba(107, 101, 112, .08);
+        box-shadow: inset 0 0 0 1px rgba(107, 101, 112, .12);
+    }
+
+    .ticket-detail-priority {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.ticket-detail-priority-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    border-radius: 8px;
+}
+
+.priority-low {
+    color: #64748b;
+}
+
+.priority-low .ticket-detail-priority-icon {
+    color: #64748b;
+    background: #f1f5f9;
+    box-shadow: inset 0 0 0 1px #e2e8f0;
+}
+
+.priority-normal {
+    color: #7c3aed;
+}
+
+.priority-normal .ticket-detail-priority-icon {
+    color: #7c3aed;
+    background: #f5f3ff;
+    box-shadow: inset 0 0 0 1px #ede9fe;
+}
+
+.priority-high {
+    color: #ea580c;
+}
+
+.priority-high .ticket-detail-priority-icon {
+    color: #ea580c;
+    background: #fff7ed;
+    box-shadow: inset 0 0 0 1px #ffedd5;
+}
+
+.priority-urgent {
+    color: #dc2626;
+}
+
+.priority-urgent .ticket-detail-priority-icon {
+    color: #dc2626;
+    background: #fef2f2;
+    box-shadow: inset 0 0 0 1px #fee2e2;
+}
     /* =========================================================
        BUTTONS
        ========================================================= */
@@ -1558,9 +1736,24 @@
 
         <div class="ticket-header-side">
             <div class="ticket-status {{ $statusClass }}">
-                <span></span>
-                {{ ucfirst($status) }}
-            </div>
+        <span class="ticket-status-icon">
+            @if ($status === 'open')
+                <flux:icon.play class="size-3.5" />
+            @elseif ($status === 'pending')
+                <flux:icon.clock class="size-3.5" />
+            @elseif ($status === 'resolved')
+                <flux:icon.check-circle class="size-3.5" />
+            @elseif ($status === 'closed')
+                <flux:icon.lock-closed class="size-3.5" />
+            @else
+                <flux:icon.question-mark-circle class="size-3.5" />
+            @endif
+        </span>
+
+        <span class="ticket-status-label">
+            {{ ucfirst($status) }}
+        </span>
+    </div>
         </div>
     </header>
 
@@ -2106,14 +2299,26 @@
 
                 <div class="ticket-detail-list">
                     <div class="ticket-detail-row">
-                        <span>
-                            Ticket
-                        </span>
+                <span class="ticket-detail-label">Status</span>
 
-                        <strong>
-                            {{ $ticket->ticket_number }}
-                        </strong>
-                    </div>
+                <span class="ticket-detail-value ticket-detail-status {{ $statusClass }}">
+                    <span class="ticket-detail-status-icon">
+                        @if ($status === 'open')
+                            <flux:icon.play class="size-3.5" />
+                        @elseif ($status === 'pending')
+                            <flux:icon.clock class="size-3.5" />
+                        @elseif ($status === 'resolved')
+                            <flux:icon.check-circle class="size-3.5" />
+                        @elseif ($status === 'closed')
+                            <flux:icon.lock-closed class="size-3.5" />
+                        @else
+                            <flux:icon.question-mark-circle class="size-3.5" />
+                        @endif
+                    </span>
+
+                    <span>{{ ucfirst($status) }}</span>
+                </span>
+            </div>
 
                     <div class="ticket-detail-row">
                         <span>
@@ -2126,14 +2331,28 @@
                     </div>
 
                     <div class="ticket-detail-row">
-                        <span>
-                            Priority
+                    <span class="ticket-detail-label">Priority</span>
+
+                    @php
+                        $ticketPriority = strtolower((string) ($ticket->priority ?: 'normal'));
+                    @endphp
+
+                    <span class="ticket-detail-value ticket-detail-priority priority-{{ $ticketPriority }}">
+                        <span class="ticket-detail-priority-icon">
+                            @if ($ticketPriority === 'low')
+                                <flux:icon.arrow-down class="size-3.5" />
+                            @elseif ($ticketPriority === 'normal')
+                                <flux:icon.minus class="size-3.5" />
+                            @elseif ($ticketPriority === 'high')
+                                <flux:icon.arrow-up class="size-3.5" />
+                            @elseif ($ticketPriority === 'urgent')
+                                <flux:icon.exclamation-triangle class="size-3.5" />
+                            @endif
                         </span>
 
-                        <strong>
-                            {{ ucfirst($ticket->priority) }}
-                        </strong>
-                    </div>
+                        <span>{{ ucfirst($ticketPriority) }}</span>
+                    </span>
+                </div>
 
                     <div class="ticket-detail-row">
                         <span>

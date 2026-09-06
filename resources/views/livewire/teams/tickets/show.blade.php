@@ -863,123 +863,142 @@
                         </div>
 
 
-                        {{-- =================================================
-                            PRIORITY DROPDOWN
-                        ================================================== --}}
+                                        {{-- =================================================*
+                        PRIORITY DROPDOWN
+                    ================================================== --}}
 
-                        <div class="border-t border-[#eeeaf1] pt-5 dark:border-white/5">
-
-                            <div class="mb-2 text-xs font-medium text-[#9b95a0]">
-                                Priority
-                            </div>
-
-                            <div
-                                x-data="{ open: false }"
-                                x-on:click.outside="open = false"
-                                class="relative"
-                            >
-
-                                <button
-                                    type="button"
-                                    x-on:click="open = !open"
-                                    class="flex min-h-12 w-full items-center justify-between rounded-2xl border border-[#e4dfea] bg-[#fcfbfd] px-4 text-sm font-semibold text-[#48424f] transition hover:border-[#cfc2e2] hover:bg-white focus:outline-none focus:ring-4 focus:ring-[#f0ebf8] dark:border-white/10 dark:bg-white/5 dark:text-white"
-                                >
-
-                                    <span class="flex items-center gap-3">
-
-                                        <span
-                                            class="flex size-7 items-center justify-center rounded-lg
-                                            {{ match($priority) {
-                                                'urgent' => 'bg-red-50 text-red-600',
-                                                'high' => 'bg-orange-50 text-orange-600',
-                                                'normal' => 'bg-[#eee9f7] text-[#806da8]',
-                                                'low' => 'bg-zinc-100 text-zinc-500',
-                                                default => 'bg-zinc-100 text-zinc-500',
-                                            } }}"
-                                        >
-                                            <flux:icon.flag class="size-3.5" />
-                                        </span>
-
-                                        {{ ucfirst($priority ?: 'normal') }}
-
-                                    </span>
-
-                                    <flux:icon.chevron-down
-                                        class="size-4 text-[#9d96a5] transition"
-                                        x-bind:class="open && 'rotate-180'"
-                                    />
-
-                                </button>
-
-
-                                <div
-                                    x-show="open"
-                                    x-cloak
-                                    x-transition.origin.top
-                                    class="absolute left-0 right-0 z-50 mt-2 overflow-hidden rounded-2xl border border-[#e4dfea] bg-white p-1.5 shadow-[0_20px_50px_-20px_rgba(40,30,55,.3)] dark:border-white/10 dark:bg-[#1d1922]"
-                                >
-
-                                    @foreach([
-                                        'low' => [
-                                            'label' => 'Low',
-                                            'description' => 'Can wait',
-                                            'class' => 'bg-zinc-100 text-zinc-500',
-                                        ],
-                                        'normal' => [
-                                            'label' => 'Normal',
-                                            'description' => 'Standard request',
-                                            'class' => 'bg-[#eee9f7] text-[#806da8]',
-                                        ],
-                                        'high' => [
-                                            'label' => 'High',
-                                            'description' => 'Needs attention',
-                                            'class' => 'bg-orange-50 text-orange-600',
-                                        ],
-                                        'urgent' => [
-                                            'label' => 'Urgent',
-                                            'description' => 'Needs immediate action',
-                                            'class' => 'bg-red-50 text-red-600',
-                                        ],
-                                    ] as $value => $option)
-
-                                        <button
-                                            type="button"
-                                            wire:click="updatePriority('{{ $value }}')"
-                                            x-on:click="open = false"
-                                            wire:loading.attr="disabled"
-                                            class="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-[#f5f1f9] dark:hover:bg-white/5"
-                                        >
-
-                                            <span class="flex size-8 shrink-0 items-center justify-center rounded-lg {{ $option['class'] }}">
-                                                <flux:icon.flag class="size-3.5" />
-                                            </span>
-
-                                            <span class="min-w-0 flex-1">
-
-                                                <span class="block text-sm font-semibold text-[#49434f] dark:text-white/90">
-                                                    {{ $option['label'] }}
-                                                </span>
-
-                                                <span class="block text-[11px] text-[#aaa4af]">
-                                                    {{ $option['description'] }}
-                                                </span>
-
-                                            </span>
-
-                                            @if($priority === $value)
-                                                <flux:icon.check class="size-4 shrink-0 text-[#8875b6]" />
-                                            @endif
-
-                                        </button>
-
-                                    @endforeach
-
-                                </div>
-
-                            </div>
-
+                    <div class="border-t border-[#eeeaf1] pt-5 dark:border-white/5">
+                        <div class="mb-2 text-xs font-medium text-[#9b95a0]">
+                            Priority
                         </div>
 
+                        <div
+                            x-data="{ open: false }"
+                            x-on:click.outside="open = false"
+                            class="relative"
+                        >
+                            {{-- Current priority --}}
+                            <button
+                                type="button"
+                                x-on:click="open = !open"
+                                class="flex min-h-12 w-full items-center justify-between rounded-2xl border border-[#e4dfea] bg-[#fcfbfd] px-4 text-sm font-semibold text-[#48424f] transition hover:border-[#cfc2e2] hover:bg-white focus:outline-none focus:ring-4 focus:ring-[#f0ebf8] dark:border-white/10 dark:bg-white/5 dark:text-white"
+                            >
+                                <span class="flex items-center gap-3">
+
+                                    <span
+                                        class="flex size-8 items-center justify-center rounded-xl
+                                        {{
+                                            match($priority ?: 'normal') {
+                                                'low' => 'bg-slate-100 text-slate-500 ring-1 ring-inset ring-slate-200',
+                                                'normal' => 'bg-violet-50 text-violet-600 ring-1 ring-inset ring-violet-100',
+                                                'high' => 'bg-orange-50 text-orange-600 ring-1 ring-inset ring-orange-100',
+                                                'urgent' => 'bg-red-50 text-red-600 ring-1 ring-inset ring-red-100',
+                                                default => 'bg-violet-50 text-violet-600 ring-1 ring-inset ring-violet-100',
+                                            }
+                                        }}"
+                                    >
+                                        @if(($priority ?: 'normal') === 'low')
+                                            <flux:icon.arrow-down class="size-4" />
+                                        @elseif(($priority ?: 'normal') === 'normal')
+                                            <flux:icon.minus class="size-4" />
+                                        @elseif(($priority ?: 'normal') === 'high')
+                                            <flux:icon.arrow-up class="size-4" />
+                                        @elseif(($priority ?: 'normal') === 'urgent')
+                                            <flux:icon.exclamation-triangle class="size-4" />
+                                        @endif
+                                    </span>
+
+                                    <span>
+                                        {{ ucfirst($priority ?: 'normal') }}
+                                    </span>
+                                </span>
+
+                                <flux:icon.chevron-down
+                                    class="size-4 text-[#9d96a5] transition"
+                                    x-bind:class="open && 'rotate-180'"
+                                />
+                            </button>
+
+                            {{-- Dropdown --}}
+                            <div
+                                x-show="open"
+                                x-cloak
+                                x-transition.origin.top
+                                class="absolute left-0 right-0 z-50 mt-2 overflow-hidden rounded-2xl border border-[#e4dfea] bg-white p-1.5 shadow-[0_20px_50px_-20px_rgba(40,30,55,.3)] dark:border-white/10 dark:bg-[#1d1922]"
+                            >
+                                @foreach([
+                                    'low' => [
+                                        'label' => 'Low',
+                                        'description' => 'Can wait',
+                                        'icon' => 'arrow-down',
+                                        'class' => 'bg-slate-100 text-slate-500 ring-1 ring-inset ring-slate-200',
+                                    ],
+                                    'normal' => [
+                                        'label' => 'Normal',
+                                        'description' => 'Standard request',
+                                        'icon' => 'minus',
+                                        'class' => 'bg-violet-50 text-violet-600 ring-1 ring-inset ring-violet-100',
+                                    ],
+                                    'high' => [
+                                        'label' => 'High',
+                                        'description' => 'Needs attention',
+                                        'icon' => 'arrow-up',
+                                        'class' => 'bg-orange-50 text-orange-600 ring-1 ring-inset ring-orange-100',
+                                    ],
+                                    'urgent' => [
+                                        'label' => 'Urgent',
+                                        'description' => 'Needs immediate action',
+                                        'icon' => 'exclamation-triangle',
+                                        'class' => 'bg-red-50 text-red-600 ring-1 ring-inset ring-red-100',
+                                    ],
+                                ] as $value => $option)
+
+                                    <button
+                                        type="button"
+                                        wire:click="updatePriority('{{ $value }}')"
+                                        x-on:click="open = false"
+                                        wire:loading.attr="disabled"
+                                        wire:target="updatePriority('{{ $value }}')"
+                                        class="group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-[#f7f4fa] dark:hover:bg-white/5"
+                                    >
+                                        {{-- Priority icon --}}
+                                        <span
+                                            class="flex size-9 shrink-0 items-center justify-center rounded-xl transition group-hover:scale-105 {{ $option['class'] }}"
+                                        >
+                                            @if($value === 'low')
+                                                <flux:icon.arrow-down class="size-4" />
+                                            @elseif($value === 'normal')
+                                                <flux:icon.minus class="size-4" />
+                                            @elseif($value === 'high')
+                                                <flux:icon.arrow-up class="size-4" />
+                                            @elseif($value === 'urgent')
+                                                <flux:icon.exclamation-triangle class="size-4" />
+                                            @endif
+                                        </span>
+
+                                        {{-- Text --}}
+                                        <span class="min-w-0 flex-1">
+                                            <span class="block text-sm font-semibold text-[#49434f] dark:text-white/90">
+                                                {{ $option['label'] }}
+                                            </span>
+
+                                            <span class="block text-[11px] text-[#aaa4af]">
+                                                {{ $option['description'] }}
+                                            </span>
+                                        </span>
+
+                                        {{-- Selected --}}
+                                        @if(($priority ?: 'normal') === $value)
+                                            <span class="flex size-7 items-center justify-center rounded-lg bg-[#f0ebf8] text-[#8875b6]">
+                                                <flux:icon.check class="size-3.5" />
+                                            </span>
+                                        @endif
+                                    </button>
+
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
 
                         {{-- Ticket number --}}
 
