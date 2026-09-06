@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\Ticket;
+use App\Services\TicketService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -16,46 +17,54 @@ class TicketStatusChangedNotification extends Notification implements ShouldQueu
         public Ticket $ticket,
         public string $oldStatus,
         public string $newStatus,
+        public ?string $ticketUrl = null,
     ) {
     }
 
-    /**
-     * Get the notification's delivery channels.
-     */
     public function via(object $notifiable): array
     {
         return ['mail'];
     }
 
-    /**
-     * Get the mail representation of the notification.
-     */
     public function toMail(object $notifiable): MailMessage
     {
+        /*
+         * ALWAYS generate the guest URL when the queued notification
+         * is actually being processed.
+         *
+         * This prevents team route defaults from leaking into the
+         * customer-facing email URL.
+         */
+        $ticketUrl = app(TicketService::class)
+            ->createGuestTicketUrl(
+                $this->ticket,
+                60
+            );
+
         return (new MailMessage)
-            ->subject(
-                "Ticket #{$this->ticket->ticket_number} status updated"
-            )
-            ->greeting('Ticket status updated')
+            ->subject('Ticket status updated')
             ->line(
-                "Ticket #{$this->ticket->ticket_number} has changed " .
-                "from {$this->oldStatus} to {$this->newStatus}."
+                'Ticket #' .
+                $this->ticket->ticket_number .
+                ' has changed from ' .
+                $this->oldStatus .
+                ' to ' .
+                $this->newStatus .
+                '.'
             )
             ->line(
-                "Subject: {$this->ticket->subject}"
+                'Subject: ' .
+                $this->ticket->subject
             )
             ->action(
                 'View Ticket',
-                route('team.tickets.show', [
-                    'current_team' => $this->ticket->team->slug,
-                    'ticket' => $this->ticket->ticket_number,
-                ])
+                $ticketUrl
+            )
+            ->line(
+                'Regards,'
             );
     }
 
-    /**
-     * Get the array representation of the notification.
-     */
     public function toArray(object $notifiable): array
     {
         return [];

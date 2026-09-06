@@ -54,8 +54,8 @@ class TicketService
     }
 
     protected function resolveTicketTeam(): Team
-{
-        // If we're inside a team route, use that team
+    {
+        // If we're inside a team route, use that team.
         $currentTeam = request()->route('current_team');
 
         if ($currentTeam instanceof Team) {
@@ -70,7 +70,7 @@ class TicketService
             }
         }
 
-        // If the authenticated user has a current team, use it
+        // If the authenticated user has a current team, use it.
         if (auth()->check()) {
             $user = auth()->user();
 
@@ -83,7 +83,7 @@ class TicketService
             }
         }
 
-        // Deterministic fallback
+        // Deterministic fallback.
         $team = Team::query()
             ->where('is_personal', true)
             ->orderBy('id')
@@ -93,7 +93,7 @@ class TicketService
             return $team;
         }
 
-        // If absolutely nothing exists create a safe fallback
+        // If absolutely nothing exists, create a safe fallback.
         return Team::create([
             'name' => 'Support',
             'slug' => 'support',
@@ -101,7 +101,6 @@ class TicketService
         ]);
     }
 
-    
     public function findGuestTicket(
         string $ticketNumber,
     ): ?Ticket {
@@ -129,9 +128,9 @@ class TicketService
     ): ?Ticket {
         $ticketNumber = trim($ticketNumber);
 
-        $ipKey = 'guest-ticket-search:ip:'.$ipAddress;
+        $ipKey = 'guest-ticket-search:ip:' . $ipAddress;
 
-        $ticketKey = 'guest-ticket-search:ticket:'.hash(
+        $ticketKey = 'guest-ticket-search:ticket:' . hash(
             'sha256',
             Str::lower($ticketNumber)
         );
@@ -172,7 +171,7 @@ class TicketService
         int $minutes = 60
     ): void {
         session()->put(
-            'guest_ticket_access.'.$ticket->id,
+            'guest_ticket_access.' . $ticket->id,
             now()->addMinutes($minutes)->timestamp
         );
     }
@@ -180,7 +179,7 @@ class TicketService
     public function hasGuestTicketAccess(Ticket $ticket): bool
     {
         $expiresAt = session(
-            'guest_ticket_access.'.$ticket->id
+            'guest_ticket_access.' . $ticket->id
         );
 
         if (! $expiresAt) {
@@ -218,7 +217,7 @@ class TicketService
     public function revokeGuestTicketAccess(Ticket $ticket): void
     {
         session()->forget(
-            'guest_ticket_access.'.$ticket->id
+            'guest_ticket_access.' . $ticket->id
         );
     }
 
@@ -241,12 +240,12 @@ class TicketService
             return false;
         }
 
-        $emailKey = 'guest-ticket-email:'.hash(
+        $emailKey = 'guest-ticket-email:' . hash(
             'sha256',
             $email
         );
 
-        $ipKey = 'guest-ticket-email-ip:'.$ipAddress;
+        $ipKey = 'guest-ticket-email-ip:' . $ipAddress;
 
         if (
             RateLimiter::tooManyAttempts($emailKey, 3) ||
@@ -338,12 +337,12 @@ class TicketService
             return null;
         }
 
-        $emailKey = 'guest-ticket-code:'.hash(
+        $emailKey = 'guest-ticket-code:' . hash(
             'sha256',
             $email
         );
 
-        $ipKey = 'guest-ticket-code-ip:'.$ipAddress;
+        $ipKey = 'guest-ticket-code-ip:' . $ipAddress;
 
         if (
             RateLimiter::tooManyAttempts($emailKey, 10) ||
@@ -436,6 +435,27 @@ class TicketService
             ->first();
     }
 
+
+    public function verifyGuestTicketAccess(
+    Ticket $ticket,
+    string $token
+): bool {
+    if (! preg_match('/^[a-fA-F0-9]{64}$/', $token)) {
+        return false;
+    }
+
+    $tokenHash = hash(
+        'sha256',
+        $token
+    );
+
+    return TicketAccessToken::query()
+        ->where('ticket_id', $ticket->id)
+        ->where('token_hash', $tokenHash)
+        ->where('expires_at', '>', now())
+        ->exists();
+}
+
     /*
     |--------------------------------------------------------------------------
     | Temporary URL Access Token
@@ -446,16 +466,7 @@ class TicketService
         Ticket $ticket,
         int $minutes = 60
     ): string {
-        /*
-         * Generate a completely separate token.
-         *
-         * This is NOT the original guest private key.
-         */
         $token = bin2hex(random_bytes(32));
-
-        TicketAccessToken::query()
-            ->where('ticket_id', $ticket->id)
-            ->delete();
 
         TicketAccessToken::create([
             'ticket_id' => $ticket->id,
@@ -468,6 +479,27 @@ class TicketService
 
         return $token;
     }
+    /*
+    |--------------------------------------------------------------------------
+    | Guest Ticket URL
+    |--------------------------------------------------------------------------
+    */
+
+   public function createGuestTicketUrl(
+    Ticket $ticket,
+    int $minutes = 60
+): string {
+    $token = $this->createEmailTicketAccessToken(
+        $ticket,
+        $minutes
+    );
+
+    return rtrim(config('app.url'), '/') .
+        '/tickets/' .
+        $ticket->ticket_number .
+        '/' .
+        $token;
+}
 
     /*
     |--------------------------------------------------------------------------
@@ -531,7 +563,7 @@ class TicketService
     {
         do {
             $ticketNumber =
-                'TCKT-'.strtoupper(
+                'TCKT-' . strtoupper(
                     Str::random(8)
                 );
         } while (

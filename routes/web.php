@@ -10,6 +10,12 @@ use App\Livewire\Teams\Projects\Index as AdminWorksIndex;
 use App\Livewire\Teams\Testimonials\Index as AdminTestimonialsIndex;
 use Illuminate\Support\Facades\Route;
 
+/*
+|--------------------------------------------------------------------------
+| Home
+|--------------------------------------------------------------------------
+*/
+
 Route::view('/', 'welcome')
     ->name('home');
 
@@ -27,14 +33,30 @@ Route::get('/tickets', TicketSearch::class)
 | Guest Ticket
 |--------------------------------------------------------------------------
 |
-| /tickets/TCKT-123/TOKEN
+| Customer URL:
+|
+| /tickets/TCKT-123/64_CHARACTER_TOKEN
+|
+| IMPORTANT:
+| This route is completely independent from the team/admin routes.
 |
 */
 
 Route::get('/tickets/{ticketNumber}/{token}', [
     GuestTicketController::class,
     'guestShow',
-])->name('tickets.show');
+])
+    ->where([
+        'ticketNumber' => 'TCKT-[A-Z0-9]+',
+        'token' => '[a-fA-F0-9]{64}',
+    ])
+    ->name('tickets.show');
+
+/*
+|--------------------------------------------------------------------------
+| Guest Ticket Attachments
+|--------------------------------------------------------------------------
+*/
 
 Route::get(
     '/tickets/attachments/{attachment}/preview',
@@ -52,15 +74,21 @@ Route::get(
 |--------------------------------------------------------------------------
 */
 
-Route::get('/projects/{work}', [WorkController::class, 'show'])
-    ->name('work.show');
+Route::get('/projects/{work}', [
+    WorkController::class,
+    'show',
+])->name('work.show');
 
 /*
 |--------------------------------------------------------------------------
 | Team / Admin
 |--------------------------------------------------------------------------
 |
-| /karam-toors-team/tickets/TCKT-123
+| Internal URL:
+|
+| /{current_team}/tickets/TCKT-123
+|
+| This route is NOT used for customer emails.
 |
 */
 

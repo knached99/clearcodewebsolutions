@@ -4,14 +4,16 @@ namespace App\Livewire\Teams\Tickets;
 
 use App\Models\Ticket;
 use App\Models\TicketMessageAttachment;
-use App\Notifications\TicketStatusChangedNotification;
 use App\Notifications\TicketPriorityChangedNotification;
+use App\Notifications\TicketStatusChangedNotification;
+use App\Services\TicketService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Illuminate\Support\Facades\Notification;
+
 class Show extends Component
 {
     use WithFileUploads;
@@ -31,6 +33,7 @@ class Show extends Component
         $this->ticket = $ticket;
 
         $this->status = (string) $ticket->status;
+
         $this->priority = (string) $ticket->priority;
 
         $this->loadTicket();
@@ -42,7 +45,7 @@ class Show extends Component
     |--------------------------------------------------------------------------
     */
 
- public function updateStatus(string $value): void
+   public function updateStatus(string $value): void
 {
     $value = strtolower(trim($value));
 
@@ -58,6 +61,7 @@ class Show extends Component
 
     if ($value === $this->ticket->status) {
         $this->status = $value;
+
         return;
     }
 
@@ -80,7 +84,7 @@ class Show extends Component
         new TicketStatusChangedNotification(
             $this->ticket,
             $oldStatus,
-            $this->ticket->status,
+            $this->ticket->status
         )
     );
 
@@ -92,7 +96,7 @@ class Show extends Component
     |--------------------------------------------------------------------------
     */
 
-    public function updatePriority(string $value): void
+   public function updatePriority(string $value): void
 {
     $value = strtolower(trim($value));
 
@@ -108,6 +112,7 @@ class Show extends Component
 
     if ($value === $this->ticket->priority) {
         $this->priority = $value;
+
         return;
     }
 
@@ -130,7 +135,7 @@ class Show extends Component
         new TicketPriorityChangedNotification(
             $this->ticket,
             $oldPriority,
-            $this->ticket->priority,
+            $this->ticket->priority
         )
     );
 
@@ -166,7 +171,7 @@ class Show extends Component
 
             foreach ($this->attachments as $attachment) {
                 $path = $attachment->store(
-                    'tickets/'.$this->ticket->id,
+                    'tickets/' . $this->ticket->id,
                     'public'
                 );
 
@@ -182,8 +187,16 @@ class Show extends Component
                 'last_activity_at' => now(),
             ]);
 
-            \Illuminate\Support\Facades\Notification::route('mail', $this->ticket->email)
-                ->notify(new \App\Notifications\NewTicketReplyNotification($this->ticket, $message, false));
+            Notification::route(
+                'mail',
+                $this->ticket->email
+            )->notify(
+                new \App\Notifications\NewTicketReplyNotification(
+                    $this->ticket,
+                    $message,
+                    false
+                )
+            );
         });
 
         $this->reset([
@@ -223,7 +236,9 @@ class Show extends Component
         if (isset($this->attachments[$index])) {
             unset($this->attachments[$index]);
 
-            $this->attachments = array_values($this->attachments);
+            $this->attachments = array_values(
+                $this->attachments
+            );
         }
     }
 
@@ -267,8 +282,9 @@ class Show extends Component
             200,
             [
                 'Content-Type' => $mime,
-                'Content-Disposition' => 'inline; filename="'.
-                    addslashes($attachment->original_name).
+                'Content-Disposition' =>
+                    'inline; filename="' .
+                    addslashes($attachment->original_name) .
                     '"',
                 'Cache-Control' => 'private, max-age=3600',
             ]
@@ -313,7 +329,8 @@ class Show extends Component
 
         abort_unless(
             $attachment->message &&
-            (int) $attachment->message->ticket_id === (int) $this->ticket->id,
+            (int) $attachment->message->ticket_id ===
+                (int) $this->ticket->id,
             404
         );
     }
