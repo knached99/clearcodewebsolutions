@@ -23,7 +23,7 @@
         {{-- Desktop Navigation --}}
         <div class="cc-navbar__desktop">
 
-            <a href="{{ url('/') }}" class="cc-nav-link active">
+            <a href="{{ url('/') }}" class="cc-nav-link {{ request()->routeIs('home') ? 'active' : '' }}">
                 <span>Home</span>
             </a>
 
@@ -64,7 +64,7 @@
 
             <a
                 href="{{ route('home.tickets.ticket-search') }}"
-                class="cc-nav-link"
+                class="cc-nav-link {{ request()->routeIs('home.tickets.ticket-search', 'tickets.show') ? 'active' : '' }}"
             >
                 <span>Track Ticket</span>
             </a>
