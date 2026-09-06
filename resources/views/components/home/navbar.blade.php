@@ -6,19 +6,18 @@
     <div class="cc-navbar__container">
 
         {{-- Logo --}}
-       <a href="{{ url('/') }}" class="cc-navbar__brand">
-        <img
-            src="{{ asset('assets/img/app__logo.jpg') }}"
-            alt="ClearCode Web Solutions"
-            class="cc-navbar__logo"
-        >
+        <a href="{{ url('/') }}" class="cc-navbar__brand">
+            <img
+                src="{{ asset('assets/img/app__logo.jpg') }}"
+                alt="ClearCode Web Solutions"
+                class="cc-navbar__logo"
+            >
 
-        <span class="cc-navbar__logo-name">
-            ClearCode
-            <small>Web Solutions</small>
-        </span>
-    </a>
-            
+            <span class="cc-navbar__logo-name">
+                ClearCode
+                <small>Web Solutions</small>
+            </span>
+        </a>
 
 
         {{-- Desktop Navigation --}}
@@ -28,28 +27,45 @@
                 <span>Home</span>
             </a>
 
-            <a href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#services' : '#services' }}" class="cc-nav-link">
+            <a
+                href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#services' : '#services' }}"
+                class="cc-nav-link"
+            >
                 <span>Services</span>
             </a>
 
-            <a href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#work' : '#work' }}" class="cc-nav-link">
+            <a
+                href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#work' : '#work' }}"
+                class="cc-nav-link"
+            >
                 <span>Our Work</span>
             </a>
-            <a href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#about' : '#about' }}" class="cc-nav-link">
+
+            <a
+                href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#about' : '#about' }}"
+                class="cc-nav-link"
+            >
                 <span>About</span>
             </a>
 
-            <a href="{{request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/'). '#testimonials' : '#testimonials'}}" class="cc-nav-link">
+            <a
+                href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#testimonials' : '#testimonials' }}"
+                class="cc-nav-link"
+            >
                 <span>Testimonials</span>
             </a>
 
-            <a href="{{request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#testimonial-form' : '#testimonial-form'}}" class="cc-nav-link">
+            <a
+                href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#testimonial-form' : '#testimonial-form' }}"
+                class="cc-nav-link"
+            >
                 <span>Submit Testimonial</span>
             </a>
 
-
-
-            <a href="{{route('home.tickets.ticket-search')}}" class="cc-nav-link">
+            <a
+                href="{{ route('home.tickets.ticket-search') }}"
+                class="cc-nav-link"
+            >
                 <span>Track Ticket</span>
             </a>
 
@@ -57,8 +73,10 @@
 
 
         {{-- Desktop CTA --}}
-        <a href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#contact' : '#contact' }}" class="cc-navbar__cta">
-
+        <a
+            href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#contact' : '#contact' }}"
+            class="cc-navbar__cta"
+        >
             <span>Let's Talk</span>
 
             <svg viewBox="0 0 24 24">
@@ -71,7 +89,6 @@
                     stroke-linejoin="round"
                 />
             </svg>
-
         </a>
 
 
@@ -83,7 +100,6 @@
             aria-label="Open navigation"
             aria-expanded="false"
         >
-
             <span class="cc-menu-button__label">
                 Menu
             </span>
@@ -92,7 +108,6 @@
                 <i></i>
                 <i></i>
             </span>
-
         </button>
 
     </div>
@@ -114,8 +129,10 @@
 
         <div class="cc-mobile-drawer__top">
 
-            <a href="{{ url('/') }}" class="cc-mobile-drawer__logo">
-
+            <a
+                href="{{ url('/') }}"
+                class="cc-mobile-drawer__logo"
+            >
                 <span class="cc-navbar__logo-icon">
                     C
                 </span>
@@ -124,7 +141,6 @@
                     ClearCode
                     <small>Web Solutions</small>
                 </span>
-
             </a>
 
             <button
@@ -150,8 +166,11 @@
             </p>
 
 
-            <a href="{{url('/')}}" class="cc-mobile-link active">
-
+            {{-- Home --}}
+            <a
+                href="{{ url('/') }}"
+                class="cc-mobile-link active"
+            >
                 <span class="cc-mobile-link__number">
                     01
                 </span>
@@ -163,12 +182,14 @@
                 <span class="cc-mobile-link__arrow">
                     ↗
                 </span>
-
             </a>
 
 
-            <a href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') || request()->routeIs('tickets.show') ? url('/').'#services' : '#services' }}" class="cc-mobile-link">
-
+            {{-- Services --}}
+            <a
+                href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#services' : '#services' }}"
+                class="cc-mobile-link"
+            >
                 <span class="cc-mobile-link__number">
                     02
                 </span>
@@ -180,12 +201,14 @@
                 <span class="cc-mobile-link__arrow">
                     ↗
                 </span>
-
             </a>
 
 
-            <a href="{{request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#work' : '#work'}}" class="cc-mobile-link">
-
+            {{-- Our Work --}}
+            <a
+                href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#work' : '#work' }}"
+                class="cc-mobile-link"
+            >
                 <span class="cc-mobile-link__number">
                     03
                 </span>
@@ -197,12 +220,14 @@
                 <span class="cc-mobile-link__arrow">
                     ↗
                 </span>
-
             </a>
 
 
-            <a href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#about' : '#about' }}" class="cc-mobile-link">
-
+            {{-- About --}}
+            <a
+                href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#about' : '#about' }}"
+                class="cc-mobile-link"
+            >
                 <span class="cc-mobile-link__number">
                     04
                 </span>
@@ -214,11 +239,14 @@
                 <span class="cc-mobile-link__arrow">
                     ↗
                 </span>
-
             </a>
 
-             <a href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#testimonials' : '#testimonials' }}" class="cc-mobile-link">
 
+            {{-- Testimonials --}}
+            <a
+                href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#testimonials' : '#testimonials' }}"
+                class="cc-mobile-link"
+            >
                 <span class="cc-mobile-link__number">
                     05
                 </span>
@@ -230,11 +258,14 @@
                 <span class="cc-mobile-link__arrow">
                     ↗
                 </span>
-
             </a>
 
-             <a href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#testimonial-form' : '#testimonial-form' }}" class="cc-mobile-link">
 
+            {{-- Submit Testimonial --}}
+            <a
+                href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#testimonial-form' : '#testimonial-form' }}"
+                class="cc-mobile-link"
+            >
                 <span class="cc-mobile-link__number">
                     06
                 </span>
@@ -246,12 +277,14 @@
                 <span class="cc-mobile-link__arrow">
                     ↗
                 </span>
-
             </a>
 
 
-            <a href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#contact' : '#contact' }}" class="cc-mobile-link">
-
+            {{-- Contact --}}
+            <a
+                href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#contact' : '#contact' }}"
+                class="cc-mobile-link"
+            >
                 <span class="cc-mobile-link__number">
                     07
                 </span>
@@ -263,32 +296,36 @@
                 <span class="cc-mobile-link__arrow">
                     ↗
                 </span>
-
             </a>
 
-            <a href="{{ route('home.tickets.ticket-search') }}" class="cc-mobile-link">
 
-            <span class="cc-mobile-link__number">
-                08
-            </span>
+            {{-- Track Ticket --}}
+            <a
+                href="{{ route('home.tickets.ticket-search') }}"
+                class="cc-mobile-link"
+            >
+                <span class="cc-mobile-link__number">
+                    08
+                </span>
 
-            <span class="cc-mobile-link__text">
-                Track Ticket
-            </span>
+                <span class="cc-mobile-link__text">
+                    Track Ticket
+                </span>
 
-            <span class="cc-mobile-link__arrow">
-                ↗
-            </span>
-
-        </a>
+                <span class="cc-mobile-link__arrow">
+                    ↗
+                </span>
+            </a>
 
         </div>
 
 
         <div class="cc-mobile-drawer__bottom">
 
-            <a href="#contact" class="cc-mobile-cta">
-
+            <a
+                href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#contact' : '#contact' }}"
+                class="cc-mobile-cta"
+            >
                 <span>
                     Let's build something
                     <strong>great.</strong>
@@ -297,7 +334,6 @@
                 <span class="cc-mobile-cta__arrow">
                     →
                 </span>
-
             </a>
 
 

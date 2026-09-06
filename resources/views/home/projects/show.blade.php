@@ -908,7 +908,7 @@
                         @if ($work->description)
 
                             <p class="cc-project-summary">
-                                {{ Str::limit($work->description, 350) }}
+                                {{$work->description}}
                             </p>
 
                         @endif
