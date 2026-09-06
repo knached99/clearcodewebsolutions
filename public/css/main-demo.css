@@ -887,197 +887,442 @@ figure figcaption p {
 /* ------------------------------------------------*/
 /* Buttons & Triggers Styles End */
 /* ------------------------------------------------*/
-/* ------------------------------------------------*/
-/* Intro Styles Start */
-/* ------------------------------------------------*/
+/* ------------------------------------------------ */
+/* INTRO */
+/* ------------------------------------------------ */
+
 .intro {
-  position: relative;
-  min-height: 640px;
-  background-color: #0b0b0b;
-  background-repeat: no-repeat;
-  -moz-background-size: cover;
-       background-size: cover;
-  background-position: bottom right;
-  background-image: url("../assets/img/demo/1920x1080-bg-demo.webp");
-}
-@media only screen and (min-width: 1200px) {
-  .intro {
-    background-attachment: fixed;
-  }
+    position: relative;
+    min-height: 100svh;
+    height: 100svh;
+
+    background-color: #0b0b0b;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    background-image: url("../assets/img/backgrounds/hero__bg__wallpaper.jpg");
+
+    overflow: hidden;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
+
+/* ------------------------------------------------ */
+/* CENTER EVERYTHING */
+/* ------------------------------------------------ */
+
 .intro__header {
-  position: absolute;
-  top: 3rem;
-  left: 0;
-  width: 100%;
-  padding: 0 -moz-calc(10% - 15px);
-  padding: 0 calc(10% - 15px);
-}
-.intro__header .logo img {
-  width: 180px;
-}
-@media only screen and (min-width: 768px) {
-  .intro__header .logo img {
-    width: 200px;
-  }
-}
-@media only screen and (min-width: 1200px) {
-  .intro__header {
-    padding: 0 85px;
-  }
-}
-@media only screen and (min-width: 1400px) {
-  .intro__header {
-    position: absolute;
-    top: 6rem;
-    left: 0;
-    padding: 0 105px;
-  }
-  .intro__header .logo img {
-    width: auto;
-  }
+    position: static !important;
+    width: 100%;
+    padding: 0 20px !important;
+    margin: 0;
+
+    text-align: center;
+    z-index: 5;
 }
 
 .intro__content {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  bottom: auto;
-  -webkit-transform: translateY(-50%);
-     -moz-transform: translateY(-50%);
-      -ms-transform: translateY(-50%);
-          transform: translateY(-50%);
-  width: 100%;
+    position: static !important;
+    width: 100%;
+    padding: 0 20px !important;
+    margin: 0;
+
+    transform: none !important;
+
+    text-align: center;
+    z-index: 5;
 }
+
+.intro__header .container-fluid,
+.intro__header .row,
+.intro__header .col-12,
+.intro__content .container-fluid,
+.intro__content .row,
+.intro__content .col-12 {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+
+/* ------------------------------------------------ */
+/* LOGO — ONLY TEXT WITH GRADIENT */
+/* ------------------------------------------------ */
+
+.intro__header .logo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.intro__header .logo h1 {
+    margin: 0;
+
+    font-size: clamp(4rem, 8vw, 8rem);
+    line-height: 0.9;
+    font-weight: 800;
+    letter-spacing: -0.05em;
+
+    text-align: center;
+
+    /* ONLY THIS TEXT GETS THE GRADIENT */
+
+    /* background: linear-gradient(
+        110deg,
+        #670a67 0%,
+        #8b2be2 20%,
+        #c084fc 35%,
+        #f0d9ff 45%,
+        #a855f7 55%,
+        #7c22ce 70%,
+        #670a67 85%,
+        #d8b4fe 100%
+    ); */
+/* 
+    background-size: 400% 100%;
+
+    -webkit-background-clip: text;
+    background-clip: text;
+
+    -webkit-text-fill-color: transparent;
+
+    animation: clearCodeGradient 5s ease-in-out infinite; */
+}
+
+
+/* ------------------------------------------------ */
+/* HERO CONTENT */
+/* ------------------------------------------------ */
+
 .intro__content .headline {
-  padding: 0 -moz-calc(10% - 15px);
-  padding: 0 calc(10% - 15px);
+    width: 100%;
+    padding: 0 !important;
 }
-@media only screen and (min-width: 1200px) {
-  .intro__content .headline {
-    padding: 0 85px;
-  }
+
+.intro__content .headline .col-12 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
-@media only screen and (min-width: 1400px) {
-  .intro__content .headline {
-    padding: 0 105px;
-  }
+
+
+/* ------------------------------------------------ */
+/* BUILDING THE WEB CLEARLY */
+/* ------------------------------------------------ */
+
+/* SOLID WHITE — NO GRADIENT */
+
+.intro__content .headline h1 {
+    margin: 2.5rem 0 1.5rem;
+
+    font-size: clamp(3rem, 5.5vw, 6rem);
+    line-height: 0.95;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+
+    color: #ffffff !important;
+
+    text-align: center;
+
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    -webkit-text-fill-color: #ffffff !important;
 }
+
+
+/* ------------------------------------------------ */
+/* DESCRIPTION — MUCH BIGGER */
+/* ------------------------------------------------ */
+
+.intro__content .headline p {
+    width: 100%;
+    max-width: 1000px;
+
+    margin: 0 auto 2.5rem;
+
+    font-size: clamp(1.25rem, 1.8vw, 1.6rem);
+    line-height: 1.65;
+    font-weight: 400;
+
+    color: #ffffff !important;
+
+    text-align: center;
+}
+
+
+/* ------------------------------------------------ */
+/* DESCRIPTION SPAN — SOLID WHITE */
+/* ------------------------------------------------ */
+
+/* Completely removes the old lime green AND gradient */
+
+.intro__content .headline p span {
+    color: #ffffff !important;
+
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    -webkit-text-fill-color: #ffffff !important;
+
+    animation: none !important;
+}
+
+
+/* ------------------------------------------------ */
+/* BUTTONS — MUCH BIGGER */
+/* ------------------------------------------------ */
+
+.headline__btngroup {
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    gap: 20px;
+
+    width: 100%;
+
+    flex-wrap: wrap;
+}
+
+.headline__btngroup .btn {
+    min-width: 190px;
+
+    padding: 1.1rem 2rem;
+
+    font-size: 1.1rem;
+    line-height: 1.2;
+
+    font-weight: 600;
+
+    text-align: center;
+}
+
+
+/* ------------------------------------------------ */
+/* PURPLE BUTTON */
+/* ------------------------------------------------ */
+
+.headline__btngroup .btn-solid-light {
+    background-color: #cee57a;
+    border-color: #cee57a;
+}
+
+
+/* ------------------------------------------------ */
+/* OUTLINE BUTTON */
+/* ------------------------------------------------ */
+
+.headline__btngroup .btn-outline-light {
+    border-color: #ffffff;
+    color: #ffffff;
+}
+
+
+/* ------------------------------------------------ */
+/* LOGO GRADIENT ANIMATION */
+/* ------------------------------------------------ */
+
+@keyframes clearCodeGradient {
+
+    0% {
+        background-position: 0% 50%;
+    }
+
+    25% {
+        background-position: 35% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    75% {
+        background-position: 65% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+
+}
+
+
+/* ------------------------------------------------ */
+/* SCROLL INDICATOR */
+/* ------------------------------------------------ */
 
 .intro__scroll {
-  position: absolute;
-  bottom: 3rem;
-  left: 10%;
-  display: block;
-  width: 31px;
-  height: 54px;
-  -moz-border-radius: 15px;
-       border-radius: 15px;
-  border: 2px solid #ffffff;
+    position: absolute;
+
+    left: 50%;
+    bottom: 2rem;
+
+    display: block;
+
+    width: 31px;
+    height: 54px;
+
+    border-radius: 15px;
+    border: 2px solid #a855f7;
+
+    transform: translateX(-50%);
+
+    z-index: 10;
 }
+
 .intro__scroll span {
-  display: block;
-  position: absolute;
-  top: 12px;
-  left: -2px;
-  width: 31px;
-  height: 26px;
-  overflow: hidden;
+    display: block;
+
+    position: absolute;
+
+    top: 12px;
+    left: -2px;
+
+    width: 31px;
+    height: 26px;
+
+    overflow: hidden;
 }
+
 .intro__scroll span::before {
-  content: "";
-  display: block;
-  position: absolute;
-  top: 0;
-  left: 14px;
-  width: 3px;
-  height: 14px;
-  -moz-border-radius: 2px;
-       border-radius: 2px;
-  background-color: #ffffff;
-  -webkit-animation: scroll 1.4s infinite;
-     -moz-animation: scroll 1.4s infinite;
-          animation: scroll 1.4s infinite;
-}
-@media only screen and (min-width: 1200px) {
-  .intro__scroll {
+    content: "";
+
+    display: block;
+
     position: absolute;
-    bottom: 3rem;
-    left: 100px;
-  }
-}
-@media only screen and (min-width: 1400px) {
-  .intro__scroll {
-    position: absolute;
-    bottom: 6rem;
-    left: 120px;
-  }
+
+    top: 0;
+    left: 14px;
+
+    width: 3px;
+    height: 14px;
+
+    border-radius: 2px;
+
+    background-color: #a855f7;
+
+    animation: scroll 1.4s infinite;
 }
 
-@-webkit-keyframes scroll {
-  0% {
-    -webkit-transform: translate3d(0, 0, 0);
-            transform: translate3d(0, 0, 0);
-  }
-  60% {
-    -webkit-transform: translate3d(0, 40px, 0);
-            transform: translate3d(0, 40px, 0);
-  }
-  61% {
-    -webkit-transform: translate3d(0, -40px, 0);
-            transform: translate3d(0, -40px, 0);
-  }
-  85% {
-    -webkit-transform: translate3d(0, 0, 0);
-            transform: translate3d(0, 0, 0);
-  }
-}
 
-@-moz-keyframes scroll {
-  0% {
-    -moz-transform: translate3d(0, 0, 0);
-         transform: translate3d(0, 0, 0);
-  }
-  60% {
-    -moz-transform: translate3d(0, 40px, 0);
-         transform: translate3d(0, 40px, 0);
-  }
-  61% {
-    -moz-transform: translate3d(0, -40px, 0);
-         transform: translate3d(0, -40px, 0);
-  }
-  85% {
-    -moz-transform: translate3d(0, 0, 0);
-         transform: translate3d(0, 0, 0);
-  }
-}
+/* ------------------------------------------------ */
+/* SCROLL ANIMATION */
+/* ------------------------------------------------ */
 
 @keyframes scroll {
-  0% {
-    -webkit-transform: translate3d(0, 0, 0);
-       -moz-transform: translate3d(0, 0, 0);
-            transform: translate3d(0, 0, 0);
-  }
-  60% {
-    -webkit-transform: translate3d(0, 40px, 0);
-       -moz-transform: translate3d(0, 40px, 0);
-            transform: translate3d(0, 40px, 0);
-  }
-  61% {
-    -webkit-transform: translate3d(0, -40px, 0);
-       -moz-transform: translate3d(0, -40px, 0);
-            transform: translate3d(0, -40px, 0);
-  }
-  85% {
-    -webkit-transform: translate3d(0, 0, 0);
-       -moz-transform: translate3d(0, 0, 0);
-            transform: translate3d(0, 0, 0);
-  }
+
+    0% {
+        transform: translate3d(0, 0, 0);
+    }
+
+    60% {
+        transform: translate3d(0, 40px, 0);
+    }
+
+    61% {
+        transform: translate3d(0, -40px, 0);
+    }
+
+    85% {
+        transform: translate3d(0, 0, 0);
+    }
+
 }
-/* ------------------------------------------------*/
+
+
+/* ------------------------------------------------ */
+/* DESKTOP */
+/* ------------------------------------------------ */
+
+@media only screen and (min-width: 1200px) {
+
+    .intro {
+        background-attachment: fixed;
+    }
+
+}
+
+
+/* ------------------------------------------------ */
+/* MOBILE */
+/* ------------------------------------------------ */
+
+@media only screen and (max-width: 767px) {
+
+    .intro {
+        min-height: 100svh;
+        height: 100svh;
+
+        padding: 20px 0;
+    }
+
+    .intro__header .logo h1 {
+        font-size: clamp(3rem, 13vw, 5rem);
+    }
+
+    .intro__content {
+        padding: 0 15px !important;
+    }
+
+    .intro__content .headline h1 {
+        margin-top: 2rem;
+
+        font-size: clamp(2.4rem, 10vw, 4rem);
+    }
+
+    .intro__content .headline p {
+        max-width: 95%;
+
+        font-size: 1.1rem;
+        line-height: 1.55;
+    }
+
+    .headline__btngroup {
+        gap: 12px;
+    }
+
+    .headline__btngroup .btn {
+        min-width: 170px;
+
+        padding: 1rem 1.4rem;
+
+        font-size: 1rem;
+    }
+
+    .intro__scroll {
+        bottom: 1.5rem;
+    }
+
+}
+
+
+/* ------------------------------------------------ */
+/* REDUCED MOTION */
+/* ------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .intro__header .logo h1 {
+        animation: none;
+    }
+
+    .intro__scroll span::before {
+        animation: none;
+    }
+
+}
+
+
+/* ------------------------------------------------ */
 /* Intro Styles End */
-/* ------------------------------------------------*/
+/* ------------------------------------------------ */
 /* ------------------------------------------------*/
 /* Preview Sections Styles Start */
 /* ------------------------------------------------*/
