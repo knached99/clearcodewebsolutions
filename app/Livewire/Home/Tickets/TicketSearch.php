@@ -8,8 +8,6 @@ use Livewire\Component;
 
 class TicketSearch extends Component
 {
-    public string $ticketNumber = '';
-
     public string $email = '';
 
     public string $verificationCode = '';
@@ -20,14 +18,15 @@ class TicketSearch extends Component
 
     public bool $showTicketSelection = false;
 
-    /*
-    |--------------------------------------------------------------------------
-    | Rate Limiting
-    |--------------------------------------------------------------------------
-    */
-
-    protected function rateLimitKey(string $action, ?string $value = null): string
-    {
+    /**
+     * |--------------------------------------------------------------------------
+     * | Rate Limiting
+     * |--------------------------------------------------------------------------
+     */
+    protected function rateLimitKey(
+        string $action,
+        ?string $value = null
+    ): string {
         $ip = request()->ip() ?? 'unknown';
 
         $value = $value
@@ -48,12 +47,21 @@ class TicketSearch extends Component
         int $decaySeconds,
         ?string $value = null,
     ): void {
-        $key = $this->rateLimitKey($action, $value);
+        $key = $this->rateLimitKey(
+            $action,
+            $value
+        );
 
-        if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {
+        if (RateLimiter::tooManyAttempts(
+            $key,
+            $maxAttempts
+        )) {
             $seconds = RateLimiter::availableIn($key);
 
-            $minutes = max(1, (int) ceil($seconds / 60));
+            $minutes = max(
+                1,
+                (int) ceil($seconds / 60)
+            );
 
             abort(
                 429,
@@ -61,72 +69,17 @@ class TicketSearch extends Component
             );
         }
 
-        RateLimiter::hit($key, $decaySeconds);
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Search by Ticket Number
-    |--------------------------------------------------------------------------
-    */
-
-    public function search(
-        TicketService $ticketService
-    ): void {
-        $this->validate([
-            'ticketNumber' => [
-                'required',
-                'string',
-                'max:100',
-            ],
-        ]);
-
-        // 10 ticket searches per IP/ticket number per 10 minutes.
-        $this->ensureRateLimit(
-            action: 'search',
-            maxAttempts: 10,
-            decaySeconds: 600,
-            value: $this->ticketNumber,
-        );
-
-        $ticket = $ticketService->findGuestTicket(
-            ticketNumber: $this->ticketNumber,
-        );
-
-        if (! $ticket) {
-            $this->addError(
-                'ticketNumber',
-                "We couldn't find a ticket with that number."
-            );
-
-            return;
-        }
-
-        $token = $ticketService->createEmailTicketAccessToken(
-            ticket: $ticket,
-            minutes: 60,
-        );
-
-        $ticketService->grantGuestTicketAccess(
-            ticket: $ticket,
-            minutes: 60,
-        );
-
-        $this->redirectRoute(
-            'tickets.show',
-            [
-                'ticketNumber' => $ticket->ticket_number,
-                'token' => $token,
-            ]
+        RateLimiter::hit(
+            $key,
+            $decaySeconds
         );
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Send Email Verification Code
-    |--------------------------------------------------------------------------
-    */
-
+    /**
+     * |--------------------------------------------------------------------------
+     * | Send Email Verification Code
+     * |--------------------------------------------------------------------------
+     */
     public function sendVerificationCode(
         TicketService $ticketService
     ): void {
@@ -138,7 +91,9 @@ class TicketSearch extends Component
             ],
         ]);
 
-        // 3 requests per email/IP every 15 minutes.
+        /**
+         * 3 requests per email/IP every 15 minutes.
+         */
         $this->ensureRateLimit(
             action: 'send-verification',
             maxAttempts: 3,
@@ -167,12 +122,11 @@ class TicketSearch extends Component
         $this->verificationCode = '';
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Verify Email Code
-    |--------------------------------------------------------------------------
-    */
-
+    /**
+     * |--------------------------------------------------------------------------
+     * | Verify Email Code
+     * |--------------------------------------------------------------------------
+     */
     public function verifyEmail(
         TicketService $ticketService
     ): void {
@@ -188,7 +142,9 @@ class TicketSearch extends Component
             ],
         ]);
 
-        // 5 verification attempts per email/IP every 15 minutes.
+        /**
+         * 5 verification attempts per email/IP every 15 minutes.
+         */
         $this->ensureRateLimit(
             action: 'verify-email',
             maxAttempts: 5,
@@ -219,19 +175,36 @@ class TicketSearch extends Component
             ->values()
             ->all();
 
+        /**
+         * -------------------------------------------------------------
+         * One ticket
+         * -------------------------------------------------------------
+         *
+         * Email verification has authenticated ownership of the email
+         * address.
+         *
+         * Generate a fresh real guest token for this ticket.
+         *
+         * The raw token is never stored in the database.
+         */
         if (count($this->verifiedTicketIds) === 1) {
             $ticket = $tickets[0];
 
-            $token = $ticketService->createEmailTicketAccessToken(
+            $token = $ticketService->rotateGuestTicketToken(
                 ticket: $ticket,
-                minutes: 60,
             );
 
+            /**
+             * Also establish the guest session.
+             */
             $ticketService->grantGuestTicketAccess(
                 ticket: $ticket,
                 minutes: 60,
             );
 
+            /**
+             * Redirect using the REAL 64-character token.
+             */
             $this->redirectRoute(
                 'tickets.show',
                 [
@@ -243,17 +216,23 @@ class TicketSearch extends Component
             return;
         }
 
+        /**
+         * -------------------------------------------------------------
+         * Multiple tickets
+         * -------------------------------------------------------------
+         *
+         * Let the customer select which ticket they want to access.
+         */
         $this->showTicketSelection = true;
 
         $this->resetErrorBag();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Select Ticket After Email Verification
-    |--------------------------------------------------------------------------
-    */
-
+    /**
+     * |--------------------------------------------------------------------------
+     * | Select Ticket After Email Verification
+     * |--------------------------------------------------------------------------
+     */
     public function selectTicket(
         int $ticketId,
         TicketService $ticketService
@@ -275,16 +254,27 @@ class TicketSearch extends Component
             abort(404);
         }
 
-        $token = $ticketService->createEmailTicketAccessToken(
+        /**
+         * Generate a fresh real guest token.
+         *
+         * This token is the same credential stored by hash in
+         * tickets.guest_token_hash.
+         */
+        $token = $ticketService->rotateGuestTicketToken(
             ticket: $ticket,
-            minutes: 60,
         );
 
+        /**
+         * Establish guest session access.
+         */
         $ticketService->grantGuestTicketAccess(
             ticket: $ticket,
             minutes: 60,
         );
 
+        /**
+         * Redirect using the REAL 64-character token.
+         */
         $this->redirectRoute(
             'tickets.show',
             [
@@ -294,28 +284,29 @@ class TicketSearch extends Component
         );
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Change Email
-    |--------------------------------------------------------------------------
-    */
-
+    /**
+     * |--------------------------------------------------------------------------
+     * | Change Email
+     * |--------------------------------------------------------------------------
+     */
     public function changeEmail(): void
     {
         $this->emailVerificationSent = false;
+
         $this->showTicketSelection = false;
+
         $this->verificationCode = '';
+
         $this->verifiedTicketIds = [];
 
         $this->resetErrorBag();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Render
-    |--------------------------------------------------------------------------
-    */
-
+    /**
+     * |--------------------------------------------------------------------------
+     * | Render
+     * |--------------------------------------------------------------------------
+     */
     public function render()
     {
         return view(

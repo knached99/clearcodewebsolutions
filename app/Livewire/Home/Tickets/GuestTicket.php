@@ -5,6 +5,7 @@ namespace App\Livewire\Home\Tickets;
 use App\Models\Ticket;
 use App\Services\TicketService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -34,13 +35,11 @@ class GuestTicket extends Component
                 'string',
                 'max:10000',
             ],
-
             'attachments' => [
                 'nullable',
                 'array',
                 'max:10',
             ],
-
             'attachments.*' => [
                 'nullable',
                 'file',
@@ -53,13 +52,13 @@ class GuestTicket extends Component
 
     public function mount(
         Ticket $ticket,
-        TicketService $ticketService
+        TicketService $ticketService,
     ): void {
         $ticketService->requireGuestTicketAccess($ticket);
 
-        $this->ticket = $ticket->load(
-            'messages.attachments'
-        );
+        $this->ticket = $ticket->load([
+            'messages.attachments',
+        ]);
 
         $this->subject = (string) $ticket->subject;
         $this->status = (string) $ticket->status;
@@ -67,7 +66,7 @@ class GuestTicket extends Component
     }
 
     public function sendReply(
-        TicketService $ticketService
+        TicketService $ticketService,
     ): void {
         $ticket = Ticket::query()->find($this->ticket->id);
 
@@ -92,8 +91,8 @@ class GuestTicket extends Component
 
             foreach ($this->attachments as $attachment) {
                 $path = $attachment->store(
-                    'tickets/'.$ticket->id,
-                    'public'
+                    'tickets/' . $ticket->id,
+                    'public',
                 );
 
                 $message->attachments()->create([
@@ -108,8 +107,16 @@ class GuestTicket extends Component
                 'last_activity_at' => now(),
             ]);
 
-            \Illuminate\Support\Facades\Notification::route('mail', config('mail.admin_address'))
-                ->notify(new \App\Notifications\NewTicketReplyNotification($ticket, $message, true));
+            Notification::route(
+                'mail',
+                config('mail.admin_address'),
+            )->notify(
+                new \App\Notifications\NewTicketReplyNotification(
+                    $ticket,
+                    $message,
+                    true,
+                ),
+            );
         });
 
         $this->ticket = $ticket
@@ -125,7 +132,7 @@ class GuestTicket extends Component
 
         session()->flash(
             'ticket-success',
-            'Your reply has been sent.'
+            'Your reply has been sent.',
         );
     }
 
@@ -138,12 +145,12 @@ class GuestTicket extends Component
         unset($this->attachments[$index]);
 
         $this->attachments = array_values(
-            $this->attachments
+            $this->attachments,
         );
     }
 
     public function render(
-        TicketService $ticketService
+        TicketService $ticketService,
     ) {
         $ticket = Ticket::query()->find($this->ticket->id);
 
@@ -154,7 +161,7 @@ class GuestTicket extends Component
         $ticketService->requireGuestTicketAccess($ticket);
 
         return view(
-            'livewire.home.tickets.guest-ticket'
+            'livewire.home.tickets.guest-ticket',
         );
     }
 }

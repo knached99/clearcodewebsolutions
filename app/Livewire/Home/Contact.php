@@ -124,10 +124,16 @@ class Contact extends Component
     {
         $this->submitted = false;
 
+        /*
+         * Honeypot.
+         */
         if ($this->website !== '') {
             return;
         }
 
+        /*
+         * Minimum form completion time.
+         */
         if (
             $this->formLoadedAt &&
             now()->timestamp - $this->formLoadedAt < 3
@@ -137,7 +143,10 @@ class Contact extends Component
             ]);
         }
 
-        $key = 'contact-form:'.request()->ip();
+        /*
+         * Rate limiting.
+         */
+        $key = 'contact-form:' . request()->ip();
 
         if (RateLimiter::tooManyAttempts($key, 3)) {
             $seconds = RateLimiter::availableIn($key);
@@ -149,17 +158,27 @@ class Contact extends Component
 
         RateLimiter::hit($key, 60);
 
+        /*
+         * Validate form.
+         */
         $validated = $this->validate();
 
+        /*
+         * Create ticket.
+         *
+         * createTicket() also creates the TicketAccessToken and
+         * returns the raw token.
+         */
         $result = $ticketService->createTicket(
             $validated
         );
 
         $ticket = $result['ticket'];
-
         $token = $result['token'];
 
-        // Customer email
+        /*
+         * Customer email.
+         */
         Notification::route(
             'mail',
             $ticket->email
@@ -170,7 +189,9 @@ class Contact extends Component
             )
         );
 
-        // Admin email
+        /*
+         * Admin email.
+         */
         Notification::route(
             'mail',
             config('mail.admin_address')

@@ -42,7 +42,7 @@ Route::get('/tickets', TicketSearch::class)
 |
 */
 
-Route::get('/tickets/{ticketNumber}/{token}', [
+Route::get('/tickets/{ticketNumber}/{token?}', [
     GuestTicketController::class,
     'guestShow',
 ])
