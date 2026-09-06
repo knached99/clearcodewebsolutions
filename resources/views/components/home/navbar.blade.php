@@ -28,23 +28,22 @@
                 <span>Home</span>
             </a>
 
-            <a href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') ? url('/').'#services' : '#services' }}" class="cc-nav-link">
+            <a href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#services' : '#services' }}" class="cc-nav-link">
                 <span>Services</span>
             </a>
 
-            <a href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') ? url('/').'#work' : '#work' }}" class="cc-nav-link">
+            <a href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#work' : '#work' }}" class="cc-nav-link">
                 <span>Our Work</span>
             </a>
-
-            <a href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') ? url('/').'#about' : '#about' }}" class="cc-nav-link">
+            <a href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#about' : '#about' }}" class="cc-nav-link">
                 <span>About</span>
             </a>
 
-            <a href="{{request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') ? url('/'). '#testimonials' : '#testimonials'}}" class="cc-nav-link">
+            <a href="{{request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/'). '#testimonials' : '#testimonials'}}" class="cc-nav-link">
                 <span>Testimonials</span>
             </a>
 
-            <a href="{{request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') ? url('/').'#testimonial-form' : '#testimonial-form'}}" class="cc-nav-link">
+            <a href="{{request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#testimonial-form' : '#testimonial-form'}}" class="cc-nav-link">
                 <span>Submit Testimonial</span>
             </a>
 
@@ -58,7 +57,7 @@
 
 
         {{-- Desktop CTA --}}
-        <a href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') ? url('/').'#contact' : '#contact' }}" class="cc-navbar__cta">
+        <a href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#contact' : '#contact' }}" class="cc-navbar__cta">
 
             <span>Let's Talk</span>
 
@@ -168,7 +167,7 @@
             </a>
 
 
-            <a href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') ? url('/').'#services' : '#services' }}" class="cc-mobile-link">
+            <a href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') || request()->routeIs('tickets.show') ? url('/').'#services' : '#services' }}" class="cc-mobile-link">
 
                 <span class="cc-mobile-link__number">
                     02
@@ -185,7 +184,7 @@
             </a>
 
 
-            <a href="{{request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') ? url('/').'#work' : '#work'}}" class="cc-mobile-link">
+            <a href="{{request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#work' : '#work'}}" class="cc-mobile-link">
 
                 <span class="cc-mobile-link__number">
                     03
@@ -202,7 +201,7 @@
             </a>
 
 
-            <a href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') ? url('/').'#about' : '#about' }}" class="cc-mobile-link">
+            <a href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#about' : '#about' }}" class="cc-mobile-link">
 
                 <span class="cc-mobile-link__number">
                     04
@@ -218,7 +217,7 @@
 
             </a>
 
-             <a href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') ? url('/').'#testimonials' : '#testimonials' }}" class="cc-mobile-link">
+             <a href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#testimonials' : '#testimonials' }}" class="cc-mobile-link">
 
                 <span class="cc-mobile-link__number">
                     05
@@ -234,7 +233,7 @@
 
             </a>
 
-             <a href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') ? url('/').'#testimonial-form' : '#testimonial-form' }}" class="cc-mobile-link">
+             <a href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#testimonial-form' : '#testimonial-form' }}" class="cc-mobile-link">
 
                 <span class="cc-mobile-link__number">
                     06
@@ -251,7 +250,7 @@
             </a>
 
 
-            <a href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') ? url('/').'#contact' : '#contact' }}" class="cc-mobile-link">
+            <a href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#contact' : '#contact' }}" class="cc-mobile-link">
 
                 <span class="cc-mobile-link__number">
                     07
