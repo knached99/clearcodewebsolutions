@@ -13,10 +13,10 @@
                     06 / LET'S TALK
                 </span>
 
-                <h2>
-                    Have an idea?
-                    <span>Let's build it.</span>
-                </h2>
+              <h2>
+                <span style="white-space: nowrap;">Have an idea?</span>
+                <span>Let's build it.</span>
+            </h2>
 
                 <p>
                     Tell us what you're working on and we'll
