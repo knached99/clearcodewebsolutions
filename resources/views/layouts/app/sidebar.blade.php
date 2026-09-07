@@ -1007,6 +1007,7 @@
 
     </flux:header>
 
+    <livewire:required-onboarding/>
     <livewire:create-team-modal />
 
     @persist('toast')
