@@ -11,6 +11,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 
 new class extends Component {
+
     public bool $showPendingInvitationsModal = true;
 
     public bool $showChangePasswordModal = false;
@@ -27,7 +28,7 @@ new class extends Component {
             return;
         }
 
-        /*
+        /**
          * An invitation is always the first mandatory step.
          */
         if ($this->pendingInvitations->isNotEmpty()) {
@@ -37,7 +38,7 @@ new class extends Component {
             return;
         }
 
-        /*
+        /**
          * If there are no pending invitations but the user still
          * needs to change their temporary password, show that modal.
          */
@@ -97,7 +98,7 @@ new class extends Component {
             $user->switchTeam($team);
         });
 
-        /*
+        /**
          * Close invitation modal and immediately open
          * the mandatory password-change modal.
          */
@@ -122,7 +123,7 @@ new class extends Component {
         $user = Auth::user();
 
         DB::transaction(function () use ($user, $invitation): void {
-            /*
+            /**
              * Remove any membership that may have been created
              * by an older version of the invitation flow.
              */
@@ -133,7 +134,7 @@ new class extends Component {
 
             $invitation->delete();
 
-            /*
+            /**
              * This account was created specifically for the invitation.
              */
             $user->delete();
@@ -142,6 +143,7 @@ new class extends Component {
         Auth::logout();
 
         request()->session()->invalidate();
+
         request()->session()->regenerateToken();
 
         $this->redirectRoute('login', navigate: true);
@@ -155,7 +157,7 @@ new class extends Component {
             abort(403);
         }
 
-        /*
+        /**
          * Do not allow the password modal to be bypassed.
          */
         if (! $user->must_change_password) {
@@ -241,6 +243,7 @@ new class extends Component {
 
         return $invitation;
     }
+
 }; ?>
 
 <div>
@@ -250,67 +253,105 @@ new class extends Component {
             wire:model="showPendingInvitationsModal"
             focusable
             :dismissible="false"
-            class="max-w-lg"
+            class="w-[calc(100vw-2rem)] max-w-lg"
         >
             <div
                 data-test="pending-invitations-modal"
-                class="space-y-6"
+                class="overflow-hidden rounded-2xl border border-purple-500/15 bg-black shadow-2xl shadow-purple-950/30"
             >
-                <div>
-                    <flux:heading size="lg">
-                        {{ __('Pending team invitations') }}
-                    </flux:heading>
+                {{-- Header --}}
+                <div class="border-b border-purple-500/10 px-6 py-5">
+                    <div class="flex items-center gap-4">
+                        <div class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-purple-600/15 ring-1 ring-purple-500/20">
+                            <flux:icon.users class="size-5 text-purple-400" />
+                        </div>
 
-                    <flux:subheading>
-                        {{ __('You must accept or decline this invitation before you can continue.') }}
-                    </flux:subheading>
+                        <div class="min-w-0">
+                            <flux:heading
+                                size="lg"
+                                class="text-white"
+                            >
+                                {{ __('Pending team invitations') }}
+                            </flux:heading>
+
+                            <flux:text class="mt-1 text-sm text-zinc-500">
+                                {{ __('You must accept or decline this invitation before you can continue.') }}
+                            </flux:text>
+                        </div>
+                    </div>
                 </div>
 
-                @error('invitation')
-                    <flux:text class="text-sm text-red-600 dark:text-red-400">
-                        {{ $message }}
-                    </flux:text>
-                @enderror
-
-                <div class="grid gap-4">
-                    @foreach ($this->pendingInvitations as $invitation)
-                        <div
-                            data-test="pending-invitation-row"
-                            class="rounded-lg border border-zinc-200 p-4 dark:border-zinc-700"
-                        >
-                            <div class="space-y-1">
-                                <p class="font-medium">
-                                    {{ $invitation['team_name'] }}
+                {{-- Invitations --}}
+                <div class="space-y-3 p-6">
+                    @error('invitation')
+                        <div class="rounded-xl border border-purple-500/15 bg-purple-950/20 px-4 py-3">
+                            <div class="flex items-start gap-3">
+                                <flux:icon.x-circle class="mt-0.5 size-4 shrink-0 text-purple-400" />
+                                <p class="text-sm text-purple-300">
+                                    {{ $message }}
                                 </p>
-
-                                <flux:text class="text-sm text-zinc-500 dark:text-zinc-400">
-                                    {{ __(':inviter invited you to join this team.', [
-                                        'inviter' => $invitation['inviter_name'],
-                                    ]) }}
-                                </flux:text>
-                            </div>
-
-                            <div class="mt-4 flex justify-end gap-2">
-                                <flux:button
-                                    variant="filled"
-                                    wire:click="declineInvitation('{{ $invitation['code'] }}')"
-                                    wire:loading.attr="disabled"
-                                    data-test="pending-invitation-decline"
-                                >
-                                    {{ __('Decline') }}
-                                </flux:button>
-
-                                <flux:button
-                                    variant="primary"
-                                    wire:click="acceptInvitation('{{ $invitation['code'] }}')"
-                                    wire:loading.attr="disabled"
-                                    data-test="pending-invitation-accept"
-                                >
-                                    {{ __('Accept') }}
-                                </flux:button>
                             </div>
                         </div>
-                    @endforeach
+                    @enderror
+
+                    <div class="space-y-2">
+                        @foreach ($this->pendingInvitations as $invitation)
+                            <div
+                                data-test="pending-invitation-row"
+                                class="rounded-xl border border-purple-500/10 bg-purple-950/10 p-4 transition hover:border-purple-500/20 hover:bg-purple-950/15"
+                            >
+                                <div class="flex items-start gap-3">
+                                    <div class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-purple-600/15">
+                                        <flux:icon.building-office-2 class="size-4 text-purple-400" />
+                                    </div>
+
+                                    <div class="min-w-0 flex-1">
+                                        <p class="truncate text-sm font-semibold text-white">
+                                            {{ $invitation['team_name'] }}
+                                        </p>
+
+                                        <p class="mt-1 text-xs leading-5 text-zinc-500">
+                                            {{ __(':inviter invited you to join this team.', [
+                                                'inviter' => $invitation['inviter_name'],
+                                            ]) }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 grid grid-cols-2 gap-2">
+                                    <flux:button
+                                        variant="outline"
+                                        wire:click="declineInvitation('{{ $invitation['code'] }}')"
+                                        wire:loading.attr="disabled"
+                                        data-test="pending-invitation-decline"
+                                        class="w-full cursor-pointer border-purple-500/15 bg-transparent text-zinc-400 hover:border-purple-500/30 hover:bg-purple-950/30 hover:text-white"
+                                    >
+                                        {{ __('Decline') }}
+                                    </flux:button>
+
+                                    <flux:button
+                                        variant="primary"
+                                        wire:click="acceptInvitation('{{ $invitation['code'] }}')"
+                                        wire:loading.attr="disabled"
+                                        data-test="pending-invitation-accept"
+                                        class="w-full cursor-pointer bg-purple-600 hover:bg-purple-500"
+                                    >
+                                        {{ __('Accept') }}
+                                    </flux:button>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <div class="flex items-center gap-3 pt-1">
+                        <div class="h-px flex-1 bg-purple-500/10"></div>
+
+                        <span class="shrink-0 text-[10px] font-medium uppercase tracking-[0.16em] text-zinc-700">
+                            {{ __('Required') }}
+                        </span>
+
+                        <div class="h-px flex-1 bg-purple-500/10"></div>
+                    </div>
                 </div>
             </div>
         </flux:modal>
@@ -322,50 +363,93 @@ new class extends Component {
             wire:model="showChangePasswordModal"
             focusable
             :dismissible="false"
-            class="max-w-lg"
+            class="w-[calc(100vw-2rem)] max-w-lg"
         >
-            <form
-                wire:submit="updatePassword"
-                class="space-y-6"
-            >
-                <div>
-                    <flux:heading size="lg">
-                        {{ __('Create your new password') }}
-                    </flux:heading>
+            <div class="overflow-hidden rounded-2xl border border-purple-500/15 bg-black shadow-2xl shadow-purple-950/30">
+                <form
+                    wire:submit="updatePassword"
+                    novalidate
+                >
+                    {{-- Header --}}
+                    <div class="border-b border-purple-500/10 px-6 py-5">
+                        <div class="flex items-center gap-4">
+                            <div class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-purple-600/15 ring-1 ring-purple-500/20">
+                                <flux:icon.lock-closed class="size-5 text-purple-400" />
+                            </div>
 
-                    <flux:subheading>
-                        {{ __('For security, you must create a new password before you can continue.') }}
-                    </flux:subheading>
-                </div>
+                            <div class="min-w-0">
+                                <flux:heading
+                                    size="lg"
+                                    class="text-white"
+                                >
+                                    {{ __('Create your new password') }}
+                                </flux:heading>
 
-                <flux:input
-                    wire:model="newPassword"
-                    type="password"
-                    :label="__('New password')"
-                    autocomplete="new-password"
-                    viewable
-                />
+                                <flux:text class="mt-1 text-sm text-zinc-500">
+                                    {{ __('For security, you must create a new password before you can continue.') }}
+                                </flux:text>
+                            </div>
+                        </div>
+                    </div>
 
-                <flux:input
-                    wire:model="newPassword_confirmation"
-                    type="password"
-                    :label="__('Confirm new password')"
-                    autocomplete="new-password"
-                    viewable
-                />
+                    {{-- Form --}}
+                    <div class="space-y-5 p-6">
+                        <div class="rounded-xl border border-purple-500/10 bg-purple-950/10 px-4 py-3">
+                            <div class="flex items-center gap-3">
+                                <flux:icon.shield-check class="size-4 shrink-0 text-purple-400" />
 
-                <flux:error name="newPassword" />
+                                <p class="text-xs leading-5 text-zinc-500">
+                                    {{ __('Choose a strong password that you do not use anywhere else.') }}
+                                </p>
+                            </div>
+                        </div>
 
-                <div class="flex justify-end">
-                    <flux:button
-                        type="submit"
-                        variant="primary"
-                        wire:loading.attr="disabled"
-                    >
-                        {{ __('Save new password') }}
-                    </flux:button>
-                </div>
-            </form>
+                        <div class="space-y-4">
+                            <flux:input
+                                wire:model="newPassword"
+                                type="password"
+                                :label="__('New password')"
+                                autocomplete="new-password"
+                                viewable
+                                :error="$errors->first('newPassword')"
+                                class="w-full [&_input]:min-h-12 [&_input]:rounded-xl [&_input]:px-4 [&_input]:text-sm"
+                            />
+
+                            <flux:input
+                                wire:model="newPassword_confirmation"
+                                type="password"
+                                :label="__('Confirm new password')"
+                                autocomplete="new-password"
+                                viewable
+                                :error="$errors->first('newPassword_confirmation')"
+                                class="w-full [&_input]:min-h-12 [&_input]:rounded-xl [&_input]:px-4 [&_input]:text-sm"
+                            />
+                        </div>
+
+                        <div class="flex items-center justify-between gap-4 border-t border-purple-500/10 pt-5">
+                            <div class="flex items-center gap-2 text-xs text-zinc-600">
+                                <flux:icon.lock-closed class="size-3.5" />
+                                <span>{{ __('Your password is securely encrypted.') }}</span>
+                            </div>
+
+                            <flux:button
+                                type="submit"
+                                variant="primary"
+                                wire:loading.attr="disabled"
+                                class="cursor-pointer bg-purple-600 px-5 hover:bg-purple-500"
+                            >
+                                <span wire:loading.remove wire:target="updatePassword">
+                                    {{ __('Save new password') }}
+                                </span>
+
+                                <span wire:loading wire:target="updatePassword">
+                                    {{ __('Saving...') }}
+                                </span>
+                            </flux:button>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </flux:modal>
     @endif
 </div>
