@@ -17,7 +17,9 @@ new #[Title('Security settings')] class extends Component {
     use PasswordValidationRules;
 
     public string $current_password = '';
+
     public string $password = '';
+
     public string $password_confirmation = '';
 
     public bool $canManageTwoFactor;
@@ -48,12 +50,19 @@ new #[Title('Security settings')] class extends Component {
         $this->canManageTwoFactor = Features::canManageTwoFactorAuthentication();
 
         if ($this->canManageTwoFactor) {
-            if (Fortify::confirmsTwoFactorAuthentication() && is_null(auth()->user()->two_factor_confirmed_at)) {
+            if (
+                Fortify::confirmsTwoFactorAuthentication()
+                && is_null(auth()->user()->two_factor_confirmed_at)
+            ) {
                 $disableTwoFactorAuthentication(auth()->user());
             }
 
             $this->twoFactorEnabled = auth()->user()->hasEnabledTwoFactorAuthentication();
-            $this->requiresConfirmation = Features::optionEnabled(Features::twoFactorAuthentication(), 'confirm');
+
+            $this->requiresConfirmation = Features::optionEnabled(
+                Features::twoFactorAuthentication(),
+                'confirm'
+            );
         }
 
         $this->canManagePasskeys = Features::canManagePasskeys();
@@ -74,7 +83,11 @@ new #[Title('Security settings')] class extends Component {
                 'password' => $this->passwordRules(),
             ]);
         } catch (ValidationException $e) {
-            $this->reset('current_password', 'password', 'password_confirmation');
+            $this->reset(
+                'current_password',
+                'password',
+                'password_confirmation'
+            );
 
             throw $e;
         }
@@ -83,9 +96,16 @@ new #[Title('Security settings')] class extends Component {
             'password' => $validated['password'],
         ]);
 
-        $this->reset('current_password', 'password', 'password_confirmation');
+        $this->reset(
+            'current_password',
+            'password',
+            'password_confirmation'
+        );
 
-        Flux::toast(variant: 'success', text: __('Password updated.'));
+        Flux::toast(
+            variant: 'success',
+            text: __('Password updated.')
+        );
     }
 
     /**
@@ -94,7 +114,13 @@ new #[Title('Security settings')] class extends Component {
     public function loadPasskeys(): void
     {
         $this->passkeys = auth()->user()->passkeys()
-            ->select(['id', 'name', 'credential', 'created_at', 'last_used_at'])
+            ->select([
+                'id',
+                'name',
+                'credential',
+                'created_at',
+                'last_used_at',
+            ])
             ->latest()
             ->get()
             ->map(fn ($passkey) => [
@@ -128,11 +154,14 @@ new #[Title('Security settings')] class extends Component {
             return;
         }
 
-        $passkey = auth()->user()->passkeys()->findOrFail($this->deletingPasskeyId);
+        $passkey = auth()->user()
+            ->passkeys()
+            ->findOrFail($this->deletingPasskeyId);
 
         $deletePasskey(auth()->user(), $passkey);
 
         $this->closeDeleteModal();
+
         $this->loadPasskeys();
     }
 
@@ -158,8 +187,9 @@ new #[Title('Security settings')] class extends Component {
     /**
      * Disable two-factor authentication for the user.
      */
-    public function disable(DisableTwoFactorAuthentication $disableTwoFactorAuthentication): void
-    {
+    public function disable(
+        DisableTwoFactorAuthentication $disableTwoFactorAuthentication
+    ): void {
         $disableTwoFactorAuthentication(auth()->user());
 
         $this->twoFactorEnabled = false;
@@ -169,169 +199,305 @@ new #[Title('Security settings')] class extends Component {
 <section class="w-full">
     @include('partials.settings-heading')
 
-    <flux:heading level="2" class="sr-only">{{ __('Security settings') }}</flux:heading>
+    <flux:heading level="2" class="sr-only">
+        {{ __('Security settings') }}
+    </flux:heading>
 
-    <x-pages::settings.layout :heading="__('Update password')" :subheading="__('Ensure your account is using a long, random password to stay secure')">
-        <form method="POST" wire:submit="updatePassword" class="mt-6 space-y-6">
-            <flux:input
-                wire:model="current_password"
-                :label="__('Current password')"
-                type="password"
-                required
-                autocomplete="current-password"
-                viewable
-            />
-            <flux:input
-                wire:model="password"
-                :label="__('New password')"
-                type="password"
-                required
-                autocomplete="new-password"
-                passwordrules="{{ \Illuminate\Validation\Rules\Password::defaults()->toPasswordRulesString() }}"
-                viewable
-            />
-            <flux:input
-                wire:model="password_confirmation"
-                :label="__('Confirm password')"
-                type="password"
-                required
-                autocomplete="new-password"
-                passwordrules="{{ \Illuminate\Validation\Rules\Password::defaults()->toPasswordRulesString() }}"
-                viewable
-            />
+    <x-pages::settings.layout
+        :heading="__('Security')"
+        :subheading="__('Manage your password, authentication, and passkeys.')"
+    >
+        <div class="overflow-hidden rounded-2xl border border-white/[0.08] bg-zinc-950/70 shadow-xl shadow-black/10">
 
-            <div class="flex items-center gap-4">
-                <flux:button variant="primary" type="submit" data-test="update-password-button">
-                    {{ __('Save') }}
-                </flux:button>
-            </div>
-        </form>
+            {{-- Password --}}
+            <section class="relative">
+                <div
+                    class="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-violet-600/10 blur-3xl"
+                    aria-hidden="true"
+                ></div>
 
-        @if ($canManageTwoFactor)
-            <section class="mt-12">
-                <flux:heading>{{ __('Two-factor authentication') }}</flux:heading>
-                <flux:subheading>{{ __('Manage your two-factor authentication settings') }}</flux:subheading>
+                <div class="relative flex items-center justify-between border-b border-white/[0.06] px-5 py-4 sm:px-6">
+                    <div class="flex items-center gap-3">
+                        <div class="flex size-9 shrink-0 items-center justify-center rounded-xl border border-violet-400/15 bg-violet-500/10">
+                            <flux:icon.lock-closed class="size-4.5 text-violet-300" />
+                        </div>
 
-                <div class="flex flex-col w-full mx-auto space-y-6 text-sm" wire:cloak>
-                    @if ($twoFactorEnabled)
-                        <div class="space-y-4">
-                            <flux:text>
-                                {{ __('You will be prompted for a secure, random pin during login, which you can retrieve from the TOTP-supported application on your phone.') }}
-                            </flux:text>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <flux:heading size="lg">
+                                    {{ __('Password') }}
+                                </flux:heading>
 
-                            <div class="flex justify-start">
+                                <span class="hidden rounded-full border border-emerald-400/10 bg-emerald-400/[0.05] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-emerald-300/70 sm:inline-flex">
+                                    {{ __('Protected') }}
+                                </span>
+                            </div>
+
+                            <p class="mt-0.5 text-xs text-white/30">
+                                {{ __('Update your account password.') }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative px-5 py-5 sm:px-6">
+                    <form
+                        method="POST"
+                        wire:submit="updatePassword"
+                        class="space-y-5"
+                        novalidate
+                    >
+                        {{-- Current password --}}
+                        <flux:input
+                            wire:model="current_password"
+                            :label="__('Current password')"
+                            type="password"
+                            required
+                            autocomplete="current-password"
+                            viewable
+                            class="w-full [&_input]:min-h-12 [&_input]:rounded-xl [&_input]:px-4 [&_input]:text-sm"
+                        />
+
+                        {{-- New password / confirmation --}}
+                        <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                            <flux:input
+                                wire:model="password"
+                                :label="__('New password')"
+                                type="password"
+                                required
+                                autocomplete="new-password"
+                                passwordrules="{{ \Illuminate\Validation\Rules\Password::defaults()->toPasswordRulesString() }}"
+                                viewable
+                                class="w-full [&_input]:min-h-12 [&_input]:rounded-xl [&_input]:px-4 [&_input]:text-sm"
+                            />
+
+                            <flux:input
+                                wire:model="password_confirmation"
+                                :label="__('Confirm password')"
+                                type="password"
+                                required
+                                autocomplete="new-password"
+                                passwordrules="{{ \Illuminate\Validation\Rules\Password::defaults()->toPasswordRulesString() }}"
+                                viewable
+                                class="w-full [&_input]:min-h-12 [&_input]:rounded-xl [&_input]:px-4 [&_input]:text-sm"
+                            />
+                        </div>
+
+                        <div class="flex justify-end pt-1">
+                            <flux:button
+                                variant="primary"
+                                type="submit"
+                                data-test="update-password-button"
+                                class="cursor-pointer"
+                            >
+                                {{ __('Save password') }}
+                            </flux:button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            {{-- Two-factor --}}
+            @if ($canManageTwoFactor)
+                <section class="border-t border-white/[0.06]">
+                    <div class="flex flex-col gap-4 px-5 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+                        <div class="flex min-w-0 items-center gap-3">
+                            <div class="flex size-9 shrink-0 items-center justify-center rounded-xl border border-fuchsia-400/15 bg-fuchsia-500/10">
+                                <flux:icon.shield-check class="size-4.5 text-fuchsia-300" />
+                            </div>
+
+                            <div class="min-w-0">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <flux:heading size="sm">
+                                        {{ __('Two-factor authentication') }}
+                                    </flux:heading>
+
+                                    @if ($twoFactorEnabled)
+                                        <span class="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/10 bg-emerald-400/[0.05] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-emerald-300/70">
+                                            <span class="size-1.5 rounded-full bg-emerald-400"></span>
+                                            {{ __('Enabled') }}
+                                        </span>
+                                    @else
+                                        <span class="rounded-full border border-white/[0.07] bg-white/[0.025] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-white/30">
+                                            {{ __('Not enabled') }}
+                                        </span>
+                                    @endif
+                                </div>
+
+                                <p class="mt-0.5 truncate text-xs text-white/30">
+                                    {{ __('Add an extra layer of protection to your account.') }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div
+                            class="flex shrink-0 flex-wrap items-center gap-2"
+                            wire:cloak
+                        >
+                            @if ($twoFactorEnabled)
                                 <flux:button
-                                    variant="danger"
+                                    variant="outline"
                                     wire:click="disable"
+                                    class="cursor-pointer"
                                 >
                                     {{ __('Disable 2FA') }}
                                 </flux:button>
+
+                                <livewire:pages::settings.two-factor.recovery-codes :$requiresConfirmation />
+                            @else
+                                <flux:modal.trigger name="two-factor-setup-modal">
+                                    <flux:button
+                                        variant="primary"
+                                        wire:click="$dispatch('start-two-factor-setup')"
+                                        class="cursor-pointer"
+                                    >
+                                        {{ __('Enable 2FA') }}
+                                    </flux:button>
+                                </flux:modal.trigger>
+
+                                <livewire:pages::settings.two-factor-setup-modal
+                                    :requires-confirmation="$requiresConfirmation"
+                                />
+                            @endif
+                        </div>
+                    </div>
+                </section>
+            @endif
+
+            {{-- Passkeys --}}
+            @if ($canManagePasskeys)
+                <section class="border-t border-white/[0.06]">
+                    <div class="px-5 py-4 sm:px-6">
+                        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div class="flex min-w-0 items-center gap-3">
+                                <div class="flex size-9 shrink-0 items-center justify-center rounded-xl border border-purple-400/15 bg-purple-500/10">
+                                    <flux:icon.key class="size-4.5 text-purple-300" />
+                                </div>
+
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <flux:heading size="sm">
+                                            {{ __('Passkeys') }}
+                                        </flux:heading>
+
+                                        <span class="rounded-full border border-white/[0.07] bg-white/[0.025] px-2 py-0.5 text-[9px] font-semibold tabular-nums text-white/35">
+                                            {{ count($passkeys) }}
+                                        </span>
+                                    </div>
+
+                                    <p class="mt-0.5 text-xs text-white/30">
+                                        {{ __('Passwordless sign-in with your trusted devices.') }}
+                                    </p>
+                                </div>
                             </div>
 
-                            <livewire:pages::settings.two-factor.recovery-codes :$requiresConfirmation />
+                            <x-passkey-registration />
                         </div>
-                    @else
-                        <div class="space-y-4">
-                            <flux:text variant="subtle">
-                                {{ __('When you enable two-factor authentication, you will be prompted for a secure pin during login. This pin can be retrieved from a TOTP-supported application on your phone.') }}
-                            </flux:text>
 
-                            <flux:modal.trigger name="two-factor-setup-modal">
-                                <flux:button
-                                    variant="primary"
-                                    wire:click="$dispatch('start-two-factor-setup')"
+                        <div class="mt-4 overflow-hidden rounded-xl border border-white/[0.06] bg-black/15">
+                            @forelse ($passkeys as $passkey)
+                                <div
+                                    class="flex items-center justify-between gap-3 px-3.5 py-3 transition hover:bg-white/[0.02] sm:px-4 {{ ! $loop->last ? 'border-b border-white/[0.05]' : '' }}"
                                 >
-                                    {{ __('Enable 2FA') }}
-                                </flux:button>
-                            </flux:modal.trigger>
-
-                            <livewire:pages::settings.two-factor-setup-modal :requires-confirmation="$requiresConfirmation" />
-                        </div>
-                    @endif
-                </div>
-            </section>
-        @endif
-
-        @if ($canManagePasskeys)
-            <section class="mt-12">
-                <flux:heading>{{ __('Passkeys') }}</flux:heading>
-                <flux:subheading>{{ __('Manage your passkeys for passwordless sign-in') }}</flux:subheading>
-
-                <div class="mt-6 flex flex-col w-full mx-auto space-y-6 text-sm" wire:cloak>
-                    <div class="border rounded-lg border-zinc-200 dark:border-zinc-700 overflow-hidden">
-                        @forelse ($passkeys as $passkey)
-                            <div class="flex items-center justify-between p-4 {{ ! $loop->last ? 'border-b border-zinc-200 dark:border-zinc-700' : '' }}">
-                                <div class="flex items-center gap-4">
-                                    <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800">
-                                        <flux:icon.key class="size-5 text-zinc-500 dark:text-zinc-400" />
-                                    </div>
-                                    <div class="space-y-1">
-                                        <div class="flex items-center gap-2.5">
-                                            <p class="font-medium tracking-tight">{{ $passkey['name'] }}</p>
-                                            @if ($passkey['authenticator'])
-                                                <flux:badge size="sm">{{ $passkey['authenticator'] }}</flux:badge>
-                                            @endif
+                                    <div class="flex min-w-0 items-center gap-3">
+                                        <div class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/[0.035]">
+                                            <flux:icon.key class="size-4 text-white/40" />
                                         </div>
-                                        <p class="text-zinc-500 dark:text-zinc-400 text-xs">
-                                            {{ __('Added :time', ['time' => $passkey['created_at_diff']]) }}
-                                            @if ($passkey['last_used_at_diff'])
-                                                <span class="opacity-50 mx-1">/</span>
-                                                {{ __('Last used :time', ['time' => $passkey['last_used_at_diff']]) }}
-                                            @endif
+
+                                        <div class="min-w-0">
+                                            <div class="flex flex-wrap items-center gap-2">
+                                                <p class="truncate text-xs font-medium text-white/75">
+                                                    {{ $passkey['name'] }}
+                                                </p>
+
+                                                @if ($passkey['authenticator'])
+                                                    <flux:badge size="sm">
+                                                        {{ $passkey['authenticator'] }}
+                                                    </flux:badge>
+                                                @endif
+                                            </div>
+
+                                            <p class="mt-0.5 text-[10px] text-white/25">
+                                                {{ __('Added :time', ['time' => $passkey['created_at_diff']]) }}
+
+                                                @if ($passkey['last_used_at_diff'])
+                                                    <span class="mx-1 opacity-40">•</span>
+                                                    {{ __('Last used :time', ['time' => $passkey['last_used_at_diff']]) }}
+                                                @endif
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <flux:button
+                                        variant="ghost"
+                                        size="sm"
+                                        icon="trash"
+                                        icon:variant="outline"
+                                        wire:click="confirmDelete({{ $passkey['id'] }})"
+                                        class="cursor-pointer text-red-400/50 hover:bg-red-500/[0.07] hover:text-red-300"
+                                    />
+                                </div>
+                            @empty
+                                <div class="flex items-center gap-3 px-4 py-5">
+                                    <div class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white/[0.035]">
+                                        <flux:icon.key class="size-4 text-white/25" />
+                                    </div>
+
+                                    <div>
+                                        <p class="text-xs font-medium text-white/55">
+                                            {{ __('No passkeys yet') }}
+                                        </p>
+
+                                        <p class="mt-0.5 text-[10px] text-white/25">
+                                            {{ __('Add a passkey to sign in without a password.') }}
                                         </p>
                                     </div>
                                 </div>
-
-                                <flux:button
-                                    variant="ghost"
-                                    size="sm"
-                                    icon="trash"
-                                    icon:variant="outline"
-                                    wire:click="confirmDelete({{ $passkey['id'] }})"
-                                    class="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50"
-                                />
-                            </div>
-                        @empty
-                            <div class="p-8 text-center">
-                                <div class="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-zinc-100 dark:bg-zinc-800">
-                                    <flux:icon.key class="size-7 text-zinc-400 dark:text-zinc-500" />
-                                </div>
-                                <p class="font-medium">{{ __('No passkeys yet') }}</p>
-                                <flux:text class="mt-1">{{ __('Add a passkey to sign in without a password') }}</flux:text>
-                            </div>
-                        @endforelse
+                            @endforelse
+                        </div>
                     </div>
-
-                    <x-passkey-registration />
-                </div>
-            </section>
-        @endif
+                </section>
+            @endif
+        </div>
     </x-pages::settings.layout>
 
+    {{-- Delete passkey modal --}}
     <flux:modal
         name="delete-passkey-modal"
         class="max-w-md md:min-w-md"
         @close="closeDeleteModal"
         wire:model="showDeleteModal"
     >
-        <div class="space-y-6">
-            <div class="space-y-2">
-                <flux:heading size="lg">{{ __('Remove passkey') }}</flux:heading>
-                <flux:text>
-                    {{ __('Are you sure you want to remove the passkey ":name"? You will no longer be able to use it to sign in.', ['name' => $deletingPasskeyName]) }}
-                </flux:text>
+        <div class="space-y-5">
+            <div class="flex items-start gap-3.5">
+                <div class="flex size-10 shrink-0 items-center justify-center rounded-xl border border-red-400/10 bg-red-500/[0.07]">
+                    <flux:icon.trash class="size-5 text-red-300" />
+                </div>
+
+                <div class="space-y-1.5">
+                    <flux:heading size="lg">
+                        {{ __('Remove passkey') }}
+                    </flux:heading>
+
+                    <flux:text>
+                        {{ __('Are you sure you want to remove the passkey ":name"? You will no longer be able to use it to sign in.', ['name' => $deletingPasskeyName]) }}
+                    </flux:text>
+                </div>
             </div>
 
-            <div class="flex gap-3 justify-end">
+            <div class="flex justify-end gap-3">
                 <flux:button
                     variant="outline"
                     wire:click="closeDeleteModal"
+                    class="cursor-pointer"
                 >
                     {{ __('Cancel') }}
                 </flux:button>
+
                 <flux:button
                     variant="danger"
                     wire:click="deletePasskey"
+                    class="cursor-pointer"
                 >
                     {{ __('Remove passkey') }}
                 </flux:button>
