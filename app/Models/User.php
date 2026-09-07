@@ -16,7 +16,7 @@ use Illuminate\Support\Str;
 use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
-
+use App\Enums\TeamRole;
 /**
  * @property int $id
  * @property string $name
@@ -68,5 +68,10 @@ class User extends Authenticatable implements PasskeyUser
         return Str::length($initials) > 1
             ? Str::substr($initials, 0, 1).Str::substr($initials, -1)
             : $initials;
+    }
+
+    public function canCreateTeam(): bool 
+    {
+        return !$this->teamMemberships()->where('role', TeamRole::Member)->exists();
     }
 }
