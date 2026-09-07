@@ -367,7 +367,7 @@
                 <button
                     type="button"
                     wire:click="create"
-                    class="group inline-flex items-center justify-center gap-3 rounded-2xl bg-[#ADD322] px-5 py-3.5 text-sm font-black text-black shadow-[0_12px_40px_rgba(173,211,34,.12)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_50px_rgba(173,211,34,.2)]"
+                    class="cursor-pointer group inline-flex items-center justify-center gap-3 rounded-2xl bg-[#ADD322] px-5 py-3.5 text-sm font-black text-black shadow-[0_12px_40px_rgba(173,211,34,.12)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_50px_rgba(173,211,34,.2)]"
                 >
                     <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-black/10 text-lg">
                         +
@@ -605,7 +605,7 @@
                                 <button
                                     type="button"
                                     wire:click="togglePublished({{ $work->id }})"
-                                    class="action-button text-xs font-semibold text-gray-500 hover:text-[#ADD322]"
+                                    class="cursor-pointer action-button text-xs font-semibold text-gray-500 hover:text-[#ADD322]"
                                 >
                                     {{ $work->is_published ? 'Unpublish' : 'Publish' }}
                                 </button>
@@ -615,20 +615,213 @@
                                     <button
                                         type="button"
                                         wire:click="edit({{ $work->id }})"
-                                        class="action-button rounded-lg px-3 py-2 text-xs font-bold text-gray-300 hover:bg-white/5 hover:text-white"
+                                        class="cursor-pointer action-button rounded-lg px-3 py-2 text-xs font-bold text-gray-300 hover:bg-white/5 hover:text-white"
                                     >
                                         Edit
                                     </button>
 
+                                                                        <div
+                                    x-data="{ deleteOpen: false }"
+                                    @keydown.escape.window="deleteOpen = false"
+                                >
                                     <button
                                         type="button"
-                                        wire:click="delete({{ $work->id }})"
-                                        wire:confirm="Are you sure you want to delete this project?"
-                                        class="action-button rounded-lg px-3 py-2 text-xs font-bold text-red-400/70 hover:bg-red-500/10 hover:text-red-400"
+                                        @click="deleteOpen = true"
+                                        class="cursor-pointer action-button rounded-lg px-3 py-2 text-xs font-bold text-red-400/70 hover:bg-red-500/10 hover:text-red-400"
                                     >
                                         Delete
                                     </button>
 
+                                    {{-- DELETE CONFIRMATION MODAL --}}
+                                    <template x-teleport="body">
+                                        <div
+                                            x-show="deleteOpen"
+                                            x-cloak
+                                            x-transition.opacity.duration.200ms
+                                            class="fixed inset-0 z-[10000] flex items-center justify-center overflow-y-auto px-4 py-6"
+                                            @click.self="deleteOpen = false"
+                                        >
+                                            {{-- Backdrop --}}
+                                            <div class="absolute inset-0 bg-black/85 backdrop-blur-xl"></div>
+
+                                            {{-- Modal --}}
+                                            <div
+                                                x-show="deleteOpen"
+                                                x-transition:enter="transition ease-out duration-300"
+                                                x-transition:enter-start="translate-y-4 scale-[.96] opacity-0"
+                                                x-transition:enter-end="translate-y-0 scale-100 opacity-100"
+                                                x-transition:leave="transition ease-in duration-150"
+                                                x-transition:leave-start="translate-y-0 scale-100 opacity-100"
+                                                x-transition:leave-end="translate-y-2 scale-[.98] opacity-0"
+                                                class="relative w-full max-w-md overflow-hidden rounded-[26px] border border-white/[0.09] bg-[#0d0b13] shadow-[0_40px_120px_rgba(0,0,0,.75)]"
+                                                @click.stop
+                                            >
+                                                {{-- Ambient glow --}}
+                                                <div
+                                                    class="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-red-500/[0.08] blur-[80px]"
+                                                ></div>
+
+                                                <div
+                                                    class="pointer-events-none absolute -bottom-24 -left-20 h-56 w-56 rounded-full bg-[#8b5cf6]/[0.07] blur-[80px]"
+                                                ></div>
+
+                                                {{-- Content --}}
+                                                <div class="relative p-6 sm:p-7">
+
+                                                    {{-- Icon --}}
+                                                    <div class="flex h-14 w-14 items-center justify-center rounded-2xl border border-red-500/15 bg-red-500/[0.07] text-red-400 shadow-[0_0_35px_rgba(239,68,68,.08)]">
+                                                        <svg
+                                                            class="h-6 w-6"
+                                                            viewBox="0 0 24 24"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            stroke-width="1.7"
+                                                        >
+                                                            <path
+                                                                stroke-linecap="round"
+                                                                stroke-linejoin="round"
+                                                                d="M3 6h18"
+                                                            />
+
+                                                            <path
+                                                                stroke-linecap="round"
+                                                                stroke-linejoin="round"
+                                                                d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"
+                                                            />
+
+                                                            <path
+                                                                stroke-linecap="round"
+                                                                stroke-linejoin="round"
+                                                                d="M19 6l-1 14a1 1 0 0 1-1 .9H7a1 1 0 0 1-1-.9L5 6"
+                                                            />
+
+                                                            <path
+                                                                stroke-linecap="round"
+                                                                stroke-linejoin="round"
+                                                                d="M10 11v5M14 11v5"
+                                                            />
+                                                        </svg>
+                                                    </div>
+
+                                                    {{-- Heading --}}
+                                                    <div class="mt-5">
+
+                                                        <div class="text-[10px] font-bold uppercase tracking-[0.24em] text-red-400/70">
+                                                            Delete project
+                                                        </div>
+
+                                                        <h3 class="mt-2 text-xl font-black tracking-tight text-white">
+                                                            Are you sure?
+                                                        </h3>
+
+                                                        <p class="mt-2 text-sm leading-6 text-gray-500">
+                                                            You're about to permanently delete
+                                                            <span class="font-semibold text-gray-300">
+                                                                {{ $work->title }}
+                                                            </span>.
+                                                            This action cannot be undone.
+                                                        </p>
+
+                                                    </div>
+
+                                                    {{-- Warning --}}
+                                                    <div class="mt-5 flex gap-3 rounded-xl border border-red-500/10 bg-red-500/[0.035] px-3.5 py-3">
+
+                                                        <svg
+                                                            class="mt-0.5 h-4 w-4 shrink-0 text-red-400/80"
+                                                            viewBox="0 0 24 24"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            stroke-width="1.8"
+                                                        >
+                                                            <path
+                                                                stroke-linecap="round"
+                                                                stroke-linejoin="round"
+                                                                d="M12 9v4"
+                                                            />
+
+                                                            <path
+                                                                stroke-linecap="round"
+                                                                stroke-linejoin="round"
+                                                                d="M12 17h.01"
+                                                            />
+
+                                                            <path
+                                                                stroke-linecap="round"
+                                                                stroke-linejoin="round"
+                                                                d="M10.3 3.8 2.7 17a2 2 0 0 0 1.73 3h15.14a2 2 0 0 0 1.73-3L13.7 3.8a2 2 0 0 0-3.4 0Z"
+                                                            />
+                                                        </svg>
+
+                                                        <p class="text-[11px] leading-5 text-gray-500">
+                                                            Any images and project data associated with this
+                                                            project may also be removed.
+                                                        </p>
+
+                                                    </div>
+
+                                                    {{-- Actions --}}
+                                                    <div class="mt-6 flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-end">
+
+                                                        <button
+                                                            type="button"
+                                                            @click="deleteOpen = false"
+                                                            class="h-11 rounded-xl border border-white/[0.08] bg-white/[0.02] px-5 text-xs font-bold text-gray-400 transition hover:border-white/[0.14] hover:bg-white/[0.05] hover:text-white"
+                                                        >
+                                                            Cancel
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            wire:click="delete({{ $work->id }})"
+                                                            wire:loading.attr="disabled"
+                                                            @click="deleteOpen = false"
+                                                            class="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-red-500 px-5 text-xs font-black text-white shadow-[0_10px_35px_rgba(239,68,68,.12)] transition hover:-translate-y-0.5 hover:bg-red-400 hover:shadow-[0_15px_45px_rgba(239,68,68,.18)] disabled:cursor-not-allowed disabled:opacity-50"
+                                                        >
+                                                            <svg
+                                                                wire:loading.remove
+                                                                class="h-3.5 w-3.5"
+                                                                viewBox="0 0 24 24"
+                                                                fill="none"
+                                                                stroke="currentColor"
+                                                                stroke-width="1.8"
+                                                            >
+                                                                <path
+                                                                    stroke-linecap="round"
+                                                                    stroke-linejoin="round"
+                                                                    d="M3 6h18"
+                                                                />
+
+                                                                <path
+                                                                    stroke-linecap="round"
+                                                                    stroke-linejoin="round"
+                                                                    d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"
+                                                                />
+
+                                                                <path
+                                                                    stroke-linecap="round"
+                                                                    stroke-linejoin="round"
+                                                                    d="M19 6l-1 14a1 1 0 0 1-1 .9H7a1 1 0 0 1-1-.9L5 6"
+                                                                />
+                                                            </svg>
+
+                                                            <span wire:loading.remove>
+                                                                Delete project
+                                                            </span>
+
+                                                            <span wire:loading>
+                                                                Deleting...
+                                                            </span>
+                                                        </button>
+
+                                                    </div>
+
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
                                 </div>
 
                             </div>
