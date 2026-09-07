@@ -785,6 +785,7 @@
         }
     }
 </style>
+
 </head>
 
 <body class="min-h-screen bg-[#050507] text-white">
