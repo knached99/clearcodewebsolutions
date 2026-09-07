@@ -2,14 +2,16 @@
 
 namespace App\Livewire;
 
+use App\Enums\TeamRole;
 use App\Models\TeamInvitation;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Password;
+use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class RequiredOnboarding extends Component
@@ -27,10 +29,14 @@ class RequiredOnboarding extends Component
         $this->syncOnboardingState();
     }
 
-    /**
-     * Determine which onboarding step must currently be displayed.
-     */
-    public function syncOnboardingState(): void
+    #[On('refresh-onboarding')]
+    public function refreshOnboarding(): void
+    {
+        $this->syncOnboardingState();
+        $this->openCorrectModal();
+    }
+
+    protected function syncOnboardingState(): void
     {
         $user = Auth::user();
 
@@ -41,7 +47,9 @@ class RequiredOnboarding extends Component
             return;
         }
 
-        // Invitation step always comes first.
+        unset($this->pendingInvitations);
+
+        // Step 1 always takes priority.
         if ($this->pendingInvitations->isNotEmpty()) {
             $this->showPendingInvitationsModal = true;
             $this->showChangePasswordModal = false;
@@ -49,7 +57,7 @@ class RequiredOnboarding extends Component
             return;
         }
 
-        // Once invitations are resolved, require the password change.
+        // Step 2 comes after invitations are resolved.
         if ($user->must_change_password) {
             $this->showPendingInvitationsModal = false;
             $this->showChangePasswordModal = true;
@@ -57,9 +65,22 @@ class RequiredOnboarding extends Component
             return;
         }
 
-        // Onboarding is complete.
+        // Onboarding complete.
         $this->showPendingInvitationsModal = false;
         $this->showChangePasswordModal = false;
+    }
+
+    protected function openCorrectModal(): void
+    {
+        if ($this->showPendingInvitationsModal) {
+            Flux::modal('pending-invitations')->show();
+
+            return;
+        }
+
+        if ($this->showChangePasswordModal) {
+            Flux::modal('change-invitation-password')->show();
+        }
     }
 
     #[Computed]
@@ -97,9 +118,6 @@ class RequiredOnboarding extends Component
             });
     }
 
-    /**
-     * Accept an invitation.
-     */
     public function acceptInvitation(string $code): void
     {
         $invitation = $this->findPendingInvitation($code);
@@ -110,52 +128,47 @@ class RequiredOnboarding extends Component
             return;
         }
 
-        DB::transaction(function () use ($invitation, $user) {
-            /*
-             * Adjust this relationship/table to match your application.
-             *
-             * This assumes your User model has a teams() relationship.
-             */
+        $team = $invitation->team;
+
+        if (! $team) {
+            throw ValidationException::withMessages([
+                'invitation' => 'The team associated with this invitation no longer exists.',
+            ]);
+        }
+
+        DB::transaction(function () use ($invitation, $user, $team) {
             $user->teams()->syncWithoutDetaching([
-                $invitation->team_id,
+                $team->id => [
+                    'role' => TeamRole::Member->value,
+                ],
             ]);
 
             $invitation->update([
                 'accepted_at' => now(),
             ]);
 
-            /*
-             * If your application stores the active team on the user,
-             * set it here.
-             *
-             * Remove this block if your app uses another mechanism.
-             */
-            if ($user->current_team_id === null) {
-                $user->update([
-                    'current_team_id' => $invitation->team_id,
-                ]);
-            }
+            $user->switchTeam($team);
         });
 
         unset($this->pendingInvitations);
 
         $this->resetPasswordFields();
 
-        // If there are more invitations, show those first.
         $this->syncOnboardingState();
+
+        Flux::modal('pending-invitations')->close();
+
+        if ($this->showChangePasswordModal) {
+            Flux::modal('change-invitation-password')->show();
+        }
 
         Flux::toast(
             text: 'Invitation accepted.',
-            variant: 'success'
+            variant: 'success',
         );
     }
 
-    /**
-     * Decline an invitation.
-     *
-     * Declining deletes the invited account and logs the user out.
-     */
-    public function declineInvitation(string $code)
+    public function declineInvitation(string $code): void
     {
         $invitation = $this->findPendingInvitation($code);
 
@@ -166,40 +179,25 @@ class RequiredOnboarding extends Component
         }
 
         DB::transaction(function () use ($invitation, $user) {
-            /*
-             * Remove the membership if one somehow exists.
-             */
+            // Do NOT switch teams here because the account is being deleted.
             $user->teams()->detach($invitation->team_id);
 
-            /*
-             * Remove the invitation.
-             */
             $invitation->delete();
 
-            /*
-             * Delete the temporary invited account.
-             */
             $user->delete();
         });
 
-        /*
-         * Completely terminate the authenticated session.
-         */
         Auth::logout();
 
         request()->session()->invalidate();
-
         request()->session()->regenerateToken();
 
         $this->redirect(
             route('login'),
-            navigate: false
+            navigate: false,
         );
     }
 
-    /**
-     * Change the temporary password.
-     */
     public function updatePassword(): void
     {
         $user = Auth::user();
@@ -208,19 +206,12 @@ class RequiredOnboarding extends Component
             return;
         }
 
-        /*
-         * This action cannot be used to bypass the invitation step.
-         */
         if ($this->pendingInvitations->isNotEmpty()) {
             throw ValidationException::withMessages([
                 'newPassword' => 'You must resolve your invitation before changing your password.',
             ]);
         }
 
-        /*
-         * Never allow this action unless the account actually requires
-         * a password change.
-         */
         if (! $user->must_change_password) {
             $this->showChangePasswordModal = false;
 
@@ -232,7 +223,11 @@ class RequiredOnboarding extends Component
                 'required',
                 'string',
                 'confirmed',
-                Password::default(),
+
+                PasswordRule::min(8)
+                ->mixedCase()
+                ->numbers()
+                ->symbols(),
             ],
         ]);
 
@@ -241,25 +236,25 @@ class RequiredOnboarding extends Component
             'must_change_password' => false,
         ]);
 
+        $user->refresh();
+
         $this->resetPasswordFields();
 
-        $this->showPendingInvitationsModal = false;
-        $this->showChangePasswordModal = false;
+        $this->syncOnboardingState();
+
+        Flux::modal('change-invitation-password')->close();
 
         Flux::toast(
             text: 'Your password has been updated.',
-            variant: 'success'
+            variant: 'success',
         );
 
         $this->redirect(
             route('dashboard'),
-            navigate: true
+            navigate: true,
         );
     }
 
-    /**
-     * Find and validate a pending invitation for the authenticated user.
-     */
     protected function findPendingInvitation(string $code): TeamInvitation
     {
         $user = Auth::user();
@@ -269,6 +264,7 @@ class RequiredOnboarding extends Component
         }
 
         $invitation = TeamInvitation::query()
+            ->with('team')
             ->where('code', $code)
             ->whereNull('accepted_at')
             ->where(function ($query) {
@@ -284,10 +280,6 @@ class RequiredOnboarding extends Component
             ]);
         }
 
-        /*
-         * Make sure this invitation actually belongs to the
-         * authenticated user's email address.
-         */
         if (
             strtolower(trim($invitation->email)) !==
             strtolower(trim($user->email))
