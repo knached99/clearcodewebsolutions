@@ -1190,8 +1190,7 @@
                     </h3>
 
                     <p>
-                        Send us a message and our support
-                        team will get back to you.
+                    {{$isClosed ? 'Open a new ticket and our team will get back to you.' : 'Send us a message and our team will get back to you.'}}
                     </p>
 
                     <div class="help-status">
