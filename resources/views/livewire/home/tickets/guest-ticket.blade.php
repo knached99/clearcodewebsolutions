@@ -2296,9 +2296,9 @@
         }
 
         .message-date {
-            color: #625b68;
+            color: #fff;
 
-            font-size: 8px;
+            font-size: 10px;
         }
 
         .message-link {
@@ -2312,11 +2312,11 @@
 
             border: 0;
 
-            color: #514b58;
+            color: #fff;
 
             background: transparent;
 
-            font-size: 8px;
+            font-size: 10px;
 
             cursor: pointer;
 
@@ -3134,9 +3134,9 @@
         .customer-info span {
             margin-top: 3px;
 
-            color: #69626f;
+            color: #fff;
 
-            font-size: 10px;
+            font-size: 12px;
         }
 
         .detail-list {
@@ -3172,9 +3172,9 @@
 
             gap: 7px;
 
-            color: #69626f;
+            color: #fff;
 
-            font-size: 10px;
+            font-size: 12px;
         }
 
         .detail-row span i {
@@ -3184,7 +3184,7 @@
         }
 
         .detail-row strong {
-            color: #c9c1ce;
+            color: #fff;
 
             font-size: 10px;
 
@@ -3276,9 +3276,9 @@
 
             margin: 0;
 
-            color: #827a88;
+            color: #fff;
 
-            font-size: 11px;
+            font-size: 12px;
 
             line-height: 1.7;
         }
@@ -3294,9 +3294,9 @@
 
             margin-top: 16px;
 
-            color: #a69baa;
+            color: #fff;
 
-            font-size: 9px;
+            font-size: 12px;
 
             font-weight: 700;
         }

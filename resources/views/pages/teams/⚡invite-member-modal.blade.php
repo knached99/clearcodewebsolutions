@@ -422,7 +422,7 @@ new class extends Component
 
                     </div>
 
-                    <p class="text-[11px] leading-5 text-white/30">
+                    <p class="text-[11px] leading-5 text-white">
                         {{ __('The invited user will receive a temporary password by email and will be required to create a new password before continuing.') }}
                     </p>
 
