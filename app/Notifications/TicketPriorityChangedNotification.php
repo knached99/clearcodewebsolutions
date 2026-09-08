@@ -26,42 +26,51 @@ class TicketPriorityChangedNotification extends Notification implements ShouldQu
         return ['mail'];
     }
 
-    public function toMail(object $notifiable): MailMessage
-    {
-        /*
-         * ALWAYS generate the guest URL when the queued notification
-         * is actually processed.
-         */
-        $ticketUrl = app(TicketService::class)
-            ->createGuestTicketUrl(
-                $this->ticket,
-                60
-            );
+public function toMail(object $notifiable): MailMessage
+{
+    $ticketService = app(TicketService::class);
 
-        return (new MailMessage)
-            ->subject(
-                "Ticket Priority Changed: {$this->ticket->ticket_number}"
-            )
-            ->greeting('Hello,')
-            ->line(
-                "The priority of ticket " .
-                "{$this->ticket->ticket_number} has changed."
-            )
-            ->line(
-                "Priority changed from {$this->oldPriority} " .
-                "to {$this->newPriority}."
-            )
-            ->line(
-                "Subject: {$this->ticket->subject}"
-            )
-            ->action(
-                'View Ticket',
-                $ticketUrl
-            )
-            ->line(
-                'This ticket link will expire in 60 minutes.'
-            );
-    }
+    $token = $ticketService->createGuestAccessToken(
+        ticket: $this->ticket,
+        minutes: 60 * 24 * 30,
+    );
+    \Log::info('PRIORITY NOTIFICATION TOKEN', [
+    'ticket' => $this->ticket->ticket_number,
+    'token' => $token,
+    'token_length' => strlen($token),
+]);
+
+    $url = $ticketService->createGuestTicketUrl(
+        ticket: $this->ticket,
+        token: $token,
+    );
+
+    \Log::info('PRIORITY NOTIFICATION URL', [
+    'url' => $url,
+]);
+
+    return (new MailMessage)
+        ->subject(
+            "Ticket Priority Changed: {$this->ticket->ticket_number}"
+        )
+        ->greeting('Hello,')
+        ->line(
+            "The priority of ticket {$this->ticket->ticket_number} has changed."
+        )
+        ->line(
+            "Priority changed from {$this->oldPriority} to {$this->newPriority}."
+        )
+        ->line(
+            "Subject: {$this->ticket->subject}"
+        )
+        ->action(
+            'View Ticket',
+            $url
+        )
+        ->line(
+            'This ticket link will expire in 30 days.'
+        );
+}
 
     public function toArray(object $notifiable): array
     {

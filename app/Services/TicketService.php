@@ -454,6 +454,10 @@ class TicketService
         Ticket $ticket,
         string $token,
     ): string {
+
+        if (!preg_match('/^[a-fA-F0-9]{64}$/', $token)) {
+            throw new \InvalidArgumentException('Invalid URL');
+        }
         return rtrim(config('app.url'), '/') .
             '/tickets/' .
             $ticket->ticket_number .

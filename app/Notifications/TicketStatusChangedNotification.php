@@ -26,45 +26,43 @@ class TicketStatusChangedNotification extends Notification implements ShouldQueu
         return ['mail'];
     }
 
-    public function toMail(object $notifiable): MailMessage
-    {
-        /*
-         * ALWAYS generate the guest URL when the queued notification
-         * is actually being processed.
-         *
-         * This prevents team route defaults from leaking into the
-         * customer-facing email URL.
-         */
-        $ticketUrl = app(TicketService::class)
-            ->createGuestTicketUrl(
-                $this->ticket,
-                60
-            );
+public function toMail(object $notifiable): MailMessage
+{
+    $ticketService = app(TicketService::class);
 
-        return (new MailMessage)
-            ->subject('Ticket status updated')
-            ->line(
-                'Ticket #' .
-                $this->ticket->ticket_number .
-                ' has changed from ' .
-                $this->oldStatus .
-                ' to ' .
-                $this->newStatus .
-                '.'
-            )
-            ->line(
-                'Subject: ' .
-                $this->ticket->subject
-            )
-            ->action(
-                'View Ticket',
-                $ticketUrl
-            )
-            ->line(
-                'Regards,'
-            );
-    }
+    $token = $ticketService->createGuestAccessToken(
+        ticket: $this->ticket,
+        minutes: 60 * 24 * 30,
+    );
 
+    $url = $ticketService->createGuestTicketUrl(
+        ticket: $this->ticket,
+        token: $token,
+    );
+
+    return (new MailMessage)
+        ->subject('Ticket status updated')
+        ->greeting('Hello,')
+        ->line(
+            'Ticket #' .
+            $this->ticket->ticket_number .
+            ' has changed from ' .
+            $this->oldStatus .
+            ' to ' .
+            $this->newStatus .
+            '.'
+        )
+        ->line(
+            'Subject: ' . $this->ticket->subject
+        )
+        ->action(
+            'View Ticket',
+            $url
+        )
+        ->line(
+            'This ticket link will expire in 30 days.'
+        );
+}
     public function toArray(object $notifiable): array
     {
         return [];

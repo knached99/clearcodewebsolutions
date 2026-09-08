@@ -106,23 +106,42 @@
         }
     }"
 
-    x-init="
-        const handleScroll = () => {
-            showToTop = window.scrollY > 400;
-        };
+   x-init="
+    const handleScroll = () => {
+        showToTop = window.scrollY > 400;
+    };
 
-        handleScroll();
+    handleScroll();
 
-        window.addEventListener(
-            'scroll',
-            handleScroll,
-            { passive: true }
-        );
+    window.addEventListener(
+        'scroll',
+        handleScroll,
+        { passive: true }
+    );
 
-        if (highlightedMessage) {
-            scrollToMessage(highlightedMessage);
-        }
-    "
+    const scrollToBottom = () => {
+        window.scrollTo({
+            top: document.documentElement.scrollHeight,
+            behavior: 'smooth'
+        });
+    };
+
+    if (highlightedMessage) {
+
+        scrollToMessage(highlightedMessage);
+
+    } else {
+
+        setTimeout(() => {
+            scrollToBottom();
+
+            setTimeout(() => {
+                scrollToBottom();
+            }, 500);
+
+        }, 450);
+    }
+"
 
     x-on:keydown.escape.window="closeLightbox()"
 >
