@@ -12,10 +12,12 @@ class TicketAccessToken extends Model
     protected $fillable = [
         'ticket_id',
         'token_hash',
+        'token',
         'expires_at',
     ];
 
     protected $casts = [
+        'token' => 'encrypted',
         'expires_at' => 'datetime',
         'created_at' => 'datetime',
     ];
@@ -27,6 +29,7 @@ class TicketAccessToken extends Model
 
     public function isExpired(): bool
     {
-        return $this->expires_at->isPast();
+        return $this->expires_at !== null
+            && $this->expires_at->isPast();
     }
 }

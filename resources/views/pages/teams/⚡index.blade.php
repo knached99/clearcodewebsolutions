@@ -209,6 +209,7 @@ new #[Title('Teams')] class extends Component
                 </div>
 
 
+                @if (Auth::user()->canCreateTeam())
                 {{-- Create team --}}
                 <flux:modal.trigger name="create-team">
 
@@ -239,6 +240,7 @@ new #[Title('Teams')] class extends Component
                     </button>
 
                 </flux:modal.trigger>
+                @endif
 
             </div>
 

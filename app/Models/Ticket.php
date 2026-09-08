@@ -39,6 +39,17 @@ class Ticket extends Model
         return $this->hasMany(TicketAccessToken::class);
     }
 
+    /**
+     * Get the current guest access token.
+     */
+    public function guestAccessToken(): ?TicketAccessToken
+    {
+        return $this->accessTokens()
+            ->whereNotNull('token')
+            ->latest('created_at')
+            ->first();
+    }
+
     public function getRouteKeyName(): string
     {
         return 'ticket_number';

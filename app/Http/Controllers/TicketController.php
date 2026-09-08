@@ -24,16 +24,18 @@ class TicketController extends Controller
             abort(404);
         }
 
-        /**
+        /*
          * A guest ticket URL must contain a real token.
          */
         if ($token === null) {
             abort(404);
         }
 
-        /**
-         * Validate the raw 64-character token against the
-         * SHA-256 hash stored on the ticket.
+        /*
+         * Validate the raw token against either:
+         *
+         * 1. tickets.guest_token_hash
+         * 2. ticket_access_tokens.token_hash
          */
         if (! $ticketService->verifyGuestTicketAccess(
             ticket: $ticket,
@@ -42,7 +44,7 @@ class TicketController extends Controller
             abort(404);
         }
 
-        /**
+        /*
          * Token successfully authenticated the guest.
          *
          * Establish temporary browser access.

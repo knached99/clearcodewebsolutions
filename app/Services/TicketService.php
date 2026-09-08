@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Mail\GuestTicketVerificationCodeMail;
 use App\Models\Team;
 use App\Models\Ticket;
+use App\Models\TicketAccessToken;
 use App\Models\TicketVerification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -14,21 +15,22 @@ use Illuminate\Support\Str;
 
 class TicketService
 {
-    /**
-     * |--------------------------------------------------------------------------
-     * | Ticket Creation
-     * |--------------------------------------------------------------------------
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | Ticket Creation
+    |--------------------------------------------------------------------------
+    */
+
     public function createTicket(array $data): array
     {
         $team = $this->resolveTicketTeam();
 
         return DB::transaction(function () use ($data, $team) {
-            /**
+            /*
              * Generate the raw guest token once.
              *
              * The raw token is returned to the caller so it can be
-             * included in the customer's email.
+             * included in the customer's initial email.
              *
              * Only the SHA-256 hash is stored in the database.
              */
@@ -107,19 +109,14 @@ class TicketService
         ]);
     }
 
-    /**
-     * |--------------------------------------------------------------------------
-     * | Guest Ticket Lookup
-     * |--------------------------------------------------------------------------
-     *
-     * | Ticket-number lookup is intentionally not used for authentication.
-     * | Guest customers authenticate through the email verification flow
-     * | or through the secure token contained in the email link.
-     * |--------------------------------------------------------------------------
-     */
-    public function findGuestTicket(
-        string $ticketNumber,
-    ): ?Ticket {
+    /*
+    |--------------------------------------------------------------------------
+    | Guest Ticket Lookup
+    |--------------------------------------------------------------------------
+    */
+
+    public function findGuestTicket(string $ticketNumber): ?Ticket
+    {
         $ticketNumber = trim($ticketNumber);
 
         if ($ticketNumber === '') {
@@ -131,14 +128,15 @@ class TicketService
             ->first();
     }
 
-    /**
-     * |--------------------------------------------------------------------------
-     * | Session Guest Access
-     * |--------------------------------------------------------------------------
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | Session Guest Access
+    |--------------------------------------------------------------------------
+    */
+
     public function grantGuestTicketAccess(
         Ticket $ticket,
-        int $minutes = 60
+        int $minutes = 60,
     ): void {
         session()->put(
             'guest_ticket_access.' . $ticket->id,
@@ -191,11 +189,12 @@ class TicketService
         );
     }
 
-    /**
-     * |--------------------------------------------------------------------------
-     * | Email Verification Code
-     * |--------------------------------------------------------------------------
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | Email Verification Code
+    |--------------------------------------------------------------------------
+    */
+
     public function sendGuestTicketVerificationCode(
         string $email,
         string $ipAddress,
@@ -226,7 +225,7 @@ class TicketService
         RateLimiter::hit($emailKey, 900);
         RateLimiter::hit($ipKey, 900);
 
-        /**
+        /*
          * Always return success for a syntactically valid email.
          *
          * This prevents email enumeration.
@@ -242,7 +241,7 @@ class TicketService
             return true;
         }
 
-        /**
+        /*
          * Invalidate previous unverified codes.
          */
         TicketVerification::query()
@@ -252,7 +251,7 @@ class TicketService
                 'verified_at' => now(),
             ]);
 
-        /**
+        /*
          * Generate a cryptographically secure 6-digit code.
          */
         $code = (string) random_int(
@@ -269,11 +268,9 @@ class TicketService
             'user_agent' => request()->userAgent(),
         ]);
 
-        /**
+        /*
          * Plaintext code exists only in memory long enough
          * to send the email.
-         *
-         * It is never stored in the database.
          */
         Mail::to($email)->send(
             new GuestTicketVerificationCodeMail(
@@ -285,11 +282,12 @@ class TicketService
         return true;
     }
 
-    /**
-     * |--------------------------------------------------------------------------
-     * | Verify Email Code
-     * |--------------------------------------------------------------------------
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | Verify Email Code
+    |--------------------------------------------------------------------------
+    */
+
     public function verifyGuestTicketVerificationCode(
         string $email,
         string $code,
@@ -340,7 +338,7 @@ class TicketService
             return null;
         }
 
-        /**
+        /*
          * Count every verification attempt.
          */
         $verification->increment('attempts');
@@ -359,7 +357,7 @@ class TicketService
         RateLimiter::clear($emailKey);
         RateLimiter::clear($ipKey);
 
-        /**
+        /*
          * Find all tickets belonging to this email.
          */
         $tickets = Ticket::query()
@@ -378,11 +376,12 @@ class TicketService
         return $tickets;
     }
 
-    /**
-     * |--------------------------------------------------------------------------
-     * | Email-Verified Ticket
-     * |--------------------------------------------------------------------------
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | Email-Verified Ticket
+    |--------------------------------------------------------------------------
+    */
+
     public function findVerifiedEmailTicket(
         string $email,
         int $ticketId,
@@ -402,52 +401,58 @@ class TicketService
             ->first();
     }
 
-    /**
-     * |--------------------------------------------------------------------------
-     * | Guest Token Verification
-     * |--------------------------------------------------------------------------
-     *
-     * | The raw 64-character token from the email URL is hashed and
-     * | compared directly against tickets.guest_token_hash.
-     * |--------------------------------------------------------------------------
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | Guest Token Verification
+    |--------------------------------------------------------------------------
+    */
+
     public function verifyGuestTicketAccess(
         Ticket $ticket,
-        string $token
+        string $token,
     ): bool {
         if (! preg_match('/^[a-fA-F0-9]{64}$/', $token)) {
             return false;
         }
 
+        $tokenHash = hash('sha256', $token);
+
+        /*
+         * Check the original token stored on the ticket.
+         */
         if (
-            ! $ticket->guest_token_hash ||
-            ! is_string($ticket->guest_token_hash)
+            $ticket->guest_token_hash &&
+            is_string($ticket->guest_token_hash) &&
+            hash_equals(
+                $ticket->guest_token_hash,
+                $tokenHash
+            )
         ) {
-            return false;
+            return true;
         }
 
-        $tokenHash = hash(
-            'sha256',
-            $token
-        );
-
-        return hash_equals(
-            $ticket->guest_token_hash,
-            $tokenHash
-        );
+        /*
+         * Check tokens created for notification/deep links.
+         */
+        return $ticket->accessTokens()
+            ->where('token_hash', $tokenHash)
+            ->where(function ($query) {
+                $query
+                    ->whereNull('expires_at')
+                    ->orWhere('expires_at', '>', now());
+            })
+            ->exists();
     }
 
-    /**
-     * |--------------------------------------------------------------------------
-     * | Guest Ticket URL
-     * |--------------------------------------------------------------------------
-     *
-     * | Uses the token generated during ticket creation.
-     * |--------------------------------------------------------------------------
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | Guest Ticket URL
+    |--------------------------------------------------------------------------
+    */
+
     public function createGuestTicketUrl(
         Ticket $ticket,
-        string $token
+        string $token,
     ): string {
         return rtrim(config('app.url'), '/') .
             '/tickets/' .
@@ -456,11 +461,32 @@ class TicketService
             $token;
     }
 
-    /**
-     * |--------------------------------------------------------------------------
-     * | Ticket Number Generation
-     * |--------------------------------------------------------------------------
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | Create Additional Guest Access Token
+    |--------------------------------------------------------------------------
+    */
+
+    public function createGuestAccessToken(
+        Ticket $ticket,
+        int $minutes = 60 * 24 * 30,
+    ): string {
+        $token = bin2hex(random_bytes(32));
+
+        $ticket->accessTokens()->create([
+            'token_hash' => hash('sha256', $token),
+            'expires_at' => now()->addMinutes($minutes),
+        ]);
+
+        return $token;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Ticket Number Generation
+    |--------------------------------------------------------------------------
+    */
+
     protected function generateTicketNumber(): string
     {
         do {
@@ -478,29 +504,24 @@ class TicketService
         return $ticketNumber;
     }
 
-    /**
- * |--------------------------------------------------------------------------
- * | Rotate Guest Ticket Token
- * |--------------------------------------------------------------------------
- *
- * Generates a new 64-character guest token and stores only its SHA-256
- * hash on the ticket.
- *
- * The raw token is returned to the caller so it can be placed in the
- * customer's URL.
- *
- * Rotating the token invalidates the previous guest URL token.
- * |--------------------------------------------------------------------------
- */
-public function rotateGuestTicketToken(
-    Ticket $ticket
-): string {
-    $token = bin2hex(random_bytes(32));
+    /*
+    |--------------------------------------------------------------------------
+    | Rotate Guest Ticket Token
+    |--------------------------------------------------------------------------
+    */
 
-    $ticket->forceFill([
-        'guest_token_hash' => hash('sha256', $token),
-    ])->save();
+    public function rotateGuestTicketToken(
+        Ticket $ticket,
+    ): string {
+        $token = bin2hex(random_bytes(32));
 
-    return $token;
-}
+        $ticket->forceFill([
+            'guest_token_hash' => hash(
+                'sha256',
+                $token
+            ),
+        ])->save();
+
+        return $token;
+    }
 }

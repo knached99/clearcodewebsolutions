@@ -13,16 +13,16 @@
 
     <main class="ticket-page">
         <div class="ticket-shell">
-
+{{-- 
             <a href="{{ url('/') }}" class="ticket-back">
                 <flux:icon.arrow-left class="size-4" />
                 Back to website
-            </a>
+            </a> --}}
 
-         <livewire:home.tickets.guest-ticket
-    :ticket="$ticket"
-    wire:key="guest-ticket-{{ $ticket->id }}"
-/>
+            <livewire:home.tickets.guest-ticket
+                :ticket="$ticket"
+                wire:key="guest-ticket-{{ $ticket->id }}"
+            />
 
         </div>
     </main>
