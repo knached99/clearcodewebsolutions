@@ -253,12 +253,6 @@
         </span>
     @enderror
 </div>
-
-    @error('subject')
-        <span class="cc-form-error">
-            {{ $message }}
-        </span>
-    @enderror
 </div>
 
 
