@@ -38,7 +38,7 @@
                     <div class="clearcode-team__flip-inner" :class="flipped ? 'is-flipped' : ''">
                         <div class="clearcode-team__flip-front">
                             <div class="clearcode-team__image">
-                                <img src="{{ asset('assets/img/team/khaled.jpg') }}" alt="Khaled Nached">
+                                <img src="{{ asset('assets/img/team/khaled.jpg') }}" alt="Khaled">
                                 <div class="clearcode-team__image-overlay"></div>
                                 <span class="clearcode-team__number">
                                     01
@@ -46,7 +46,7 @@
                             </div>
                             <div class="clearcode-team__info">
                                 <div>
-                                    <h3>Khaled Nached</h3>
+                                    <h3>Khaled</h3>
                                     <p>
                                         Founder &amp; Lead Developer
                                     </p>
@@ -58,7 +58,7 @@
                         </div>
                         <div class="clearcode-team__flip-back">
                             <div class="clearcode-team__back-content">
-                                <h3>Khaled Nached</h3>
+                                <h3>Khaled</h3>
                                 <span class="back-role">Founder & Lead Developer</span>
                                 <p>With over a decade of experience architecting enterprise-grade applications, Khaled
                                     leads the technical vision at ClearCode. A master of modern PHP, Laravel, and
