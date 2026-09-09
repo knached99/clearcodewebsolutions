@@ -13,20 +13,17 @@
                     06 / LET'S TALK
                 </span>
 
-              <h2>
-                <span style="white-space: nowrap;">Have an idea?</span>
-                <span>Let's build it.</span>
-            </h2>
+                <h2>
+                    <span style="white-space: nowrap;">Have an idea?</span>
+                    <span>Let's build it.</span>
+                </h2>
 
                 <p>
                     Tell us what you're working on and we'll
                     figure out the best way to bring it to life.
                 </p>
 
-                <a
-                    href="mailto:hello@clearcodewebsolutions.com"
-                    class="cc-contact__email"
-                >
+                <a href="mailto:hello@clearcodewebsolutions.com" class="cc-contact__email">
                     hello@clearcodewebsolutions.com
                     <span>↗</span>
                 </a>
@@ -35,18 +32,11 @@
 
 
             {{-- Contact Form --}}
-            <form
-                wire:submit="submit"
-                class="cc-contact-form"
-            >
+            <form wire:submit="prepareSubmit" class="cc-contact-form">
 
                 {{-- Success Message --}}
-                @if($submitted)
-
-                    <div
-                        class="cc-form-status cc-form-status--success"
-                        wire:key="success-message"
-                    >
+                @if ($submitted)
+                    <div class="cc-form-status cc-form-status--success" wire:key="success-message">
                         <div class="cc-form-status__icon">
                             ✓
                         </div>
@@ -59,17 +49,12 @@
                             </span>
                         </div>
                     </div>
-
                 @endif
 
 
                 {{-- Validation Errors --}}
-                @if($errors->any())
-
-                    <div
-                        class="cc-form-status cc-form-status--error"
-                        wire:key="error-message"
-                    >
+                @if ($errors->any())
+                    <div class="cc-form-status cc-form-status--error" wire:key="error-message">
                         <div class="cc-form-status__icon">
                             !
                         </div>
@@ -82,237 +67,182 @@
                             </span>
                         </div>
                     </div>
-
                 @endif
+
+                {{-- Honeypot --}}
+                <div class="cc-contact-honeypot" aria-hidden="true">
+                    <label for="contact-website">
+                        Website
+                    </label>
+
+                    <input id="contact-website" type="text" wire:model="website" tabindex="-1" autocomplete="off">
+                </div>
 
 
                 <div class="cc-form-row">
 
                     {{-- Name --}}
-                   <div class="cc-form-field">
-                    <label for="contact-name">Name</label>
+                    <div class="cc-form-field">
+                        <label for="contact-name">Name</label>
 
-                    <input
-                        id="contact-name"
-                        type="text"
-                        wire:model.live.debounce.500ms="name"
-                        placeholder="Your name"
-                        @class([
-                            'cc-input-error' => $errors->has('name'),
-                            'cc-input-valid' => !$errors->has('name') && filled($name),
-                        ])
-                    >
+                        <input id="contact-name" type="text" wire:model.live.debounce.500ms="name"
+                            placeholder="Your name" @class([
+                                'cc-input-error' => $errors->has('name'),
+                                'cc-input-valid' => !$errors->has('name') && filled($name),
+                            ])>
 
-                    @error('name')
-                        <span class="cc-form-error">
-                            {{ $message }}
-                        </span>
-                    @enderror
-                </div>
+                        @error('name')
+                            <span class="cc-form-error">
+                                {{ $message }}
+                            </span>
+                        @enderror
+                    </div>
 
                     {{-- Email --}}
                     <div class="cc-form-field">
-                    <label for="contact-email">Email</label>
+                        <label for="contact-email">Email</label>
 
-                    <input
-                        id="contact-email"
-                        type="email"
-                        wire:model.live.debounce.500ms="email"
-                        placeholder="you@company.com"
-                        @class([
-                            'cc-input-error' => $errors->has('email'),
-                            'cc-input-valid' => !$errors->has('email') && filled($email),
-                        ])
-                    >
+                        <input id="contact-email" type="email" wire:model.live.debounce.500ms="email"
+                            placeholder="you@company.com" @class([
+                                'cc-input-error' => $errors->has('email'),
+                                'cc-input-valid' => !$errors->has('email') && filled($email),
+                            ])>
 
-                    @error('email')
-                        <span class="cc-form-error">
-                            {{ $message }}
-                        </span>
-                    @enderror
-                </div>
+                        @error('email')
+                            <span class="cc-form-error">
+                                {{ $message }}
+                            </span>
+                        @enderror
+                    </div>
 
                 </div>
 
                 <div class="cc-form-field">
 
 
-   <div class="cc-form-field">
-    <label for="contact-subject">
-        What can we help you with?
-    </label>
+                    <div class="cc-form-field">
+                        <label for="contact-subject">
+                            What can we help you with?
+                        </label>
 
-    <div
-        class="cc-select"
-        x-data="{
-            open: false,
-            selected: @entangle('subject').live,
-            options: [
-                'Website Design',
-                'Website Development',
-                'Mobile App Development',
-                'E-Commerce',
-                'Website Redesign',
-                'Maintenance & Support',
-                'Other'
-            ],
-            select(option) {
-                this.selected = option;
-                this.open = false;
-            }
-        }"
-        x-on:click.outside="open = false"
-        x-on:keydown.escape.window="open = false"
-    >
-        {{-- Hidden native select keeps the form accessible / compatible --}}
-        <select
-            id="contact-subject"
-            wire:model.live="subject"
-            class="cc-select__native"
-            tabindex="-1"
-            aria-hidden="true"
-        >
-            <option value="">Select a subject</option>
-            <option value="Website Design">Website Design</option>
-            <option value="Website Development">Website Development</option>
-            <option value="Mobile App Development">Mobile App Development</option>
-            <option value="E-Commerce">E-Commerce</option>
-            <option value="Website Redesign">Website Redesign</option>
-            <option value="Maintenance & Support">Maintenance & Support</option>
-            <option value="Other">Other</option>
-        </select>
+                        <div class="cc-select" x-data="{
+                            open: false,
+                            selected: @entangle('subject').live,
+                            options: [
+                                'Website Design',
+                                'Website Development',
+                                'Mobile App Development',
+                                'E-Commerce',
+                                'Website Redesign',
+                                'Maintenance & Support',
+                                'Other'
+                            ],
+                            select(option) {
+                                this.selected = option;
+                                this.open = false;
+                            }
+                        }" x-on:click.outside="open = false"
+                            x-on:keydown.escape.window="open = false">
+                            {{-- Hidden native select keeps the form accessible / compatible --}}
+                            <select id="contact-subject" wire:model.live="subject" class="cc-select__native"
+                                tabindex="-1" aria-hidden="true">
+                                <option value="">Select a subject</option>
+                                <option value="Website Design">Website Design</option>
+                                <option value="Website Development">Website Development</option>
+                                <option value="Mobile App Development">Mobile App Development</option>
+                                <option value="E-Commerce">E-Commerce</option>
+                                <option value="Website Redesign">Website Redesign</option>
+                                <option value="Maintenance & Support">Maintenance & Support</option>
+                                <option value="Other">Other</option>
+                            </select>
 
-        {{-- Custom trigger --}}
-        <button
-            type="button"
-            class="cc-select__trigger"
-            :class="{
-                'is-open': open,
-                'cc-input-valid': selected,
-                'cc-input-error': @js($errors->has('subject'))
-            }"
-            @click="open = !open"
-            @keydown.arrow-down.prevent="open = true"
-            @keydown.arrow-up.prevent="open = true"
-            :aria-expanded="open"
-            aria-haspopup="listbox"
-            aria-controls="contact-subject-options"
-        >
-            <span
-                class="cc-select__value"
-                :class="{ 'is-placeholder': !selected }"
-                x-text="selected || 'Select a subject'"
-            ></span>
+                            {{-- Custom trigger --}}
+                            <button type="button" class="cc-select__trigger"
+                                :class="{
+                                    'is-open': open,
+                                    'cc-input-valid': selected,
+                                    'cc-input-error': @js($errors->has('subject'))
+                                }"
+                                @click="open = !open" @keydown.arrow-down.prevent="open = true"
+                                @keydown.arrow-up.prevent="open = true" :aria-expanded="open" aria-haspopup="listbox"
+                                aria-controls="contact-subject-options">
+                                <span class="cc-select__value" :class="{ 'is-placeholder': !selected }"
+                                    x-text="selected || 'Select a subject'"></span>
 
-            <span class="cc-select__arrow" aria-hidden="true">
-                <svg viewBox="0 0 16 16" fill="none">
-                    <path
-                        d="M4 6L8 10L12 6"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    />
-                </svg>
-            </span>
-        </button>
+                                <span class="cc-select__arrow" aria-hidden="true">
+                                    <svg viewBox="0 0 16 16" fill="none">
+                                        <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="1.5"
+                                            stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </span>
+                            </button>
 
-        {{-- Animated options --}}
-        <div
-            id="contact-subject-options"
-            class="cc-select__menu"
-            x-show="open"
-            x-transition:enter="cc-select-enter"
-            x-transition:enter-start="cc-select-enter-start"
-            x-transition:enter-end="cc-select-enter-end"
-            x-transition:leave="cc-select-leave"
-            x-transition:leave-start="cc-select-leave-start"
-            x-transition:leave-end="cc-select-leave-end"
-            role="listbox"
-            aria-label="Select a subject"
-            x-cloak
-        >
-            <template x-for="(option, index) in options" :key="option">
-                <button
-                    type="button"
-                    class="cc-select__option"
-                    :class="{ 'is-selected': selected === option }"
-                    role="option"
-                    :aria-selected="selected === option"
-                    @click="select(option)"
-                    x-text="option"
-                    :style="`--option-index: ${index}`"
-                ></button>
-            </template>
-        </div>
-    </div>
+                            {{-- Animated options --}}
+                            <div id="contact-subject-options" class="cc-select__menu" x-show="open"
+                                x-transition:enter="cc-select-enter" x-transition:enter-start="cc-select-enter-start"
+                                x-transition:enter-end="cc-select-enter-end" x-transition:leave="cc-select-leave"
+                                x-transition:leave-start="cc-select-leave-start"
+                                x-transition:leave-end="cc-select-leave-end" role="listbox"
+                                aria-label="Select a subject" x-cloak>
+                                <template x-for="(option, index) in options" :key="option">
+                                    <button type="button" class="cc-select__option"
+                                        :class="{ 'is-selected': selected === option }" role="option"
+                                        :aria-selected="selected === option" @click="select(option)" x-text="option"
+                                        :style="`--option-index: ${index}`"></button>
+                                </template>
+                            </div>
+                        </div>
 
-    @error('subject')
-        <span class="cc-form-error">
-            {{ $message }}
-        </span>
-    @enderror
-</div>
-</div>
+                        @error('subject')
+                            <span class="cc-form-error">
+                                {{ $message }}
+                            </span>
+                        @enderror
+                    </div>
+                </div>
 
 
                 {{-- Message --}}
-                        <div class="cc-form-field">
-                <label for="contact-message">
-                    What can we build together?
-                </label>
+                <div class="cc-form-field">
+                    <label for="contact-message">
+                        What can we build together?
+                    </label>
 
-                <textarea
-                    id="contact-message"
-                    wire:model.live.debounce.500ms="message"
-                    rows="5"
-                    placeholder="Tell us a little about your project..."
-                    @class([
-                        'cc-input-error' => $errors->has('message'),
-                        'cc-input-valid' => !$errors->has('message') && filled($message),
-                    ])
-                ></textarea>
+                    <textarea id="contact-message" wire:model.live.debounce.500ms="message" rows="5"
+                        placeholder="Tell us a little about your project..." @class([
+                            'cc-input-error' => $errors->has('message'),
+                            'cc-input-valid' => !$errors->has('message') && filled($message),
+                        ])></textarea>
 
-                @error('message')
-                    <span class="cc-form-error">
-                        {{ $message }}
-                    </span>
-                @enderror
-            </div>
+                    @error('message')
+                        <span class="cc-form-error">
+                            {{ $message }}
+                        </span>
+                    @enderror
+                </div>
 
                 {{-- Submit --}}
-                 <button
-                type="submit"
-                class="cc-contact-form__submit"
-                wire:loading.attr="disabled"
-                wire:target="submit"
-            >
-                {{-- Normal state --}}
-                <span wire:loading.remove wire:target="submit">
-                    Start a conversation
-                </span>
+                <button type="submit" class="cc-contact-form__submit" wire:loading.attr="disabled"
+                    wire:target="prepareSubmit,submit">
+                    {{-- Normal state --}}
+                    <span wire:loading.remove wire:target="prepareSubmit,submit">
+                        Start a conversation
+                    </span>
 
-                <span wire:loading.remove wire:target="submit">
-                    ↗
-                </span>
+                    <span wire:loading.remove wire:target="prepareSubmit,submit">
+                        ↗
+                    </span>
 
-                {{-- Loading state --}}
-                <span
-                    wire:loading
-                    wire:target="submit"
-                    class="cc-submit-spinner"
-                    aria-hidden="true"
-                >
-                    <i></i>
-                </span>
+                    {{-- Loading state --}}
+                    <span wire:loading wire:target="prepareSubmit,submit" class="cc-submit-spinner"
+                        aria-hidden="true">
+                        <i></i>
+                    </span>
 
-                <span
-                    wire:loading
-                    wire:target="submit"
-                >
-                    Sending...
-                </span>
-            </button>
+                    <span wire:loading wire:target="prepareSubmit,submit">
+                        Sending...
+                    </span>
+                </button>
 
             </form>
 
@@ -321,3 +251,73 @@
     </div>
 
 </section>
+
+@once
+    <script src="https://www.google.com/recaptcha/api.js?render={{ config('services.google_recaptcha.site_key') }}" async
+        defer></script>
+@endonce
+
+@script
+    <script>
+        $wire.on(
+            'execute-contact-recaptcha',
+            async () => {
+
+                try {
+
+                    if (
+                        typeof grecaptcha === 'undefined'
+                    ) {
+                        $wire.addError(
+                            'form',
+                            'Security verification is still loading. Please try again.'
+                        );
+
+                        return;
+                    }
+
+                    await new Promise((resolve) => {
+                        grecaptcha.ready(resolve);
+                    });
+
+                    const token =
+                        await grecaptcha.execute(
+                            '{{ config('services.google_recaptcha.site_key') }}', {
+                                action: 'contact_submit'
+                            }
+                        );
+
+                    await $wire.call(
+                        'submit',
+                        token
+                    );
+
+                } catch (error) {
+
+                    console.error(
+                        'reCAPTCHA error:',
+                        error
+                    );
+
+                    $wire.addError(
+                        'form',
+                        'Security verification failed. Please try again.'
+                    );
+                }
+            }
+        );
+    </script>
+@endscript
+
+@push('styles')
+    <style>
+        .cc-contact-honeypot {
+            position: absolute !important;
+            width: 1px !important;
+            height: 1px !important;
+            overflow: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+    </style>
+@endpush
