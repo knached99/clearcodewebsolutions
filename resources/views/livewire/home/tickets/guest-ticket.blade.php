@@ -1,6 +1,5 @@
 <div
     class="guest-ticket-page"
-
     x-data="{
         lightbox: false,
         lightboxSrc: '',
@@ -9,6 +8,12 @@
         showToTop: false,
 
         highlightedMessage: @js($highlightMessageId),
+
+        toast: false,
+        toastHeading: '',
+        toastText: '',
+        toastVariant: 'success',
+        toastTimer: null,
 
         openLightbox(src, name = '') {
             this.lightboxSrc = src;
@@ -66,84 +71,133 @@
             }, 450);
         },
 
-        copyMessageLink(id) {
+        showToast(heading, text, variant = 'success') {
+            if (this.toastTimer) {
+                clearTimeout(this.toastTimer);
+                this.toastTimer = null;
+            }
+
+            this.toastHeading = heading;
+            this.toastText = text;
+            this.toastVariant = variant;
+            this.toast = true;
+
+            this.toastTimer = setTimeout(() => {
+                this.toast = false;
+                this.toastTimer = null;
+            }, 3500);
+        },
+
+        async copyMessageLink(id) {
             const url =
                 window.location.origin +
                 window.location.pathname +
                 '?message=' +
-                id;
-
-            if (
-                navigator.clipboard &&
-                window.isSecureContext
-            ) {
-                navigator.clipboard.writeText(url);
-                return;
-            }
-
-            const textarea =
-                document.createElement('textarea');
-
-            textarea.value = url;
-
-            textarea.style.position = 'fixed';
-            textarea.style.opacity = '0';
-
-            document.body.appendChild(textarea);
-
-            textarea.select();
+                encodeURIComponent(id);
 
             try {
-                document.execCommand('copy');
+                let copied = false;
+
+                if (
+                    navigator.clipboard &&
+                    window.isSecureContext
+                ) {
+                    try {
+                        await navigator.clipboard.writeText(url);
+                        copied = true;
+                    } catch (clipboardError) {
+                        console.warn(
+                            'Clipboard API failed. Trying fallback.',
+                            clipboardError
+                        );
+                    }
+                }
+
+                if (!copied) {
+                    const textarea =
+                        document.createElement('textarea');
+
+                    textarea.value = url;
+
+                    textarea.style.position = 'fixed';
+                    textarea.style.top = '0';
+                    textarea.style.left = '0';
+                    textarea.style.width = '1px';
+                    textarea.style.height = '1px';
+                    textarea.style.padding = '0';
+                    textarea.style.border = '0';
+                    textarea.style.outline = '0';
+                    textarea.style.boxShadow = 'none';
+                    textarea.style.background = 'transparent';
+                    textarea.style.opacity = '0';
+
+                    textarea.setAttribute(
+                        'readonly',
+                        ''
+                    );
+
+                    document.body.appendChild(textarea);
+
+                    textarea.focus();
+                    textarea.select();
+
+                    textarea.setSelectionRange(
+                        0,
+                        textarea.value.length
+                    );
+
+                    copied =
+                        document.execCommand('copy');
+
+                    textarea.remove();
+                }
+
+                if (!copied) {
+                    throw new Error(
+                        'Copy operation failed.'
+                    );
+                }
+
+                this.showToast(
+                    'Link copied!',
+                    'The message link is ready to share.',
+                    'success'
+                );
+
             } catch (error) {
                 console.error(
                     'Unable to copy message link.',
                     error
                 );
-            }
 
-            textarea.remove();
+                this.showToast(
+                    'Couldn’t copy link',
+                    'Please try again.',
+                    'danger'
+                );
+            }
         }
     }"
+    x-init="
+        const updateScrollButton = () => {
+            showToTop = window.scrollY > 500;
+        };
 
-   x-init="
-    const handleScroll = () => {
-        showToTop = window.scrollY > 400;
-    };
+        window.addEventListener(
+            'scroll',
+            updateScrollButton,
+            { passive: true }
+        );
 
-    handleScroll();
+        updateScrollButton();
 
-    window.addEventListener(
-        'scroll',
-        handleScroll,
-        { passive: true }
-    );
-
-    const scrollToBottom = () => {
-        window.scrollTo({
-            top: document.documentElement.scrollHeight,
-            behavior: 'smooth'
-        });
-    };
-
-    if (highlightedMessage) {
-
-        scrollToMessage(highlightedMessage);
-
-    } else {
-
-        setTimeout(() => {
-            scrollToBottom();
-
+        if (highlightedMessage) {
             setTimeout(() => {
-                scrollToBottom();
+                scrollToMessage(highlightedMessage);
             }, 500);
-
-        }, 450);
-    }
-"
-
-    x-on:keydown.escape.window="closeLightbox()"
+        }
+    "
+    @keydown.escape.window="if (lightbox) closeLightbox(); else if (toast) { toast = false; if (toastTimer) { clearTimeout(toastTimer); toastTimer = null; } }"
 >
 
     @php
@@ -188,6 +242,77 @@
 
 
     {{-- =========================================================
+       TOAST NOTIFICATION
+    ========================================================== --}}
+
+    <div
+        x-show="toast"
+        x-cloak
+        x-transition:enter="toast-enter"
+        x-transition:enter-start="toast-enter-start"
+        x-transition:enter-end="toast-enter-end"
+        x-transition:leave="toast-leave"
+        x-transition:leave-start="toast-leave-start"
+        x-transition:leave-end="toast-leave-end"
+        class="ticket-toast"
+        :class="{
+            'ticket-toast-success': toastVariant === 'success',
+            'ticket-toast-danger': toastVariant === 'danger',
+            'ticket-toast-info': toastVariant === 'info'
+        }"
+        role="status"
+        aria-live="polite"
+    >
+
+        <div class="ticket-toast-icon">
+
+            <i
+                class="fa-solid"
+                :class="{
+                    'fa-check': toastVariant === 'success',
+                    'fa-circle-exclamation': toastVariant === 'danger',
+                    'fa-circle-info': toastVariant === 'info'
+                }"
+            ></i>
+
+        </div>
+
+
+        <div class="ticket-toast-content">
+
+            <strong
+                x-text="toastHeading"
+            ></strong>
+
+            <span
+                x-text="toastText"
+            ></span>
+
+        </div>
+
+
+        <button
+            type="button"
+            class="ticket-toast-close"
+            @click.stop="
+                toast = false;
+
+                if (toastTimer) {
+                    clearTimeout(toastTimer);
+                    toastTimer = null;
+                }
+            "
+            aria-label="Close notification"
+        >
+
+            <i class="fa-solid fa-xmark"></i>
+
+        </button>
+
+    </div>
+
+
+    {{-- =========================================================
        DECORATIVE BACKGROUND
     ========================================================== --}}
 
@@ -195,11 +320,13 @@
         class="ticket-background"
         aria-hidden="true"
     >
+
         <div class="purple-orb orb-one"></div>
         <div class="purple-orb orb-two"></div>
         <div class="purple-orb orb-three"></div>
 
         <div class="ticket-grid"></div>
+
     </div>
 
 
@@ -220,13 +347,17 @@
                 href="{{ route('home') }}"
                 class="ticket-back"
             >
+
                 <span class="ticket-back-icon">
+
                     <i class="fa-solid fa-arrow-left"></i>
+
                 </span>
 
                 <span>
                     Back to website
                 </span>
+
             </a>
 
         </div>
@@ -245,7 +376,9 @@
                 <div class="ticket-brand">
 
                     <div class="ticket-brand-icon">
+
                         <i class="fa-solid fa-headset"></i>
+
                     </div>
 
                     <div>
@@ -326,7 +459,9 @@
                     <div class="hero-meta-item">
 
                         <div class="hero-meta-icon">
+
                             <i class="fa-regular fa-comments"></i>
+
                         </div>
 
                         <div>
@@ -347,7 +482,9 @@
                     <div class="hero-meta-item">
 
                         <div class="hero-meta-icon">
+
                             <i class="fa-regular fa-calendar"></i>
+
                         </div>
 
                         <div>
@@ -451,8 +588,6 @@
                             |--------------------------------------------------------------------------
                             | guest = customer / sender
                             | anything else = support / recipient
-                            |
-                            | Therefore:
                             |
                             | SUPPORT  -> LEFT
                             | CUSTOMER -> RIGHT
@@ -739,22 +874,39 @@
                                         @endif
 
 
+                                      <div
+                                        class="message-link-wrapper"
+                                        x-data="{ showTooltip: false }"
+                                    >
                                         <button
                                             type="button"
                                             class="message-link"
-                                            title="Copy message link"
-                                            @click="
-                                                copyMessageLink(
-                                                    {{ $message->id }}
-                                                )
-                                            "
+                                            @click="copyMessageLink({{ $message->id }})"
+                                            @mouseenter="showTooltip = true"
+                                            @mouseleave="showTooltip = false"
+                                            @focus="showTooltip = true"
+                                            @blur="showTooltip = false"
+                                            aria-label="Copy link to message #{{ $message->id }}"
                                         >
-
                                             <i class="fa-solid fa-link"></i>
-
-                                            #{{ $message->id }}
-
+                                            <span>{{ $message->id }}</span>
                                         </button>
+
+                                        <div
+                                            class="message-link-tooltip"
+                                            x-show="showTooltip"
+                                            x-transition:enter="tooltip-enter"
+                                            x-transition:enter-start="tooltip-enter-start"
+                                            x-transition:enter-end="tooltip-enter-end"
+                                            x-transition:leave="tooltip-leave"
+                                            x-transition:leave-start="tooltip-leave-start"
+                                            x-transition:leave-end="tooltip-leave-end"
+                                            x-cloak
+                                            role="tooltip"
+                                        >
+                                            Copy link to message #{{ $message->id }}
+                                        </div>
+                                    </div>
 
                                     </div>
 
@@ -1190,7 +1342,10 @@
                     </h3>
 
                     <p>
-                    {{$isClosed ? 'Open a new ticket and our team will get back to you.' : 'Send us a message and our team will get back to you.'}}
+                        {{ $isClosed
+                            ? 'Open a new ticket and our team will get back to you.'
+                            : 'Send us a message and our team will get back to you.'
+                        }}
                     </p>
 
                     <div class="help-status">
@@ -1228,7 +1383,9 @@
             @click="closeLightbox()"
             aria-label="Close"
         >
+
             <i class="fa-solid fa-xmark"></i>
+
         </button>
 
 
@@ -1302,6 +1459,347 @@
                     transparent 25%
                 ),
                 #070609;
+        }
+
+
+        /* =========================================================
+           TOAST NOTIFICATION
+           DESKTOP = BOTTOM RIGHT
+           MOBILE = TOP, BELOW NAVBAR
+        ========================================================== */
+
+        .ticket-toast {
+            position: fixed;
+
+            right: 24px;
+            bottom: 24px;
+
+            width: min(
+                420px,
+                calc(100vw - 48px)
+            );
+
+            min-height: 72px;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 13px;
+
+            padding: 14px 16px;
+
+            border:
+                1px solid
+                rgba(255,255,255,.12);
+
+            border-radius: 14px;
+
+            background:
+                rgba(18,18,24,.96);
+
+            box-shadow:
+                0 18px 45px
+                rgba(0,0,0,.28),
+
+                0 4px 14px
+                rgba(0,0,0,.16);
+
+            backdrop-filter:
+                blur(14px);
+
+            -webkit-backdrop-filter:
+                blur(14px);
+
+            color: #fff;
+
+            z-index: 99999;
+
+            pointer-events: auto;
+        }
+
+        .ticket-toast-icon {
+            width: 34px;
+            height: 34px;
+
+            min-width: 34px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            border-radius: 50%;
+
+            font-size: 14px;
+        }
+
+        .ticket-toast-success {
+            border-color:
+                rgba(74,222,128,.22);
+        }
+
+        .ticket-toast-success
+        .ticket-toast-icon {
+            background:
+                rgba(74,222,128,.14);
+
+            color: #4ade80;
+        }
+
+        .ticket-toast-danger {
+            border-color:
+                rgba(248,113,113,.22);
+        }
+
+        .ticket-toast-danger
+        .ticket-toast-icon {
+            background:
+                rgba(248,113,113,.14);
+
+            color: #f87171;
+        }
+
+        .ticket-toast-info {
+            border-color:
+                rgba(96,165,250,.22);
+        }
+
+        .ticket-toast-info
+        .ticket-toast-icon {
+            background:
+                rgba(96,165,250,.14);
+
+            color: #60a5fa;
+        }
+
+        .ticket-toast-content {
+            min-width: 0;
+
+            flex: 1;
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 3px;
+        }
+
+        .ticket-toast-content strong {
+            color: #fff;
+
+            font-size: 14px;
+
+            font-weight: 700;
+
+            line-height: 1.25;
+        }
+
+        .ticket-toast-content span {
+            color:
+                rgba(255,255,255,.68);
+
+            font-size: 13px;
+
+            line-height: 1.4;
+
+            overflow-wrap: anywhere;
+        }
+
+        .ticket-toast-close {
+            width: 30px;
+            height: 30px;
+
+            min-width: 30px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            margin-left: auto;
+
+            padding: 0;
+
+            border: 0;
+
+            border-radius: 8px;
+
+            background: transparent;
+
+            color:
+                rgba(255,255,255,.48);
+
+            cursor: pointer;
+
+            transition:
+                background .15s ease,
+                color .15s ease,
+                transform .15s ease;
+        }
+
+        .ticket-toast-close:hover {
+            background:
+                rgba(255,255,255,.08);
+
+            color: #fff;
+        }
+
+        .ticket-toast-close:active {
+            transform:
+                scale(.92);
+        }
+
+
+        /* =========================================================
+           TOAST ANIMATION
+        ========================================================== */
+
+        .toast-enter {
+            transition:
+                opacity .2s ease,
+                transform .2s ease;
+        }
+
+        .toast-enter-start {
+            opacity: 0;
+
+            transform:
+                translateY(12px);
+        }
+
+        .toast-enter-end {
+            opacity: 1;
+
+            transform:
+                translateY(0);
+        }
+
+        .toast-leave {
+            transition:
+                opacity .15s ease,
+                transform .15s ease;
+        }
+
+        .toast-leave-start {
+            opacity: 1;
+
+            transform:
+                translateY(0);
+        }
+
+        .toast-leave-end {
+            opacity: 0;
+
+            transform:
+                translateY(12px);
+        }
+
+
+        /* =========================================================
+           MOBILE TOAST
+        ========================================================== */
+
+        @media (max-width: 767px) {
+
+            .ticket-toast {
+                top:
+                    calc(
+                        64px +
+                        env(safe-area-inset-top) +
+                        8px
+                    );
+
+                right: 12px;
+                bottom: auto;
+                left: 12px;
+
+                width: auto;
+
+                max-width: none;
+
+                min-height: 68px;
+
+                padding: 13px 14px;
+
+                border-radius: 13px;
+            }
+
+            .toast-enter-start {
+                opacity: 0;
+
+                transform:
+                    translateY(-12px);
+            }
+
+            .toast-enter-end {
+                opacity: 1;
+
+                transform:
+                    translateY(0);
+            }
+
+            .toast-leave-start {
+                opacity: 1;
+
+                transform:
+                    translateY(0);
+            }
+
+            .toast-leave-end {
+                opacity: 0;
+
+                transform:
+                    translateY(-12px);
+            }
+
+            .ticket-toast-content strong {
+                font-size: 13px;
+            }
+
+            .ticket-toast-content span {
+                font-size: 12px;
+            }
+        }
+
+
+        /* =========================================================
+           SMALL PHONES
+        ========================================================== */
+
+        @media (max-width: 380px) {
+
+            .ticket-toast {
+                top:
+                    calc(
+                        60px +
+                        env(safe-area-inset-top) +
+                        8px
+                    );
+
+                right: 10px;
+                left: 10px;
+
+                width: auto;
+
+                padding: 12px;
+            }
+
+            .ticket-toast-icon {
+                width: 31px;
+                height: 31px;
+
+                min-width: 31px;
+            }
+
+            .ticket-toast-close {
+                width: 28px;
+                height: 28px;
+
+                min-width: 28px;
+            }
         }
 
 
@@ -1433,7 +1931,8 @@
             padding: 8px 13px 8px 8px;
 
             border:
-                1px solid rgba(255,255,255,.08);
+                1px solid
+                rgba(255,255,255,.08);
 
             border-radius: 999px;
 
@@ -1443,11 +1942,13 @@
                 rgba(15,12,19,.92);
 
             box-shadow:
-                0 8px 25px rgba(0,0,0,.25);
+                0 8px 25px
+                rgba(0,0,0,.25);
 
             text-decoration: none;
 
             font-size: 11px;
+
             font-weight: 700;
 
             pointer-events: auto;
@@ -1505,7 +2006,8 @@
             padding: 30px;
 
             border:
-                1px solid rgba(168,85,247,.18);
+                1px solid
+                rgba(168,85,247,.18);
 
             border-radius: 26px;
 
@@ -1517,8 +2019,11 @@
                 );
 
             box-shadow:
-                0 30px 90px rgba(0,0,0,.45),
-                inset 0 1px rgba(255,255,255,.04);
+                0 30px 90px
+                rgba(0,0,0,.45),
+
+                inset 0 1px
+                rgba(255,255,255,.04);
         }
 
         .hero-glow {
@@ -1641,7 +2146,8 @@
             font-weight: 800;
 
             border:
-                1px solid rgba(255,255,255,.08);
+                1px solid
+                rgba(255,255,255,.08);
 
             background:
                 rgba(255,255,255,.035);
@@ -1656,7 +2162,8 @@
             background: #a855f7;
 
             box-shadow:
-                0 0 12px #a855f7;
+                0 0 12px
+                #a855f7;
         }
 
         .status-closed .status-dot {
@@ -1745,7 +2252,8 @@
             padding: 12px;
 
             border:
-                1px solid rgba(255,255,255,.06);
+                1px solid
+                rgba(255,255,255,.06);
 
             border-radius: 14px;
 
@@ -1816,7 +2324,8 @@
         .conversation-card,
         .sidebar-card {
             border:
-                1px solid rgba(168,85,247,.12);
+                1px solid
+                rgba(168,85,247,.12);
 
             background:
                 linear-gradient(
@@ -1826,8 +2335,11 @@
                 );
 
             box-shadow:
-                0 25px 70px rgba(0,0,0,.32),
-                inset 0 1px rgba(255,255,255,.025);
+                0 25px 70px
+                rgba(0,0,0,.32),
+
+                inset 0 1px
+                rgba(255,255,255,.025);
         }
 
         .conversation-card {
@@ -1846,7 +2358,8 @@
             padding: 25px 28px;
 
             border-bottom:
-                1px solid rgba(255,255,255,.055);
+                1px solid
+                rgba(255,255,255,.055);
         }
 
         .section-kicker {
@@ -1866,7 +2379,8 @@
             background: #a855f7;
 
             box-shadow:
-                0 0 10px #a855f7;
+                0 0 10px
+                #a855f7;
         }
 
         .conversation-header h2 {
@@ -1890,7 +2404,8 @@
                 rgba(124,58,237,.10);
 
             border:
-                1px solid rgba(168,85,247,.12);
+                1px solid
+                rgba(168,85,247,.12);
 
             font-size: 11px;
 
@@ -2004,10 +2519,12 @@
                 );
 
             border:
-                1px solid rgba(255,255,255,.08);
+                1px solid
+                rgba(255,255,255,.08);
 
             box-shadow:
-                0 5px 18px rgba(0,0,0,.25);
+                0 5px 18px
+                rgba(0,0,0,.25);
         }
 
         .support-message .message-avatar {
@@ -2135,7 +2652,8 @@
             border: 1px solid transparent;
 
             box-shadow:
-                0 4px 18px rgba(0,0,0,.15);
+                0 4px 18px
+                rgba(0,0,0,.15);
 
             transition:
                 transform .2s ease,
@@ -2150,7 +2668,6 @@
 
         /* =========================================================
            SUPPORT BUBBLE
-           LEFT / RECIPIENT
         ========================================================== */
 
         .support-message .message-bubble {
@@ -2198,7 +2715,6 @@
 
         /* =========================================================
            CUSTOMER BUBBLE
-           RIGHT / SENDER
         ========================================================== */
 
         .customer-message .message-bubble {
@@ -3310,7 +3826,8 @@
             background: #a855f7;
 
             box-shadow:
-                0 0 10px #a855f7;
+                0 0 10px
+                #a855f7;
         }
 
 
@@ -3653,6 +4170,14 @@
                 font-size: 7px;
             }
 
+            /*
+             * IMPORTANT:
+             * Do not override .ticket-toast positioning here.
+             *
+             * The mobile toast position is controlled by the
+             * dedicated @media (max-width: 767px) block above,
+             * which places it below the mobile navbar.
+             */
         }
 
 
@@ -3678,6 +4203,95 @@
             }
 
         }
+        .message-link-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.message-link {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    cursor: pointer;
+}
+
+.message-link-tooltip {
+    position: absolute;
+    z-index: 9999;
+    left: 50%;
+    bottom: calc(100% + 8px);
+    transform: translateX(-50%);
+
+    width: max-content;
+    max-width: 240px;
+    padding: 0.45rem 0.7rem;
+
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 0.5rem;
+
+    background: #171421;
+    color: #fff;
+
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.25;
+    white-space: nowrap;
+
+    box-shadow:
+        0 10px 25px rgba(0, 0, 0, 0.25),
+        0 2px 8px rgba(0, 0, 0, 0.15);
+
+    pointer-events: none;
+}
+
+.message-link-tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+
+    background: #171421;
+    border-right: 1px solid rgba(255, 255, 255, 0.12);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+
+    transform: translate(-50%, -4px) rotate(45deg);
+}
+
+.tooltip-enter {
+    transition:
+        opacity 0.15s ease,
+        transform 0.15s ease;
+}
+
+.tooltip-enter-start {
+    opacity: 0;
+    transform: translateX(-50%) translateY(4px);
+}
+
+.tooltip-enter-end {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.tooltip-leave {
+    transition:
+        opacity 0.1s ease,
+        transform 0.1s ease;
+}
+
+.tooltip-leave-start {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.tooltip-leave-end {
+    opacity: 0;
+    transform: translateX(-50%) translateY(4px);
+}
 
     </style>
 
