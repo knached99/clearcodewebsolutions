@@ -262,7 +262,7 @@
                 </h2>
 
                 <p>
-                    Testimonials will appear here once they're added.
+                    Made you look good? Give us the bragging rights.
                 </p>
 
             </div>
