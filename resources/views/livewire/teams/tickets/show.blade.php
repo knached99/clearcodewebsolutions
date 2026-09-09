@@ -870,7 +870,7 @@
                                     wire:loading.attr="disabled"
                                     wire:target="sendMessage"
                                     variant="primary"
-                                    class="min-h-11 cursor-pointer rounded-xl bg-[#8875b6] px-5 text-sm font-semibold shadow-[0_10px_25px_-12px_rgba(120,100,165,.8)] transition-colors duration-200 hover:bg-black hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                                    class="min-h-11 cursor-pointer rounded-xl bg-purple-300 bg-[#8875b6] px-5 text-sm font-semibold shadow-[0_10px_25px_-12px_rgba(120,100,165,.8)] transition-colors duration-200 hover:bg-purple-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
                                 >
                                     <flux:icon.paper-airplane
                                         wire:loading.remove
@@ -967,7 +967,7 @@
                     <div class="p-4">
                         <a
                             href="mailto:{{ $ticket->email }}"
-                            class="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#f2edf9] text-sm font-semibold text-[#75629e] transition hover:bg-[#eae3f5]"
+                            class="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#f2edf9] text-sm font-semibold text-[#75629e] transition hover:bg-purple-500 hover:text-white"
                         >
                             <flux:icon.envelope class="size-4" />
                             Email customer
@@ -1021,7 +1021,7 @@
                                 <button
                                     type="button"
                                     x-on:click="open = !open"
-                                    class="flex min-h-12 w-full items-center justify-between rounded-2xl border border-[#e4dfea] bg-[#fcfbfd] px-4 text-sm font-semibold text-[#48424f] transition hover:border-[#cfc2e2] hover:bg-white focus:outline-none focus:ring-4 focus:ring-[#f0ebf8] dark:border-white/10 dark:bg-white/5 dark:text-white"
+                                    class="flex min-h-12 w-full items-center justify-between rounded-2xl border border-[#e4dfea] bg-[#fcfbfd] px-4 text-sm font-semibold text-[#48424f] transition hover:border-[#cfc2e2] hover:bg-gray-700 hover:cursor-pointer focus:outline-none focus:ring-4 focus:ring-[#f0ebf8] dark:border-white/10 dark:bg-white/5 dark:text-white"
                                 >
                                     <span class="flex items-center gap-3">
                                         <span
@@ -1113,7 +1113,7 @@
                                 <button
                                     type="button"
                                     x-on:click="open = !open"
-                                    class="flex min-h-12 w-full items-center justify-between rounded-2xl border border-[#e4dfea] bg-[#fcfbfd] px-4 text-sm font-semibold text-[#48424f] transition hover:border-[#cfc2e2] hover:bg-white focus:outline-none focus:ring-4 focus:ring-[#f0ebf8] dark:border-white/10 dark:bg-white/5 dark:text-white"
+                                    class="flex min-h-12 w-full items-center justify-between rounded-2xl border border-[#e4dfea] bg-[#fcfbfd] px-4 text-sm font-semibold text-[#48424f] transition hover:border-[#cfc2e2] hover:bg-gray-700 hover:cursor-pointer focus:outline-none focus:ring-4 focus:ring-[#f0ebf8] dark:border-white/10 dark:bg-white/5 dark:text-white"
                                 >
                                     <span class="flex items-center gap-3">
                                         <span
