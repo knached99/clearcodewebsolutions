@@ -11,7 +11,7 @@ class Index extends Component
 {
     use WithPagination;
 
-    public string $status = 'pending';
+    public string $status = 'all';
 
     public string $search = '';
 
