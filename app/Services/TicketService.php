@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Mail\GuestTicketVerificationCodeMail;
+use App\Mail\YourTicketNotificationMail;
 use App\Models\Team;
 use App\Models\Ticket;
 use App\Models\TicketVerification;
@@ -53,6 +54,17 @@ class TicketService
                 'message' => $data['message'],
             ]);
 
+            /*
+             * Queue the team notification after the ticket has been
+             * successfully committed to the database.
+             *
+             * This prevents the mail worker from attempting to process
+             * a ticket that could still be rolled back.
+             */
+            DB::afterCommit(function () use ($ticket) {
+                $this->notifyTeamsOfNewTicket($ticket);
+            });
+
             return [
                 'ticket' => $ticket,
                 'token' => $token,
@@ -60,52 +72,60 @@ class TicketService
         });
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Ticket Team Resolution
+    |--------------------------------------------------------------------------
+    */
+
     protected function resolveTicketTeam(): Team
     {
-        // If we're inside a team route, use that team.
-        $currentTeam = request()->route('current_team');
-
-        if ($currentTeam instanceof Team) {
-            return $currentTeam;
-        }
-
-        if (is_string($currentTeam) && $currentTeam !== '') {
-            $team = Team::where('slug', $currentTeam)->first();
-
-            if ($team) {
-                return $team;
-            }
-        }
-
-        // If the authenticated user has a current team, use it.
-        if (auth()->check()) {
-            $user = auth()->user();
-
-            if ($user->current_team_id) {
-                $team = Team::find($user->current_team_id);
-
-                if ($team) {
-                    return $team;
-                }
-            }
-        }
-
-        // Deterministic fallback.
-        $team = Team::query()
-            ->where('is_personal', true)
+        /*
+         * Teams are guaranteed to exist.
+         *
+         * The first team by ID is always the primary team assigned to
+         * newly-created tickets.
+         */
+        return Team::query()
             ->orderBy('id')
-            ->first();
+            ->firstOrFail();
+    }
 
-        if ($team) {
-            return $team;
+    /*
+    |--------------------------------------------------------------------------
+    | Team Notifications
+    |--------------------------------------------------------------------------
+    */
+
+    protected function notifyTeamsOfNewTicket(Ticket $ticket): void
+    {
+        /*
+         * Every team receives the same notification.
+         *
+         * Only the email column is selected so we don't load unnecessary
+         * team data into memory.
+         *
+         * BCC keeps team email addresses private from one another and
+         * results in a single queued mail instead of one mail per team.
+         */
+        $teamEmails = Team::query()
+            ->whereNotNull('email')
+            ->where('email', '!=', '')
+            ->orderBy('id')
+            ->pluck('email')
+            ->all();
+
+        if ($teamEmails === []) {
+            return;
         }
 
-        // If absolutely nothing exists, create a safe fallback.
-        return Team::create([
-            'name' => 'Support',
-            'slug' => 'support',
-            'is_personal' => true,
-        ]);
+        Mail::to(config('mail.from.address'))
+            ->bcc($teamEmails)
+            ->queue(
+                new YourTicketNotificationMail(
+                    ticket: $ticket,
+                )
+            );
     }
 
     /*
@@ -138,7 +158,7 @@ class TicketService
         int $minutes = 60,
     ): void {
         session()->put(
-            'guest_ticket_access.'.$ticket->id,
+            'guest_ticket_access.' . $ticket->id,
             now()->addMinutes($minutes)->timestamp
         );
     }
@@ -146,7 +166,7 @@ class TicketService
     public function hasGuestTicketAccess(Ticket $ticket): bool
     {
         $expiresAt = session(
-            'guest_ticket_access.'.$ticket->id
+            'guest_ticket_access.' . $ticket->id
         );
 
         if (! $expiresAt) {
@@ -184,7 +204,7 @@ class TicketService
     public function revokeGuestTicketAccess(Ticket $ticket): void
     {
         session()->forget(
-            'guest_ticket_access.'.$ticket->id
+            'guest_ticket_access.' . $ticket->id
         );
     }
 
@@ -207,12 +227,12 @@ class TicketService
             return false;
         }
 
-        $emailKey = 'guest-ticket-email:'.hash(
+        $emailKey = 'guest-ticket-email:' . hash(
             'sha256',
             $email
         );
 
-        $ipKey = 'guest-ticket-email-ip:'.$ipAddress;
+        $ipKey = 'guest-ticket-email-ip:' . $ipAddress;
 
         if (
             RateLimiter::tooManyAttempts($emailKey, 3) ||
@@ -302,12 +322,12 @@ class TicketService
             return null;
         }
 
-        $emailKey = 'guest-ticket-code:'.hash(
+        $emailKey = 'guest-ticket-code:' . hash(
             'sha256',
             $email
         );
 
-        $ipKey = 'guest-ticket-code-ip:'.$ipAddress;
+        $ipKey = 'guest-ticket-code-ip:' . $ipAddress;
 
         if (
             RateLimiter::tooManyAttempts($emailKey, 10) ||
@@ -453,15 +473,14 @@ class TicketService
         Ticket $ticket,
         string $token,
     ): string {
-
         if (! preg_match('/^[a-fA-F0-9]{64}$/', $token)) {
             throw new \InvalidArgumentException('Invalid URL');
         }
 
-        return rtrim(config('app.url'), '/').
-            '/tickets/'.
-            $ticket->ticket_number.
-            '/'.
+        return rtrim(config('app.url'), '/') .
+            '/tickets/' .
+            $ticket->ticket_number .
+            '/' .
             $token;
     }
 
@@ -495,7 +514,7 @@ class TicketService
     {
         do {
             $ticketNumber =
-                'TCKT-'.strtoupper(
+                'TCKT-' . strtoupper(
                     Str::random(8)
                 );
         } while (
