@@ -766,6 +766,33 @@
             opacity: 0 !important;
             pointer-events: none !important;
         }
+
+        /* =========================================================
+   RECAPTCHA
+   ========================================================= */
+
+.grecaptcha-badge {
+    visibility: hidden !important;
+}
+
+.ticket-search-recaptcha {
+    margin: 10px 0 0;
+    color: rgba(255, 255, 255, 0.28);
+    font-size: 9px;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.ticket-search-recaptcha a {
+    color: rgba(255, 255, 255, 0.42);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+}
+
+.ticket-search-recaptcha a:hover {
+    color: rgba(255, 255, 255, 0.7);
+}
     </style>
 @endpush
 
@@ -946,6 +973,18 @@
                                         </span>
 
                                     </span>
+
+                                    <p class="ticket-search-recaptcha">
+                                    This site is protected by reCAPTCHA and the Google
+                                    <a href="https://policies.google.com/privacy">
+                                        Privacy Policy
+                                    </a>
+                                    and
+                                    <a href="https://policies.google.com/terms">
+                                        Terms of Service
+                                    </a>
+                                    apply.
+                                </p>
 
                                 </button>
 

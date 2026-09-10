@@ -237,6 +237,20 @@
                     </span>
                 </button>
 
+                </button>
+
+                <p class="cc-contact-form__recaptcha">
+                    This site is protected by reCAPTCHA and the Google
+                    <a href="https://policies.google.com/privacy">
+                        Privacy Policy
+                    </a>
+                    and
+                    <a href="https://policies.google.com/terms">
+                        Terms of Service
+                    </a>
+                    apply.
+                </p>
+
             </form>
 
         </div>
@@ -244,6 +258,41 @@
     </div>
 
 </section>
+
+@push('styles')
+<style>
+/* ==========================================================================
+   RECAPTCHA
+   ========================================================================== */
+
+/*
+ * reCAPTCHA v3 badge is hidden because the required disclosure
+ * is displayed directly beneath the contact form submit button.
+ */
+.grecaptcha-badge {
+    visibility: hidden !important;
+}
+
+.cc-contact-form__recaptcha {
+    margin: 10px 0 0;
+    color: rgba(255, 255, 255, .28);
+    font-size: 9px;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.cc-contact-form__recaptcha a {
+    color: rgba(255, 255, 255, .42);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+}
+
+.cc-contact-form__recaptcha a:hover {
+    color: rgba(255, 255, 255, .7);
+}
+</style>
+@endpush
 
 @once
     <script src="https://www.google.com/recaptcha/api.js?render={{ config('services.google_recaptcha.site_key') }}" async

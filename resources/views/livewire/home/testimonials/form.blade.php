@@ -289,6 +289,18 @@
                 <p class="cc-testimonial-form__privacy">
                     Your email is never displayed publicly.
                 </p>
+                
+                <p class="cc-testimonial-form__recaptcha">
+                    This site is protected by reCAPTCHA and the Google 
+                    <a href="https://policies.google.com/privacy">
+                    Privacy Policy
+                    </a>
+                    and
+                    <a href="https://policies.google.com/terms">
+                    Terms of Service
+                    </a>
+                    apply.
+                </p>
 
             </form>
 
@@ -1153,6 +1165,36 @@
             font-size: 10px;
             line-height: 1.5;
         }
+
+        /* ==========================================================================
+   RECAPTCHA DISCLOSURE
+   ========================================================================== */
+
+/*
+ * Google permits the reCAPTCHA badge to be hidden when the
+ * required reCAPTCHA disclosure is displayed elsewhere on the page.
+ */
+.grecaptcha-badge {
+    visibility: hidden !important;
+}
+
+.cc-testimonial-form__recaptcha {
+    margin: 8px 0 0;
+    color: rgba(255, 255, 255, .28);
+    font-size: 9px;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.cc-testimonial-form__recaptcha a {
+    color: rgba(255, 255, 255, .42);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.cc-testimonial-form__recaptcha a:hover {
+    color: rgba(255, 255, 255, .7);
+}
 
 
         /* ==========================================================================
