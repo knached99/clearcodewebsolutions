@@ -54,8 +54,8 @@ class LoginResponse implements LoginResponseContract
                 ]);
 
                 return redirect()->to(
-                    '/' .
-                    $invitation->team->slug .
+                    '/'.
+                    $invitation->team->slug.
                     Fortify::redirects('login')
                 );
             }

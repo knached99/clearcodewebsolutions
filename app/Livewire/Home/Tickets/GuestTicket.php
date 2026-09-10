@@ -3,8 +3,8 @@
 namespace App\Livewire\Home\Tickets;
 
 use App\Models\Ticket;
-use App\Services\TicketService;
 use App\Notifications\NewTicketReplyNotification;
+use App\Services\TicketService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Component;
@@ -156,7 +156,7 @@ class GuestTicket extends Component
 
             foreach ($this->attachments as $attachment) {
                 $path = $attachment->store(
-                    'tickets/' . $ticket->id,
+                    'tickets/'.$ticket->id,
                     'public',
                 );
 
@@ -255,10 +255,11 @@ class GuestTicket extends Component
 
         $ticketService->requireGuestTicketAccess($ticket);
 
-        $this->ticket = $ticket;
-
         return view(
             'livewire.home.tickets.guest-ticket',
+            [
+                'ticket' => $ticket,
+            ],
         );
     }
 }

@@ -858,15 +858,8 @@
 
                                 <div class="ticket-form-group">
                                     <!-- Honeypot -->
-                                    <div class="ticket-search-honeypot" aria-hidden="true">
-                                        <label for="ticket-website">
-                                            Website
-                                        </label>
-
-                                        <input id="ticket-website" type="text" wire:model="website" tabindex="-1"
-                                            autocomplete="off">
-                                    </div>
-
+                                    @honeypot
+                                    
                                     <label for="ticket-email" class="ticket-form-label">
 
                                         <span>

@@ -5,10 +5,15 @@ namespace App\Livewire\Home\Testimonials;
 use App\Services\TestimonialService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
+use Spatie\Honeypot\Http\Livewire\Concerns\HoneypotData;
+use Spatie\Honeypot\Http\Livewire\Concerns\UsesSpamProtection;
 
 class Form extends Component
 {
+    use UsesSpamProtection;
+
     public string $name = '';
 
     public string $email = '';
@@ -22,48 +27,59 @@ class Form extends Component
     public int $rating = 0;
 
     /**
-     * Honeypot field.
-     *
-     * This should remain empty for real visitors.
+     * Spatie honeypot data.
      */
-    public string $website = '';
+    public HoneypotData $extraFields;
 
     /**
-     * reCAPTCHA v3 token.
+     * Fresh reCAPTCHA v3 token.
      */
     public string $recaptchaToken = '';
 
     public bool $submitted = false;
 
+    public function mount(): void
+    {
+        $this->extraFields = new HoneypotData();
+    }
+
     protected function rules(): array
     {
         return [
             'name' => [
+                'bail',
                 'required',
                 'string',
                 'min:2',
                 'max:120',
+                'regex:/\A[\pL\pM]+(?:[ .\'-][\pL\pM]+)*\z/u',
             ],
 
             'email' => [
+                'bail',
                 'nullable',
-                'email',
-                'max:255',
+                'string',
+                'lowercase',
+                'max:254',
+                'email:rfc,dns,spoof',
             ],
 
             'company' => [
+                'bail',
                 'nullable',
                 'string',
                 'max:150',
             ],
 
             'role' => [
+                'bail',
                 'nullable',
                 'string',
                 'max:150',
             ],
 
             'message' => [
+                'bail',
                 'required',
                 'string',
                 'min:20',
@@ -71,21 +87,17 @@ class Form extends Component
             ],
 
             'rating' => [
+                'bail',
                 'required',
                 'integer',
-                'min:1',
-                'max:5',
-            ],
-
-            'website' => [
-                'nullable',
-                'string',
-                'max:0',
+                Rule::in([1, 2, 3, 4, 5]),
             ],
 
             'recaptchaToken' => [
+                'bail',
                 'required',
                 'string',
+                'max:4096',
             ],
         ];
     }
@@ -95,28 +107,85 @@ class Form extends Component
         return [
             'name.required' => 'Please tell us your name.',
 
+            'name.regex' => 'Please enter a valid name.',
+
             'email.email' => 'Please enter a valid email address.',
 
             'message.required' => 'Please share your experience with us.',
 
-            'message.min' =>
-                'Your testimonial should be at least 20 characters.',
+            'message.min' => 'Your testimonial should be at least 20 characters.',
 
-            'message.max' =>
-                'Your testimonial is too long.',
+            'message.max' => 'Your testimonial is too long.',
 
-            'rating.required' =>
-                'Please select a rating.',
+            'rating.required' => 'Please select a rating.',
 
-            'rating.min' =>
-                'Please select a rating.',
+            'rating.in' => 'Please select a rating from 1 to 5.',
 
-            'rating.max' =>
-                'Please select a rating.',
-
-            'recaptchaToken.required' =>
-                'Please wait a moment and try submitting again.',
+            'recaptchaToken.required' => 'Please wait a moment and try submitting again.',
         ];
+    }
+
+    public function updated($property): void
+    {
+        $rules = $this->typingRules($property);
+
+        if ($rules === []) {
+            return;
+        }
+
+        $this->validateOnly($property, [
+            $property => $rules,
+        ]);
+    }
+
+    protected function typingRules(string $property): array
+    {
+        return match ($property) {
+            'name' => [
+                'bail',
+                'required',
+                'string',
+                'min:2',
+                'max:120',
+                'regex:/\A[\pL\pM]+(?:[ .\'-][\pL\pM]+)*\z/u',
+            ],
+
+            'email' => [
+                'bail',
+                'nullable',
+                'string',
+                'lowercase',
+                'max:254',
+                'email:rfc',
+            ],
+
+            'company',
+            'role' => [
+                'bail',
+                'nullable',
+                'string',
+                'max:150',
+            ],
+
+            'message' => [
+                'bail',
+                'required',
+                'string',
+                'min:20',
+                'max:2000',
+            ],
+
+            'rating' => [
+                'bail',
+                'required',
+                'integer',
+                Rule::in([1, 2, 3, 4, 5]),
+            ],
+
+            'recaptchaToken' => [],
+
+            default => [],
+        };
     }
 
     /**
@@ -124,7 +193,7 @@ class Form extends Component
      */
     public function setRating(int $rating): void
     {
-        if ($rating < 1 || $rating > 5) {
+        if (! in_array($rating, [1, 2, 3, 4, 5], true)) {
             return;
         }
 
@@ -135,9 +204,6 @@ class Form extends Component
 
     /**
      * Called when the user clicks Submit.
-     *
-     * We generate the reCAPTCHA token immediately before
-     * actually submitting the testimonial.
      */
     public function prepareSubmit(): void
     {
@@ -146,276 +212,246 @@ class Form extends Component
             'recaptchaToken',
         ]);
 
-        $this->dispatch('execute-testimonial-recaptcha');
+        $this->validate([
+            'name' => $this->rules()['name'],
+            'email' => $this->rules()['email'],
+            'company' => $this->rules()['company'],
+            'role' => $this->rules()['role'],
+            'message' => $this->rules()['message'],
+            'rating' => $this->rules()['rating'],
+        ]);
+
+        $this->dispatch(
+            'execute-testimonial-recaptcha',
+        );
     }
 
     /**
-     * Final submission after the browser has obtained
-     * the reCAPTCHA v3 token.
+     * Final submission after reCAPTCHA has been generated.
      */
     public function submit(
         string $recaptchaToken,
-        TestimonialService $service
+        TestimonialService $service,
     ): void {
-        /*
-         * Store the freshly generated token.
-         */
+        $this->submitted = false;
+
         $this->recaptchaToken = $recaptchaToken;
 
         /*
-         * ---------------------------------------------
-         * HONEYPOT
-         * ---------------------------------------------
-         *
-         * Real users should never populate this field.
-         *
-         * We silently accept the submission from bots so
-         * they don't receive a useful indication that they
-         * triggered bot detection.
+         * Spatie honeypot + minimum-time protection.
          */
-        if (filled($this->website)) {
-            $this->resetForm();
-
-            $this->submitted = true;
-
-            return;
-        }
+        $this->protectAgainstSpam();
 
         /*
-         * ---------------------------------------------
-         * RATE LIMIT
-         * ---------------------------------------------
-         *
-         * 3 submissions per hour per IP.
+         * Rate-limit before making the external reCAPTCHA request.
          */
-        $key = 'testimonial-submission:' . request()->ip();
+        $key = $this->rateLimitKey();
 
         if (RateLimiter::tooManyAttempts($key, 3)) {
             $this->addError(
                 'form',
-                'Too many submissions. Please try again later.'
+                'Too many submissions. Please try again later.',
             );
 
             return;
         }
 
         /*
-         * ---------------------------------------------
-         * FORM VALIDATION
-         * ---------------------------------------------
+         * Validate the complete form.
          */
-        $validated = $this->validate();
+        $this->validate();
 
         /*
-         * ---------------------------------------------
-         * RECAPTCHA VERIFICATION
-         * ---------------------------------------------
+         * Verify reCAPTCHA server-side.
          */
         $recaptcha = $this->verifyRecaptcha(
-            $recaptchaToken
+            token: $recaptchaToken,
+            expectedAction: 'testimonial_submit',
         );
 
-        if (!$recaptcha['success']) {
+        if (! $recaptcha['success']) {
             $this->addError(
                 'form',
-                $recaptcha['message']
+                $recaptcha['message'],
             );
 
             return;
         }
 
         /*
-         * Only consume the rate-limit attempt after
-         * the request successfully passes reCAPTCHA.
+         * Consume the rate-limit attempt only after the
+         * security checks succeed.
          */
         RateLimiter::hit($key, 3600);
 
         /*
-         * ---------------------------------------------
-         * REMOVE SECURITY-ONLY FIELDS
-         * ---------------------------------------------
+         * Explicitly construct the business data.
+         *
+         * Do NOT pass all Livewire properties to the service.
          */
-        unset(
-            $validated['website'],
-            $validated['recaptchaToken']
-        );
+        $testimonialData = [
+            'name' => $this->name,
+            'email' => $this->email ?: null,
+            'company' => $this->company ?: null,
+            'role' => $this->role ?: null,
+            'message' => $this->message,
+            'rating' => $this->rating,
+        ];
 
-        /*
-         * ---------------------------------------------
-         * CREATE TESTIMONIAL
-         * ---------------------------------------------
-         */
-        $service->create($validated);
+        $service->create($testimonialData);
 
-        /*
-         * ---------------------------------------------
-         * RESET
-         * ---------------------------------------------
-         */
         $this->resetForm();
 
         $this->submitted = true;
 
         $this->dispatch(
-            'testimonial-submitted'
+            'testimonial-submitted',
+        );
+    }
+
+    protected function rateLimitKey(): string
+    {
+        $ip = request()->ip() ?? 'unknown';
+
+        return 'testimonial-submission:' . hash(
+            'sha256',
+            $ip,
         );
     }
 
     /**
      * Verify a reCAPTCHA v3 token with Google.
-     *
-     * Google returns:
-     *
-     * success
-     * score
-     * action
-     *
-     * We verify all three.
      */
     protected function verifyRecaptcha(
-        string $token
+        string $token,
+        string $expectedAction,
     ): array {
+        if (
+            $token === ''
+            || strlen($token) > 4096
+        ) {
+            return [
+                'success' => false,
+                'message' => 'The security verification failed. Please try again.',
+            ];
+        }
+
         $secret = config(
-            'services.google_recaptcha.secret_key'
+            'services.google_recaptcha.secret_key',
         );
 
         if (blank($secret)) {
             report(
                 new \RuntimeException(
-                    'Google reCAPTCHA secret key is not configured.'
-                )
+                    'Google reCAPTCHA secret key is not configured.',
+                ),
             );
 
             return [
                 'success' => false,
-                'message' =>
-                    'Security verification is currently unavailable. Please try again later.',
+                'message' => 'Security verification is currently unavailable. Please try again later.',
             ];
         }
 
         try {
             $response = Http::asForm()
-                ->timeout(10)
+                ->connectTimeout(3)
+                ->timeout(5)
                 ->post(
                     'https://www.google.com/recaptcha/api/siteverify',
                     [
                         'secret' => $secret,
-
                         'response' => $token,
-
-                        /*
-                         * Google can use this to evaluate
-                         * the originating client IP.
-                         */
                         'remoteip' => request()->ip(),
-                    ]
+                    ],
                 );
         } catch (\Throwable $e) {
             report($e);
 
             return [
                 'success' => false,
-                'message' =>
-                    'We could not complete the security check. Please try again.',
+                'message' => 'We could not complete the security check. Please try again.',
             ];
         }
 
-        /*
-         * Google did not return a successful HTTP response.
-         */
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             report(
                 new \RuntimeException(
-                    'Google reCAPTCHA request failed: ' .
-                    $response->body()
-                )
+                    'Google reCAPTCHA verification request failed with HTTP status ' .
+                    $response->status(),
+                ),
             );
 
             return [
                 'success' => false,
-                'message' =>
-                    'We could not complete the security check. Please try again.',
+                'message' => 'We could not complete the security check. Please try again.',
             ];
         }
 
         $data = $response->json();
 
-        /*
-         * ---------------------------------------------
-         * TOKEN VALIDITY
-         * ---------------------------------------------
-         */
-        if (!data_get($data, 'success', false)) {
+        if (! is_array($data)) {
+            return [
+                'success' => false,
+                'message' => 'The security verification failed. Please try again.',
+            ];
+        }
+
+        if (($data['success'] ?? false) !== true) {
+            return [
+                'success' => false,
+                'message' => 'The security verification failed. Please try again.',
+            ];
+        }
+
+        if (($data['action'] ?? null) !== $expectedAction) {
             report(
                 new \RuntimeException(
-                    'reCAPTCHA verification failed: ' .
-                    json_encode(
-                        data_get($data, 'error-codes', [])
-                    )
-                )
+                    'Unexpected reCAPTCHA action.',
+                ),
             );
 
             return [
                 'success' => false,
-                'message' =>
-                    'The security verification failed. Please try again.',
+                'message' => 'The security verification failed. Please try again.',
             ];
         }
 
-        /*
-         * ---------------------------------------------
-         * ACTION VALIDATION
-         * ---------------------------------------------
-         *
-         * The browser generates the token using:
-         *
-         * testimonial_submit
-         *
-         * We make sure Google reports the exact same action.
-         */
-        $action = data_get(
-            $data,
-            'action'
+        $score = $data['score'] ?? null;
+
+        if (! is_numeric($score)) {
+            return [
+                'success' => false,
+                'message' => 'The security verification failed. Please try again.',
+            ];
+        }
+
+        $score = (float) $score;
+
+        if ($score < 0.5 || $score > 1.0) {
+            return [
+                'success' => false,
+                'message' => 'We could not verify that this request came from a real visitor. Please try again.',
+            ];
+        }
+
+        $expectedHostname = config(
+            'services.google_recaptcha.hostname',
         );
 
-        if ($action !== 'testimonial_submit') {
+        if (
+            filled($expectedHostname)
+            && ($data['hostname'] ?? null) !== $expectedHostname
+        ) {
             report(
                 new \RuntimeException(
-                    'Unexpected reCAPTCHA action: ' .
-                    (string) $action
-                )
+                    'Unexpected reCAPTCHA hostname.',
+                ),
             );
 
             return [
                 'success' => false,
-                'message' =>
-                    'The security verification failed. Please try again.',
-            ];
-        }
-
-        /*
-         * ---------------------------------------------
-         * SCORE
-         * ---------------------------------------------
-         *
-         * reCAPTCHA v3 returns a score from 0.0 to 1.0.
-         *
-         * Start with 0.5. We can tune this after testing
-         * your real traffic.
-         */
-        $score = (float) data_get(
-            $data,
-            'score',
-            0
-        );
-
-        $minimumScore = 0.5;
-
-        if ($score < $minimumScore) {
-            return [
-                'success' => false,
-                'message' =>
-                    'We could not verify that this submission came from a real visitor. Please try again.',
+                'message' => 'The security verification failed. Please try again.',
             ];
         }
 
@@ -425,9 +461,6 @@ class Form extends Component
         ];
     }
 
-    /**
-     * Reset the form.
-     */
     protected function resetForm(): void
     {
         $this->reset([
@@ -436,17 +469,21 @@ class Form extends Component
             'company',
             'role',
             'message',
-            'website',
             'recaptchaToken',
         ]);
 
         $this->rating = 0;
+
+        /*
+         * Fresh honeypot payload.
+         */
+        $this->extraFields = new \Spatie\Honeypot\Http\Livewire\Concerns\HoneypotData();
     }
 
     public function render()
     {
         return view(
-            'livewire.home.testimonials.form'
+            'livewire.home.testimonials.form',
         );
     }
 }

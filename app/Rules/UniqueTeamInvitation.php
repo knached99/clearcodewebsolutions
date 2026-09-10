@@ -12,13 +12,12 @@ class UniqueTeamInvitation implements ValidationRule
 {
     public function __construct(
         protected Team $team
-    ) {
-    }
+    ) {}
 
     /**
      * Run the validation rule.
      *
-     * @param Closure(string, ?string=): PotentiallyTranslatedString $fail
+     * @param  Closure(string, ?string=): PotentiallyTranslatedString  $fail
      */
     public function validate(
         string $attribute,
@@ -42,6 +41,7 @@ class UniqueTeamInvitation implements ValidationRule
 
         if ($isMember) {
             $fail(__('This user is already a member of the team.'));
+
             return;
         }
 

@@ -121,7 +121,7 @@ class Index extends Component
             ->when(
                 $this->search !== '',
                 function ($query) {
-                    $search = '%' . $this->search . '%';
+                    $search = '%'.$this->search.'%';
 
                     $query->where(function ($query) use ($search) {
                         $query

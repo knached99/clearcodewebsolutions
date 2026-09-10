@@ -157,4 +157,4 @@ Route::prefix('{current_team}')
         )->name('testimonials.show');
     });
 
-require __DIR__ . '/settings.php';
+require __DIR__.'/settings.php';

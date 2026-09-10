@@ -31,18 +31,18 @@ class TicketReceivedNotification extends Notification implements ShouldQueue
 
         return (new MailMessage)
             ->subject(
-                'We received your ClearCode request — ' .
+                'We received your ClearCode request — '.
                 $this->ticket->ticket_number
             )
             ->greeting(
-                'Hey ' . $this->ticket->name . '!'
+                'Hey '.$this->ticket->name.'!'
             )
             ->line(
                 'We received your message and our team will take a look shortly.'
             )
             ->line(
-                'Your ticket number is ' .
-                $this->ticket->ticket_number . '.'
+                'Your ticket number is '.
+                $this->ticket->ticket_number.'.'
             )
             ->action(
                 'View Your Ticket',

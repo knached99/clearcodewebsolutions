@@ -225,9 +225,9 @@ class RequiredOnboarding extends Component
                 'confirmed',
 
                 PasswordRule::min(8)
-                ->mixedCase()
-                ->numbers()
-                ->symbols(),
+                    ->mixedCase()
+                    ->numbers()
+                    ->symbols(),
             ],
         ]);
 

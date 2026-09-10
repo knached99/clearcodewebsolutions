@@ -15,8 +15,7 @@ class NewTestimonialSubmittedNotification extends Notification implements Should
 
     public function __construct(
         public Testimonials $testimonial,
-    ) {
-    }
+    ) {}
 
     public function via(object $notifiable): array
     {
@@ -40,31 +39,31 @@ class NewTestimonialSubmittedNotification extends Notification implements Should
 
         return (new MailMessage)
             ->subject(
-                'New testimonial submitted — ' .
+                'New testimonial submitted — '.
                 $this->testimonial->name
             )
             ->greeting(
-                'Hello ' . $adminName . ','
+                'Hello '.$adminName.','
             )
             ->line(
-                $this->testimonial->name .
+                $this->testimonial->name.
                 ' has submitted a new testimonial.'
             )
             ->line(
-                'Email: ' .
+                'Email: '.
                 ($this->testimonial->email ?: 'Not provided')
             )
             ->line(
-                'Company: ' .
+                'Company: '.
                 ($this->testimonial->company ?: 'Not provided')
             )
             ->line(
-                'Role: ' .
+                'Role: '.
                 ($this->testimonial->role ?: 'Not provided')
             )
             ->line(
-                'Rating: ' .
-                str_repeat('★', $this->testimonial->rating) .
+                'Rating: '.
+                str_repeat('★', $this->testimonial->rating).
                 str_repeat('☆', 5 - $this->testimonial->rating)
             )
             ->line('Message:')

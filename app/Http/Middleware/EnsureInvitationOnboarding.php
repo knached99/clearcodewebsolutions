@@ -18,7 +18,7 @@ class EnsureInvitationOnboarding
 
         $hasPendingInvitation = $user->teamInvitations()
             ->whereNull('accepted_at')
-        ->where(function ($query) {
+            ->where(function ($query) {
                 $query
                     ->whereNull('expires_at')
                     ->orWhere('expires_at', '>=', now());

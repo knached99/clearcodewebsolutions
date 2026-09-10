@@ -197,24 +197,28 @@
             }, 500);
         }
     "
-    @keydown.escape.window="if (lightbox) closeLightbox(); else if (toast) { toast = false; if (toastTimer) { clearTimeout(toastTimer); toastTimer = null; } }"
+    @keydown.escape.window="
+        if (lightbox) {
+            closeLightbox();
+        } else if (toast) {
+            toast = false;
+
+            if (toastTimer) {
+                clearTimeout(toastTimer);
+                toastTimer = null;
+            }
+        }
+    "
 >
 
     @php
-        /*
-        |--------------------------------------------------------------------------
-        | MESSAGE DATA
-        |--------------------------------------------------------------------------
-        */
-
         $messagesCollection = collect(
             $ticket->messages ?? []
         )
             ->sortBy('created_at')
             ->values();
 
-        $messageCount =
-            $messagesCollection->count();
+        $messageCount = $messagesCollection->count();
 
         $statusValue = strtolower(
             (string) ($ticket->status ?? 'open')
@@ -277,19 +281,13 @@
 
         </div>
 
-
         <div class="ticket-toast-content">
 
-            <strong
-                x-text="toastHeading"
-            ></strong>
+            <strong x-text="toastHeading"></strong>
 
-            <span
-                x-text="toastText"
-            ></span>
+            <span x-text="toastText"></span>
 
         </div>
-
 
         <button
             type="button"
@@ -349,9 +347,7 @@
             >
 
                 <span class="ticket-back-icon">
-
                     <i class="fa-solid fa-arrow-left"></i>
-
                 </span>
 
                 <span>
@@ -376,9 +372,7 @@
                 <div class="ticket-brand">
 
                     <div class="ticket-brand-icon">
-
                         <i class="fa-solid fa-headset"></i>
-
                     </div>
 
                     <div>
@@ -459,9 +453,7 @@
                     <div class="hero-meta-item">
 
                         <div class="hero-meta-icon">
-
                             <i class="fa-regular fa-comments"></i>
-
                         </div>
 
                         <div>
@@ -482,9 +474,7 @@
                     <div class="hero-meta-item">
 
                         <div class="hero-meta-icon">
-
                             <i class="fa-regular fa-calendar"></i>
-
                         </div>
 
                         <div>
@@ -531,11 +521,8 @@
                     <div>
 
                         <div class="section-kicker">
-
                             <span></span>
-
                             LIVE CONVERSATION
-
                         </div>
 
                         <h2>
@@ -582,18 +569,6 @@
                                 $message->author_type
                             );
 
-                            /*
-                            |--------------------------------------------------------------------------
-                            | IMPORTANT
-                            |--------------------------------------------------------------------------
-                            | guest = customer / sender
-                            | anything else = support / recipient
-                            |
-                            | SUPPORT  -> LEFT
-                            | CUSTOMER -> RIGHT
-                            |--------------------------------------------------------------------------
-                            */
-
                             $isCustomer =
                                 $authorType === 'guest';
 
@@ -632,10 +607,6 @@
                         @endphp
 
 
-                        {{-- =================================================
-                           MESSAGE
-                        ================================================== --}}
-
                         <article
                             id="ticket-message-{{ $message->id }}"
                             class="
@@ -653,9 +624,7 @@
                         >
 
 
-                            {{-- =================================================
-                               NEW REPLY INDICATOR
-                            ================================================== --}}
+                            {{-- NEW REPLY INDICATOR --}}
 
                             @if ($isHighlighted)
 
@@ -701,16 +670,12 @@
                             @endif
 
 
-                            {{-- =================================================
-                               MESSAGE ROW
-                            ================================================== --}}
+                            {{-- MESSAGE ROW --}}
 
                             <div class="message-row">
 
 
-                                {{-- =================================================
-                                   AVATAR
-                                ================================================== --}}
+                                {{-- AVATAR --}}
 
                                 <div class="message-avatar">
 
@@ -727,16 +692,12 @@
                                 </div>
 
 
-                                {{-- =================================================
-                                   MESSAGE MAIN
-                                ================================================== --}}
+                                {{-- MESSAGE MAIN --}}
 
                                 <div class="message-main">
 
 
-                                    {{-- =================================================
-                                       AUTHOR
-                                    ================================================== --}}
+                                    {{-- AUTHOR --}}
 
                                     <div class="message-top">
 
@@ -758,9 +719,7 @@
                                     </div>
 
 
-                                    {{-- =================================================
-                                       BUBBLE
-                                    ================================================== --}}
+                                    {{-- BUBBLE --}}
 
                                     <div class="message-bubble">
 
@@ -775,9 +734,7 @@
                                         @endif
 
 
-                                        {{-- =================================================
-                                           ATTACHMENTS
-                                        ================================================== --}}
+                                        {{-- ATTACHMENTS --}}
 
                                         @if (
                                             $attachments->isNotEmpty()
@@ -838,9 +795,7 @@
                                                             >
 
                                                             <span class="attachment-hover">
-
                                                                 <i class="fa-solid fa-expand"></i>
-
                                                             </span>
 
                                                         </button>
@@ -856,9 +811,7 @@
                                     </div>
 
 
-                                    {{-- =================================================
-                                       MESSAGE FOOTER
-                                    ================================================== --}}
+                                    {{-- MESSAGE FOOTER --}}
 
                                     <div class="message-footer">
 
@@ -874,39 +827,46 @@
                                         @endif
 
 
-                                      <div
-                                        class="message-link-wrapper"
-                                        x-data="{ showTooltip: false }"
-                                    >
-                                        <button
-                                            type="button"
-                                            class="message-link"
-                                            @click="copyMessageLink({{ $message->id }})"
-                                            @mouseenter="showTooltip = true"
-                                            @mouseleave="showTooltip = false"
-                                            @focus="showTooltip = true"
-                                            @blur="showTooltip = false"
-                                            aria-label="Copy link to message #{{ $message->id }}"
-                                        >
-                                            <i class="fa-solid fa-link"></i>
-                                            <span>{{ $message->id }}</span>
-                                        </button>
-
                                         <div
-                                            class="message-link-tooltip"
-                                            x-show="showTooltip"
-                                            x-transition:enter="tooltip-enter"
-                                            x-transition:enter-start="tooltip-enter-start"
-                                            x-transition:enter-end="tooltip-enter-end"
-                                            x-transition:leave="tooltip-leave"
-                                            x-transition:leave-start="tooltip-leave-start"
-                                            x-transition:leave-end="tooltip-leave-end"
-                                            x-cloak
-                                            role="tooltip"
+                                            class="message-link-wrapper"
+                                            x-data="{ showTooltip: false }"
                                         >
-                                            Copy link to message #{{ $message->id }}
+
+                                            <button
+                                                type="button"
+                                                class="message-link"
+                                                @click="copyMessageLink({{ $message->id }})"
+                                                @mouseenter="showTooltip = true"
+                                                @mouseleave="showTooltip = false"
+                                                @focus="showTooltip = true"
+                                                @blur="showTooltip = false"
+                                                aria-label="Copy link to message #{{ $message->id }}"
+                                            >
+
+                                                <i class="fa-solid fa-link"></i>
+
+                                                <span>
+                                                    {{ $message->id }}
+                                                </span>
+
+                                            </button>
+
+                                            <div
+                                                class="message-link-tooltip"
+                                                x-show="showTooltip"
+                                                x-transition:enter="tooltip-enter"
+                                                x-transition:enter-start="tooltip-enter-start"
+                                                x-transition:enter-end="tooltip-enter-end"
+                                                x-transition:leave="tooltip-leave"
+                                                x-transition:leave-start="tooltip-leave-start"
+                                                x-transition:leave-end="tooltip-leave-end"
+                                                x-cloak
+                                                role="tooltip"
+                                            >
+                                                Copy link to message #{{ $message->id }}
+                                            </div>
+
                                         </div>
-                                    </div>
 
                                     </div>
 
@@ -953,11 +913,8 @@
                             <div>
 
                                 <div class="section-kicker">
-
                                     <span></span>
-
                                     SEND A REPLY
-
                                 </div>
 
                                 <h3>
@@ -1022,24 +979,24 @@
                             ></textarea>
 
 
+                            {{-- =================================================
+                               REPLY TOOLBAR
+                            ================================================== --}}
+
                             <div class="reply-toolbar">
 
                                 <div class="reply-tools">
 
-                                    <label
-                                        class="attachment-input"
-                                    >
+
+                                    {{-- ATTACH BUTTON --}}
+
+                                    <label class="attachment-input">
 
                                         <input
                                             type="file"
                                             wire:model="attachments"
                                             multiple
-                                            accept="
-                                                image/jpeg,
-                                                image/png,
-                                                image/webp,
-                                                image/gif
-                                            "
+                                            accept="image/jpeg,image/png,image/webp,image/gif"
                                         >
 
                                         <i class="fa-solid fa-paperclip"></i>
@@ -1050,8 +1007,94 @@
 
                                     </label>
 
+
+                                   {{-- UPLOAD PREVIEW --}}
+
+                                    <div style="
+                                        margin-top: 10px;
+                                        padding: 10px;
+                                        background: rgba(255,255,255,.05);
+                                        border: 1px solid rgba(255,255,255,.1);
+                                        border-radius: 8px;
+                                    ">
+
+                                        <div style="font-size: 11px; color: #fff;">
+                                            Attachment count:
+                                            <strong>{{ count($attachments) }}</strong>
+                                        </div>
+
+                                        @foreach ($attachments as $index => $attachment)
+
+                                            <div style="
+                                                margin-top: 8px;
+                                                padding: 8px;
+                                                border: 1px solid rgba(255,255,255,.1);
+                                            ">
+
+                                                <div style="font-size: 10px; color: #aaa;">
+                                                    Index: {{ $index }}
+                                                </div>
+
+                                                <div style="font-size: 10px; color: #aaa;">
+                                                    Class: {{ get_class($attachment) }}
+                                                </div>
+
+                                                <div style="font-size: 10px; color: #aaa;">
+                                                    Name:
+                                                    {{ $attachment->getClientOriginalName() }}
+                                                </div>
+
+                                                <img
+                                                    src="{{ $attachment->temporaryUrl() }}"
+                                                    style="
+                                                        display: block;
+                                                        width: 100px;
+                                                        height: 100px;
+                                                        object-fit: cover;
+                                                        margin-top: 8px;
+                                                    "
+                                                >
+
+                                            </div>
+
+                                        @endforeach
+
+                                    </div>
+                                    <div style="margin-top:10px; padding:10px; border:1px solid red; color:white;">
+    <strong>Attachment count: {{ count($attachments) }}</strong>
+
+    @foreach ($attachments as $index => $attachment)
+        <div style="margin-top:10px;">
+            <div>Index: {{ $index }}</div>
+            <div>Class: {{ get_class($attachment) }}</div>
+            <div>Name: {{ $attachment->getClientOriginalName() }}</div>
+
+            <img
+                src="{{ $attachment->temporaryUrl() }}"
+                style="width:150px;height:150px;object-fit:cover;"
+            >
+        </div>
+    @endforeach
+</div>
+
+                                    {{-- UPLOAD LOADING --}}
+
+                                    <div
+                                        class="upload-loading"
+                                        wire:loading
+                                        wire:target="attachments"
+                                    >
+
+                                        <i class="fa-solid fa-spinner fa-spin"></i>
+
+                                        Uploading...
+
+                                    </div>
+
                                 </div>
 
+
+                                {{-- SEND BUTTON --}}
 
                                 <button
                                     type="button"
@@ -1091,59 +1134,6 @@
                         </div>
 
 
-                        {{-- =================================================
-                           UPLOAD PREVIEW
-                        ================================================== --}}
-
-                        @if (count($attachments))
-
-                            <div class="upload-preview">
-
-                                @foreach (
-                                    $attachments
-                                    as $index => $attachment
-                                )
-
-                                    <div class="upload-item">
-
-                                        <div class="upload-preview-image">
-
-                                            @if (
-                                                method_exists(
-                                                    $attachment,
-                                                    'temporaryUrl'
-                                                )
-                                            )
-
-                                                <img
-                                                    src="{{ $attachment->temporaryUrl() }}"
-                                                    alt="Attachment preview"
-                                                >
-
-                                            @endif
-
-                                        </div>
-
-
-                                        <button
-                                            type="button"
-                                            wire:click="removeAttachment({{ $index }})"
-                                            aria-label="Remove attachment"
-                                        >
-
-                                            <i class="fa-solid fa-xmark"></i>
-
-                                        </button>
-
-                                    </div>
-
-                                @endforeach
-
-                            </div>
-
-                        @endif
-
-
                         {{-- MESSAGE ERROR --}}
 
                         @error('message')
@@ -1161,6 +1151,18 @@
 
                         {{-- ATTACHMENT ERROR --}}
 
+                        @error('attachments')
+
+                            <div class="field-error">
+
+                                <i class="fa-solid fa-circle-exclamation"></i>
+
+                                {{ $message }}
+
+                            </div>
+
+                        @enderror
+
                         @error('attachments.*')
 
                             <div class="field-error">
@@ -1177,9 +1179,7 @@
 
                 @else
 
-                    {{-- =================================================
-                       CLOSED TICKET
-                    ================================================== --}}
+                    {{-- CLOSED TICKET --}}
 
                     <div class="closed-ticket">
 
@@ -1213,9 +1213,7 @@
             <aside class="ticket-sidebar">
 
 
-                {{-- =================================================
-                   CUSTOMER
-                ================================================== --}}
+                {{-- CUSTOMER --}}
 
                 <div class="sidebar-card customer-card">
 
@@ -1223,13 +1221,11 @@
                         CUSTOMER
                     </div>
 
-
                     <div class="customer-profile">
 
                         <div class="customer-avatar">
                             {{ $customerInitial ?: 'C' }}
                         </div>
-
 
                         <div class="customer-info">
 
@@ -1252,16 +1248,13 @@
                 </div>
 
 
-                {{-- =================================================
-                   TICKET DETAILS
-                ================================================== --}}
+                {{-- TICKET DETAILS --}}
 
                 <div class="sidebar-card">
 
                     <div class="sidebar-label">
                         TICKET DETAILS
                     </div>
-
 
                     <div class="detail-list">
 
@@ -1325,9 +1318,7 @@
                 </div>
 
 
-                {{-- =================================================
-                   HELP
-                ================================================== --}}
+                {{-- HELP --}}
 
                 <div class="sidebar-help">
 
@@ -1438,13 +1429,9 @@
         .guest-ticket-page {
             position: relative;
             isolation: isolate;
-
             min-height: 100vh;
-
             padding: 24px 20px 100px;
-
             overflow: hidden;
-
             color: #fff;
 
             background:
@@ -1463,14 +1450,11 @@
 
 
         /* =========================================================
-           TOAST NOTIFICATION
-           DESKTOP = BOTTOM RIGHT
-           MOBILE = TOP, BELOW NAVBAR
+           TOAST
         ========================================================== */
 
         .ticket-toast {
             position: fixed;
-
             right: 24px;
             bottom: 24px;
 
@@ -1482,9 +1466,7 @@
             min-height: 72px;
 
             display: flex;
-
             align-items: center;
-
             gap: 13px;
 
             padding: 14px 16px;
@@ -1505,33 +1487,24 @@
                 0 4px 14px
                 rgba(0,0,0,.16);
 
-            backdrop-filter:
-                blur(14px);
-
-            -webkit-backdrop-filter:
-                blur(14px);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
 
             color: #fff;
-
             z-index: 99999;
-
             pointer-events: auto;
         }
 
         .ticket-toast-icon {
             width: 34px;
             height: 34px;
-
             min-width: 34px;
 
             display: flex;
-
             align-items: center;
-
             justify-content: center;
 
             border-radius: 50%;
-
             font-size: 14px;
         }
 
@@ -1576,23 +1549,17 @@
 
         .ticket-toast-content {
             min-width: 0;
-
             flex: 1;
 
             display: flex;
-
             flex-direction: column;
-
             gap: 3px;
         }
 
         .ticket-toast-content strong {
             color: #fff;
-
             font-size: 14px;
-
             font-weight: 700;
-
             line-height: 1.25;
         }
 
@@ -1601,36 +1568,27 @@
                 rgba(255,255,255,.68);
 
             font-size: 13px;
-
             line-height: 1.4;
-
             overflow-wrap: anywhere;
         }
 
         .ticket-toast-close {
             width: 30px;
             height: 30px;
-
             min-width: 30px;
 
             display: flex;
-
             align-items: center;
-
             justify-content: center;
 
             margin-left: auto;
-
             padding: 0;
 
             border: 0;
-
             border-radius: 8px;
 
             background: transparent;
-
-            color:
-                rgba(255,255,255,.48);
+            color: rgba(255,255,255,.48);
 
             cursor: pointer;
 
@@ -1648,8 +1606,7 @@
         }
 
         .ticket-toast-close:active {
-            transform:
-                scale(.92);
+            transform: scale(.92);
         }
 
 
@@ -1665,16 +1622,12 @@
 
         .toast-enter-start {
             opacity: 0;
-
-            transform:
-                translateY(12px);
+            transform: translateY(12px);
         }
 
         .toast-enter-end {
             opacity: 1;
-
-            transform:
-                translateY(0);
+            transform: translateY(0);
         }
 
         .toast-leave {
@@ -1685,16 +1638,12 @@
 
         .toast-leave-start {
             opacity: 1;
-
-            transform:
-                translateY(0);
+            transform: translateY(0);
         }
 
         .toast-leave-end {
             opacity: 0;
-
-            transform:
-                translateY(12px);
+            transform: translateY(12px);
         }
 
 
@@ -1717,42 +1666,31 @@
                 left: 12px;
 
                 width: auto;
-
                 max-width: none;
 
                 min-height: 68px;
-
                 padding: 13px 14px;
-
                 border-radius: 13px;
             }
 
             .toast-enter-start {
                 opacity: 0;
-
-                transform:
-                    translateY(-12px);
+                transform: translateY(-12px);
             }
 
             .toast-enter-end {
                 opacity: 1;
-
-                transform:
-                    translateY(0);
+                transform: translateY(0);
             }
 
             .toast-leave-start {
                 opacity: 1;
-
-                transform:
-                    translateY(0);
+                transform: translateY(0);
             }
 
             .toast-leave-end {
                 opacity: 0;
-
-                transform:
-                    translateY(-12px);
+                transform: translateY(-12px);
             }
 
             .ticket-toast-content strong {
@@ -1763,11 +1701,6 @@
                 font-size: 12px;
             }
         }
-
-
-        /* =========================================================
-           SMALL PHONES
-        ========================================================== */
 
         @media (max-width: 380px) {
 
@@ -1783,21 +1716,18 @@
                 left: 10px;
 
                 width: auto;
-
                 padding: 12px;
             }
 
             .ticket-toast-icon {
                 width: 31px;
                 height: 31px;
-
                 min-width: 31px;
             }
 
             .ticket-toast-close {
                 width: 28px;
                 height: 28px;
-
                 min-width: 28px;
             }
         }
@@ -1809,21 +1739,15 @@
 
         .ticket-background {
             position: fixed;
-
             inset: 0;
-
             z-index: -1;
-
             pointer-events: none;
-
             overflow: hidden;
         }
 
         .ticket-grid {
             position: absolute;
-
             inset: 0;
-
             opacity: .035;
 
             background-image:
@@ -1842,41 +1766,32 @@
 
         .purple-orb {
             position: absolute;
-
             border-radius: 999px;
-
             filter: blur(100px);
-
             opacity: .20;
         }
 
         .orb-one {
             width: 420px;
             height: 420px;
-
             top: -180px;
             left: -160px;
-
             background: #7c3aed;
         }
 
         .orb-two {
             width: 350px;
             height: 350px;
-
             right: -160px;
             top: 35%;
-
             background: #a855f7;
         }
 
         .orb-three {
             width: 280px;
             height: 280px;
-
             left: 35%;
             bottom: -180px;
-
             background: #6d28d9;
         }
 
@@ -1887,7 +1802,6 @@
 
         .ticket-container {
             position: relative;
-
             z-index: 10;
 
             width: 100%;
@@ -1898,20 +1812,17 @@
 
 
         /* =========================================================
-           BACK TO WEBSITE
+           NAVIGATION
         ========================================================== */
 
         .ticket-navigation {
             position: relative;
-
             z-index: 100;
 
             display: flex;
-
             align-items: center;
 
             width: 100%;
-
             margin-bottom: 18px;
 
             pointer-events: auto;
@@ -1919,13 +1830,10 @@
 
         .ticket-back {
             position: relative;
-
             z-index: 101;
 
             display: inline-flex;
-
             align-items: center;
-
             gap: 9px;
 
             padding: 8px 13px 8px 8px;
@@ -1948,11 +1856,9 @@
             text-decoration: none;
 
             font-size: 11px;
-
             font-weight: 700;
 
             pointer-events: auto;
-
             cursor: pointer;
 
             transition:
@@ -1977,7 +1883,6 @@
 
         .ticket-back-icon {
             display: grid;
-
             place-items: center;
 
             width: 25px;
@@ -1998,11 +1903,9 @@
 
         .ticket-hero {
             position: relative;
-
             overflow: hidden;
 
             margin-bottom: 24px;
-
             padding: 30px;
 
             border:
@@ -2036,9 +1939,7 @@
             top: -180px;
 
             background: #7c3aed;
-
             filter: blur(100px);
-
             opacity: .13;
 
             pointer-events: none;
@@ -2047,15 +1948,12 @@
         .hero-top,
         .hero-content {
             position: relative;
-
             z-index: 1;
         }
 
         .hero-top {
             display: flex;
-
             justify-content: space-between;
-
             align-items: center;
 
             gap: 20px;
@@ -2063,15 +1961,12 @@
 
         .ticket-brand {
             display: flex;
-
             align-items: center;
-
             gap: 14px;
         }
 
         .ticket-brand-icon {
             display: grid;
-
             place-items: center;
 
             width: 50px;
@@ -2097,13 +1992,9 @@
         .section-kicker,
         .sidebar-label {
             font-size: 10px;
-
             font-weight: 800;
-
             letter-spacing: .18em;
-
             text-transform: uppercase;
-
             color: #9d8cae;
         }
 
@@ -2111,9 +2002,7 @@
             margin-top: 3px;
 
             font-size: 14px;
-
             font-weight: 800;
-
             letter-spacing: .05em;
 
             color: #f1eaff;
@@ -2121,20 +2010,15 @@
 
         .hero-statuses {
             display: flex;
-
             gap: 8px;
-
             flex-wrap: wrap;
-
             justify-content: flex-end;
         }
 
         .status-pill,
         .priority-pill {
             display: inline-flex;
-
             align-items: center;
-
             gap: 8px;
 
             padding: 8px 12px;
@@ -2142,7 +2026,6 @@
             border-radius: 999px;
 
             font-size: 11px;
-
             font-weight: 800;
 
             border:
@@ -2168,7 +2051,6 @@
 
         .status-closed .status-dot {
             background: #71717a;
-
             box-shadow: none;
         }
 
@@ -2185,13 +2067,10 @@
 
         .hero-content {
             display: flex;
-
             align-items: flex-end;
-
             justify-content: space-between;
 
             gap: 30px;
-
             margin-top: 45px;
         }
 
@@ -2199,9 +2078,7 @@
             color: #a855f7;
 
             font-size: 11px;
-
             font-weight: 900;
-
             letter-spacing: .22em;
         }
 
@@ -2214,9 +2091,7 @@
                 clamp(28px, 4vw, 48px);
 
             line-height: 1.08;
-
             letter-spacing: -.04em;
-
             font-weight: 900;
 
             color: #fff;
@@ -2226,29 +2101,22 @@
 
         .hero-description {
             margin: 0;
-
             color: #9c93a6;
-
             font-size: 14px;
         }
 
         .hero-meta {
             display: flex;
-
             gap: 10px;
-
             flex-shrink: 0;
         }
 
         .hero-meta-item {
             display: flex;
-
             align-items: center;
-
             gap: 10px;
 
             min-width: 130px;
-
             padding: 12px;
 
             border:
@@ -2263,7 +2131,6 @@
 
         .hero-meta-icon {
             display: grid;
-
             place-items: center;
 
             width: 36px;
@@ -2286,9 +2153,7 @@
             margin-bottom: 2px;
 
             font-size: 9px;
-
             text-transform: uppercase;
-
             letter-spacing: .12em;
 
             color: #77717e;
@@ -2296,7 +2161,6 @@
 
         .hero-meta-item strong {
             font-size: 12px;
-
             color: #eee8f4;
         }
 
@@ -2344,15 +2208,12 @@
 
         .conversation-card {
             overflow: hidden;
-
             border-radius: 24px;
         }
 
         .conversation-header {
             display: flex;
-
             align-items: center;
-
             justify-content: space-between;
 
             padding: 25px 28px;
@@ -2364,9 +2225,7 @@
 
         .section-kicker {
             display: flex;
-
             align-items: center;
-
             gap: 8px;
         }
 
@@ -2387,7 +2246,6 @@
             margin: 7px 0 0;
 
             font-size: 22px;
-
             font-weight: 850;
 
             color: #fff;
@@ -2408,13 +2266,12 @@
                 rgba(168,85,247,.12);
 
             font-size: 11px;
-
             font-weight: 800;
         }
 
 
         /* =========================================================
-           IMESSAGE STYLE
+           MESSAGES
         ========================================================== */
 
         .messages-container {
@@ -2425,7 +2282,6 @@
             position: relative;
 
             width: 100%;
-
             padding: 13px 0;
 
             scroll-margin-top: 120px;
@@ -2438,18 +2294,10 @@
 
         .message-row {
             display: flex;
-
             align-items: flex-end;
-
             gap: 9px;
-
             width: 100%;
         }
-
-
-        /* =========================================================
-           SUPPORT = LEFT
-        ========================================================== */
 
         .support-message .message-row {
             justify-content: flex-start;
@@ -2461,16 +2309,9 @@
 
         .support-message .message-main {
             order: 2;
-
             align-items: flex-start;
-
             margin-right: auto;
         }
-
-
-        /* =========================================================
-           CUSTOMER = RIGHT
-        ========================================================== */
 
         .customer-message .message-row {
             justify-content: flex-end;
@@ -2478,9 +2319,7 @@
 
         .customer-message .message-main {
             order: 1;
-
             align-items: flex-end;
-
             margin-left: auto;
         }
 
@@ -2490,14 +2329,13 @@
 
 
         /* =========================================================
-           AVATARS
+           AVATAR
         ========================================================== */
 
         .message-avatar {
             flex: 0 0 38px;
 
             display: grid;
-
             place-items: center;
 
             width: 38px;
@@ -2506,9 +2344,7 @@
             border-radius: 50%;
 
             color: #fff;
-
             font-size: 11px;
-
             font-weight: 900;
 
             background:
@@ -2566,29 +2402,20 @@
 
         .message-main {
             min-width: 0;
-
             width: auto;
 
             max-width:
                 min(76%, 720px);
 
             display: flex;
-
             flex-direction: column;
         }
 
-
-        /* =========================================================
-           AUTHOR
-        ========================================================== */
-
         .message-top {
             display: flex;
-
             align-items: center;
 
             margin-bottom: 5px;
-
             padding: 0 6px;
         }
 
@@ -2602,9 +2429,7 @@
 
         .message-author {
             display: flex;
-
             align-items: center;
-
             gap: 7px;
         }
 
@@ -2612,7 +2437,6 @@
             color: #d9d1df;
 
             font-size: 10px;
-
             font-weight: 800;
         }
 
@@ -2627,24 +2451,21 @@
                 rgba(168,85,247,.07);
 
             font-size: 7px;
-
             font-weight: 900;
 
             text-transform: uppercase;
-
             letter-spacing: .09em;
         }
 
 
         /* =========================================================
-           BUBBLE BASE
+           MESSAGE BUBBLE
         ========================================================== */
 
         .message-bubble {
             position: relative;
 
             width: fit-content;
-
             max-width: 100%;
 
             padding: 12px 16px;
@@ -2664,11 +2485,6 @@
             transform:
                 translateY(-1px);
         }
-
-
-        /* =========================================================
-           SUPPORT BUBBLE
-        ========================================================== */
 
         .support-message .message-bubble {
             border-radius:
@@ -2712,11 +2528,6 @@
                 );
         }
 
-
-        /* =========================================================
-           CUSTOMER BUBBLE
-        ========================================================== */
-
         .customer-message .message-bubble {
             border-radius:
                 20px 6px 20px 20px;
@@ -2759,22 +2570,15 @@
                 );
         }
 
-
-        /* =========================================================
-           MESSAGE TEXT
-        ========================================================== */
-
         .message-content {
             max-width: 100%;
 
             overflow-wrap: anywhere;
-
             word-break: break-word;
 
             white-space: normal;
 
             font-size: 14px;
-
             line-height: 1.65;
         }
 
@@ -2793,13 +2597,10 @@
 
         .message-footer {
             display: flex;
-
             align-items: center;
-
             gap: 8px;
 
             margin-top: 4px;
-
             padding: 0 6px;
         }
 
@@ -2813,15 +2614,12 @@
 
         .message-date {
             color: #fff;
-
             font-size: 10px;
         }
 
         .message-link {
             display: inline-flex;
-
             align-items: center;
-
             gap: 4px;
 
             padding: 0;
@@ -2829,11 +2627,9 @@
             border: 0;
 
             color: #fff;
-
             background: transparent;
 
             font-size: 10px;
-
             cursor: pointer;
 
             transition:
@@ -2846,7 +2642,7 @@
 
 
         /* =========================================================
-           HIGHLIGHTED MESSAGE
+           HIGHLIGHT
         ========================================================== */
 
         .ticket-message.message-highlight {
@@ -2909,7 +2705,6 @@
             position: absolute;
 
             top: -9px;
-
             left: 50%;
 
             transform:
@@ -2918,9 +2713,7 @@
             z-index: 20;
 
             display: flex;
-
             align-items: center;
-
             gap: 7px;
 
             padding:
@@ -2946,11 +2739,9 @@
                 rgba(88,28,135,.35);
 
             font-size: 8px;
-
             font-weight: 900;
 
             text-transform: uppercase;
-
             letter-spacing: .1em;
 
             white-space: nowrap;
@@ -2962,18 +2753,15 @@
 
         .new-reply-indicator button {
             display: grid;
-
             place-items: center;
 
             width: 18px;
             height: 18px;
 
             margin-left: 2px;
-
             padding: 0;
 
             border: 0;
-
             border-radius: 50%;
 
             color: #fff;
@@ -3016,7 +2804,7 @@
 
 
         /* =========================================================
-           ATTACHMENTS
+           EXISTING MESSAGE ATTACHMENTS
         ========================================================== */
 
         .attachments-grid {
@@ -3073,11 +2861,9 @@
 
         .attachment-hover {
             position: absolute;
-
             inset: 0;
 
             display: grid;
-
             place-items: center;
 
             color: #fff;
@@ -3103,13 +2889,11 @@
 
         .empty-conversation {
             padding: 80px 20px;
-
             text-align: center;
         }
 
         .empty-icon {
             display: grid;
-
             place-items: center;
 
             width: 70px;
@@ -3135,7 +2919,6 @@
             margin: 0 0 7px;
 
             font-size: 18px;
-
             color: #eee8f4;
         }
 
@@ -3143,7 +2926,6 @@
             margin: 0;
 
             color: #6f6875;
-
             font-size: 13px;
         }
 
@@ -3169,13 +2951,10 @@
 
         .reply-header {
             display: flex;
-
             align-items: center;
-
             justify-content: space-between;
 
             gap: 20px;
-
             margin-bottom: 16px;
         }
 
@@ -3185,19 +2964,15 @@
             color: #fff;
 
             font-size: 17px;
-
             font-weight: 850;
         }
 
         .reply-secure {
             display: flex;
-
             align-items: center;
-
             gap: 6px;
 
             color: #655e6b;
-
             font-size: 10px;
         }
 
@@ -3242,25 +3017,19 @@
             display: block;
 
             width: 100%;
-
             min-height: 170px;
 
             padding: 20px;
 
             resize: vertical;
-
             outline: none;
-
             border: 0;
 
             color: #eee8f4;
-
             background: transparent;
 
             font: inherit;
-
             font-size: 14px;
-
             line-height: 1.8;
         }
 
@@ -3268,11 +3037,14 @@
             color: #514b57;
         }
 
+
+        /* =========================================================
+           REPLY TOOLBAR
+        ========================================================== */
+
         .reply-toolbar {
             display: flex;
-
             align-items: center;
-
             justify-content: space-between;
 
             gap: 15px;
@@ -3286,16 +3058,25 @@
 
         .reply-tools {
             display: flex;
-
             align-items: center;
+
+            gap: 10px;
+
+            min-width: 0;
+            flex-wrap: wrap;
         }
+
+
+        /* =========================================================
+           ATTACHMENT BUTTON
+        ========================================================== */
 
         .attachment-input {
             display: inline-flex;
-
             align-items: center;
-
             gap: 8px;
+
+            flex: 0 0 auto;
 
             padding: 9px 11px;
 
@@ -3325,13 +3106,147 @@
             display: none;
         }
 
+
+        /* =========================================================
+           LIVE UPLOAD PREVIEW
+        ========================================================== */
+
+        .upload-preview {
+            display: flex;
+            align-items: center;
+
+            flex-wrap: wrap;
+
+            gap: 8px;
+
+            margin: 0;
+
+            min-width: 0;
+        }
+
+        .upload-item {
+            position: relative;
+
+            flex: 0 0 65px;
+
+            width: 65px;
+            height: 65px;
+
+            overflow: hidden;
+
+            border-radius: 10px;
+
+            border:
+                1px solid
+                rgba(168,85,247,.25);
+
+            background:
+                rgba(255,255,255,.04);
+
+            box-shadow:
+                0 5px 18px
+                rgba(0,0,0,.25);
+        }
+
+        .upload-preview-image {
+            display: block;
+
+            width: 100%;
+            height: 100%;
+
+            object-fit: cover;
+
+            object-position: center;
+
+            transition:
+                transform .2s ease;
+        }
+
+        .upload-item:hover
+        .upload-preview-image {
+            transform: scale(1.05);
+        }
+
+        .upload-item button {
+            position: absolute;
+
+            top: 4px;
+            right: 4px;
+
+            z-index: 2;
+
+            display: grid;
+            place-items: center;
+
+            width: 19px;
+            height: 19px;
+
+            padding: 0;
+
+            border:
+                1px solid
+                rgba(255,255,255,.15);
+
+            border-radius: 50%;
+
+            color: #fff;
+
+            background:
+                rgba(0,0,0,.72);
+
+            cursor: pointer;
+
+            transition:
+                background .15s ease,
+                transform .15s ease;
+        }
+
+        .upload-item button:hover {
+            background:
+                rgba(239,68,68,.85);
+
+            transform:
+                scale(1.08);
+        }
+
+        .upload-item button:active {
+            transform:
+                scale(.92);
+        }
+
+
+        /* =========================================================
+           UPLOAD LOADING
+        ========================================================== */
+
+        .upload-loading {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+
+            color: #8d8592;
+
+            font-size: 10px;
+            white-space: nowrap;
+        }
+
+        .upload-loading i {
+            color: #a855f7;
+        }
+
+
+        /* =========================================================
+           SEND BUTTON
+        ========================================================== */
+
         .send-button {
             min-width: 130px;
+
+            flex: 0 0 auto;
 
             padding: 11px 18px;
 
             border: 0;
-
             border-radius: 11px;
 
             color: #fff;
@@ -3348,7 +3263,6 @@
                 rgba(109,40,217,.22);
 
             font-size: 12px;
-
             font-weight: 850;
 
             cursor: pointer;
@@ -3369,21 +3283,21 @@
 
         .send-button:disabled {
             opacity: .55;
-
             cursor: not-allowed;
-
             transform: none;
         }
 
+
+        /* =========================================================
+           SUCCESS / ERRORS
+        ========================================================== */
+
         .success-message {
             display: flex;
-
             align-items: center;
-
             gap: 12px;
 
             margin-bottom: 14px;
-
             padding: 12px 14px;
 
             border:
@@ -3398,7 +3312,6 @@
 
         .success-icon {
             display: grid;
-
             place-items: center;
 
             width: 30px;
@@ -3407,7 +3320,6 @@
             border-radius: 9px;
 
             color: #fff;
-
             background: #7e22ce;
         }
 
@@ -3418,92 +3330,24 @@
 
         .success-message strong {
             color: #e9d5ff;
-
             font-size: 11px;
         }
 
         .success-message span {
             margin-top: 2px;
-
             color: #766d7d;
-
             font-size: 10px;
         }
 
         .field-error {
             display: flex;
-
             align-items: center;
-
             gap: 7px;
 
             margin-top: 8px;
 
             color: #e879f9;
-
             font-size: 11px;
-        }
-
-        .upload-preview {
-            display: flex;
-
-            flex-wrap: wrap;
-
-            gap: 8px;
-
-            margin-top: 10px;
-        }
-
-        .upload-item {
-            position: relative;
-
-            width: 65px;
-            height: 65px;
-
-            overflow: hidden;
-
-            border-radius: 10px;
-
-            border:
-                1px solid
-                rgba(168,85,247,.15);
-        }
-
-        .upload-preview-image,
-        .upload-preview-image img {
-            width: 100%;
-            height: 100%;
-        }
-
-        .upload-preview-image img {
-            object-fit: cover;
-        }
-
-        .upload-item button {
-            position: absolute;
-
-            top: 4px;
-            right: 4px;
-
-            display: grid;
-
-            place-items: center;
-
-            width: 19px;
-            height: 19px;
-
-            padding: 0;
-
-            border: 0;
-
-            border-radius: 50%;
-
-            color: #fff;
-
-            background:
-                rgba(0,0,0,.7);
-
-            cursor: pointer;
         }
 
 
@@ -3513,13 +3357,10 @@
 
         .closed-ticket {
             display: flex;
-
             align-items: center;
-
             gap: 13px;
 
             margin: 25px 28px;
-
             padding: 17px;
 
             border:
@@ -3534,7 +3375,6 @@
 
         .closed-icon {
             display: grid;
-
             place-items: center;
 
             width: 40px;
@@ -3555,15 +3395,12 @@
 
         .closed-ticket strong {
             color: #c5bdca;
-
             font-size: 12px;
         }
 
         .closed-ticket span {
             margin-top: 3px;
-
             color: #625b68;
-
             font-size: 10px;
         }
 
@@ -3574,27 +3411,21 @@
 
         .ticket-sidebar {
             display: flex;
-
             flex-direction: column;
-
             gap: 16px;
 
             position: sticky;
-
             top: 25px;
         }
 
         .sidebar-card {
             padding: 20px;
-
             border-radius: 19px;
         }
 
         .customer-profile {
             display: flex;
-
             align-items: center;
-
             gap: 12px;
 
             margin-top: 16px;
@@ -3602,7 +3433,6 @@
 
         .customer-avatar {
             display: grid;
-
             place-items: center;
 
             width: 44px;
@@ -3620,7 +3450,6 @@
                 );
 
             font-size: 13px;
-
             font-weight: 900;
 
             box-shadow:
@@ -3637,21 +3466,17 @@
             display: block;
 
             overflow: hidden;
-
             text-overflow: ellipsis;
         }
 
         .customer-info strong {
             color: #eee8f4;
-
             font-size: 12px;
         }
 
         .customer-info span {
             margin-top: 3px;
-
             color: #fff;
-
             font-size: 12px;
         }
 
@@ -3661,13 +3486,10 @@
 
         .detail-row {
             display: flex;
-
             align-items: center;
-
             justify-content: space-between;
 
             gap: 10px;
-
             padding: 12px 0;
 
             border-bottom:
@@ -3677,33 +3499,26 @@
 
         .detail-row:last-child {
             border-bottom: 0;
-
             padding-bottom: 0;
         }
 
         .detail-row span {
             display: flex;
-
             align-items: center;
-
             gap: 7px;
 
             color: #fff;
-
             font-size: 12px;
         }
 
         .detail-row span i {
             color: #8b5cf6;
-
             width: 12px;
         }
 
         .detail-row strong {
             color: #fff;
-
             font-size: 10px;
-
             text-align: right;
         }
 
@@ -3718,7 +3533,6 @@
 
         .sidebar-help {
             position: relative;
-
             overflow: hidden;
 
             padding: 23px;
@@ -3751,7 +3565,6 @@
             background: #a855f7;
 
             filter: blur(50px);
-
             opacity: .18;
         }
 
@@ -3759,7 +3572,6 @@
             position: relative;
 
             display: grid;
-
             place-items: center;
 
             width: 42px;
@@ -3783,7 +3595,6 @@
             margin: 15px 0 7px;
 
             color: #fff;
-
             font-size: 16px;
         }
 
@@ -3793,9 +3604,7 @@
             margin: 0;
 
             color: #fff;
-
             font-size: 12px;
-
             line-height: 1.7;
         }
 
@@ -3803,17 +3612,13 @@
             position: relative;
 
             display: flex;
-
             align-items: center;
-
             gap: 7px;
 
             margin-top: 16px;
 
             color: #fff;
-
             font-size: 12px;
-
             font-weight: 700;
         }
 
@@ -3837,13 +3642,11 @@
 
         .ticket-lightbox {
             position: fixed;
-
             inset: 0;
 
             z-index: 9999;
 
             display: grid;
-
             place-items: center;
 
             padding: 30px;
@@ -3851,13 +3654,11 @@
             background:
                 rgba(3,2,5,.94);
 
-            backdrop-filter:
-                blur(15px);
+            backdrop-filter: blur(15px);
         }
 
         .lightbox-content {
             max-width: 1100px;
-
             max-height: 90vh;
 
             text-align: center;
@@ -3867,7 +3668,6 @@
             display: block;
 
             max-width: 100%;
-
             max-height: 78vh;
 
             margin: 0 auto;
@@ -3883,7 +3683,6 @@
             margin-top: 12px;
 
             color: #aaa0b2;
-
             font-size: 11px;
         }
 
@@ -3894,7 +3693,6 @@
             right: 22px;
 
             display: grid;
-
             place-items: center;
 
             width: 42px;
@@ -3940,7 +3738,6 @@
             z-index: 500;
 
             display: grid;
-
             place-items: center;
 
             width: 44px;
@@ -3978,6 +3775,140 @@
 
 
         /* =========================================================
+           MESSAGE LINK TOOLTIP
+        ========================================================== */
+
+        .message-link-wrapper {
+            position: relative;
+
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .message-link {
+            position: relative;
+
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+
+            cursor: pointer;
+        }
+
+        .message-link-tooltip {
+            position: absolute;
+
+            z-index: 9999;
+
+            left: 50%;
+            bottom: calc(100% + 8px);
+
+            transform:
+                translateX(-50%);
+
+            width: max-content;
+            max-width: 240px;
+
+            padding:
+                .45rem .7rem;
+
+            border:
+                1px solid
+                rgba(255,255,255,.12);
+
+            border-radius: .5rem;
+
+            background: #171421;
+            color: #fff;
+
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 1.25;
+
+            white-space: nowrap;
+
+            box-shadow:
+                0 10px 25px
+                rgba(0,0,0,.25),
+
+                0 2px 8px
+                rgba(0,0,0,.15);
+
+            pointer-events: none;
+        }
+
+        .message-link-tooltip::after {
+            content: "";
+
+            position: absolute;
+
+            top: 100%;
+            left: 50%;
+
+            width: 8px;
+            height: 8px;
+
+            background: #171421;
+
+            border-right:
+                1px solid
+                rgba(255,255,255,.12);
+
+            border-bottom:
+                1px solid
+                rgba(255,255,255,.12);
+
+            transform:
+                translate(-50%, -4px)
+                rotate(45deg);
+        }
+
+        .tooltip-enter {
+            transition:
+                opacity 0.15s ease,
+                transform 0.15s ease;
+        }
+
+        .tooltip-enter-start {
+            opacity: 0;
+
+            transform:
+                translateX(-50%)
+                translateY(4px);
+        }
+
+        .tooltip-enter-end {
+            opacity: 1;
+
+            transform:
+                translateX(-50%)
+                translateY(0);
+        }
+
+        .tooltip-leave {
+            transition:
+                opacity 0.1s ease,
+                transform 0.1s ease;
+        }
+
+        .tooltip-leave-start {
+            opacity: 1;
+
+            transform:
+                translateX(-50%)
+                translateY(0);
+        }
+
+        .tooltip-leave-end {
+            opacity: 0;
+
+            transform:
+                translateX(-50%)
+                translateY(4px);
+        }
+
+
+        /* =========================================================
            RESPONSIVE
         ========================================================== */
 
@@ -3990,14 +3921,12 @@
 
             .hero-content {
                 align-items: flex-start;
-
                 flex-direction: column;
             }
 
             .hero-meta {
                 width: 100%;
             }
-
         }
 
 
@@ -4027,10 +3956,8 @@
 
             .ticket-hero {
                 padding: 22px;
-
                 border-radius: 20px;
             }
-
         }
 
 
@@ -4046,7 +3973,6 @@
 
             .hero-top {
                 align-items: flex-start;
-
                 flex-direction: column;
             }
 
@@ -4118,7 +4044,6 @@
 
             .message-content {
                 font-size: 13px;
-
                 line-height: 1.6;
             }
 
@@ -4146,8 +4071,15 @@
 
             .reply-toolbar {
                 align-items: stretch;
-
                 flex-direction: column;
+            }
+
+            .reply-tools {
+                align-items: flex-start;
+            }
+
+            .upload-preview {
+                width: 100%;
             }
 
             .send-button {
@@ -4169,15 +4101,6 @@
             .new-reply-indicator {
                 font-size: 7px;
             }
-
-            /*
-             * IMPORTANT:
-             * Do not override .ticket-toast positioning here.
-             *
-             * The mobile toast position is controlled by the
-             * dedicated @media (max-width: 767px) block above,
-             * which places it below the mobile navbar.
-             */
         }
 
 
@@ -4201,97 +4124,7 @@
                 transition-duration:
                     .01ms !important;
             }
-
         }
-        .message-link-wrapper {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-}
-
-.message-link {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    cursor: pointer;
-}
-
-.message-link-tooltip {
-    position: absolute;
-    z-index: 9999;
-    left: 50%;
-    bottom: calc(100% + 8px);
-    transform: translateX(-50%);
-
-    width: max-content;
-    max-width: 240px;
-    padding: 0.45rem 0.7rem;
-
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 0.5rem;
-
-    background: #171421;
-    color: #fff;
-
-    font-size: 12px;
-    font-weight: 500;
-    line-height: 1.25;
-    white-space: nowrap;
-
-    box-shadow:
-        0 10px 25px rgba(0, 0, 0, 0.25),
-        0 2px 8px rgba(0, 0, 0, 0.15);
-
-    pointer-events: none;
-}
-
-.message-link-tooltip::after {
-    content: "";
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    width: 8px;
-    height: 8px;
-
-    background: #171421;
-    border-right: 1px solid rgba(255, 255, 255, 0.12);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-
-    transform: translate(-50%, -4px) rotate(45deg);
-}
-
-.tooltip-enter {
-    transition:
-        opacity 0.15s ease,
-        transform 0.15s ease;
-}
-
-.tooltip-enter-start {
-    opacity: 0;
-    transform: translateX(-50%) translateY(4px);
-}
-
-.tooltip-enter-end {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-}
-
-.tooltip-leave {
-    transition:
-        opacity 0.1s ease,
-        transform 0.1s ease;
-}
-
-.tooltip-leave-start {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-}
-
-.tooltip-leave-end {
-    opacity: 0;
-    transform: translateX(-50%) translateY(4px);
-}
 
     </style>
 

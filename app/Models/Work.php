@@ -39,8 +39,7 @@ class Work extends Model
     {
         return collect($this->images ?? [])
             ->map(
-                fn (string $image) =>
-                    Storage::disk('public')->url($image)
+                fn (string $image) => Storage::disk('public')->url($image)
             )
             ->values()
             ->all();

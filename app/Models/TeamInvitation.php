@@ -22,7 +22,6 @@ use Illuminate\Support\Str;
  * @property Carbon|null $accepted_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- *
  * @property-read Team $team
  * @property-read User $inviter
  */

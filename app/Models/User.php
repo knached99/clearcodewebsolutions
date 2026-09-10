@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Concerns\HasTeams;
+use App\Enums\TeamRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -16,7 +17,7 @@ use Illuminate\Support\Str;
 use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
-use App\Enums\TeamRole;
+
 /**
  * @property int $id
  * @property string $name
@@ -70,8 +71,8 @@ class User extends Authenticatable implements PasskeyUser
             : $initials;
     }
 
-    public function canCreateTeam(): bool 
+    public function canCreateTeam(): bool
     {
-        return !$this->teamMemberships()->where('role', TeamRole::Member)->exists();
+        return ! $this->teamMemberships()->where('role', TeamRole::Member)->exists();
     }
 }

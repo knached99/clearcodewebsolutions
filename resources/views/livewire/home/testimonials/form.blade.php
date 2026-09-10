@@ -82,15 +82,7 @@
 
 
                 {{-- Honeypot --}}
-                <div class="cc-testimonial-honeypot" aria-hidden="true">
-                    <label for="testimonial-website">
-                        Website
-                    </label>
-
-                    <input id="testimonial-website" type="text" wire:model="website" tabindex="-1"
-                        autocomplete="off">
-                </div>
-
+                @honeypot
 
                 {{-- Name / Email --}}
                 <div class="cc-form-row">

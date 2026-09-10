@@ -82,11 +82,10 @@ class WorkService
         }
 
         return array_map(
-            fn (UploadedFile $image): string =>
-                $image->store(
-                    self::IMAGE_DIRECTORY,
-                    self::DISK
-                ),
+            fn (UploadedFile $image): string => $image->store(
+                self::IMAGE_DIRECTORY,
+                self::DISK
+            ),
             $images
         );
     }

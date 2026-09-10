@@ -4,9 +4,9 @@ namespace App\Livewire\Teams\Tickets;
 
 use App\Models\Ticket;
 use App\Models\TicketMessageAttachment;
+use App\Notifications\NewTicketReplyNotification;
 use App\Notifications\TicketPriorityChangedNotification;
 use App\Notifications\TicketStatusChangedNotification;
-use App\Services\TicketService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
@@ -45,102 +45,102 @@ class Show extends Component
     |--------------------------------------------------------------------------
     */
 
-   public function updateStatus(string $value): void
-{
-    $value = strtolower(trim($value));
+    public function updateStatus(string $value): void
+    {
+        $value = strtolower(trim($value));
 
-    validator(
-        ['status' => $value],
-        [
-            'status' => [
-                'required',
-                'in:open,pending,resolved,closed',
-            ],
-        ]
-    )->validate();
+        validator(
+            ['status' => $value],
+            [
+                'status' => [
+                    'required',
+                    'in:open,pending,resolved,closed',
+                ],
+            ]
+        )->validate();
 
-    if ($value === $this->ticket->status) {
-        $this->status = $value;
+        if ($value === $this->ticket->status) {
+            $this->status = $value;
 
-        return;
+            return;
+        }
+
+        $oldStatus = (string) $this->ticket->status;
+
+        $this->ticket->update([
+            'status' => $value,
+            'last_activity_at' => now(),
+        ]);
+
+        $this->ticket->refresh();
+
+        $this->status = (string) $this->ticket->status;
+        $this->priority = (string) $this->ticket->priority;
+
+        Notification::route(
+            'mail',
+            $this->ticket->email
+        )->notify(
+            new TicketStatusChangedNotification(
+                $this->ticket,
+                $oldStatus,
+                $this->ticket->status
+            )
+        );
+
+        $this->dispatch('ticket-status-updated');
     }
-
-    $oldStatus = (string) $this->ticket->status;
-
-    $this->ticket->update([
-        'status' => $value,
-        'last_activity_at' => now(),
-    ]);
-
-    $this->ticket->refresh();
-
-    $this->status = (string) $this->ticket->status;
-    $this->priority = (string) $this->ticket->priority;
-
-    Notification::route(
-        'mail',
-        $this->ticket->email
-    )->notify(
-        new TicketStatusChangedNotification(
-            $this->ticket,
-            $oldStatus,
-            $this->ticket->status
-        )
-    );
-
-    $this->dispatch('ticket-status-updated');
-}
     /*
     |--------------------------------------------------------------------------
     | Priority
     |--------------------------------------------------------------------------
     */
 
-   public function updatePriority(string $value): void
-{
-    $value = strtolower(trim($value));
+    public function updatePriority(string $value): void
+    {
+        $value = strtolower(trim($value));
 
-    validator(
-        ['priority' => $value],
-        [
-            'priority' => [
-                'required',
-                'in:low,normal,high,urgent',
-            ],
-        ]
-    )->validate();
+        validator(
+            ['priority' => $value],
+            [
+                'priority' => [
+                    'required',
+                    'in:low,normal,high,urgent',
+                ],
+            ]
+        )->validate();
 
-    if ($value === $this->ticket->priority) {
-        $this->priority = $value;
+        if ($value === $this->ticket->priority) {
+            $this->priority = $value;
 
-        return;
+            return;
+        }
+
+        $oldPriority = (string) $this->ticket->priority;
+
+        $this->ticket->update([
+            'priority' => $value,
+            'last_activity_at' => now(),
+        ]);
+
+        $this->ticket->refresh();
+
+        $this->priority = (string) $this->ticket->priority;
+        $this->status = (string) $this->ticket->status;
+
+        Notification::route(
+            'mail',
+            $this->ticket->email
+        )->notify(
+            new TicketPriorityChangedNotification(
+                $this->ticket,
+                $oldPriority,
+                $this->ticket->priority
+            )
+        );
+
+        $this->dispatch('ticket-priority-updated');
     }
-
-    $oldPriority = (string) $this->ticket->priority;
-
-    $this->ticket->update([
-        'priority' => $value,
-        'last_activity_at' => now(),
-    ]);
-
-    $this->ticket->refresh();
-
-    $this->priority = (string) $this->ticket->priority;
-    $this->status = (string) $this->ticket->status;
-
-    Notification::route(
-        'mail',
-        $this->ticket->email
-    )->notify(
-        new TicketPriorityChangedNotification(
-            $this->ticket,
-            $oldPriority,
-            $this->ticket->priority
-        )
-    );
-
-    $this->dispatch('ticket-priority-updated');
-}
 
     /*
     |--------------------------------------------------------------------------
@@ -171,7 +171,7 @@ class Show extends Component
 
             foreach ($this->attachments as $attachment) {
                 $path = $attachment->store(
-                    'tickets/' . $this->ticket->id,
+                    'tickets/'.$this->ticket->id,
                     'public'
                 );
 
@@ -191,7 +191,7 @@ class Show extends Component
                 'mail',
                 $this->ticket->email
             )->notify(
-                new \App\Notifications\NewTicketReplyNotification(
+                new NewTicketReplyNotification(
                     $this->ticket,
                     $message,
                     false
@@ -282,9 +282,8 @@ class Show extends Component
             200,
             [
                 'Content-Type' => $mime,
-                'Content-Disposition' =>
-                    'inline; filename="' .
-                    addslashes($attachment->original_name) .
+                'Content-Disposition' => 'inline; filename="'.
+                    addslashes($attachment->original_name).
                     '"',
                 'Cache-Control' => 'private, max-age=3600',
             ]

@@ -70,14 +70,7 @@
                 @endif
 
                 {{-- Honeypot --}}
-                <div class="cc-contact-honeypot" aria-hidden="true">
-                    <label for="contact-website">
-                        Website
-                    </label>
-
-                    <input id="contact-website" type="text" wire:model="website" tabindex="-1" autocomplete="off">
-                </div>
-
+                 @honeypot
 
                 <div class="cc-form-row">
 
@@ -308,16 +301,3 @@
         );
     </script>
 @endscript
-
-@push('styles')
-    <style>
-        .cc-contact-honeypot {
-            position: absolute !important;
-            width: 1px !important;
-            height: 1px !important;
-            overflow: hidden !important;
-            opacity: 0 !important;
-            pointer-events: none !important;
-        }
-    </style>
-@endpush

@@ -13,8 +13,7 @@ class TestimonialApprovedNotification extends Notification
 
     public function __construct(
         public Testimonials $testimonial
-    ) {
-    }
+    ) {}
 
     public function via(object $notifiable): array
     {
@@ -25,13 +24,13 @@ class TestimonialApprovedNotification extends Notification
     {
         return (new MailMessage)
             ->subject('Your testimonial has been approved')
-            ->greeting('Thank you, ' . $this->testimonial->name . '!')
+            ->greeting('Thank you, '.$this->testimonial->name.'!')
             ->line('Your testimonial has been approved and is now published on our website.')
             ->line('Here is the testimonial you submitted:')
-            ->line('“' . $this->testimonial->message . '”')
+            ->line('“'.$this->testimonial->message.'”')
             ->line(
-                'Rating: ' .
-                str_repeat('★', $this->testimonial->rating) .
+                'Rating: '.
+                str_repeat('★', $this->testimonial->rating).
                 str_repeat('☆', 5 - $this->testimonial->rating)
             )
             ->line('We appreciate you taking the time to share your experience with us.')

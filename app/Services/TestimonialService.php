@@ -8,7 +8,6 @@ use App\Notifications\NewTestimonialSubmittedNotification;
 use App\Notifications\TestimonialApprovedNotification;
 use App\Notifications\TestimonialSubmittedNotification;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 
 class TestimonialService
@@ -55,10 +54,8 @@ class TestimonialService
             ->where('email', '<>', '')
             ->get(['id', 'name', 'email']);
 
-
-
         foreach ($admins as $admin) {
-    
+
             Notification::route(
                 'mail',
                 $admin->email
@@ -69,7 +66,6 @@ class TestimonialService
             );
 
         }
-
 
         return $testimonial;
     }

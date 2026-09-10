@@ -8,11 +8,16 @@ use App\Services\TicketService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Component;
+use Spatie\Honeypot\Http\Livewire\Concerns\HoneypotData;
+use Spatie\Honeypot\Http\Livewire\Concerns\UsesSpamProtection;
 
 class Contact extends Component
 {
+    use UsesSpamProtection;
+
     public string $name = '';
 
     public string $email = '';
@@ -22,23 +27,16 @@ class Contact extends Component
     public string $message = '';
 
     /**
-     * Honeypot field.
+     * Spatie honeypot data.
      *
-     * Real visitors should never fill this out.
+     * This replaces the custom $website honeypot field.
      */
-    public string $website = '';
+    public HoneypotData $extraFields;
 
     /**
-     * Fresh reCAPTCHA v3 token generated immediately
-     * before submission.
+     * Fresh reCAPTCHA v3 token generated immediately before submission.
      */
     public string $recaptchaToken = '';
-
-    /**
-     * Timestamp used to prevent extremely fast automated
-     * submissions.
-     */
-    public int $formLoadedAt = 0;
 
     public bool $submitted = false;
 
@@ -46,21 +44,23 @@ class Contact extends Component
 
     public function mount(): void
     {
-        $this->formLoadedAt = now()->timestamp;
+        $this->extraFields = new HoneypotData();
     }
 
     protected function rules(): array
     {
         return [
             'name' => [
+                'bail',
                 'required',
                 'string',
                 'min:2',
                 'max:80',
-                'regex:/^[\pL\pM\s\'\-.]+$/u',
+                'regex:/\A[\pL\pM]+(?:[ .\'-][\pL\pM]+)*\z/u',
             ],
 
             'email' => [
+                'bail',
                 'required',
                 'string',
                 'lowercase',
@@ -69,31 +69,33 @@ class Contact extends Component
             ],
 
             'subject' => [
+                'bail',
                 'required',
                 'string',
-                'in:Website Design,Website Development,Mobile App Development,E-Commerce,Website Redesign,Maintenance & Support,Other',
+                Rule::in([
+                    'Website Design',
+                    'Website Development',
+                    'Mobile App Development',
+                    'E-Commerce',
+                    'Website Redesign',
+                    'Maintenance & Support',
+                    'Other',
+                ]),
             ],
 
             'message' => [
+                'bail',
                 'required',
                 'string',
                 'min:20',
                 'max:5000',
             ],
 
-            /*
-             * Honeypot must remain empty.
-             */
-            'website' => [
-                'prohibited',
-            ],
-
-            /*
-             * reCAPTCHA token must be present.
-             */
             'recaptchaToken' => [
+                'bail',
                 'required',
                 'string',
+                'max:4096',
             ],
         ];
     }
@@ -115,14 +117,16 @@ class Contact extends Component
     {
         return match ($property) {
             'name' => [
+                'bail',
                 'required',
                 'string',
                 'min:2',
                 'max:80',
-                'regex:/^[\pL\pM\s\'\-.]+$/u',
+                'regex:/\A[\pL\pM]+(?:[ .\'-][\pL\pM]+)*\z/u',
             ],
 
             'email' => [
+                'bail',
                 'required',
                 'string',
                 'lowercase',
@@ -131,31 +135,38 @@ class Contact extends Component
             ],
 
             'subject' => [
+                'bail',
                 'required',
                 'string',
-                'in:Website Design,Website Development,Mobile App Development,E-Commerce,Website Redesign,Maintenance & Support,Other',
+                Rule::in([
+                    'Website Design',
+                    'Website Development',
+                    'Mobile App Development',
+                    'E-Commerce',
+                    'Website Redesign',
+                    'Maintenance & Support',
+                    'Other',
+                ]),
             ],
 
             'message' => [
+                'bail',
                 'required',
                 'string',
                 'min:20',
                 'max:5000',
             ],
 
-            /*
-             * Do NOT validate the honeypot while the user is typing.
-             */
+            'recaptchaToken' => [],
+
             default => [],
         };
     }
 
     /**
-     * First step when the visitor clicks Submit.
+     * Called when the visitor clicks Submit.
      *
-     * We don't immediately process the form.
-     * Instead we ask the browser to generate a fresh
-     * reCAPTCHA v3 token.
+     * reCAPTCHA is generated immediately before the final submission.
      */
     public function prepareSubmit(): void
     {
@@ -164,359 +175,310 @@ class Contact extends Component
             'recaptchaToken',
         ]);
 
-        $this->dispatch(
-            'execute-contact-recaptcha'
-        );
+        $this->validate([
+            'name' => $this->rules()['name'],
+            'email' => $this->rules()['email'],
+            'subject' => $this->rules()['subject'],
+            'message' => $this->rules()['message'],
+        ]);
+
+        $this->dispatch('execute-contact-recaptcha');
     }
 
     /**
      * Final form submission.
-     *
-     * The browser passes the freshly generated
-     * reCAPTCHA token into this method.
      */
     public function submit(
         string $recaptchaToken,
-        TicketService $ticketService
+        TicketService $ticketService,
     ): void {
-        /*
-         * Store the fresh token.
-         */
-        $this->recaptchaToken = $recaptchaToken;
-
         $this->submitted = false;
 
         /*
-         * =========================================================
-         * HONEYPOT
-         * =========================================================
+         * The browser controls this value.
          *
-         * Normal visitors never interact with this field.
-         *
-         * If a bot fills it, silently stop processing.
+         * Store it only long enough to perform validation.
          */
-        if (filled($this->website)) {
-            $this->resetForm();
-
-            return;
-        }
+        $this->recaptchaToken = $recaptchaToken;
 
         /*
-         * =========================================================
-         * MINIMUM COMPLETION TIME
-         * =========================================================
+         * Spatie honeypot.
          *
-         * Prevent extremely fast automated submissions.
+         * If the honeypot or minimum-time protection detects spam,
+         * the package aborts the request.
          */
-        if (
-            $this->formLoadedAt &&
-            now()->timestamp - $this->formLoadedAt < 3
-        ) {
-            throw ValidationException::withMessages([
-                'message' =>
-                    'Please take a moment to review your message.',
-            ]);
-        }
+        $this->protectAgainstSpam();
 
         /*
-         * =========================================================
-         * RATE LIMITING
-         * =========================================================
+         * Rate-limit BEFORE calling Google or sending mail.
          *
-         * Maximum 3 accepted attempts per minute per IP.
+         * This protects your application and external services.
          */
-        $key = 'contact-form:' . request()->ip();
+        $key = $this->rateLimitKey();
 
         if (RateLimiter::tooManyAttempts($key, 3)) {
             $seconds = RateLimiter::availableIn($key);
 
             throw ValidationException::withMessages([
-                'email' =>
-                    "Too many attempts. Please try again in {$seconds} seconds.",
+                'email' => "Too many attempts. Please try again in {$seconds} seconds.",
             ]);
         }
 
         /*
-         * =========================================================
-         * VALIDATE FORM
-         * =========================================================
+         * Validate the complete form.
          */
-        $validated = $this->validate();
+        $this->validate();
 
         /*
-         * =========================================================
-         * VERIFY reCAPTCHA
-         * =========================================================
+         * Verify reCAPTCHA server-side.
          */
         $recaptcha = $this->verifyRecaptcha(
-            $recaptchaToken
+            token: $recaptchaToken,
+            expectedAction: 'contact_submit',
         );
 
-        if (!$recaptcha['success']) {
+        if (! $recaptcha['success']) {
             $this->addError(
                 'form',
-                $recaptcha['message']
+                $recaptcha['message'],
             );
 
             return;
         }
 
         /*
-         * =========================================================
-         * CONSUME RATE-LIMIT ATTEMPT
-         * =========================================================
-         *
-         * We only consume an attempt after the request passes
-         * the reCAPTCHA security check.
+         * Only consume the rate-limit attempt after the request
+         * has passed validation and reCAPTCHA.
          */
         RateLimiter::hit($key, 60);
 
         /*
-         * =========================================================
-         * REMOVE SECURITY-ONLY FIELDS
-         * =========================================================
+         * Explicitly construct the service input.
          *
-         * These fields should never be passed to TicketService.
+         * Never pass the complete Livewire state to the service.
          */
-        unset(
-            $validated['website'],
-            $validated['recaptchaToken']
-        );
+        $ticketData = [
+            'name' => $this->name,
+            'email' => $this->email,
+            'subject' => $this->subject,
+            'message' => $this->message,
+        ];
 
         /*
-         * =========================================================
-         * CREATE TICKET
-         * =========================================================
-         *
-         * createTicket() creates the TicketAccessToken
-         * and returns the raw access token.
+         * Create ticket.
          */
-        $result = $ticketService->createTicket(
-            $validated
-        );
+        $result = $ticketService->createTicket($ticketData);
 
         $ticket = $result['ticket'];
-
         $token = $result['token'];
 
         /*
-         * =========================================================
-         * CUSTOMER EMAIL
-         * =========================================================
+         * Customer notification.
          */
         Notification::route(
             'mail',
-            $ticket->email
+            $ticket->email,
         )->notify(
             new TicketReceivedNotification(
                 $ticket,
-                $token
-            )
+                $token,
+            ),
         );
 
         /*
-         * =========================================================
-         * ADMIN EMAIL
-         * =========================================================
+         * Admin notification.
          */
         Notification::route(
             'mail',
-            config('mail.admin_address')
+            config('mail.admin_address'),
         )->notify(
             new NewTicketNotification(
-                $ticket
-            )
+                $ticket,
+            ),
         );
 
         /*
-         * =========================================================
-         * SUCCESS
-         * =========================================================
+         * Success.
          */
         $this->ticketNumber = $ticket->ticket_number;
 
         $this->resetForm();
 
         $this->submitted = true;
-
-        /*
-         * Reset the timer for the next possible submission.
-         */
-        $this->formLoadedAt = now()->timestamp;
     }
 
     /**
-     * Verify the reCAPTCHA v3 token with Google.
+     * Build a bounded rate-limit key.
+     */
+    protected function rateLimitKey(): string
+    {
+        $ip = request()->ip() ?? 'unknown';
+
+        return 'contact-form:' . hash(
+            'sha256',
+            $ip,
+        );
+    }
+
+    /**
+     * Verify reCAPTCHA v3 with Google.
      */
     protected function verifyRecaptcha(
-        string $token
+        string $token,
+        string $expectedAction,
     ): array {
+        /*
+         * Reject obviously invalid input before making an
+         * external request.
+         */
+        if (
+            $token === ''
+            || strlen($token) > 4096
+        ) {
+            return [
+                'success' => false,
+                'message' => 'The security verification failed. Please try again.',
+            ];
+        }
+
         $secret = config(
-            'services.google_recaptcha.secret_key'
+            'services.google_recaptcha.secret_key',
         );
 
-        /*
-         * Make sure Laravel has the secret key.
-         */
         if (blank($secret)) {
             report(
                 new \RuntimeException(
-                    'Google reCAPTCHA secret key is not configured.'
-                )
+                    'Google reCAPTCHA secret key is not configured.',
+                ),
             );
 
             return [
                 'success' => false,
-
-                'message' =>
-                    'Security verification is currently unavailable. Please try again later.',
+                'message' => 'Security verification is currently unavailable. Please try again later.',
             ];
         }
 
         try {
             $response = Http::asForm()
-                ->timeout(10)
+                ->connectTimeout(3)
+                ->timeout(5)
                 ->post(
                     'https://www.google.com/recaptcha/api/siteverify',
                     [
                         'secret' => $secret,
-
                         'response' => $token,
-
-                        /*
-                         * Pass the visitor IP to Google.
-                         */
                         'remoteip' => request()->ip(),
-                    ]
+                    ],
                 );
         } catch (\Throwable $e) {
             report($e);
 
             return [
                 'success' => false,
-
-                'message' =>
-                    'We could not complete the security check. Please try again.',
+                'message' => 'We could not complete the security check. Please try again.',
             ];
         }
 
-        /*
-         * Google request failed.
-         */
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             report(
                 new \RuntimeException(
-                    'Google reCAPTCHA request failed: ' .
-                    $response->body()
-                )
+                    'Google reCAPTCHA verification request failed with HTTP status ' .
+                    $response->status(),
+                ),
             );
 
             return [
                 'success' => false,
-
-                'message' =>
-                    'We could not complete the security check. Please try again.',
+                'message' => 'We could not complete the security check. Please try again.',
             ];
         }
 
         $data = $response->json();
 
-        /*
-         * =========================================================
-         * TOKEN VALIDITY
-         * =========================================================
-         */
-        if (!data_get($data, 'success', false)) {
-            report(
-                new \RuntimeException(
-                    'reCAPTCHA verification failed: ' .
-                    json_encode(
-                        data_get(
-                            $data,
-                            'error-codes',
-                            []
-                        )
-                    )
-                )
-            );
-
+        if (! is_array($data)) {
             return [
                 'success' => false,
-
-                'message' =>
-                    'The security verification failed. Please try again.',
+                'message' => 'The security verification failed. Please try again.',
             ];
         }
 
         /*
-         * =========================================================
-         * ACTION CHECK
-         * =========================================================
-         *
-         * The frontend generates:
-         *
-         * contact_submit
-         *
-         * Make sure Google returns exactly the same action.
+         * Token validity.
          */
-        $action = data_get(
-            $data,
-            'action'
-        );
-
-        if ($action !== 'contact_submit') {
-            report(
-                new \RuntimeException(
-                    'Unexpected reCAPTCHA action: ' .
-                    (string) $action
-                )
-            );
-
+        if (($data['success'] ?? false) !== true) {
             return [
                 'success' => false,
-
-                'message' =>
-                    'The security verification failed. Please try again.',
+                'message' => 'The security verification failed. Please try again.',
             ];
         }
 
         /*
-         * =========================================================
-         * SCORE CHECK
-         * =========================================================
-         *
-         * reCAPTCHA v3 returns a score between 0.0 and 1.0.
-         *
-         * Start with 0.5. We can adjust it later based on
-         * actual traffic.
+         * Action must exactly match the action requested by
+         * the frontend.
          */
-        $score = (float) data_get(
-            $data,
-            'score',
-            0
-        );
+        if (($data['action'] ?? null) !== $expectedAction) {
+            report(
+                new \RuntimeException(
+                    'Unexpected reCAPTCHA action.',
+                ),
+            );
 
-        $minimumScore = 0.5;
-
-        if ($score < $minimumScore) {
             return [
                 'success' => false,
+                'message' => 'The security verification failed. Please try again.',
+            ];
+        }
 
-                'message' =>
-                    'We could not verify that this submission came from a real visitor. Please try again.',
+        /*
+         * Score must exist and be numeric.
+         */
+        $score = $data['score'] ?? null;
+
+        if (! is_numeric($score)) {
+            return [
+                'success' => false,
+                'message' => 'The security verification failed. Please try again.',
+            ];
+        }
+
+        $score = (float) $score;
+
+        if ($score < 0.5 || $score > 1.0) {
+            return [
+                'success' => false,
+                'message' => 'We could not verify that this request came from a real visitor. Please try again.',
+            ];
+        }
+
+        /*
+         * Optional hostname validation.
+         */
+        $expectedHostname = config(
+            'services.google_recaptcha.hostname',
+        );
+
+        if (
+            filled($expectedHostname)
+            && ($data['hostname'] ?? null) !== $expectedHostname
+        ) {
+            report(
+                new \RuntimeException(
+                    'Unexpected reCAPTCHA hostname.',
+                ),
+            );
+
+            return [
+                'success' => false,
+                'message' => 'The security verification failed. Please try again.',
             ];
         }
 
         return [
             'success' => true,
-
             'score' => $score,
         ];
     }
 
-    /**
-     * Reset the form to its initial state.
-     */
     protected function resetForm(): void
     {
         $this->reset([
@@ -524,17 +486,19 @@ class Contact extends Component
             'email',
             'subject',
             'message',
-            'website',
             'recaptchaToken',
         ]);
+
+        /*
+         * Generate a new Spatie honeypot payload for the next form.
+         */
+        $this->extraFields = new \Spatie\Honeypot\Http\Livewire\Concerns\HoneypotData();
 
         $this->ticketNumber = null;
     }
 
     public function render()
     {
-        return view(
-            'livewire.home.contact'
-        );
+        return view('livewire.home.contact');
     }
 }

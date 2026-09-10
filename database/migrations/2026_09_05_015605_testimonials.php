@@ -16,11 +16,11 @@ return new class extends Migration
             $table->string('company')->nullable();
             $table->string('role')->nullable();
             $table->string('status')
-            ->default('pending')
-            ->index();
+                ->default('pending')
+                ->index();
 
-        $table->timestamp('moderated_at')
-            ->nullable();
+            $table->timestamp('moderated_at')
+                ->nullable();
 
             $table->text('message');
 

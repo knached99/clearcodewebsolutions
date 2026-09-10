@@ -66,14 +66,14 @@ class NewTicketReplyNotification extends Notification
              * Deep-link directly to the message that generated
              * this notification.
              */
-            $url .= '?message=' . $this->ticketMessage->id;
+            $url .= '?message='.$this->ticketMessage->id;
         }
 
         $author = $this->ticketMessage->author_name;
 
         return (new MailMessage)
             ->subject(
-                'New Reply on Ticket: ' .
+                'New Reply on Ticket: '.
                 $this->ticket->ticket_number
             )
             ->greeting('Hello,')
@@ -81,11 +81,11 @@ class NewTicketReplyNotification extends Notification
                 "{$author} has replied to ticket {$this->ticket->ticket_number}:"
             )
             ->line(
-                '"' .
+                '"'.
                 Str::limit(
                     $this->ticketMessage->message,
                     100
-                ) .
+                ).
                 '"'
             )
             ->action(

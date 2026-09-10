@@ -1,22 +1,24 @@
 <?php
-namespace app\Livewire\Home\Projects; 
+
+namespace app\Livewire\Home\Projects;
 
 use App\Models\Work;
-use Livewire\Component; 
+use Livewire\Component;
 
-class Featured extends Component 
+class Featured extends Component
 {
     public $works;
+
     public bool $hasMore = false;
 
-    public function mount(): void 
+    public function mount(): void
     {
         $this->works = Work::query()
-        ->where('is_published', true)
-        ->orderBy('sort_order')
-        ->latest('id')
-        ->take(5)
-        ->get();
+            ->where('is_published', true)
+            ->orderBy('sort_order')
+            ->latest('id')
+            ->take(5)
+            ->get();
 
         $this->hasMore = $this->works->count() > 4;
 

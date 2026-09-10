@@ -5,21 +5,22 @@ namespace App\Livewire\Home\Tickets;
 use App\Services\TicketService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Validation\ValidationException;
 use Livewire\Component;
+use Spatie\Honeypot\Http\Livewire\Concerns\HoneypotData;
+use Spatie\Honeypot\Http\Livewire\Concerns\UsesSpamProtection;
 
 class TicketSearch extends Component
 {
+    use UsesSpamProtection;
+
     public string $email = '';
 
     public string $verificationCode = '';
 
     /**
-     * Honeypot.
-     *
-     * Real visitors should never fill this field.
+     * Spatie honeypot data.
      */
-    public string $website = '';
+    public HoneypotData $extraFields;
 
     /**
      * Fresh reCAPTCHA v3 token.
@@ -28,31 +29,96 @@ class TicketSearch extends Component
 
     public bool $emailVerificationSent = false;
 
+    /**
+     * UI state only.
+     *
+     * Never use this as the source of authorization.
+     */
     public array $verifiedTicketIds = [];
 
     public bool $showTicketSelection = false;
 
-    /**
-     * |-----------------------------------------------------------------------
-     * | Rate Limiting
-     * |-----------------------------------------------------------------------
-     */
+    public function mount(): void
+    {
+        $this->extraFields = new HoneypotData();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Validation
+    |--------------------------------------------------------------------------
+    */
+
+    protected function rules(): array
+    {
+        return [
+            'email' => $this->emailRules(),
+
+            'verificationCode' => $this->verificationRules(),
+
+            'recaptchaToken' => [
+                'bail',
+                'required',
+                'string',
+                'max:4096',
+            ],
+        ];
+    }
+
+    protected function emailRules(): array
+    {
+        return [
+            'bail',
+            'required',
+            'string',
+            'lowercase',
+            'max:254',
+            'email:rfc,dns,spoof',
+        ];
+    }
+
+    protected function verificationRules(): array
+    {
+        return [
+            'bail',
+            'required',
+            'string',
+            'size:6',
+            'regex:/\A[0-9]{6}\z/D',
+        ];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Rate limiting
+    |--------------------------------------------------------------------------
+    */
 
     protected function rateLimitKey(
         string $action,
-        ?string $value = null
+        ?string $value = null,
     ): string {
         $ip = request()->ip() ?? 'unknown';
 
-        $value = $value
+        $normalizedValue = $value !== null
             ? strtolower(trim($value))
             : '';
+
+        $ipHash = hash(
+            'sha256',
+            $ip,
+        );
+
+        $valueHash = hash(
+            'sha256',
+            $normalizedValue,
+        );
 
         return sprintf(
             'ticket-search:%s:%s:%s',
             $action,
-            $ip,
-            $value
+            $ipHash,
+            $valueHash,
         );
     }
 
@@ -63,122 +129,109 @@ class TicketSearch extends Component
         ?string $value = null,
     ): void {
         $key = $this->rateLimitKey(
-            $action,
-            $value
+            action: $action,
+            value: $value,
         );
 
         if (RateLimiter::tooManyAttempts(
             $key,
-            $maxAttempts
+            $maxAttempts,
         )) {
             $seconds = RateLimiter::availableIn($key);
 
             $minutes = max(
                 1,
-                (int) ceil($seconds / 60)
+                (int) ceil($seconds / 60),
             );
 
             abort(
                 429,
-                "Too many attempts. Please try again in {$minutes} minute(s)."
+                "Too many attempts. Please try again in {$minutes} minute(s).",
             );
         }
 
         RateLimiter::hit(
             $key,
-            $decaySeconds
+            $decaySeconds,
         );
     }
 
-    /**
-     * |-----------------------------------------------------------------------
-     * | Prepare reCAPTCHA for sending the verification email
-     * |-----------------------------------------------------------------------
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | Send verification code
+    |--------------------------------------------------------------------------
+    */
 
     public function prepareSendVerificationCode(): void
     {
         $this->resetValidation([
             'form',
+            'email',
             'recaptchaToken',
         ]);
 
-        /*
-         * Validate the email before asking Google to generate
-         * a token. This avoids unnecessary reCAPTCHA calls.
-         */
         $this->validate([
-            'email' => [
-                'required',
-                'email',
-                'max:255',
-            ],
+            'email' => $this->emailRules(),
         ]);
 
         /*
-         * Honeypot.
+         * Spatie honeypot check.
+         *
+         * This must happen before requesting the reCAPTCHA token.
          */
-        if (filled($this->website)) {
-            return;
-        }
+        $this->protectAgainstSpam();
 
-        /*
-         * Ask browser to execute reCAPTCHA.
-         */
         $this->dispatch(
-            'execute-ticket-send-recaptcha'
+            'execute-ticket-send-recaptcha',
         );
     }
 
-    /**
-     * |-----------------------------------------------------------------------
-     * | Send Email Verification Code
-     * |-----------------------------------------------------------------------
-     */
-
     public function sendVerificationCode(
         string $recaptchaToken,
-        TicketService $ticketService
+        TicketService $ticketService,
     ): void {
         $this->recaptchaToken = $recaptchaToken;
 
         /*
-         * Honeypot.
-         *
-         * Silently stop if a bot filled the hidden field.
+         * Honeypot + minimum-time protection.
          */
-        if (filled($this->website)) {
-            $this->resetFormState();
-
-            return;
-        }
+        $this->protectAgainstSpam();
 
         /*
-         * Validate email.
+         * Validate before doing anything expensive.
          */
         $this->validate([
-            'email' => [
-                'required',
-                'email',
-                'max:255',
-            ],
+            'email' => $this->emailRules(),
 
             'recaptchaToken' => [
+                'bail',
                 'required',
                 'string',
+                'max:4096',
             ],
         ]);
 
         /*
-         * Rate limit:
+         * Rate-limit by IP + email.
          *
-         * 3 requests per email/IP every 15 minutes.
+         * This prevents repeatedly targeting one email address.
          */
         $this->ensureRateLimit(
             action: 'send-verification',
             maxAttempts: 3,
             decaySeconds: 900,
             value: $this->email,
+        );
+
+        /*
+         * Independent IP-only limit.
+         *
+         * This prevents bypassing the first limit by rotating emails.
+         */
+        $this->ensureRateLimit(
+            action: 'send-verification-ip',
+            maxAttempts: 10,
+            decaySeconds: 900,
         );
 
         /*
@@ -189,27 +242,28 @@ class TicketSearch extends Component
             expectedAction: 'ticket_verification_send',
         );
 
-        if (!$recaptcha['success']) {
+        if (! $recaptcha['success']) {
             $this->addError(
                 'form',
-                $recaptcha['message']
+                $recaptcha['message'],
             );
 
             return;
         }
 
         /*
-         * Ask TicketService to send the email code.
+         * TicketService should deliberately return a generic
+         * result so this endpoint cannot enumerate accounts/tickets.
          */
         $sent = $ticketService->sendGuestTicketVerificationCode(
             email: $this->email,
             ipAddress: request()->ip(),
         );
 
-        if (!$sent) {
+        if (! $sent) {
             $this->addError(
-                'email',
-                'Please wait a moment before requesting another verification code.'
+                'form',
+                'Please wait a moment before requesting another verification code.',
             );
 
             return;
@@ -217,18 +271,21 @@ class TicketSearch extends Component
 
         $this->emailVerificationSent = true;
 
-        $this->resetErrorBag('email');
-
         $this->verificationCode = '';
 
         $this->recaptchaToken = '';
+
+        $this->resetErrorBag([
+            'email',
+            'recaptchaToken',
+        ]);
     }
 
-    /**
-     * |-----------------------------------------------------------------------
-     * | Prepare reCAPTCHA for email verification
-     * |-----------------------------------------------------------------------
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | Verify email
+    |--------------------------------------------------------------------------
+    */
 
     public function prepareVerifyEmail(): void
     {
@@ -237,90 +294,66 @@ class TicketSearch extends Component
             'recaptchaToken',
         ]);
 
-        /*
-         * Validate fields before generating the token.
-         */
         $this->validate([
-            'email' => [
-                'required',
-                'email',
-                'max:255',
-            ],
+            'email' => $this->emailRules(),
 
-            'verificationCode' => [
-                'required',
-                'digits:6',
-            ],
+            'verificationCode' => $this->verificationRules(),
         ]);
 
         /*
-         * Honeypot.
+         * Spatie honeypot + minimum-time protection.
          */
-        if (filled($this->website)) {
-            return;
-        }
+        $this->protectAgainstSpam();
 
-        /*
-         * Ask browser to execute reCAPTCHA.
-         */
         $this->dispatch(
-            'execute-ticket-verify-recaptcha'
+            'execute-ticket-verify-recaptcha',
         );
     }
 
-    /**
-     * |-----------------------------------------------------------------------
-     * | Verify Email Code
-     * |-----------------------------------------------------------------------
-     */
-
     public function verifyEmail(
         string $recaptchaToken,
-        TicketService $ticketService
+        TicketService $ticketService,
     ): void {
         $this->recaptchaToken = $recaptchaToken;
 
         /*
-         * Honeypot.
+         * Honeypot protection.
          */
-        if (filled($this->website)) {
-            $this->resetFormState();
-
-            return;
-        }
+        $this->protectAgainstSpam();
 
         /*
-         * Validate.
+         * Validate all security-sensitive inputs.
          */
         $this->validate([
-            'email' => [
-                'required',
-                'email',
-                'max:255',
-            ],
+            'email' => $this->emailRules(),
 
-            'verificationCode' => [
-                'required',
-                'digits:6',
-            ],
+            'verificationCode' => $this->verificationRules(),
 
             'recaptchaToken' => [
+                'bail',
                 'required',
                 'string',
+                'max:4096',
             ],
         ]);
 
         /*
-         * Rate limit:
-         *
-         * 5 verification attempts per email/IP
-         * every 15 minutes.
+         * Aggressive per-email verification limit.
          */
         $this->ensureRateLimit(
             action: 'verify-email',
             maxAttempts: 5,
             decaySeconds: 900,
             value: $this->email,
+        );
+
+        /*
+         * Independent IP limit.
+         */
+        $this->ensureRateLimit(
+            action: 'verify-email-ip',
+            maxAttempts: 15,
+            decaySeconds: 900,
         );
 
         /*
@@ -331,17 +364,26 @@ class TicketSearch extends Component
             expectedAction: 'ticket_verification_verify',
         );
 
-        if (!$recaptcha['success']) {
+        if (! $recaptcha['success']) {
             $this->addError(
                 'form',
-                $recaptcha['message']
+                $recaptcha['message'],
             );
 
             return;
         }
 
         /*
-         * Verify the actual email verification code.
+         * TicketService MUST perform the actual authentication.
+         *
+         * It should:
+         *
+         * - securely compare the verification code
+         * - enforce expiration
+         * - enforce its own attempt limit
+         * - invalidate the code after successful use
+         * - ensure tickets belong to the verified email
+         * - establish whatever server-side verification state is required
          */
         $tickets = $ticketService->verifyGuestTicketVerificationCode(
             email: $this->email,
@@ -349,142 +391,137 @@ class TicketSearch extends Component
             ipAddress: request()->ip(),
         );
 
-        if (!$tickets) {
+        if (! $tickets) {
             $this->addError(
                 'verificationCode',
-                'That verification code is invalid or has expired.'
+                'That verification code is invalid or has expired.',
             );
 
             return;
         }
 
-        /*
-         * We no longer need the reCAPTCHA token.
-         */
         $this->recaptchaToken = '';
 
+        /*
+         * These IDs are UI state only.
+         *
+         * They are NOT authorization.
+         */
         $this->verifiedTicketIds = collect($tickets)
             ->pluck('id')
             ->map(
-                fn ($id) => (int) $id
+                fn ($id) => (int) $id,
             )
             ->values()
             ->all();
 
         /*
-         * -------------------------------------------------------------
-         * One ticket
-         * -------------------------------------------------------------
-         *
-         * Email verification has authenticated ownership of
-         * the email address.
-         *
-         * Generate a fresh real guest token.
+         * If exactly one ticket exists, redirect immediately.
          */
-        if (count($this->verifiedTicketIds) === 1) {
+        if (count($tickets) === 1) {
             $ticket = $tickets[0];
 
+            /*
+             * The service generates/rotates the secret token server-side.
+             */
             $token = $ticketService->rotateGuestTicketToken(
                 ticket: $ticket,
             );
 
-            /*
-             * Establish guest session.
-             */
             $ticketService->grantGuestTicketAccess(
                 ticket: $ticket,
                 minutes: 60,
             );
 
-            /*
-             * Redirect using the REAL 64-character token.
-             */
             $this->redirectRoute(
                 'tickets.show',
                 [
                     'ticketNumber' => $ticket->ticket_number,
                     'token' => $token,
-                ]
+                ],
             );
 
             return;
         }
 
         /*
-         * -------------------------------------------------------------
-         * Multiple tickets
-         * -------------------------------------------------------------
+         * Multiple tickets.
          */
         $this->showTicketSelection = true;
 
         $this->resetErrorBag();
     }
 
-    /**
-     * |-----------------------------------------------------------------------
-     * | Select Ticket After Email Verification
-     * |-----------------------------------------------------------------------
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | Select ticket
+    |--------------------------------------------------------------------------
+    */
 
     public function selectTicket(
         int $ticketId,
-        TicketService $ticketService
+        TicketService $ticketService,
     ): void {
         /*
-         * This is only reachable after successful email verification.
+         * The Livewire property is client-controlled.
+         *
+         * It is okay to use this check as a UI sanity check,
+         * but it is NOT an authorization boundary.
          */
-        if (!in_array(
+        if (! in_array(
             $ticketId,
             $this->verifiedTicketIds,
-            true
+            true,
         )) {
             abort(403);
         }
 
+        /*
+         * The service MUST independently establish that:
+         *
+         * - this ticket belongs to the verified email
+         * - the email verification is still valid
+         * - the ticket is accessible
+         * - the ticket has not been revoked
+         */
         $ticket = $ticketService->findVerifiedEmailTicket(
             email: $this->email,
             ticketId: $ticketId,
         );
 
-        if (!$ticket) {
+        if (! $ticket) {
             abort(404);
         }
 
         /*
-         * Generate a fresh real guest token.
-         *
-         * This token is the credential whose hash is stored
-         * in tickets.guest_token_hash.
+         * Generate a fresh access token.
          */
         $token = $ticketService->rotateGuestTicketToken(
             ticket: $ticket,
         );
 
         /*
-         * Establish guest session access.
+         * Grant short-lived access.
          */
         $ticketService->grantGuestTicketAccess(
             ticket: $ticket,
             minutes: 60,
         );
 
-        /*
-         * Redirect using the real token.
-         */
         $this->redirectRoute(
             'tickets.show',
             [
                 'ticketNumber' => $ticket->ticket_number,
                 'token' => $token,
-            ]
+            ],
         );
     }
 
-    /**
-     * |-----------------------------------------------------------------------
-     * | Change Email
-     * |-----------------------------------------------------------------------
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | Change email
+    |--------------------------------------------------------------------------
+    */
 
     public function changeEmail(): void
     {
@@ -498,150 +535,174 @@ class TicketSearch extends Component
 
         $this->verifiedTicketIds = [];
 
-        $this->website = '';
-
         $this->resetErrorBag();
+
+        /*
+         * Generate a fresh honeypot payload.
+         */
+        $this->extraFields = new HoneypotData();
     }
 
-    /**
-     * |-----------------------------------------------------------------------
-     * | Verify reCAPTCHA v3 Token
-     * |-----------------------------------------------------------------------
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | reCAPTCHA
+    |--------------------------------------------------------------------------
+    */
 
     protected function verifyRecaptcha(
         string $token,
-        string $expectedAction
+        string $expectedAction,
     ): array {
+        /*
+         * Reject obviously invalid/oversized input before making
+         * an external request.
+         */
+        if (
+            $token === ''
+            || strlen($token) > 4096
+        ) {
+            return [
+                'success' => false,
+                'message' => 'The security verification failed. Please try again.',
+            ];
+        }
+
         $secret = config(
-            'services.google_recaptcha.secret_key'
+            'services.google_recaptcha.secret_key',
         );
 
         if (blank($secret)) {
             report(
                 new \RuntimeException(
-                    'Google reCAPTCHA secret key is not configured.'
-                )
+                    'Google reCAPTCHA secret key is not configured.',
+                ),
             );
 
             return [
                 'success' => false,
-                'message' =>
-                    'Security verification is currently unavailable. Please try again later.',
+                'message' => 'Security verification is currently unavailable. Please try again later.',
             ];
         }
 
         try {
             $response = Http::asForm()
-                ->timeout(10)
+                ->connectTimeout(3)
+                ->timeout(5)
                 ->post(
                     'https://www.google.com/recaptcha/api/siteverify',
                     [
                         'secret' => $secret,
-
                         'response' => $token,
-
                         'remoteip' => request()->ip(),
-                    ]
+                    ],
                 );
         } catch (\Throwable $e) {
             report($e);
 
             return [
                 'success' => false,
-                'message' =>
-                    'We could not complete the security check. Please try again.',
+                'message' => 'We could not complete the security check. Please try again.',
             ];
         }
 
-        if (!$response->successful()) {
+        /*
+         * Google request failed.
+         *
+         * Do not log the response body.
+         */
+        if (! $response->successful()) {
             report(
                 new \RuntimeException(
-                    'Google reCAPTCHA request failed: ' .
-                    $response->body()
-                )
+                    'Google reCAPTCHA verification request failed with HTTP status ' .
+                    $response->status(),
+                ),
             );
 
             return [
                 'success' => false,
-                'message' =>
-                    'We could not complete the security check. Please try again.',
+                'message' => 'We could not complete the security check. Please try again.',
             ];
         }
 
         $data = $response->json();
 
+        if (! is_array($data)) {
+            return [
+                'success' => false,
+                'message' => 'The security verification failed. Please try again.',
+            ];
+        }
+
         /*
          * Token validity.
          */
-        if (!data_get($data, 'success', false)) {
-            report(
-                new \RuntimeException(
-                    'reCAPTCHA verification failed: ' .
-                    json_encode(
-                        data_get(
-                            $data,
-                            'error-codes',
-                            []
-                        )
-                    )
-                )
-            );
-
+        if (($data['success'] ?? false) !== true) {
             return [
                 'success' => false,
-                'message' =>
-                    'The security verification failed. Please try again.',
+                'message' => 'The security verification failed. Please try again.',
             ];
         }
 
         /*
-         * Make sure the token was generated specifically
-         * for the operation we're currently performing.
+         * Action validation.
          */
-        $action = data_get(
-            $data,
-            'action'
-        );
-
-        if ($action !== $expectedAction) {
+        if (($data['action'] ?? null) !== $expectedAction) {
             report(
                 new \RuntimeException(
-                    'Unexpected reCAPTCHA action: ' .
-                    (string) $action .
-                    '. Expected: ' .
-                    $expectedAction
-                )
+                    'Unexpected reCAPTCHA action.',
+                ),
             );
 
             return [
                 'success' => false,
-                'message' =>
-                    'The security verification failed. Please try again.',
+                'message' => 'The security verification failed. Please try again.',
             ];
         }
 
         /*
-         * Score.
-         *
-         * v3 scores range from 0.0 to 1.0.
+         * Score must exist and be numeric.
          */
-        $score = (float) data_get(
-            $data,
-            'score',
-            0
-        );
+        $score = $data['score'] ?? null;
 
-        /*
-         * Starting threshold.
-         */
-        $minimumScore = 0.5;
-
-        if ($score < $minimumScore) {
+        if (! is_numeric($score)) {
             return [
                 'success' => false,
-                'message' =>
-                    'We could not verify that this request came from a real visitor. Please try again.',
+                'message' => 'The security verification failed. Please try again.',
+            ];
+        }
+
+        $score = (float) $score;
+
+        /*
+         * Valid Google v3 score is 0.0 - 1.0.
+         */
+        if ($score < 0.5 || $score > 1.0) {
+            return [
+                'success' => false,
+                'message' => 'We could not verify that this request came from a real visitor. Please try again.',
+            ];
+        }
+
+        /*
+         * Optional hostname validation.
+         */
+        $expectedHostname = config(
+            'services.google_recaptcha.hostname',
+        );
+
+        if (
+            filled($expectedHostname)
+            && ($data['hostname'] ?? null) !== $expectedHostname
+        ) {
+            report(
+                new \RuntimeException(
+                    'Unexpected reCAPTCHA hostname.',
+                ),
+            );
+
+            return [
+                'success' => false,
+                'message' => 'The security verification failed. Please try again.',
             ];
         }
 
@@ -651,19 +712,17 @@ class TicketSearch extends Component
         ];
     }
 
-    /**
-     * |-----------------------------------------------------------------------
-     * | Reset Form State
-     * |-----------------------------------------------------------------------
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | Reset
+    |--------------------------------------------------------------------------
+    */
 
     protected function resetFormState(): void
     {
         $this->email = '';
 
         $this->verificationCode = '';
-
-        $this->website = '';
 
         $this->recaptchaToken = '';
 
@@ -672,20 +731,18 @@ class TicketSearch extends Component
         $this->verifiedTicketIds = [];
 
         $this->showTicketSelection = false;
-    }
 
-    /**
-     * |-----------------------------------------------------------------------
-     * | Render
-     * |-----------------------------------------------------------------------
-     */
+        $this->extraFields = new HoneypotData();
+
+        $this->resetValidation();
+    }
 
     public function render()
     {
         return view(
-            'livewire.home.tickets.ticket-search'
+            'livewire.home.tickets.ticket-search',
         )->layout(
-            'layouts.home_layout'
+            'layouts.home_layout',
         );
     }
 }

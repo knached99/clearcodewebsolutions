@@ -144,97 +144,97 @@ class Index extends Component
     }
 
     public function save(WorkService $service): void
-{
-    $validated = $this->validate();
+    {
+        $validated = $this->validate();
 
-    /*
-     * This is the Work ID selected by the placement dropdown.
-     *
-     * null = beginning
-     * 2    = immediately after Work ID 2
-     * 17   = immediately after Work ID 17
-     */
-    $sortAfterId = $this->sortAfterId;
-
-    /*
-     * A project cannot be placed after itself.
-     */
-    if (
-        $this->editingId !== null &&
-        $sortAfterId !== null &&
-        (int) $sortAfterId === (int) $this->editingId
-    ) {
-        $sortAfterId = null;
-    }
-
-    DB::transaction(function () use (
-        $service,
-        $validated,
-        $sortAfterId
-    ) {
         /*
-         * Temporarily put the project at the end.
+         * This is the Work ID selected by the placement dropdown.
          *
-         * reorderProjects() immediately calculates the real
-         * final position afterwards.
+         * null = beginning
+         * 2    = immediately after Work ID 2
+         * 17   = immediately after Work ID 17
          */
-        $validated['sort_order'] =
-            ((int) Work::query()->max('sort_order')) + 1;
+        $sortAfterId = $this->sortAfterId;
 
-        if ($this->editingId !== null) {
-            $work = Work::query()
-                ->lockForUpdate()
-                ->findOrFail($this->editingId);
-
-            $service->update(
-                $work,
-                $validated,
-                $this->images,
-                $this->removeImages
-            );
-
-            /*
-             * IMPORTANT:
-             *
-             * Use the Work ID from sortAfterId, not sort_order.
-             */
-            $this->reorderProjects(
-                $work->fresh(),
-                $sortAfterId
-            );
-
-            session()->flash(
-                'project_success',
-                'Project updated successfully.'
-            );
-        } else {
-            $work = $service->create(
-                $validated,
-                $this->images
-            );
-
-            /*
-             * For a new project, sortAfterId is also a Work ID.
-             */
-            $this->reorderProjects(
-                $work->fresh(),
-                $sortAfterId
-            );
-
-            session()->flash(
-                'project_success',
-                'Project created successfully.'
-            );
+        /*
+         * A project cannot be placed after itself.
+         */
+        if (
+            $this->editingId !== null &&
+            $sortAfterId !== null &&
+            (int) $sortAfterId === (int) $this->editingId
+        ) {
+            $sortAfterId = null;
         }
-    });
 
-    $this->resetForm();
+        DB::transaction(function () use (
+            $service,
+            $validated,
+            $sortAfterId
+        ) {
+            /*
+             * Temporarily put the project at the end.
+             *
+             * reorderProjects() immediately calculates the real
+             * final position afterwards.
+             */
+            $validated['sort_order'] =
+                ((int) Work::query()->max('sort_order')) + 1;
 
-    $this->dispatch(
-        'notify',
-        message: session('project_success')
-    );
-}
+            if ($this->editingId !== null) {
+                $work = Work::query()
+                    ->lockForUpdate()
+                    ->findOrFail($this->editingId);
+
+                $service->update(
+                    $work,
+                    $validated,
+                    $this->images,
+                    $this->removeImages
+                );
+
+                /*
+                 * IMPORTANT:
+                 *
+                 * Use the Work ID from sortAfterId, not sort_order.
+                 */
+                $this->reorderProjects(
+                    $work->fresh(),
+                    $sortAfterId
+                );
+
+                session()->flash(
+                    'project_success',
+                    'Project updated successfully.'
+                );
+            } else {
+                $work = $service->create(
+                    $validated,
+                    $this->images
+                );
+
+                /*
+                 * For a new project, sortAfterId is also a Work ID.
+                 */
+                $this->reorderProjects(
+                    $work->fresh(),
+                    $sortAfterId
+                );
+
+                session()->flash(
+                    'project_success',
+                    'Project created successfully.'
+                );
+            }
+        });
+
+        $this->resetForm();
+
+        $this->dispatch(
+            'notify',
+            message: session('project_success')
+        );
+    }
 
     /**
      * Rebuild the complete project order.
@@ -243,79 +243,79 @@ class Index extends Component
      * $afterId. If $afterId is null, it becomes the first project.
      */
     protected function reorderProjects(
-    Work $project,
-    ?int $afterId
-): void {
-    $projects = Work::query()
-        ->orderBy('sort_order')
-        ->orderBy('id')
-        ->get();
-
-    /*
-     * Remove the project we are moving from its current position.
-     */
-    $orderedProjects = $projects
-        ->reject(fn (Work $work) => $work->id === $project->id)
-        ->values();
-
-    /*
-     * No afterId means:
-     *
-     *     project goes to the beginning.
-     */
-    if ($afterId === null) {
-        $orderedProjects->prepend($project);
-    } else {
-        /*
-         * Find the index of the project we want to place
-         * the current project AFTER.
-         */
-        $afterIndex = $orderedProjects->search(
-            fn (Work $work) => (int) $work->id === (int) $afterId
-        );
+        Work $project,
+        ?int $afterId
+    ): void {
+        $projects = Work::query()
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
 
         /*
-         * If the requested Work ID doesn't exist in the current
-         * ordering, fall back to the beginning.
+         * Remove the project we are moving from its current position.
          */
-        if ($afterIndex === false) {
+        $orderedProjects = $projects
+            ->reject(fn (Work $work) => $work->id === $project->id)
+            ->values();
+
+        /*
+         * No afterId means:
+         *
+         *     project goes to the beginning.
+         */
+        if ($afterId === null) {
             $orderedProjects->prepend($project);
         } else {
             /*
-             * Convert to a normal PHP array and explicitly insert
-             * the project after the target.
+             * Find the index of the project we want to place
+             * the current project AFTER.
              */
-            $items = $orderedProjects->all();
-
-            array_splice(
-                $items,
-                $afterIndex + 1,
-                0,
-                [$project]
+            $afterIndex = $orderedProjects->search(
+                fn (Work $work) => (int) $work->id === (int) $afterId
             );
 
-            $orderedProjects = collect($items);
+            /*
+             * If the requested Work ID doesn't exist in the current
+             * ordering, fall back to the beginning.
+             */
+            if ($afterIndex === false) {
+                $orderedProjects->prepend($project);
+            } else {
+                /*
+                 * Convert to a normal PHP array and explicitly insert
+                 * the project after the target.
+                 */
+                $items = $orderedProjects->all();
+
+                array_splice(
+                    $items,
+                    $afterIndex + 1,
+                    0,
+                    [$project]
+                );
+
+                $orderedProjects = collect($items);
+            }
+        }
+
+        /*
+         * Normalize the entire ordering.
+         *
+         * Database:
+         *
+         *     first  = 0
+         *     second = 1
+         *     third  = 2
+         *     ...
+         */
+        foreach ($orderedProjects->values() as $position => $work) {
+            Work::query()
+                ->whereKey($work->id)
+                ->update([
+                    'sort_order' => $position,
+                ]);
         }
     }
-
-    /*
-     * Normalize the entire ordering.
-     *
-     * Database:
-     *
-     *     first  = 0
-     *     second = 1
-     *     third  = 2
-     *     ...
-     */
-    foreach ($orderedProjects->values() as $position => $work) {
-        Work::query()
-            ->whereKey($work->id)
-            ->update([
-                'sort_order' => $position,
-            ]);
-    }
-}
 
     public function delete(
         int $id,
@@ -411,26 +411,25 @@ class Index extends Component
     }
 
     public function render()
-{
-    $works = Work::query()
-        ->orderBy('sort_order', 'asc')
-        ->orderBy('id', 'asc')
-        ->get();
+    {
+        $works = Work::query()
+            ->orderBy('sort_order', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
 
-    $orderOptions = $works
-        ->reject(
-            fn (Work $work) =>
-                $this->editingId !== null &&
-                $work->id === $this->editingId
-        )
-        ->values();
+        $orderOptions = $works
+            ->reject(
+                fn (Work $work) => $this->editingId !== null &&
+                    $work->id === $this->editingId
+            )
+            ->values();
 
-    return view(
-        'livewire.teams.projects.index',
-        compact(
-            'works',
-            'orderOptions'
-        )
-    );
-}
+        return view(
+            'livewire.teams.projects.index',
+            compact(
+                'works',
+                'orderOptions'
+            )
+        );
+    }
 }
