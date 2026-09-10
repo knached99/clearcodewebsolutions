@@ -776,11 +776,13 @@
 }
 
 .ticket-search-recaptcha {
-    margin: 10px 0 0;
+    display: block;
+    margin: 8px 0 0;
     color: rgba(255, 255, 255, 0.28);
     font-size: 9px;
+    font-weight: 400;
     line-height: 1.5;
-    text-align: center;
+    text-align: left;
 }
 
 .ticket-search-recaptcha a {
@@ -974,20 +976,8 @@
 
                                     </span>
 
-                                    <p class="ticket-search-recaptcha">
-                                    This site is protected by reCAPTCHA and the Google
-                                    <a href="https://policies.google.com/privacy">
-                                        Privacy Policy
-                                    </a>
-                                    and
-                                    <a href="https://policies.google.com/terms">
-                                        Terms of Service
-                                    </a>
-                                    apply.
-                                </p>
-
                                 </button>
-
+                                   
                             </form>
 
                         </div>
@@ -1191,6 +1181,17 @@
                                 token are never displayed or stored in your
                                 browser.
                             </p>
+                             <p class="ticket-search-recaptcha">
+                                    This site is protected by reCAPTCHA and the Google
+                                    <a href="https://policies.google.com/privacy">
+                                        Privacy Policy
+                                    </a>
+                                    and
+                                    <a href="https://policies.google.com/terms">
+                                        Terms of Service
+                                    </a>
+                                    apply.
+                                </p>
 
                         </div>
 
