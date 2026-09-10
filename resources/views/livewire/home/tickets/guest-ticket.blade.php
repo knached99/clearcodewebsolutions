@@ -591,7 +591,20 @@
                                     )
                                     : '';
 
-                            $attachments =
+                            /*
+                             * IMPORTANT:
+                             *
+                             * Do NOT call this variable
+                             * $attachments.
+                             *
+                             * $attachments belongs to the
+                             * Livewire WithFileUploads property
+                             * used by the reply composer.
+                             *
+                             * This variable contains persisted
+                             * TicketMessageAttachment models.
+                             */
+                            $messageAttachments =
                                 $message->attachments
                                 ?? collect();
 
@@ -734,16 +747,16 @@
                                         @endif
 
 
-                                        {{-- ATTACHMENTS --}}
+                                        {{-- PERSISTED MESSAGE ATTACHMENTS --}}
 
                                         @if (
-                                            $attachments->isNotEmpty()
+                                            $messageAttachments->isNotEmpty()
                                         )
 
                                             <div class="attachments-grid">
 
                                                 @foreach (
-                                                    $attachments
+                                                    $messageAttachments
                                                     as $attachment
                                                 )
 
@@ -1008,74 +1021,52 @@
                                     </label>
 
 
-                                   {{-- UPLOAD PREVIEW --}}
+                                    {{-- LIVE TEMPORARY UPLOAD PREVIEW --}}
 
-                                    <div style="
-                                        margin-top: 10px;
-                                        padding: 10px;
-                                        background: rgba(255,255,255,.05);
-                                        border: 1px solid rgba(255,255,255,.1);
-                                        border-radius: 8px;
-                                    ">
+                                    @if (count($attachments))
 
-                                        <div style="font-size: 11px; color: #fff;">
-                                            Attachment count:
-                                            <strong>{{ count($attachments) }}</strong>
+                                        <div class="upload-preview">
+
+                                            @foreach (
+                                                $attachments
+                                                as $index => $attachment
+                                            )
+
+                                                @if ($attachment)
+
+                                                    <div
+                                                        wire:key="guest-upload-{{ $index }}"
+                                                        class="upload-item"
+                                                    >
+
+                                                        <img
+                                                            src="{{ $attachment->temporaryUrl() }}"
+                                                            alt="{{ $attachment->getClientOriginalName() }}"
+                                                            class="upload-preview-image"
+                                                        >
+
+                                                        <button
+                                                            type="button"
+                                                            wire:click="removeAttachment({{ $index }})"
+                                                            wire:loading.attr="disabled"
+                                                            wire:target="removeAttachment"
+                                                            aria-label="Remove {{ $attachment->getClientOriginalName() }}"
+                                                        >
+
+                                                            <i class="fa-solid fa-xmark"></i>
+
+                                                        </button>
+
+                                                    </div>
+
+                                                @endif
+
+                                            @endforeach
+
                                         </div>
 
-                                        @foreach ($attachments as $index => $attachment)
+                                    @endif
 
-                                            <div style="
-                                                margin-top: 8px;
-                                                padding: 8px;
-                                                border: 1px solid rgba(255,255,255,.1);
-                                            ">
-
-                                                <div style="font-size: 10px; color: #aaa;">
-                                                    Index: {{ $index }}
-                                                </div>
-
-                                                <div style="font-size: 10px; color: #aaa;">
-                                                    Class: {{ get_class($attachment) }}
-                                                </div>
-
-                                                <div style="font-size: 10px; color: #aaa;">
-                                                    Name:
-                                                    {{ $attachment->getClientOriginalName() }}
-                                                </div>
-
-                                                <img
-                                                    src="{{ $attachment->temporaryUrl() }}"
-                                                    style="
-                                                        display: block;
-                                                        width: 100px;
-                                                        height: 100px;
-                                                        object-fit: cover;
-                                                        margin-top: 8px;
-                                                    "
-                                                >
-
-                                            </div>
-
-                                        @endforeach
-
-                                    </div>
-                                    <div style="margin-top:10px; padding:10px; border:1px solid red; color:white;">
-    <strong>Attachment count: {{ count($attachments) }}</strong>
-
-    @foreach ($attachments as $index => $attachment)
-        <div style="margin-top:10px;">
-            <div>Index: {{ $index }}</div>
-            <div>Class: {{ get_class($attachment) }}</div>
-            <div>Name: {{ $attachment->getClientOriginalName() }}</div>
-
-            <img
-                src="{{ $attachment->temporaryUrl() }}"
-                style="width:150px;height:150px;object-fit:cover;"
-            >
-        </div>
-    @endforeach
-</div>
 
                                     {{-- UPLOAD LOADING --}}
 

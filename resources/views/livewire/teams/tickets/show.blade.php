@@ -463,7 +463,13 @@
                                     <div
                                         id="ticket-message-{{ $message->id }}"
                                         wire:key="ticket-message-{{ $message->id }}"
-                                        class="min-w-0 max-w-[88%] scroll-mt-28 sm:max-w-[78%] {{ $isHighlighted ? 'message-highlight' : '' }}"
+                                        class="
+                                            min-w-0
+                                            max-w-[88%]
+                                            scroll-mt-28
+                                            sm:max-w-[78%]
+                                            {{ $isHighlighted ? 'message-highlight' : '' }}
+                                        "
                                     >
 
                                         <div
@@ -493,17 +499,22 @@
                                         @if(filled($message->message))
                                             <div
                                                 class="
-                                                {{ $isCustomer
-                                                    ? 'rounded-2xl rounded-tl-md border border-[#e7e3e9] bg-[#faf9fb] text-[#47424d] dark:border-white/10 dark:bg-white/5 dark:text-white/80'
-                                                    : 'rounded-2xl rounded-tr-md bg-[#8b78b9] text-white shadow-[0_12px_30px_-18px_rgba(105,84,155,.8)]'
-                                                }}
-                                                px-5 py-4 text-[15px] leading-7 sm:text-base
+                                                    w-fit
+                                                    max-w-full
+                                                    {{ $isCustomer ? 'mr-auto' : 'ml-auto' }}
+                                                    rounded-2xl
+                                                    {{ $isCustomer
+                                                        ? 'rounded-tl-md border border-[#e7e3e9] bg-[#faf9fb] text-[#47424d] dark:border-white/10 dark:bg-white/5 dark:text-white/80'
+                                                        : 'rounded-tr-md bg-[#8b78b9] text-white shadow-[0_12px_30px_-18px_rgba(105,84,155,.8)]'
+                                                    }}
+                                                    px-5
+                                                    py-4
+                                                    text-left
+                                                    text-[15px]
+                                                    leading-7
+                                                    sm:text-base
                                                 "
-                                            >
-                                                <div class="whitespace-pre-wrap break-words">
-                                                    {{ $message->message }}
-                                                </div>
-                                            </div>
+                                            ><div class="w-full whitespace-pre-wrap break-words !text-left">{{ $message->message }}</div></div>
                                         @endif
 
 
