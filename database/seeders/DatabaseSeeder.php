@@ -38,14 +38,6 @@ class DatabaseSeeder extends Seeder
                 'is_personal' => false,
             ]
         );
-
-        $supportTeam = Team::query()->updateOrCreate(
-            ['name' => 'Support Team'],
-            [
-                'is_personal' => false,
-            ]
-        );
-
         /*
          * Memberships
          */
