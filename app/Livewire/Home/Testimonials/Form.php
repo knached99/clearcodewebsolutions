@@ -480,13 +480,9 @@ class Form extends Component
         $this->extraFields = new \Spatie\Honeypot\Http\Livewire\Concerns\HoneypotData();
     }
 
-    public function addError(string $field, string $message): void
+   public function addError($name, $message)
     {
-        $errors = $this->getErrorBag();
-
-        $errors->add($field, $message);
-
-        $this->setErrorBag($errors);
+        parent::addError($name, $message);
     }
         public function render()
     {

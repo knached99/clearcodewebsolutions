@@ -737,15 +737,11 @@ class TicketSearch extends Component
         $this->resetValidation();
     }
 
-    public function addError(string $field, string $message): void
+    public function addError($name, $message)
     {
-        $errors = $this->getErrorBag();
-
-        $errors->add($field, $message);
-
-        $this->setErrorBag($errors);
+        parent::addError($name, $message);
     }
-
+    
     public function render()
     {
         return view(
