@@ -329,7 +329,6 @@
 
                                 {{-- Subject --}}
                                 <div class="mt-3">
-                                    <div class="mt-3">
                                     <h3 class="line-clamp-2 text-sm font-medium leading-5 text-white">
                                         {{ $ticket->subject }}
                                     </h3>
