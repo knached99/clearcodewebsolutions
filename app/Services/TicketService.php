@@ -3,7 +3,8 @@
 namespace App\Services;
 
 use App\Mail\GuestTicketVerificationCodeMail;
-use App\Mail\YourTicketNotificationMail;
+use App\Notifications\NewTicketNotification;
+use Illuminate\Support\Facades\Notification;
 use App\Models\Team;
 use App\Models\Ticket;
 use App\Models\TicketVerification;
@@ -97,36 +98,27 @@ class TicketService
     |--------------------------------------------------------------------------
     */
 
-    protected function notifyTeamsOfNewTicket(Ticket $ticket): void
-    {
-        /*
-         * Every team receives the same notification.
-         *
-         * Only the email column is selected so we don't load unnecessary
-         * team data into memory.
-         *
-         * BCC keeps team email addresses private from one another and
-         * results in a single queued mail instead of one mail per team.
-         */
-        $teamEmails = Team::query()
-            ->whereNotNull('email')
-            ->where('email', '!=', '')
-            ->orderBy('id')
-            ->pluck('email')
-            ->all();
+  protected function notifyTeamsOfNewTicket(Ticket $ticket): void
+{
+    $members = Team::query()
+        ->with('members:id,email')
+        ->orderBy('id')
+        ->get()
+        ->flatMap(
+            fn (Team $team) => $team->members
+        )
+        ->unique('id')
+        ->values();
 
-        if ($teamEmails === []) {
-            return;
-        }
-
-        Mail::to(config('mail.from.address'))
-            ->bcc($teamEmails)
-            ->queue(
-                new YourTicketNotificationMail(
-                    ticket: $ticket,
-                )
-            );
+    if ($members->isEmpty()) {
+        return;
     }
+
+    Notification::send(
+        $members,
+        new NewTicketNotification($ticket),
+    );
+}
 
     /*
     |--------------------------------------------------------------------------
