@@ -497,6 +497,15 @@ class Contact extends Component
         $this->ticketNumber = null;
     }
 
+    public function addError(string $field, string $message): void
+{
+    $errors = $this->getErrorBag();
+
+    $errors->add($field, $message);
+
+    $this->setErrorBag($errors);
+}
+
     public function render()
     {
         return view('livewire.home.contact');
