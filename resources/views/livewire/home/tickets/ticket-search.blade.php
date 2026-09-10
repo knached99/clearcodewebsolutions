@@ -881,12 +881,6 @@
 
                     @if (!$emailVerificationSent && !$showTicketSelection)
                         <div class="ticket-email-option">
-                            <div class="ticket-email-heading">
-                                <h3 class="ticket-email-title">
-                                    Find your tickets by email
-                                </h3>
-                            </div>
-
                             <form
                                 wire:submit.prevent="prepareSendVerificationCode"
                                 class="ticket-search-form"
