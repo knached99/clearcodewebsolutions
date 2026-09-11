@@ -58,11 +58,11 @@ class TestimonialService
             ->where('email', '<>', '')
             ->get(['id', 'name', 'email']);
 
-        foreach ($admins as $admin) {
-            Notification::route('mail', $admin->email)
-                ->notify(
-                    new NewTestimonialSubmittedNotification($testimonial)
-                );
+        if ($admins->isNotEmpty()) {
+            Notification::send(
+                $admins,
+                new NewTestimonialSubmittedNotification($testimonial)
+            );
         }
 
         return $testimonial;
