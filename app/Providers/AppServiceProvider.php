@@ -3,6 +3,9 @@
 namespace App\Providers;
 
 use Carbon\CarbonImmutable;
+use App\Models\Work;
+use App\Policies\WorkPolicy;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -30,7 +33,7 @@ class AppServiceProvider extends ServiceProvider
         $this->configureDefaults();
 
         Schema::defaultStringLength(191);
-
+        Gate::policy(Work::class, WorkPolicy::class);
         /*
          * Livewire update route.
          *

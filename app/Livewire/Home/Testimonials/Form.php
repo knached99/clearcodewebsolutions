@@ -3,7 +3,7 @@
 namespace App\Livewire\Home\Testimonials;
 
 use App\Services\TestimonialService;
-use Illuminate\Support\Facades\Http;
+use App\Services\RecaptchaService;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
@@ -232,6 +232,7 @@ class Form extends Component
     public function submit(
         string $recaptchaToken,
         TestimonialService $service,
+        RecaptchaService $recaptchaService,
     ): void {
         $this->submitted = false;
 
@@ -264,7 +265,7 @@ class Form extends Component
         /*
          * Verify reCAPTCHA server-side.
          */
-        $recaptcha = $this->verifyRecaptcha(
+        $recaptcha = $recaptchaService->verifyRecaptcha(
             token: $recaptchaToken,
             expectedAction: 'testimonial_submit',
         );
@@ -319,147 +320,6 @@ class Form extends Component
         );
     }
 
-    /**
-     * Verify a reCAPTCHA v3 token with Google.
-     */
-    protected function verifyRecaptcha(
-        string $token,
-        string $expectedAction,
-    ): array {
-        if (
-            $token === ''
-            || strlen($token) > 4096
-        ) {
-            return [
-                'success' => false,
-                'message' => 'The security verification failed. Please try again.',
-            ];
-        }
-
-        $secret = config(
-            'services.google_recaptcha.secret_key',
-        );
-
-        if (blank($secret)) {
-            report(
-                new \RuntimeException(
-                    'Google reCAPTCHA secret key is not configured.',
-                ),
-            );
-
-            return [
-                'success' => false,
-                'message' => 'Security verification is currently unavailable. Please try again later.',
-            ];
-        }
-
-        try {
-            $response = Http::asForm()
-                ->connectTimeout(3)
-                ->timeout(5)
-                ->post(
-                    'https://www.google.com/recaptcha/api/siteverify',
-                    [
-                        'secret' => $secret,
-                        'response' => $token,
-                        'remoteip' => request()->ip(),
-                    ],
-                );
-        } catch (\Throwable $e) {
-            report($e);
-
-            return [
-                'success' => false,
-                'message' => 'We could not complete the security check. Please try again.',
-            ];
-        }
-
-        if (! $response->successful()) {
-            report(
-                new \RuntimeException(
-                    'Google reCAPTCHA verification request failed with HTTP status ' .
-                    $response->status(),
-                ),
-            );
-
-            return [
-                'success' => false,
-                'message' => 'We could not complete the security check. Please try again.',
-            ];
-        }
-
-        $data = $response->json();
-
-        if (! is_array($data)) {
-            return [
-                'success' => false,
-                'message' => 'The security verification failed. Please try again.',
-            ];
-        }
-
-        if (($data['success'] ?? false) !== true) {
-            return [
-                'success' => false,
-                'message' => 'The security verification failed. Please try again.',
-            ];
-        }
-
-        if (($data['action'] ?? null) !== $expectedAction) {
-            report(
-                new \RuntimeException(
-                    'Unexpected reCAPTCHA action.',
-                ),
-            );
-
-            return [
-                'success' => false,
-                'message' => 'The security verification failed. Please try again.',
-            ];
-        }
-
-        $score = $data['score'] ?? null;
-
-        if (! is_numeric($score)) {
-            return [
-                'success' => false,
-                'message' => 'The security verification failed. Please try again.',
-            ];
-        }
-
-        $score = (float) $score;
-
-        if ($score < 0.5 || $score > 1.0) {
-            return [
-                'success' => false,
-                'message' => 'We could not verify that this request came from a real visitor. Please try again.',
-            ];
-        }
-
-        $expectedHostname = config(
-            'services.google_recaptcha.hostname',
-        );
-
-        if (
-            filled($expectedHostname)
-            && ($data['hostname'] ?? null) !== $expectedHostname
-        ) {
-            report(
-                new \RuntimeException(
-                    'Unexpected reCAPTCHA hostname.',
-                ),
-            );
-
-            return [
-                'success' => false,
-                'message' => 'The security verification failed. Please try again.',
-            ];
-        }
-
-        return [
-            'success' => true,
-            'score' => $score,
-        ];
-    }
 
     protected function resetForm(): void
     {

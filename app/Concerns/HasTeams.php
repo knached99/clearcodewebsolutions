@@ -163,6 +163,7 @@ trait HasTeams
     /**
      * Get the standard permissions for a team as a TeamPermissions object.
      */
+    
     public function toTeamPermissions(Team $team): TeamPermissions
     {
         $role = $this->teamRole($team);
@@ -170,13 +171,21 @@ trait HasTeams
         return new TeamPermissions(
             canUpdateTeam: $role?->hasPermission(TeamPermission::UpdateTeam) ?? false,
             canDeleteTeam: $role?->hasPermission(TeamPermission::DeleteTeam) ?? false,
+
             canAddMember: $role?->hasPermission(TeamPermission::AddMember) ?? false,
             canUpdateMember: $role?->hasPermission(TeamPermission::UpdateMember) ?? false,
             canRemoveMember: $role?->hasPermission(TeamPermission::RemoveMember) ?? false,
+
             canCreateInvitation: $role?->hasPermission(TeamPermission::CreateInvitation) ?? false,
             canCancelInvitation: $role?->hasPermission(TeamPermission::CancelInvitation) ?? false,
+
+            canViewProjects: $role?->hasPermission(TeamPermission::ViewProjects) ?? false,
+            canCreateProject: $role?->hasPermission(TeamPermission::CreateProject) ?? false,
+            canUpdateProject: $role?->hasPermission(TeamPermission::UpdateProject) ?? false,
+            canDeleteProject: $role?->hasPermission(TeamPermission::DeleteProject) ?? false,
         );
     }
+
 
     public function fallbackTeam(?Team $excluding = null): ?Team
     {

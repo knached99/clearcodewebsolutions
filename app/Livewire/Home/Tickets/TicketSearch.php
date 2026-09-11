@@ -4,12 +4,11 @@ namespace App\Livewire\Home\Tickets;
 
 use App\Models\Ticket;
 use App\Services\TicketService;
-use Illuminate\Support\Facades\Http;
+use App\Services\RecaptchaService;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Component;
 use Spatie\Honeypot\Http\Livewire\Concerns\HoneypotData;
 use Spatie\Honeypot\Http\Livewire\Concerns\UsesSpamProtection;
-use Throwable;
 
 class TicketSearch extends Component
 {
@@ -214,86 +213,83 @@ class TicketSearch extends Component
         );
     }
 
-    public function sendVerificationCode(
-        string $recaptchaToken,
-        TicketService $ticketService,
-    ): void {
-        $this->recaptchaToken = $recaptchaToken;
+   public function sendVerificationCode(
+    string $recaptchaToken,
+    TicketService $ticketService,
+    RecaptchaService $recaptchaService,
+): void {
+    $this->recaptchaToken = $recaptchaToken;
 
-        $this->protectAgainstSpam();
+    $this->protectAgainstSpam();
 
-        $this->validate([
-            'email' => $this->emailRules(),
-            'recaptchaToken' => $this->recaptchaRules(),
-        ]);
+    $this->validate([
+        'email' => $this->emailRules(),
+        'recaptchaToken' => $this->recaptchaRules(),
+    ]);
 
-        $this->ensureRateLimit(
-            action: 'send-verification',
-            maxAttempts: self::SEND_EMAIL_MAX_ATTEMPTS,
-            decaySeconds: self::SEND_EMAIL_DECAY_SECONDS,
-            value: $this->email,
+    $this->ensureRateLimit(
+        action: 'send-verification',
+        maxAttempts: self::SEND_EMAIL_MAX_ATTEMPTS,
+        decaySeconds: self::SEND_EMAIL_DECAY_SECONDS,
+        value: $this->email,
+    );
+
+    $this->ensureRateLimit(
+        action: 'send-verification-ip',
+        maxAttempts: self::SEND_IP_MAX_ATTEMPTS,
+        decaySeconds: self::SEND_IP_DECAY_SECONDS,
+    );
+
+    $recaptcha = $recaptchaService->verifyRecaptcha(
+        token: $recaptchaToken,
+        expectedAction: 'ticket_verification_send',
+    );
+
+    if (! $recaptcha['success']) {
+        $this->addError(
+            'form',
+            $recaptcha['message'],
         );
 
-        $this->ensureRateLimit(
-            action: 'send-verification-ip',
-            maxAttempts: self::SEND_IP_MAX_ATTEMPTS,
-            decaySeconds: self::SEND_IP_DECAY_SECONDS,
-        );
-
-        $recaptcha = $this->verifyRecaptcha(
-            token: $recaptchaToken,
-            expectedAction: 'ticket_verification_send',
-        );
-
-        if (! $recaptcha['success']) {
-            $this->addError(
-                'form',
-                $recaptcha['message'],
-            );
-
-            return;
-        }
-
-        $this->hitRateLimit(
-            action: 'send-verification',
-            decaySeconds: self::SEND_EMAIL_DECAY_SECONDS,
-            value: $this->email,
-        );
-
-        $this->hitRateLimit(
-            action: 'send-verification-ip',
-            decaySeconds: self::SEND_IP_DECAY_SECONDS,
-        );
-
-        $sent = $ticketService->sendGuestTicketVerificationCode(
-            email: $this->email,
-            ipAddress: request()->ip() ?? 'unknown',
-        );
-
-        if (! $sent) {
-            $this->addError(
-                'form',
-                'Please wait a moment before requesting another verification code.',
-            );
-
-            return;
-        }
-
-        /*
-         * A new verification attempt invalidates any previous
-         * server-side ticket selection.
-         */
-        $this->clearVerifiedTicketState();
-
-        $this->emailVerificationSent = true;
-        $this->verificationCode = '';
-        $this->recaptchaToken = '';
-
-        $this->resetErrorBag([
-            'email',
-            'recaptchaToken',
-        ]);
+        return;
     }
+
+    $this->hitRateLimit(
+        action: 'send-verification',
+        decaySeconds: self::SEND_EMAIL_DECAY_SECONDS,
+        value: $this->email,
+    );
+
+    $this->hitRateLimit(
+        action: 'send-verification-ip',
+        decaySeconds: self::SEND_IP_DECAY_SECONDS,
+    );
+
+    $sent = $ticketService->sendGuestTicketVerificationCode(
+        email: $this->email,
+        ipAddress: request()->ip() ?? 'unknown',
+    );
+
+    if (! $sent) {
+        $this->addError(
+            'form',
+            'Please wait a moment before requesting another verification code.',
+        );
+
+        return;
+    }
+
+    $this->clearVerifiedTicketState();
+
+    $this->emailVerificationSent = true;
+    $this->verificationCode = '';
+    $this->recaptchaToken = '';
+
+    $this->resetErrorBag([
+        'email',
+        'recaptchaToken',
+    ]);
+}
 
     /*
     |--------------------------------------------------------------------------
@@ -323,6 +319,7 @@ class TicketSearch extends Component
     public function verifyEmail(
         string $recaptchaToken,
         TicketService $ticketService,
+        RecaptchaService $recaptchaService,
     ): void {
         $this->recaptchaToken = $recaptchaToken;
 
@@ -347,7 +344,7 @@ class TicketSearch extends Component
             decaySeconds: self::VERIFY_IP_DECAY_SECONDS,
         );
 
-        $recaptcha = $this->verifyRecaptcha(
+        $recaptcha = $recaptchaService->verifyRecaptcha(
             token: $recaptchaToken,
             expectedAction: 'ticket_verification_verify',
         );
@@ -652,153 +649,6 @@ class TicketSearch extends Component
         $this->showTicketSelection = false;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | reCAPTCHA
-    |--------------------------------------------------------------------------
-    */
-
-    protected function verifyRecaptcha(
-        string $token,
-        string $expectedAction,
-    ): array {
-        if (
-            $token === ''
-            || strlen($token) > self::RECAPTCHA_MAX_LENGTH
-        ) {
-            return [
-                'success' => false,
-                'message' => 'The security verification failed. Please try again.',
-            ];
-        }
-
-        $secret = config(
-            'services.google_recaptcha.secret_key',
-        );
-
-        if (blank($secret)) {
-            report(
-                new \RuntimeException(
-                    'Google reCAPTCHA secret key is not configured.',
-                ),
-            );
-
-            return [
-                'success' => false,
-                'message' => 'Security verification is currently unavailable. Please try again later.',
-            ];
-        }
-
-        try {
-            $response = Http::asForm()
-                ->connectTimeout(3)
-                ->timeout(5)
-                ->post(
-                    'https://www.google.com/recaptcha/api/siteverify',
-                    [
-                        'secret' => $secret,
-                        'response' => $token,
-                        'remoteip' => request()->ip(),
-                    ],
-                );
-        } catch (Throwable $exception) {
-            report($exception);
-
-            return [
-                'success' => false,
-                'message' => 'We could not complete the security check. Please try again.',
-            ];
-        }
-
-        if (! $response->successful()) {
-            report(
-                new \RuntimeException(
-                    'Google reCAPTCHA verification request failed with HTTP status ' .
-                    $response->status(),
-                ),
-            );
-
-            return [
-                'success' => false,
-                'message' => 'We could not complete the security check. Please try again.',
-            ];
-        }
-
-        $data = $response->json();
-
-        if (! is_array($data)) {
-            return [
-                'success' => false,
-                'message' => 'The security verification failed. Please try again.',
-            ];
-        }
-
-        if (($data['success'] ?? false) !== true) {
-            return [
-                'success' => false,
-                'message' => 'The security verification failed. Please try again.',
-            ];
-        }
-
-        if (($data['action'] ?? null) !== $expectedAction) {
-            report(
-                new \RuntimeException(
-                    'Unexpected reCAPTCHA action.',
-                ),
-            );
-
-            return [
-                'success' => false,
-                'message' => 'The security verification failed. Please try again.',
-            ];
-        }
-
-        $score = $data['score'] ?? null;
-
-        if (! is_numeric($score)) {
-            return [
-                'success' => false,
-                'message' => 'The security verification failed. Please try again.',
-            ];
-        }
-
-        $score = (float) $score;
-
-        if (
-            $score < self::RECAPTCHA_MIN_SCORE
-            || $score > 1.0
-        ) {
-            return [
-                'success' => false,
-                'message' => 'We could not verify that this request came from a real visitor. Please try again.',
-            ];
-        }
-
-        $expectedHostname = config(
-            'services.google_recaptcha.hostname',
-        );
-
-        if (
-            filled($expectedHostname)
-            && ($data['hostname'] ?? null) !== $expectedHostname
-        ) {
-            report(
-                new \RuntimeException(
-                    'Unexpected reCAPTCHA hostname.',
-                ),
-            );
-
-            return [
-                'success' => false,
-                'message' => 'The security verification failed. Please try again.',
-            ];
-        }
-
-        return [
-            'success' => true,
-            'score' => $score,
-        ];
-    }
 
     /*
     |--------------------------------------------------------------------------

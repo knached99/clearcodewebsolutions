@@ -7,20 +7,19 @@ use App\Models\User;
 use App\Notifications\Teams\TeamInvitation as TeamInvitationNotification;
 use App\Rules\UniqueTeamInvitation;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
-use Throwable;
 
 new class extends Component
 {
     public Team $team;
-
-    public bool $show = false;
 
     #[Validate]
     public string $inviteEmail = '';
@@ -30,35 +29,6 @@ new class extends Component
     private const INVITE_MAX_ATTEMPTS = 10;
 
     private const INVITE_DECAY_SECONDS = 900;
-
-    /**
-     * Open the invitation modal.
-     */
-    public function open(): void
-    {
-        $this->authorize(
-            'inviteMember',
-            $this->team,
-        );
-
-        $this->resetValidation();
-
-        $this->inviteEmail = '';
-        $this->inviteRole = TeamRole::Member->value;
-        $this->show = true;
-    }
-
-    /**
-     * Close the invitation modal.
-     */
-    public function close(): void
-    {
-        $this->resetValidation();
-
-        $this->inviteEmail = '';
-        $this->inviteRole = TeamRole::Member->value;
-        $this->show = false;
-    }
 
     /**
      * Validation rules.
@@ -80,7 +50,7 @@ new class extends Component
                 'bail',
                 'required',
                 'string',
-                'in:' . implode(',', [
+                Rule::in([
                     TeamRole::Member->value,
                     TeamRole::Admin->value,
                 ]),
@@ -94,19 +64,15 @@ new class extends Component
     public function invite(): void
     {
         /*
-         * Always authorize again at the point of action.
-         *
-         * The modal being opened successfully is not sufficient
-         * authorization because permissions can change afterwards.
+         * Always authorize at the point of action.
          */
-        $this->authorize(
+        Gate::authorize(
             'inviteMember',
             $this->team,
         );
 
         /*
-         * Normalize before validation so the value that is validated
-         * is the value that will actually be stored.
+         * Normalize before validation.
          */
         $this->inviteEmail = strtolower(
             trim($this->inviteEmail),
@@ -115,8 +81,7 @@ new class extends Component
         $this->validate();
 
         /*
-         * Prevent an individual user/IP from repeatedly creating
-         * invitations and triggering account/password operations.
+         * Prevent repeated invitation attempts.
          */
         $this->ensureRateLimit();
 
@@ -131,11 +96,7 @@ new class extends Component
         $role = $this->inviteRole;
 
         /*
-         * Generate the temporary password only if a new account
-         * actually needs one.
-         *
-         * Existing users must NOT have their current password
-         * overwritten merely because they were invited.
+         * Only populated when a brand-new user account is created.
          */
         $temporaryPassword = null;
 
@@ -149,35 +110,29 @@ new class extends Component
                 ): TeamInvitation {
                     /*
                      * Lock the team row so concurrent invitation
-                     * operations for this team are serialized.
+                     * requests for the same team are serialized.
                      */
                     $team = Team::query()
                         ->lockForUpdate()
                         ->findOrFail($this->team->id);
 
                     /*
-                     * Re-authorize against the current team instance.
+                     * Re-authorize using the current team record.
                      */
-                    $this->authorize(
+                    Gate::authorize(
                         'inviteMember',
                         $team,
                     );
 
                     /*
-                     * Re-check membership inside the transaction.
-                     *
-                     * The validation rule is useful for UX, but it
-                     * cannot protect against concurrent requests.
+                     * Find an existing account first.
                      */
                     $existingUser = User::query()
                         ->where('email', $email)
                         ->first();
 
                     /*
-                     * Existing users should retain their password.
-                     *
-                     * They can simply receive the invitation and use
-                     * their existing account credentials.
+                     * Existing users keep their existing password.
                      */
                     if ($existingUser) {
                         if (
@@ -193,10 +148,7 @@ new class extends Component
                         }
                     } else {
                         /*
-                         * New account.
-                         *
-                         * Generate the temporary password only when
-                         * there is actually a new account to create.
+                         * Create a new account only when necessary.
                          */
                         $temporaryPassword = Str::password(
                             length: 20,
@@ -210,11 +162,15 @@ new class extends Component
                                 $email,
                                 '@',
                             ),
+
                             'email' => $email,
+
                             'password' => Hash::make(
                                 $temporaryPassword,
                             ),
+
                             'email_verified_at' => now(),
+
                             'must_change_password' => true,
                         ]);
                     }
@@ -236,16 +192,17 @@ new class extends Component
                     }
 
                     /*
-                     * Re-check for an existing invitation.
-                     *
-                     * This protects against concurrent requests even
-                     * if the validation rule was bypassed or stale.
+                     * Prevent duplicate active invitations.
                      */
                     $existingInvitation = TeamInvitation::query()
                         ->where('team_id', $team->id)
                         ->where('email', $email)
                         ->whereNull('accepted_at')
-                        ->where('expires_at', '>', now())
+                        ->where(
+                            'expires_at',
+                            '>',
+                            now(),
+                        )
                         ->exists();
 
                     if ($existingInvitation) {
@@ -256,6 +213,9 @@ new class extends Component
                         ]);
                     }
 
+                    /*
+                     * Create the invitation.
+                     */
                     return TeamInvitation::create([
                         'team_id' => $team->id,
                         'email' => $email,
@@ -267,7 +227,7 @@ new class extends Component
             );
         } catch (ValidationException $exception) {
             throw $exception;
-        } catch (Throwable $exception) {
+        } catch (\Throwable $exception) {
             report($exception);
 
             $this->addError(
@@ -281,40 +241,76 @@ new class extends Component
         }
 
         /*
-         * Rate-limit only after a successful invitation transaction.
+         * Rate-limit only after the invitation was successfully created.
          */
         $this->hitRateLimit();
 
         /*
-         * Send the invitation after the transaction has committed.
-         *
-         * If the notification implements ShouldQueue + afterCommit(),
-         * the actual mail delivery will still happen asynchronously.
-         *
-         * The temporary password is only present for newly-created
-         * accounts.
+         * Send the notification after the database transaction has
+         * successfully committed.
          */
-        Notification::route(
-            'mail',
-            $email,
-        )->notify(
-            new TeamInvitationNotification(
-                $invitation->id,
-                $temporaryPassword,
-            ),
-        );
+        try {
+            Notification::route(
+                'mail',
+                $email,
+            )->notify(
+                new TeamInvitationNotification(
+                    $invitation->id,
+                    $temporaryPassword,
+                ),
+            );
+        } catch (\Throwable $exception) {
+            /*
+             * The invitation already exists at this point.
+             *
+             * Log the notification failure rather than telling the user
+             * that the invitation itself failed.
+             */
+            report($exception);
 
+            $this->resetValidation();
+
+            $this->inviteEmail = '';
+            $this->inviteRole = TeamRole::Member->value;
+
+            session()->flash(
+                'warning',
+                __(
+                    'The invitation was created, but the email could not be sent. Please try again later.'
+                ),
+            );
+
+            $this->dispatch(
+                'team-member-invited',
+            );
+
+            return;
+        }
+
+        /*
+         * Reset the form.
+         */
         $this->resetValidation();
 
         $this->inviteEmail = '';
         $this->inviteRole = TeamRole::Member->value;
-        $this->show = false;
+
+        /*
+         * Close the Flux modal.
+         */
+        $this->dispatch(
+            'close-modal',
+            name: 'invite-member',
+        );
 
         session()->flash(
             'success',
             __('Invitation sent successfully.'),
         );
 
+        /*
+         * Let the parent refresh its team/member data.
+         */
         $this->dispatch(
             'team-member-invited',
         );
@@ -337,16 +333,13 @@ new class extends Component
             $ip,
         );
 
-        /*
-         * Keep the email-specific limit and IP-specific limit
-         * independent.
-         */
         if (
             RateLimiter::tooManyAttempts(
                 $emailKey,
                 self::INVITE_MAX_ATTEMPTS,
             )
-            || RateLimiter::tooManyAttempts(
+            ||
+            RateLimiter::tooManyAttempts(
                 $ipKey,
                 self::INVITE_MAX_ATTEMPTS,
             )
@@ -393,10 +386,10 @@ new class extends Component
     }
 };
 
-<div>
+?>
 
+<div>
     <flux:modal
-        wire:model="show"
         name="invite-member"
         class="md:w-[480px]"
     >
@@ -412,15 +405,12 @@ new class extends Component
                 aria-hidden="true"
             ></div>
 
-            <div
-                class="relative flex items-start gap-4"
-            >
+            <div class="relative flex items-start gap-4">
 
                 {{-- Icon --}}
                 <div
                     class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-purple-400/15 bg-purple-500/10 shadow-lg shadow-purple-950/20"
                 >
-
                     <svg
                         class="h-5 w-5 text-purple-300/80"
                         viewBox="0 0 24 24"
@@ -449,22 +439,16 @@ new class extends Component
                             stroke-linecap="round"
                         />
                     </svg>
-
                 </div>
-
 
                 <div class="min-w-0">
 
-                    <div class="flex items-center gap-2">
-
-                        <flux:heading
-                            size="lg"
-                            class="tracking-tight"
-                        >
-                            {{ __('Invite team member') }}
-                        </flux:heading>
-
-                    </div>
+                    <flux:heading
+                        size="lg"
+                        class="tracking-tight"
+                    >
+                        {{ __('Invite team member') }}
+                    </flux:heading>
 
                     <p class="mt-1 text-sm leading-5 text-white/35">
                         {{ __('Invite someone to join :team.', [
@@ -494,7 +478,6 @@ new class extends Component
                 <div
                     class="rounded-xl border border-white/8 bg-white/[0.025] px-4 py-3.5 transition duration-200 focus-within:border-purple-400/25 focus-within:bg-white/[0.035]"
                 >
-
                     <flux:input
                         wire:model="inviteEmail"
                         :label="__('Email address')"
@@ -504,7 +487,6 @@ new class extends Component
                         autocomplete="email"
                         autofocus
                     />
-
                 </div>
 
 
@@ -512,13 +494,11 @@ new class extends Component
                 <div
                     class="rounded-xl border border-white/8 bg-white/[0.025] px-4 py-3.5 transition duration-200 focus-within:border-purple-400/25 focus-within:bg-white/[0.035]"
                 >
-
                     <flux:select
                         wire:model="inviteRole"
                         :label="__('Role')"
                         :error="$errors->first('inviteRole')"
                     >
-
                         <flux:select.option value="member">
                             {{ __('Member') }}
                         </flux:select.option>
@@ -526,9 +506,7 @@ new class extends Component
                         <flux:select.option value="admin">
                             {{ __('Admin') }}
                         </flux:select.option>
-
                     </flux:select>
-
                 </div>
 
 
@@ -536,11 +514,9 @@ new class extends Component
                 <div
                     class="flex gap-3 rounded-xl border border-purple-400/8 bg-purple-500/[0.035] px-4 py-3"
                 >
-
                     <div
                         class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-purple-400/10 bg-purple-500/8"
                     >
-
                         <svg
                             class="h-3.5 w-3.5 text-purple-300/60"
                             viewBox="0 0 24 24"
@@ -569,13 +545,11 @@ new class extends Component
                                 stroke-width="1.5"
                             />
                         </svg>
-
                     </div>
 
                     <p class="text-[11px] leading-5 text-white">
                         {{ __('The invited user will receive a temporary password by email and will be required to create a new password before continuing.') }}
                     </p>
-
                 </div>
 
             </div>
@@ -588,18 +562,20 @@ new class extends Component
                 class="mt-6 flex items-center justify-end gap-2 border-t border-white/7 pt-5"
             >
 
-                <button
-                    type="button"
-                    wire:click="close"
-                    class="inline-flex h-10 cursor-pointer items-center justify-center rounded-lg border border-white/8 bg-white/[0.025] px-4 text-xs font-semibold text-white/45 transition hover:border-white/12 hover:bg-white/[0.05] hover:text-white/70 focus:outline-none focus:ring-2 focus:ring-purple-400/20"
-                >
-                    {{ __('Cancel') }}
-                </button>
+                <flux:modal.close>
+                    <button
+                        type="button"
+                        class="inline-flex h-10 cursor-pointer items-center justify-center rounded-lg border border-white/8 bg-white/[0.025] px-4 text-xs font-semibold text-white/45 transition hover:border-white/12 hover:bg-white/[0.05] hover:text-white/70 focus:outline-none focus:ring-2 focus:ring-purple-400/20"
+                    >
+                        {{ __('Cancel') }}
+                    </button>
+                </flux:modal.close>
 
 
                 <button
                     type="submit"
                     wire:loading.attr="disabled"
+                    wire:target="invite"
                     class="group relative inline-flex h-10 cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-purple-300/20 bg-linear-to-r from-purple-600 via-violet-500 to-fuchsia-500 px-5 text-xs font-semibold text-white shadow-lg shadow-purple-950/30 transition duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-purple-900/30 focus:outline-none focus:ring-2 focus:ring-purple-400/40 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
                 >
 
@@ -609,9 +585,9 @@ new class extends Component
 
                     <span
                         wire:loading.remove
+                        wire:target="invite"
                         class="relative flex items-center gap-2"
                     >
-
                         <svg
                             class="h-3.5 w-3.5"
                             viewBox="0 0 24 24"
@@ -635,15 +611,14 @@ new class extends Component
                         </svg>
 
                         {{ __('Send invitation') }}
-
                     </span>
 
 
                     <span
                         wire:loading
+                        wire:target="invite"
                         class="relative flex items-center gap-2"
                     >
-
                         <svg
                             class="h-3.5 w-3.5 animate-spin"
                             viewBox="0 0 24 24"
@@ -668,7 +643,6 @@ new class extends Component
                         </svg>
 
                         {{ __('Sending...') }}
-
                     </span>
 
                 </button>
@@ -678,5 +652,4 @@ new class extends Component
         </form>
 
     </flux:modal>
-
 </div>
