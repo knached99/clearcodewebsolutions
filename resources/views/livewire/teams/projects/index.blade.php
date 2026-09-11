@@ -357,7 +357,7 @@
                         Projects
                     </h1>
 
-                    <p class="mt-3 max-w-xl text-sm leading-6 text-gray-500 sm:text-base">
+                    <p class="mt-3 max-w-xl text-sm leading-6 text-gray-300 sm:text-base">
                         Manage your portfolio, project imagery, visibility,
                         categories and presentation.
                     </p>
@@ -386,7 +386,7 @@
 
                 <div class="glass rounded-2xl p-4">
 
-                    <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-600">
+                    <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-300">
                         Total
                     </div>
 
@@ -398,7 +398,7 @@
 
                 <div class="glass rounded-2xl p-4">
 
-                    <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-600">
+                    <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-300">
                         Published
                     </div>
 
@@ -410,11 +410,11 @@
 
                 <div class="glass rounded-2xl p-4">
 
-                    <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-600">
+                    <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-300">
                         Drafts
                     </div>
 
-                    <div class="mt-2 text-2xl font-black text-gray-400">
+                    <div class="mt-2 text-2xl font-black text-gray-300">
                         {{ $works->where('is_published', false)->count() }}
                     </div>
 
@@ -422,7 +422,7 @@
 
                 <div class="glass rounded-2xl p-4">
 
-                    <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-600">
+                    <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-300">
                         Portfolio
                     </div>
 
@@ -450,13 +450,13 @@
                         All Projects
                     </h2>
 
-                    <p class="mt-1 text-xs text-gray-600">
+                    <p class="mt-1 text-xs text-gray-300">
                         Your portfolio collection
                     </p>
 
                 </div>
 
-                <span class="rounded-full border border-white/10 bg-white/[0.025] px-3 py-1.5 text-xs font-medium text-gray-500">
+                <span class="rounded-full border border-white/10 bg-white/[0.025] px-3 py-1.5 text-xs font-medium text-gray-300">
                     {{ $works->count() }}
                     {{ \Illuminate\Support\Str::plural('project', $works->count()) }}
                 </span>
@@ -524,7 +524,7 @@
 
                                 @else
 
-                                    <span class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/60 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-gray-400 backdrop-blur-md">
+                                    <span class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/60 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-gray-300 backdrop-blur-md">
 
                                         <span class="h-1.5 w-1.5 rounded-full bg-gray-500"></span>
 
@@ -582,7 +582,7 @@
 
                                     @if ($work->description)
 
-                                        <p class="mt-2 line-clamp-2 text-sm leading-6 text-gray-500">
+                                        <p class="mt-2 line-clamp-2 text-sm leading-6 text-gray-300">
                                             {{ $work->description }}
                                         </p>
 
@@ -605,7 +605,7 @@
                                 <button
                                     type="button"
                                     wire:click="togglePublished({{ $work->id }})"
-                                    class="cursor-pointer action-button text-xs font-semibold text-gray-500 hover:text-[#ADD322]"
+                                    class="cursor-pointer action-button text-xs font-semibold text-gray-300 hover:text-[#ADD322]"
                                 >
                                     {{ $work->is_published ? 'Unpublish' : 'Publish' }}
                                 </button>
@@ -714,7 +714,7 @@
                                                             Are you sure?
                                                         </h3>
 
-                                                        <p class="mt-2 text-sm leading-6 text-gray-500">
+                                                        <p class="mt-2 text-sm leading-6 text-gray-300">
                                                             You're about to permanently delete
                                                             <span class="font-semibold text-gray-300">
                                                                 {{ $work->title }}
@@ -753,7 +753,7 @@
                                                             />
                                                         </svg>
 
-                                                        <p class="text-[11px] leading-5 text-gray-500">
+                                                        <p class="text-[11px] leading-5 text-gray-300">
                                                             Any images and project data associated with this
                                                             project may also be removed.
                                                         </p>
@@ -766,7 +766,7 @@
                                                         <button
                                                             type="button"
                                                             @click="deleteOpen = false"
-                                                            class="h-11 rounded-xl border border-white/[0.08] bg-white/[0.02] px-5 text-xs font-bold text-gray-400 transition hover:border-white/[0.14] hover:bg-white/[0.05] hover:text-white"
+                                                            class="h-11 rounded-xl border border-white/[0.08] bg-white/[0.02] px-5 text-xs font-bold text-gray-300 transition hover:border-white/[0.14] hover:bg-white/[0.05] hover:text-white"
                                                         >
                                                             Cancel
                                                         </button>
@@ -846,7 +846,7 @@
                             Your portfolio is empty
                         </h2>
 
-                        <p class="mx-auto mt-2 max-w-md text-sm leading-6 text-gray-500">
+                        <p class="mx-auto mt-2 max-w-md text-sm leading-6 text-gray-300">
                             Create your first project and start building
                             your portfolio collection.
                         </p>
@@ -854,7 +854,7 @@
                         <button
                             type="button"
                             wire:click="create"
-                            class="mt-7 rounded-xl bg-[#ADD322] px-5 py-3 text-sm font-black text-black transition hover:-translate-y-0.5"
+                            class="mt-7 rounded-xl bg-[#ADD322] px-5 py-3 text-sm font-black text-black transition hover:-translate-y-0.5 hover:cursor-pointer shadow-[0_12px_40px_rgba(173,211,34,.12)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_50px_rgba(173,211,34,.2)]"
                         >
                             Add your first project
                         </button>
@@ -972,7 +972,7 @@
                         <button
                             type="button"
                             wire:click="cancel"
-                            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] text-gray-500 transition hover:border-white/15 hover:bg-white/5 hover:text-white"
+                            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] text-gray-300 transition hover:border-white/15 hover:bg-white/5 hover:text-white"
                         >
 
                             <svg
@@ -1018,7 +1018,7 @@
 
                                         <label class="mb-2 flex items-center justify-between">
 
-                                            <span class="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-500">
+                                            <span class="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-300">
                                                 Project title
                                             </span>
 
@@ -1072,7 +1072,7 @@
                                         @keydown.escape.window="open = false"
                                     >
 
-                                        <label class="mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-gray-500">
+                                        <label class="mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-gray-300">
                                             Project type
                                         </label>
 
@@ -1112,7 +1112,7 @@
                                             </div>
 
                                             <svg
-                                                class="h-4 w-4 shrink-0 text-gray-600 transition"
+                                                class="h-4 w-4 shrink-0 text-gray-300 transition"
                                                 :class="open ? 'rotate-180 text-[#ADD322]' : ''"
                                                 viewBox="0 0 24 24"
                                                 fill="none"
@@ -1143,7 +1143,7 @@
                                                 <button
                                                     type="button"
                                                     @click="selected = option; open = false"
-                                                    class="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-xs text-gray-400 transition hover:bg-[#ADD322]/[0.07] hover:text-white"
+                                                    class="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-xs text-gray-300 transition hover:bg-[#ADD322]/[0.07] hover:text-white"
                                                     :class="selected === option ? 'bg-[#ADD322]/[0.08] text-white' : ''"
                                                 >
 
@@ -1177,7 +1177,7 @@
 
                                     <div>
 
-                                        <label class="mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-gray-500">
+                                        <label class="mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-gray-300">
                                             Description
                                         </label>
 
@@ -1208,7 +1208,7 @@
 
                                     <div>
 
-                                        <label class="mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-gray-500">
+                                        <label class="mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-gray-300">
 
                                             Live URL
 
@@ -1259,7 +1259,7 @@
 
                                         <div class="mb-2 flex items-center justify-between">
 
-                                            <label class="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-500">
+                                            <label class="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-300">
                                                 Project media
                                             </label>
 
@@ -1273,7 +1273,7 @@
 
                                             <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(173,211,34,.045),transparent_60%)] opacity-0 transition group-hover:opacity-100"></div>
 
-                                            <div class="relative flex h-10 w-10 items-center justify-center rounded-xl border border-white/[0.07] bg-white/[0.03] text-gray-500 transition group-hover:border-[#ADD322]/20 group-hover:bg-[#ADD322]/[0.07] group-hover:text-[#ADD322]">
+                                            <div class="relative flex h-10 w-10 items-center justify-center rounded-xl border border-white/[0.07] bg-white/[0.03] text-gray-300 transition group-hover:border-[#ADD322]/20 group-hover:bg-[#ADD322]/[0.07] group-hover:text-[#ADD322]">
 
                                                 <svg
                                                     class="h-4 w-4"
@@ -1297,7 +1297,7 @@
 
                                             </div>
 
-                                            <span class="relative mt-3 text-xs font-semibold text-gray-400 group-hover:text-white">
+                                            <span class="relative mt-3 text-xs font-semibold text-gray-300 group-hover:text-white">
                                                 Add project images
                                             </span>
 
@@ -1369,7 +1369,7 @@
 
                                                 <div class="mb-2 flex items-center justify-between">
 
-                                                    <label class="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-500">
+                                                    <label class="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-300">
                                                         Existing media
                                                     </label>
 
@@ -1450,7 +1450,7 @@
                                             @keydown.escape.window="open = false"
                                         >
 
-                                            <label class="mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-gray-500">
+                                            <label class="mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-gray-300">
                                                 Project placement
                                             </label>
 
@@ -1516,7 +1516,7 @@
                                                             "
                                                         ></div>
 
-                                                        <div class="mt-0.5 text-[9px] text-gray-600">
+                                                        <div class="mt-0.5 text-[9px] text-gray-300">
                                                             Choose where this project appears in your portfolio
                                                         </div>
 
@@ -1525,7 +1525,7 @@
                                                 </div>
 
                                                 <svg
-                                                    class="h-4 w-4 shrink-0 text-gray-600 transition"
+                                                    class="h-4 w-4 shrink-0 text-gray-300 transition"
                                                     :class="open ? 'rotate-180 text-[#ADD322]' : ''"
                                                     viewBox="0 0 24 24"
                                                     fill="none"
@@ -1609,7 +1609,7 @@
                                                                 Place at beginning
                                                             </div>
 
-                                                            <div class="mt-0.5 text-[9px] text-gray-600">
+                                                            <div class="mt-0.5 text-[9px] text-gray-300">
                                                                 Show this project first
                                                             </div>
 
@@ -1716,7 +1716,7 @@
                                                                     After: {{ $placementWork->title }}
                                                                 </div>
 
-                                                                <div class="mt-0.5 flex items-center gap-2 text-[9px] text-gray-600">
+                                                                <div class="mt-0.5 flex items-center gap-2 text-[9px] text-gray-300">
 
                                                                     <span>
                                                                         Position {{ $loop->iteration + 1 }}
@@ -1776,7 +1776,7 @@
                                                             <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/[0.07] bg-white/[0.025]">
 
                                                                 <svg
-                                                                    class="h-4 w-4 text-gray-500 group-hover:text-[#ADD322]"
+                                                                    class="h-4 w-4 text-gray-300 group-hover:text-[#ADD322]"
                                                                     viewBox="0 0 24 24"
                                                                     fill="none"
                                                                     stroke="currentColor"
@@ -1803,7 +1803,7 @@
                                                                     Place at end
                                                                 </div>
 
-                                                                <div class="mt-0.5 text-[9px] text-gray-600">
+                                                                <div class="mt-0.5 text-[9px] text-gray-300">
                                                                     Show this project after all other projects
                                                                 </div>
 
@@ -1836,7 +1836,7 @@
 
                                         <div>
 
-                                            <label class="mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-gray-500">
+                                            <label class="mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-gray-300">
                                                 Visibility
                                             </label>
 
@@ -1853,7 +1853,7 @@
                                                     ></span>
 
                                                     <span
-                                                        class="text-[11px] font-semibold {{ $is_published ? 'text-[#ADD322]' : 'text-gray-500' }}"
+                                                        class="text-[11px] font-semibold {{ $is_published ? 'text-[#ADD322]' : 'text-gray-300' }}"
                                                     >
                                                         {{ $is_published ? 'Published' : 'Draft' }}
                                                     </span>
@@ -1895,7 +1895,7 @@
                             <button
                                 type="button"
                                 wire:click="cancel"
-                                class="rounded-xl px-4 py-2.5 text-xs font-semibold text-gray-600 transition hover:bg-white/5 hover:text-white"
+                                class="rounded-xl px-4 py-2.5 text-xs font-semibold text-gray-300 transition hover:bg-white/5 hover:text-white"
                             >
                                 Cancel
                             </button>

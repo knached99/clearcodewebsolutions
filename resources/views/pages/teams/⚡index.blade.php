@@ -193,14 +193,14 @@ new #[Title('Teams')] class extends Component
                             </h3>
 
                             <span
-                                class="rounded-full border border-white/7 bg-white/[0.025] px-2 py-0.5 text-[9px] font-medium text-white/30"
+                                class="rounded-full border border-white/7 bg-white/[0.025] px-2 py-0.5 text-[9px] font-medium text-white"
                             >
                                 {{ $this->teams->count() }}
                             </span>
 
                         </div>
 
-                        <p class="mt-0.5 text-xs text-white/25">
+                        <p class="mt-0.5 text-xs text-white">
                             {{ __('Teams and memberships associated with your account.') }}
                         </p>
 
@@ -320,7 +320,7 @@ new #[Title('Teams')] class extends Component
 
                                 <div class="mt-1 flex items-center gap-2">
 
-                                    <span class="text-[11px] text-white/25">
+                                    <span class="text-[11px] text-white">
                                         {{ $team->roleLabel }}
                                     </span>
 
@@ -328,7 +328,7 @@ new #[Title('Teams')] class extends Component
 
                                         <span class="h-0.5 w-0.5 rounded-full bg-white/15"></span>
 
-                                        <span class="text-[10px] text-purple-300/35">
+                                        <span class="text-[10px] text-purple-300">
                                             {{ __('Full access') }}
                                         </span>
 
@@ -392,7 +392,7 @@ new #[Title('Teams')] class extends Component
                                     :icon="$team->role === 'member' ? 'eye' : 'pencil'"
                                     :href="route('teams.edit', $team->slug)"
                                     wire:navigate
-                                    class="cursor-pointer text-white/25! hover:bg-purple-400/8! hover:text-purple-300!"
+                                    class="cursor-pointer text-white! hover:bg-purple-400/8! hover:text-purple-300!"
                                     :data-test="$team->role === 'member' ? 'team-view-button' : 'team-edit-button'"
                                 />
 

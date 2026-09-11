@@ -196,7 +196,7 @@ new class extends Component {
                         {{ $this->modalConfig['title'] }}
                     </flux:heading>
 
-                    <flux:text class="mt-1 text-sm text-zinc-500">
+                    <flux:text class="mt-1 text-sm text-zinc-200">
                         {{ $this->modalConfig['description'] }}
                     </flux:text>
                 </div>
@@ -311,7 +311,7 @@ new class extends Component {
                             {{ __('Open your authenticator app and scan the QR code to connect your account.') }}
                         </p>
 
-                        <p class="mt-2 text-xs leading-5 text-zinc-600">
+                        <p class="mt-2 text-xs leading-5 text-zinc-100">
                             {{ __('You can also enter the setup key manually.') }}
                         </p>
                     </div>
@@ -331,7 +331,7 @@ new class extends Component {
                 <div class="flex items-center gap-3">
                     <div class="h-px flex-1 bg-purple-500/10"></div>
 
-                    <span class="text-[11px] font-medium uppercase tracking-wider text-zinc-600">
+                    <span class="text-[11px] font-medium uppercase tracking-wider text-zinc-300">
                         {{ __('Manual setup') }}
                     </span>
 

@@ -180,7 +180,7 @@ new #[Title('Profile settings')] class extends Component {
 
                             </div>
 
-                            <p class="mt-0.5 max-w-[min(65vw,520px)] truncate text-sm text-white/35">
+                            <p class="mt-0.5 max-w-[min(65vw,520px)] truncate text-sm text-white">
                                 {{ $email }}
                             </p>
 
@@ -216,11 +216,11 @@ new #[Title('Profile settings')] class extends Component {
                         </div>
 
                         <div>
-                            <p class="text-[9px] uppercase tracking-[0.16em] text-white/20">
+                            <p class="text-[9px] uppercase tracking-[0.16em] text-white">
                                 {{ __('Account') }}
                             </p>
 
-                            <p class="text-[11px] font-medium text-white/40">
+                            <p class="text-[11px] font-medium text-white">
                                 {{ __('Protected') }}
                             </p>
                         </div>
@@ -251,12 +251,12 @@ new #[Title('Profile settings')] class extends Component {
                                 {{ __('Personal details') }}
                             </p>
 
-                            <h4 class="mt-1 text-sm font-semibold text-white/80">
+                            <h4 class="mt-1 text-sm font-semibold text-white">
                                 {{ __('Account information') }}
                             </h4>
                         </div>
 
-                        <p class="hidden text-right text-[10px] text-white/20 sm:block">
+                        <p class="hidden text-right text-[10px] text-white sm:block">
                             {{ __('Changes apply immediately') }}
                         </p>
 
@@ -344,11 +344,11 @@ new #[Title('Profile settings')] class extends Component {
 
                                     <div class="min-w-0">
 
-                                        <p class="text-xs font-semibold text-white/70">
+                                        <p class="text-xs font-semibold text-white">
                                             {{ __('Email verification required') }}
                                         </p>
 
-                                        <p class="mt-0.5 truncate text-[11px] text-white/30">
+                                        <p class="mt-0.5 truncate text-[11px] text-white">
                                             {{ __('Verify your email to fully protect your account.') }}
                                         </p>
 
@@ -411,7 +411,7 @@ new #[Title('Profile settings')] class extends Component {
 
                         <span class="h-1.5 w-1.5 rounded-full bg-purple-400/50"></span>
 
-                        <span class="text-[10px] text-white/20">
+                        <span class="text-[10px] text-white">
                             {{ __('Your information is securely stored.') }}
                         </span>
 
@@ -496,11 +496,11 @@ new #[Title('Profile settings')] class extends Component {
                         </div>
 
                         <div>
-                            <p class="text-xs font-semibold text-white/65">
+                            <p class="text-xs font-semibold text-white">
                                 {{ __('Delete account') }}
                             </p>
 
-                            <p class="mt-0.5 text-[11px] text-white/25">
+                            <p class="mt-0.5 text-[11px] text-white">
                                 {{ __('Permanently remove your account and data.') }}
                             </p>
                         </div>

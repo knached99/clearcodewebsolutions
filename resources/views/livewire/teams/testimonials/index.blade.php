@@ -512,7 +512,7 @@
                         Testimonials
                     </h1>
 
-                    <p class="mt-3 max-w-2xl text-sm leading-6 text-gray-500 sm:text-base">
+                    <p class="mt-3 max-w-2xl text-sm leading-6 text-gray-300 sm:text-base">
                         Review customer feedback, moderate submissions and control
                         which testimonials appear publicly on your website.
                     </p>
@@ -526,7 +526,7 @@
 
                     {{-- TOTAL --}}
                     <div class="glass rounded-2xl p-4">
-                        <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-600">
+                        <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-300">
                             Total
                         </div>
 
@@ -534,14 +534,14 @@
                             {{ $totalCount }}
                         </div>
 
-                        <div class="mt-1 text-[10px] text-gray-700">
+                        <div class="mt-1 text-[12px] text-gray-200">
                             All submissions
                         </div>
                     </div>
 
                     {{-- PENDING --}}
                     <div class="glass rounded-2xl p-4">
-                        <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-600">
+                        <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-300">
                             Pending
                         </div>
 
@@ -549,14 +549,14 @@
                             {{ $pendingCount }}
                         </div>
 
-                        <div class="mt-1 text-[10px] text-gray-700">
+                        <div class="mt-1 text-[10px] text-gray-200">
                             Awaiting review
                         </div>
                     </div>
 
                     {{-- APPROVED --}}
                     <div class="glass rounded-2xl p-4">
-                        <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-600">
+                        <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-300">
                             Approved
                         </div>
 
@@ -564,14 +564,14 @@
                             {{ $approvedCount }}
                         </div>
 
-                        <div class="mt-1 text-[10px] text-gray-700">
+                        <div class="mt-1 text-[10px] text-gray-200">
                             Published
                         </div>
                     </div>
 
                     {{-- DENIED --}}
                     <div class="glass rounded-2xl p-4">
-                        <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-600">
+                        <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-300">
                             Denied
                         </div>
 
@@ -579,7 +579,7 @@
                             {{ $deniedCount }}
                         </div>
 
-                        <div class="mt-1 text-[10px] text-gray-700">
+                        <div class="mt-1 text-[10px] text-gray-200">
                             Not published
                         </div>
                     </div>
@@ -617,7 +617,7 @@
                     <button
                         type="button"
                         @click="show = false"
-                        class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-gray-600 transition hover:bg-white/5 hover:text-white"
+                        class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-gray-300 transition hover:bg-white/5 hover:text-white"
                     >
                         ×
                     </button>
@@ -652,7 +652,7 @@
                                 class="filter-button rounded-xl border px-3.5 py-2.5 text-[11px] font-bold transition
                                     {{ $status === $value
                                         ? 'border-[#ADD322]/25 bg-[#ADD322]/[0.08] text-[#ADD322] shadow-[0_8px_25px_rgba(173,211,34,.06)]'
-                                        : 'border-transparent text-gray-600 hover:border-white/[0.07] hover:bg-white/[0.025] hover:text-gray-300'
+                                        : 'border-transparent text-gray-300 hover:border-white/[0.07] hover:bg-white/[0.025] hover:text-gray-300'
                                     }}"
                             >
                                 {{ $label }}
@@ -680,7 +680,7 @@
                     <div class="relative w-full lg:max-w-sm">
 
                         <svg
-                            class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-700"
+                            class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-200"
                             viewBox="0 0 24 24"
                             fill="none"
                             stroke="currentColor"
@@ -709,7 +709,7 @@
                             <button
                                 type="button"
                                 wire:click="$set('search', '')"
-                                class="absolute right-2.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg text-gray-600 transition hover:bg-white/5 hover:text-white"
+                                class="absolute right-2.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg text-gray-300 transition hover:bg-white/5 hover:text-white"
                             >
                                 ×
                             </button>
@@ -736,12 +736,12 @@
                         {{ $status === 'all' ? 'All Testimonials' : ucfirst($status) . ' Testimonials' }}
                     </h2>
 
-                    <p class="mt-1 text-xs text-gray-600">
+                    <p class="mt-1 text-xs text-gray-300">
                         Customer feedback and moderation queue
                     </p>
                 </div>
 
-                <span class="rounded-full border border-white/10 bg-white/[0.025] px-3 py-1.5 text-xs font-medium text-gray-500">
+                <span class="rounded-full border border-white/10 bg-white/[0.025] px-3 py-1.5 text-xs font-medium text-gray-300">
                     {{ $testimonials->total() }}
                     {{ \Illuminate\Support\Str::plural('testimonial', $testimonials->total()) }}
                 </span>
@@ -792,13 +792,13 @@
 
                                             @if ($testimonial->display_role)
 
-                                                <p class="mt-0.5 truncate text-xs text-gray-500">
+                                                <p class="mt-0.5 truncate text-xs text-gray-300">
                                                     {{ $testimonial->display_role }}
                                                 </p>
 
                                             @else
 
-                                                <p class="mt-0.5 text-xs text-gray-700">
+                                                <p class="mt-0.5 text-xs text-gray-200">
                                                     Customer
                                                 </p>
 
@@ -843,14 +843,14 @@
                                 </div>
 
                                 {{-- META --}}
-                                <div class="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] text-gray-600">
+                                <div class="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] text-gray-300">
 
                                     @if ($testimonial->email)
 
                                         <span class="inline-flex items-center gap-1.5">
 
                                             <svg
-                                                class="h-3.5 w-3.5 text-gray-700"
+                                                class="h-3.5 w-3.5 text-gray-200"
                                                 viewBox="0 0 24 24"
                                                 fill="none"
                                                 stroke="currentColor"
@@ -880,7 +880,7 @@
                                     <span class="inline-flex items-center gap-1.5">
 
                                         <svg
-                                            class="h-3.5 w-3.5 text-gray-700"
+                                            class="h-3.5 w-3.5 text-gray-200"
                                             viewBox="0 0 24 24"
                                             fill="none"
                                             stroke="currentColor"
@@ -923,7 +923,7 @@
 
                                     </div>
 
-                                    <span class="text-[10px] font-bold text-gray-600">
+                                    <span class="text-[10px] font-bold text-gray-300">
                                         {{ $testimonial->rating }}/5
                                     </span>
 
@@ -952,7 +952,7 @@
 
                         <div class="flex flex-col gap-3 border-t border-white/[0.06] bg-black/[0.08] px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
 
-                            <div class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-700">
+                            <div class="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-200">
                                 #{{ str_pad($testimonial->id, 4, '0', STR_PAD_LEFT) }}
                             </div>
 
@@ -989,7 +989,7 @@
                                     <button
                                         type="button"
                                         wire:click="confirmDeny({{ $testimonial->id }})"
-                                        class="action-button rounded-xl px-3.5 py-2.5 text-[10px] font-bold text-gray-600 transition hover:bg-red-400/[0.06] hover:text-red-400"
+                                        class="action-button rounded-xl px-3.5 py-2.5 text-[10px] font-bold text-gray-300 transition hover:bg-red-400/[0.06] hover:text-red-400"
                                     >
                                         Unpublish
                                     </button>
@@ -1002,7 +1002,7 @@
                                     <button
                                         type="button"
                                         wire:click="confirmDeny({{ $testimonial->id }})"
-                                        class="action-button rounded-xl px-3.5 py-2.5 text-[10px] font-bold text-gray-600 transition hover:bg-red-400/[0.06] hover:text-red-400"
+                                        class="action-button rounded-xl px-3.5 py-2.5 text-[10px] font-bold text-gray-300 transition hover:bg-red-400/[0.06] hover:text-red-400"
                                     >
                                         Deny
                                     </button>
@@ -1013,7 +1013,7 @@
                                 <button
                                     type="button"
                                     wire:click="confirmDelete({{ $testimonial->id }})"
-                                    class="action-button rounded-xl px-3.5 py-2.5 text-[10px] font-bold text-gray-700 transition hover:bg-red-500/[0.07] hover:text-red-400"
+                                    class="action-button rounded-xl px-3.5 py-2.5 text-[10px] font-bold text-gray-200 transition hover:bg-red-500/[0.07] hover:text-red-400"
                                 >
                                     Delete
                                 </button>
@@ -1059,7 +1059,7 @@
                             No testimonials here
                         </h2>
 
-                        <p class="mx-auto mt-2 max-w-md text-sm leading-6 text-gray-500">
+                        <p class="mx-auto mt-2 max-w-md text-sm leading-6 text-gray-300">
 
                             @if (filled($search))
 
@@ -1195,7 +1195,7 @@
 
                                 <div>
 
-                                    <div class="text-[9px] font-bold uppercase tracking-[0.24em] text-gray-600">
+                                    <div class="text-[9px] font-bold uppercase tracking-[0.24em] text-gray-300">
                                         Confirmation
                                     </div>
 
@@ -1226,7 +1226,7 @@
                             <button
                                 type="button"
                                 wire:click="cancelAction"
-                                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] text-gray-600 transition hover:border-white/15 hover:bg-white/5 hover:text-white"
+                                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] text-gray-300 transition hover:border-white/15 hover:bg-white/5 hover:text-white"
                             >
                                 <svg
                                     class="h-4 w-4"
@@ -1295,7 +1295,7 @@
                         <button
                             type="button"
                             wire:click="cancelAction"
-                            class="rounded-xl px-4 py-2.5 text-xs font-semibold text-gray-600 transition hover:bg-white/5 hover:text-white"
+                            class="rounded-xl px-4 py-2.5 text-xs font-semibold text-gray-300 transition hover:bg-white/5 hover:text-white"
                         >
                             Cancel
                         </button>

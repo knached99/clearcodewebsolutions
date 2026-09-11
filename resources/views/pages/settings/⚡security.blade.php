@@ -233,7 +233,7 @@ new #[Title('Security settings')] class extends Component {
                                 </span>
                             </div>
 
-                            <p class="mt-0.5 text-xs text-white/30">
+                            <p class="mt-0.5 text-xs text-white">
                                 {{ __('Update your account password.') }}
                             </p>
                         </div>
@@ -318,13 +318,13 @@ new #[Title('Security settings')] class extends Component {
                                             {{ __('Enabled') }}
                                         </span>
                                     @else
-                                        <span class="rounded-full border border-white/[0.07] bg-white/[0.025] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-white/30">
+                                        <span class="rounded-full border border-white/[0.07] bg-white/[0.025] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-white">
                                             {{ __('Not enabled') }}
                                         </span>
                                     @endif
                                 </div>
 
-                                <p class="mt-0.5 truncate text-xs text-white/30">
+                                <p class="mt-0.5 truncate text-xs text-white">
                                     {{ __('Add an extra layer of protection to your account.') }}
                                 </p>
                             </div>
@@ -380,12 +380,12 @@ new #[Title('Security settings')] class extends Component {
                                             {{ __('Passkeys') }}
                                         </flux:heading>
 
-                                        <span class="rounded-full border border-white/[0.07] bg-white/[0.025] px-2 py-0.5 text-[9px] font-semibold tabular-nums text-white/35">
+                                        <span class="rounded-full border border-white/[0.07] bg-white/[0.025] px-2 py-0.5 text-[9px] font-semibold tabular-nums text-white">
                                             {{ count($passkeys) }}
                                         </span>
                                     </div>
 
-                                    <p class="mt-0.5 text-xs text-white/30">
+                                    <p class="mt-0.5 text-xs text-white">
                                         {{ __('Passwordless sign-in with your trusted devices.') }}
                                     </p>
                                 </div>
@@ -401,12 +401,12 @@ new #[Title('Security settings')] class extends Component {
                                 >
                                     <div class="flex min-w-0 items-center gap-3">
                                         <div class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/[0.035]">
-                                            <flux:icon.key class="size-4 text-white/40" />
+                                            <flux:icon.key class="size-4 text-white" />
                                         </div>
 
                                         <div class="min-w-0">
                                             <div class="flex flex-wrap items-center gap-2">
-                                                <p class="truncate text-xs font-medium text-white/75">
+                                                <p class="truncate text-xs font-medium text-white">
                                                     {{ $passkey['name'] }}
                                                 </p>
 
@@ -417,7 +417,7 @@ new #[Title('Security settings')] class extends Component {
                                                 @endif
                                             </div>
 
-                                            <p class="mt-0.5 text-[10px] text-white/25">
+                                            <p class="mt-0.5 text-[10px] text-white">
                                                 {{ __('Added :time', ['time' => $passkey['created_at_diff']]) }}
 
                                                 @if ($passkey['last_used_at_diff'])
@@ -440,15 +440,15 @@ new #[Title('Security settings')] class extends Component {
                             @empty
                                 <div class="flex items-center gap-3 px-4 py-5">
                                     <div class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white/[0.035]">
-                                        <flux:icon.key class="size-4 text-white/25" />
+                                        <flux:icon.key class="size-4 text-white" />
                                     </div>
 
                                     <div>
-                                        <p class="text-xs font-medium text-white/55">
+                                        <p class="text-xs font-medium text-white">
                                             {{ __('No passkeys yet') }}
                                         </p>
 
-                                        <p class="mt-0.5 text-[10px] text-white/25">
+                                        <p class="mt-0.5 text-[12px] text-white">
                                             {{ __('Add a passkey to sign in without a password.') }}
                                         </p>
                                     </div>

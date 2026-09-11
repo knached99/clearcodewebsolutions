@@ -85,7 +85,7 @@
                 <flux:icon.information-circle class="size-4 text-purple-400" />
             </div>
 
-            <flux:text class="text-sm text-zinc-500">
+            <flux:text class="text-sm text-zinc-200">
                 {{ __('Passkeys are not supported in this browser.') }}
             </flux:text>
         </div>
@@ -120,7 +120,7 @@
                         {{ __('New passkey') }}
                     </p>
 
-                    <p class="text-xs text-zinc-600">
+                    <p class="text-sm text-zinc-200">
                         {{ __('Choose a name so you can recognize this device later.') }}
                     </p>
                 </div>
@@ -140,7 +140,7 @@
                         class="w-full [&_input]:min-h-11 [&_input]:rounded-xl"
                     />
 
-                    <flux:text class="!mt-1 text-xs text-zinc-600">
+                    <flux:text class="!mt-1 text-sm text-zinc-200">
                         {{ __('Use a name that makes this passkey easy to identify.') }}
                     </flux:text>
                 </div>
@@ -158,7 +158,7 @@
                     <flux:button
                         variant="ghost"
                         x-on:click="cancel()"
-                        class="cursor-pointer text-zinc-500 hover:bg-purple-950/30 hover:text-white"
+                        class="cursor-pointer text-zinc-200 hover:bg-purple-950/30 hover:text-white"
                     >
                         {{ __('Cancel') }}
                     </flux:button>
