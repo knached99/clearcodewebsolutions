@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Home\Tickets;
 
+use App\Models\Ticket;
 use App\Services\TicketService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\RateLimiter;
@@ -30,18 +31,16 @@ class TicketSearch extends Component
 
     private const RECAPTCHA_MIN_SCORE = 0.5;
 
+    private const VERIFIED_TICKETS_SESSION_KEY = 'ticket_search.verified_ticket_ids';
+
+    private const VERIFIED_EMAIL_SESSION_KEY = 'ticket_search.verified_email';
+
     public string $email = '';
 
     public string $verificationCode = '';
 
-    /**
-     * Spatie honeypot data.
-     */
     public HoneypotData $extraFields;
 
-    /**
-     * Fresh reCAPTCHA v3 token.
-     */
     public string $recaptchaToken = '';
 
     public bool $emailVerificationSent = false;
@@ -49,7 +48,8 @@ class TicketSearch extends Component
     /**
      * UI state only.
      *
-     * Never use these IDs as the authorization boundary.
+     * These IDs are intentionally NOT used as the authorization
+     * boundary. The authoritative copy is kept in the session.
      */
     public array $verifiedTicketIds = [];
 
@@ -58,6 +58,11 @@ class TicketSearch extends Component
     public function mount(): void
     {
         $this->extraFields = new HoneypotData();
+
+        /*
+         * Restore server-side verification state if it still exists.
+         */
+        $this->restoreVerifiedTicketState();
     }
 
     /*
@@ -202,10 +207,6 @@ class TicketSearch extends Component
             'email' => $this->emailRules(),
         ]);
 
-        /*
-         * Honeypot + minimum-time protection happens before
-         * requesting a reCAPTCHA token.
-         */
         $this->protectAgainstSpam();
 
         $this->dispatch(
@@ -219,23 +220,13 @@ class TicketSearch extends Component
     ): void {
         $this->recaptchaToken = $recaptchaToken;
 
-        /*
-         * Honeypot + minimum-time protection.
-         */
         $this->protectAgainstSpam();
 
-        /*
-         * Validate cheap inputs before doing external work.
-         */
         $this->validate([
             'email' => $this->emailRules(),
             'recaptchaToken' => $this->recaptchaRules(),
         ]);
 
-        /*
-         * Check rate limits BEFORE the external reCAPTCHA request,
-         * but do not consume an attempt until reCAPTCHA succeeds.
-         */
         $this->ensureRateLimit(
             action: 'send-verification',
             maxAttempts: self::SEND_EMAIL_MAX_ATTEMPTS,
@@ -249,9 +240,6 @@ class TicketSearch extends Component
             decaySeconds: self::SEND_IP_DECAY_SECONDS,
         );
 
-        /*
-         * Verify reCAPTCHA.
-         */
         $recaptcha = $this->verifyRecaptcha(
             token: $recaptchaToken,
             expectedAction: 'ticket_verification_send',
@@ -266,10 +254,6 @@ class TicketSearch extends Component
             return;
         }
 
-        /*
-         * Consume the rate-limit attempts only after the security
-         * check succeeds.
-         */
         $this->hitRateLimit(
             action: 'send-verification',
             decaySeconds: self::SEND_EMAIL_DECAY_SECONDS,
@@ -281,10 +265,6 @@ class TicketSearch extends Component
             decaySeconds: self::SEND_IP_DECAY_SECONDS,
         );
 
-        /*
-         * TicketService deliberately returns a generic result so
-         * this endpoint cannot enumerate tickets/accounts.
-         */
         $sent = $ticketService->sendGuestTicketVerificationCode(
             email: $this->email,
             ipAddress: request()->ip() ?? 'unknown',
@@ -298,6 +278,12 @@ class TicketSearch extends Component
 
             return;
         }
+
+        /*
+         * A new verification attempt invalidates any previous
+         * server-side ticket selection.
+         */
+        $this->clearVerifiedTicketState();
 
         $this->emailVerificationSent = true;
         $this->verificationCode = '';
@@ -327,9 +313,6 @@ class TicketSearch extends Component
             'verificationCode' => $this->verificationRules(),
         ]);
 
-        /*
-         * Honeypot + minimum-time protection.
-         */
         $this->protectAgainstSpam();
 
         $this->dispatch(
@@ -343,24 +326,14 @@ class TicketSearch extends Component
     ): void {
         $this->recaptchaToken = $recaptchaToken;
 
-        /*
-         * Honeypot + minimum-time protection.
-         */
         $this->protectAgainstSpam();
 
-        /*
-         * Validate all security-sensitive inputs.
-         */
         $this->validate([
             'email' => $this->emailRules(),
             'verificationCode' => $this->verificationRules(),
             'recaptchaToken' => $this->recaptchaRules(),
         ]);
 
-        /*
-         * Check rate limits before reCAPTCHA, but only consume
-         * attempts after reCAPTCHA succeeds.
-         */
         $this->ensureRateLimit(
             action: 'verify-email',
             maxAttempts: self::VERIFY_EMAIL_MAX_ATTEMPTS,
@@ -374,9 +347,6 @@ class TicketSearch extends Component
             decaySeconds: self::VERIFY_IP_DECAY_SECONDS,
         );
 
-        /*
-         * Verify reCAPTCHA.
-         */
         $recaptcha = $this->verifyRecaptcha(
             token: $recaptchaToken,
             expectedAction: 'ticket_verification_verify',
@@ -391,10 +361,6 @@ class TicketSearch extends Component
             return;
         }
 
-        /*
-         * Consume the application-level rate limits after
-         * the external security check succeeds.
-         */
         $this->hitRateLimit(
             action: 'verify-email',
             decaySeconds: self::VERIFY_EMAIL_DECAY_SECONDS,
@@ -406,18 +372,6 @@ class TicketSearch extends Component
             decaySeconds: self::VERIFY_IP_DECAY_SECONDS,
         );
 
-        /*
-         * TicketService performs the actual authentication.
-         *
-         * It is responsible for:
-         *
-         * - securely comparing the verification code
-         * - enforcing expiration
-         * - enforcing its own attempt limit
-         * - invalidating the code after successful use
-         * - ensuring tickets belong to the verified email
-         * - establishing the server-side verification state
-         */
         $tickets = $ticketService->verifyGuestTicketVerificationCode(
             email: $this->email,
             code: $this->verificationCode,
@@ -436,11 +390,11 @@ class TicketSearch extends Component
         $this->recaptchaToken = '';
 
         /*
-         * These IDs are UI state only.
+         * Store the authoritative verification state server-side.
          *
-         * They are NOT authorization.
+         * The Livewire property below remains UI state only.
          */
-        $this->verifiedTicketIds = collect($tickets)
+        $ticketIds = collect($tickets)
             ->pluck('id')
             ->map(
                 fn ($id): int => (int) $id,
@@ -448,22 +402,31 @@ class TicketSearch extends Component
             ->values()
             ->all();
 
+        session()->put(
+            self::VERIFIED_TICKETS_SESSION_KEY,
+            $ticketIds,
+        );
+
+        session()->put(
+            self::VERIFIED_EMAIL_SESSION_KEY,
+            strtolower(trim($this->email)),
+        );
+
+        /*
+         * UI state.
+         */
+        $this->verifiedTicketIds = $ticketIds;
+
         /*
          * If exactly one ticket exists, redirect immediately.
          */
         if (count($tickets) === 1) {
             $ticket = $tickets[0];
 
-            /*
-             * Generate/rotate the secret token server-side.
-             */
             $token = $ticketService->rotateGuestTicketToken(
                 ticket: $ticket,
             );
 
-            /*
-             * Grant short-lived server-side access.
-             */
             $ticketService->grantGuestTicketAccess(
                 ticket: $ticket,
                 minutes: 60,
@@ -499,29 +462,34 @@ class TicketSearch extends Component
         TicketService $ticketService,
     ): void {
         /*
-         * This property is client-controlled.
+         * Never trust the client-controlled Livewire array.
          *
-         * It is only a UI sanity check and must never be the
-         * authorization boundary.
+         * Read the authoritative IDs from the session instead.
          */
+        $verifiedTicketIds = $this->getVerifiedTicketIds();
+
         if (! in_array(
             $ticketId,
-            $this->verifiedTicketIds,
+            $verifiedTicketIds,
             true,
         )) {
             abort(403);
         }
 
         /*
-         * TicketService independently verifies that this ticket:
-         *
-         * - belongs to the verified email
-         * - is still accessible
-         * - has not been revoked
-         * - satisfies the server-side verification requirements
+         * The email stored in the session is authoritative.
+         */
+        $verifiedEmail = $this->getVerifiedEmail();
+
+        if ($verifiedEmail === null) {
+            abort(404);
+        }
+
+        /*
+         * Confirm that this ticket still belongs to the verified email.
          */
         $ticket = $ticketService->findVerifiedEmailTicket(
-            email: $this->email,
+            email: $verifiedEmail,
             ticketId: $ticketId,
         );
 
@@ -544,6 +512,12 @@ class TicketSearch extends Component
             minutes: 60,
         );
 
+        /*
+         * The temporary email-verification selection state is no
+         * longer needed once this ticket has its own session access.
+         */
+        $this->clearVerifiedTicketState();
+
         $this->redirectRoute(
             'tickets.show',
             [
@@ -561,6 +535,9 @@ class TicketSearch extends Component
 
     public function changeEmail(): void
     {
+        $this->clearVerifiedTicketState();
+
+        $this->email = '';
         $this->emailVerificationSent = false;
         $this->showTicketSelection = false;
         $this->verificationCode = '';
@@ -569,10 +546,110 @@ class TicketSearch extends Component
 
         $this->resetErrorBag();
 
-        /*
-         * Generate a fresh honeypot payload.
-         */
         $this->extraFields = new HoneypotData();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Server-side verification state
+    |--------------------------------------------------------------------------
+    */
+
+    protected function restoreVerifiedTicketState(): void
+    {
+        $ticketIds = session(
+            self::VERIFIED_TICKETS_SESSION_KEY,
+            [],
+        );
+
+        $verifiedEmail = session(
+            self::VERIFIED_EMAIL_SESSION_KEY,
+        );
+
+        if (
+            ! is_array($ticketIds)
+            || $verifiedEmail === null
+            || ! is_string($verifiedEmail)
+        ) {
+            $this->clearVerifiedTicketState();
+
+            return;
+        }
+
+        $ticketIds = collect($ticketIds)
+            ->filter(
+                fn ($id): bool => is_int($id)
+                    || (
+                        is_string($id)
+                        && ctype_digit($id)
+                    ),
+            )
+            ->map(
+                fn ($id): int => (int) $id,
+            )
+            ->filter(
+                fn (int $id): bool => $id > 0,
+            )
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($ticketIds === []) {
+            $this->clearVerifiedTicketState();
+
+            return;
+        }
+
+        $this->email = strtolower(trim($verifiedEmail));
+        $this->verifiedTicketIds = $ticketIds;
+        $this->showTicketSelection = true;
+    }
+
+    protected function getVerifiedTicketIds(): array
+    {
+        $ticketIds = session(
+            self::VERIFIED_TICKETS_SESSION_KEY,
+            [],
+        );
+
+        if (! is_array($ticketIds)) {
+            return [];
+        }
+
+        return collect($ticketIds)
+            ->map(
+                fn ($id): int => (int) $id,
+            )
+            ->filter(
+                fn (int $id): bool => $id > 0,
+            )
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    protected function getVerifiedEmail(): ?string
+    {
+        $email = session(
+            self::VERIFIED_EMAIL_SESSION_KEY,
+        );
+
+        if (! is_string($email) || trim($email) === '') {
+            return null;
+        }
+
+        return strtolower(trim($email));
+    }
+
+    protected function clearVerifiedTicketState(): void
+    {
+        session()->forget([
+            self::VERIFIED_TICKETS_SESSION_KEY,
+            self::VERIFIED_EMAIL_SESSION_KEY,
+        ]);
+
+        $this->verifiedTicketIds = [];
+        $this->showTicketSelection = false;
     }
 
     /*
@@ -585,10 +662,6 @@ class TicketSearch extends Component
         string $token,
         string $expectedAction,
     ): array {
-        /*
-         * Reject obviously invalid input before making an
-         * external request.
-         */
         if (
             $token === ''
             || strlen($token) > self::RECAPTCHA_MAX_LENGTH
@@ -637,12 +710,6 @@ class TicketSearch extends Component
             ];
         }
 
-        /*
-         * Google request failed.
-         *
-         * Do not log the response body because it can contain
-         * security-sensitive information.
-         */
         if (! $response->successful()) {
             report(
                 new \RuntimeException(
@@ -666,9 +733,6 @@ class TicketSearch extends Component
             ];
         }
 
-        /*
-         * Token validity.
-         */
         if (($data['success'] ?? false) !== true) {
             return [
                 'success' => false,
@@ -676,10 +740,6 @@ class TicketSearch extends Component
             ];
         }
 
-        /*
-         * Action validation prevents a token generated for one
-         * action from being reused for another.
-         */
         if (($data['action'] ?? null) !== $expectedAction) {
             report(
                 new \RuntimeException(
@@ -693,9 +753,6 @@ class TicketSearch extends Component
             ];
         }
 
-        /*
-         * Score must exist and be numeric.
-         */
         $score = $data['score'] ?? null;
 
         if (! is_numeric($score)) {
@@ -707,9 +764,6 @@ class TicketSearch extends Component
 
         $score = (float) $score;
 
-        /*
-         * Valid Google v3 score is 0.0 - 1.0.
-         */
         if (
             $score < self::RECAPTCHA_MIN_SCORE
             || $score > 1.0
@@ -720,9 +774,6 @@ class TicketSearch extends Component
             ];
         }
 
-        /*
-         * Optional hostname validation.
-         */
         $expectedHostname = config(
             'services.google_recaptcha.hostname',
         );
@@ -757,6 +808,8 @@ class TicketSearch extends Component
 
     protected function resetFormState(): void
     {
+        $this->clearVerifiedTicketState();
+
         $this->email = '';
         $this->verificationCode = '';
         $this->recaptchaToken = '';
@@ -768,10 +821,42 @@ class TicketSearch extends Component
         $this->resetValidation();
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Render
+    |--------------------------------------------------------------------------
+    */
+
     public function render()
     {
+        $tickets = collect();
+
+        $verifiedTicketIds = $this->getVerifiedTicketIds();
+        $verifiedEmail = $this->getVerifiedEmail();
+
+        /*
+         * Only load tickets that were authenticated by the
+         * server-side email verification flow.
+         */
+        if (
+            $verifiedTicketIds !== []
+            && $verifiedEmail !== null
+        ) {
+            $tickets = Ticket::query()
+                ->whereIn('id', $verifiedTicketIds)
+                ->whereRaw(
+                    'LOWER(email) = ?',
+                    [$verifiedEmail],
+                )
+                ->latest('last_activity_at')
+                ->get();
+        }
+
         return view(
             'livewire.home.tickets.ticket-search',
+            [
+                'tickets' => $tickets,
+            ],
         )->layout(
             'layouts.home_layout',
         );
