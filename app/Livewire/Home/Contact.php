@@ -285,19 +285,22 @@ class Contact extends Component
             ),
         );
 
-        /*
-         * Admin notification.
-         */
-        Notification::route(
-            'mail',
-            config('mail.admin_address'),
-        )->notify(
-            new NewTicketNotification(
-                $ticket,
-            ),
-        );
+       $recipients = $ticket->team
+        ->members()
+        ->select([
+            'users.id',
+            'users.name',
+            'users.email',
+        ])
+        ->get();
 
-        /*
+    if ($recipients->isNotEmpty()) {
+        Notification::send(
+            $recipients,
+            new NewTicketNotification($ticket),
+        );
+    }
+            /*
          * Success.
          */
         $this->ticketNumber = $ticket->ticket_number;

@@ -3,14 +3,11 @@
 namespace App\Notifications;
 
 use App\Models\Ticket;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class NewTicketNotification extends Notification implements ShouldQueue
+class NewTicketNotification extends Notification
 {
-    use Queueable;
 
     public function __construct(
         public Ticket $ticket,

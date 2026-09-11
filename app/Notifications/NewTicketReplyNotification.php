@@ -5,14 +5,12 @@ namespace App\Notifications;
 use App\Models\Ticket;
 use App\Models\TicketMessage;
 use App\Services\TicketService;
-use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Str;
 
 class NewTicketReplyNotification extends Notification
 {
-    use Queueable;
 
     public function __construct(
         public Ticket $ticket,

@@ -5,12 +5,20 @@ namespace App\Livewire\Teams\Projects;
 use App\Models\Work;
 use App\Services\WorkService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Throwable;
 
 class Index extends Component
 {
     use WithFileUploads;
+
+    /*
+    |--------------------------------------------------------------------------
+    | Form State
+    |--------------------------------------------------------------------------
+    */
 
     public ?int $editingId = null;
 
@@ -24,24 +32,54 @@ class Index extends Component
 
     public bool $is_published = true;
 
-    /**
-     * ID of the project this project should appear AFTER.
-     *
-     * null = first position.
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | Ordering
+    |--------------------------------------------------------------------------
+    |
+    | ID of the project this project should appear AFTER.
+    |
+    | null = first position.
+    |
+    */
+
     public ?int $sortAfterId = null;
 
-    /**
-     * Newly uploaded images.
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | Images
+    |--------------------------------------------------------------------------
+    */
+
     public array $images = [];
 
-    /**
-     * Existing images selected for removal.
-     */
     public array $removeImages = [];
 
+    /*
+    |--------------------------------------------------------------------------
+    | UI
+    |--------------------------------------------------------------------------
+    */
+
     public bool $showForm = false;
+
+    /*
+    |--------------------------------------------------------------------------
+    | Limits
+    |--------------------------------------------------------------------------
+    */
+
+    private const MAX_IMAGES = 10;
+
+    private const MAX_IMAGE_SIZE_KB = 10240;
+
+    private const MAX_TOTAL_IMAGE_SIZE_KB = 51200;
+
+    /*
+    |--------------------------------------------------------------------------
+    | Validation
+    |--------------------------------------------------------------------------
+    */
 
     protected function rules(): array
     {
@@ -55,6 +93,7 @@ class Index extends Component
             'description' => [
                 'nullable',
                 'string',
+                'max:50000',
             ],
 
             'url' => [
@@ -80,27 +119,69 @@ class Index extends Component
             ],
 
             'images' => [
+                'nullable',
                 'array',
+                'max:' . self::MAX_IMAGES,
             ],
 
             'images.*' => [
+                'nullable',
+                'file',
                 'image',
-                'max:10240',
+                'mimes:jpg,jpeg,png,webp,gif',
+                'max:' . self::MAX_IMAGE_SIZE_KB,
             ],
         ];
     }
 
+    protected function messages(): array
+    {
+        return [
+            'title.required' => 'Please enter a project title.',
+
+            'title.max' => 'The project title may not exceed 255 characters.',
+
+            'description.max' => 'The project description is too long.',
+
+            'url.url' => 'Please enter a valid project URL.',
+
+            'url.max' => 'The project URL is too long.',
+
+            'category.required' => 'Please select a project category.',
+
+            'category.in' => 'Please select a valid project category.',
+
+            'sortAfterId.exists' => 'The selected project could not be found.',
+
+            'images.max' => 'You may upload up to 10 images.',
+
+            'images.*.image' => 'Each uploaded file must be a valid image.',
+
+            'images.*.mimes' => 'Only JPG, JPEG, PNG, WEBP, and GIF images are allowed.',
+
+            'images.*.max' => 'Each image may not exceed 10 MB.',
+        ];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Create
+    |--------------------------------------------------------------------------
+    */
+
     public function create(): void
     {
+        $this->authorize('create', Work::class);
+
         $this->resetForm();
 
         $this->showForm = true;
 
         /*
-         * New projects default to the end of the list.
+         * New projects default to the end of the current list.
          *
-         * sortAfterId stores the ID of the project that the new
-         * project should be inserted after.
+         * sortAfterId stores the project after which the new project
+         * should be inserted.
          */
         $this->sortAfterId = Work::query()
             ->orderByDesc('sort_order')
@@ -108,190 +189,317 @@ class Index extends Component
             ->value('id');
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Edit
+    |--------------------------------------------------------------------------
+    */
+
     public function edit(int $id): void
     {
-        $work = Work::query()->findOrFail($id);
+        $work = Work::query()
+            ->findOrFail($id);
+
+        $this->authorize('update', $work);
 
         $this->editingId = $work->id;
-        $this->title = $work->title;
-        $this->description = $work->description ?? '';
-        $this->url = $work->url ?? '';
-        $this->category = $work->category ?? '';
-        $this->is_published = $work->is_published;
+
+        $this->title = (string) $work->title;
+
+        $this->description = (string) (
+            $work->description ?? ''
+        );
+
+        $this->url = (string) (
+            $work->url ?? ''
+        );
+
+        $this->category = (string) (
+            $work->category ?? ''
+        );
+
+        $this->is_published = (bool) $work->is_published;
 
         /*
          * Find the project immediately before this one.
          *
-         * That becomes the selected "After..." option.
+         * Because ordering is:
+         *
+         * sort_order ASC
+         * id ASC
+         *
+         * the previous project is the highest project with an ordering
+         * position before the current project.
          */
         $this->sortAfterId = Work::query()
             ->where(function ($query) use ($work) {
                 $query
-                    ->where('sort_order', '<', $work->sort_order)
+                    ->where(
+                        'sort_order',
+                        '<',
+                        $work->sort_order,
+                    )
                     ->orWhere(function ($query) use ($work) {
                         $query
-                            ->where('sort_order', $work->sort_order)
-                            ->where('id', '<', $work->id);
+                            ->where(
+                                'sort_order',
+                                $work->sort_order,
+                            )
+                            ->where(
+                                'id',
+                                '<',
+                                $work->id,
+                            );
                     });
             })
             ->orderByDesc('sort_order')
             ->orderByDesc('id')
             ->value('id');
 
+        /*
+         * Clear temporary upload state when switching projects.
+         */
         $this->images = [];
+
         $this->removeImages = [];
+
         $this->showForm = true;
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Save
+    |--------------------------------------------------------------------------
+    */
+
     public function save(WorkService $service): void
     {
+        $this->authorize(
+            $this->editingId !== null
+                ? 'update'
+                : 'create',
+            $this->editingId !== null
+                ? Work::query()->findOrFail($this->editingId)
+                : Work::class,
+        );
+
+        /*
+         * Normalize simple fields before validation.
+         */
+        $this->title = trim($this->title);
+
+        $this->description = trim($this->description);
+
+        $this->url = trim($this->url);
+
+        $this->category = trim($this->category);
+
+        /*
+         * Validate all submitted data.
+         */
         $validated = $this->validate();
 
         /*
-         * This is the Work ID selected by the placement dropdown.
-         *
-         * null = beginning
-         * 2    = immediately after Work ID 2
-         * 17   = immediately after Work ID 17
+         * Validate the aggregate upload size.
          */
-        $sortAfterId = $this->sortAfterId;
+        $this->validateTotalImageSize();
 
         /*
-         * A project cannot be placed after itself.
+         * Capture the selected placement.
+         */
+        $sortAfterId = $this->sortAfterId !== null
+            ? (int) $this->sortAfterId
+            : null;
+
+        /*
+         * A project cannot be positioned after itself.
          */
         if (
-            $this->editingId !== null &&
-            $sortAfterId !== null &&
-            (int) $sortAfterId === (int) $this->editingId
+            $this->editingId !== null
+            && $sortAfterId !== null
+            && $sortAfterId === (int) $this->editingId
         ) {
             $sortAfterId = null;
         }
 
-        DB::transaction(function () use (
-            $service,
-            $validated,
-            $sortAfterId
-        ) {
-            /*
-             * Temporarily put the project at the end.
-             *
-             * reorderProjects() immediately calculates the real
-             * final position afterwards.
-             */
-            $validated['sort_order'] =
-                ((int) Work::query()->max('sort_order')) + 1;
+        /*
+         * Verify that sortAfterId still exists.
+         *
+         * The dropdown may have been rendered several seconds/minutes
+         * ago and another project could have been deleted meanwhile.
+         */
+        if ($sortAfterId !== null) {
+            $afterExists = Work::query()
+                ->whereKey($sortAfterId)
+                ->exists();
 
-            if ($this->editingId !== null) {
-                $work = Work::query()
-                    ->lockForUpdate()
-                    ->findOrFail($this->editingId);
-
-                $service->update(
-                    $work,
-                    $validated,
-                    $this->images,
-                    $this->removeImages
-                );
-
-                /*
-                 * IMPORTANT:
-                 *
-                 * Use the Work ID from sortAfterId, not sort_order.
-                 */
-                $this->reorderProjects(
-                    $work->fresh(),
-                    $sortAfterId
-                );
-
-                session()->flash(
-                    'project_success',
-                    'Project updated successfully.'
-                );
-            } else {
-                $work = $service->create(
-                    $validated,
-                    $this->images
-                );
-
-                /*
-                 * For a new project, sortAfterId is also a Work ID.
-                 */
-                $this->reorderProjects(
-                    $work->fresh(),
-                    $sortAfterId
-                );
-
-                session()->flash(
-                    'project_success',
-                    'Project created successfully.'
-                );
+            if (! $afterExists) {
+                $sortAfterId = null;
             }
-        });
+        }
+
+        /*
+         * Temporarily place the project at the end.
+         *
+         * reorderProjects() will calculate the final position.
+         */
+        $validated['sort_order'] =
+            ((int) Work::query()->max('sort_order')) + 1;
+
+        try {
+            DB::transaction(
+                function () use (
+                    $service,
+                    $validated,
+                    $sortAfterId,
+                ): void {
+                    /*
+                     * Editing an existing project.
+                     */
+                    if ($this->editingId !== null) {
+                        $work = Work::query()
+                            ->lockForUpdate()
+                            ->findOrFail($this->editingId);
+
+                        $this->authorize(
+                            'update',
+                            $work,
+                        );
+
+                        $service->update(
+                            $work,
+                            $validated,
+                            $this->images,
+                            $this->removeImages,
+                        );
+
+                        /*
+                         * Re-fetch the project so the reorder operates
+                         * on its current persisted state.
+                         */
+                        $work->refresh();
+
+                        $this->reorderProjects(
+                            $work,
+                            $sortAfterId,
+                        );
+
+                        session()->flash(
+                            'project_success',
+                            'Project updated successfully.',
+                        );
+
+                        return;
+                    }
+
+                    /*
+                     * Creating a new project.
+                     */
+                    $work = $service->create(
+                        $validated,
+                        $this->images,
+                    );
+
+                    $this->reorderProjects(
+                        $work->fresh(),
+                        $sortAfterId,
+                    );
+
+                    session()->flash(
+                        'project_success',
+                        'Project created successfully.',
+                    );
+                },
+            );
+        } catch (ValidationException $exception) {
+            throw $exception;
+        } catch (Throwable $exception) {
+            report($exception);
+
+            $this->addError(
+                'title',
+                'The project could not be saved. Please try again.',
+            );
+
+            return;
+        }
+
+        /*
+         * Reset only after the transaction succeeds.
+         */
+        $message = session('project_success');
 
         $this->resetForm();
 
         $this->dispatch(
             'notify',
-            message: session('project_success')
+            message: $message,
         );
     }
 
-    /**
-     * Rebuild the complete project order.
-     *
-     * The selected project is inserted immediately after
-     * $afterId. If $afterId is null, it becomes the first project.
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | Reorder Projects
+    |--------------------------------------------------------------------------
+    |
+    | Rebuild the complete ordering.
+    |
+    | null = first position.
+    | otherwise = immediately after $afterId.
+    |
+    */
+
     protected function reorderProjects(
         Work $project,
-        ?int $afterId
+        ?int $afterId,
     ): void {
+        /*
+         * Lock the ordering set while rebuilding it.
+         *
+         * This prevents two simultaneous reorder operations from reading
+         * the same old ordering and overwriting one another.
+         */
         $projects = Work::query()
+            ->lockForUpdate()
             ->orderBy('sort_order')
             ->orderBy('id')
             ->get();
 
         /*
-         * Remove the project we are moving from its current position.
+         * Remove the project being moved.
          */
         $orderedProjects = $projects
-            ->reject(fn (Work $work) => $work->id === $project->id)
+            ->reject(
+                fn (Work $work): bool =>
+                    (int) $work->id === (int) $project->id,
+            )
             ->values();
 
         /*
-         * No afterId means:
-         *
-         *     project goes to the beginning.
+         * Insert at the requested location.
          */
         if ($afterId === null) {
             $orderedProjects->prepend($project);
         } else {
-            /*
-             * Find the index of the project we want to place
-             * the current project AFTER.
-             */
             $afterIndex = $orderedProjects->search(
-                fn (Work $work) => (int) $work->id === (int) $afterId
+                fn (Work $work): bool =>
+                    (int) $work->id === (int) $afterId,
             );
 
             /*
-             * If the requested Work ID doesn't exist in the current
-             * ordering, fall back to the beginning.
+             * If the target disappeared between validation and the
+             * transaction, safely fall back to the beginning.
              */
             if ($afterIndex === false) {
                 $orderedProjects->prepend($project);
             } else {
-                /*
-                 * Convert to a normal PHP array and explicitly insert
-                 * the project after the target.
-                 */
                 $items = $orderedProjects->all();
 
                 array_splice(
                     $items,
                     $afterIndex + 1,
                     0,
-                    [$project]
+                    [$project],
                 );
 
                 $orderedProjects = collect($items);
@@ -299,16 +507,23 @@ class Index extends Component
         }
 
         /*
-         * Normalize the entire ordering.
-         *
-         * Database:
-         *
-         *     first  = 0
-         *     second = 1
-         *     third  = 2
-         *     ...
+         * Normalize positions.
          */
-        foreach ($orderedProjects->values() as $position => $work) {
+        $orderedProjects = $orderedProjects->values();
+
+        /*
+         * Avoid unnecessary UPDATE queries for projects that are
+         * already in the correct position.
+         */
+        foreach (
+            $orderedProjects as $position => $work
+        ) {
+            $position = (int) $position;
+
+            if ((int) $work->sort_order === $position) {
+                continue;
+            }
+
             Work::query()
                 ->whereKey($work->id)
                 ->update([
@@ -317,78 +532,250 @@ class Index extends Component
         }
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Delete
+    |--------------------------------------------------------------------------
+    */
+
     public function delete(
         int $id,
-        WorkService $service
+        WorkService $service,
     ): void {
-        $work = Work::query()->findOrFail($id);
+        $work = Work::query()
+            ->findOrFail($id);
 
-        $service->delete($work);
+        $this->authorize(
+            'delete',
+            $work,
+        );
 
         /*
-         * Close the gap left by the deleted project.
+         * Keep deletion + ordering normalization atomic.
          */
-        $this->normalizeProjectOrder();
+        DB::transaction(
+            function () use (
+                $work,
+                $service,
+            ): void {
+                /*
+                 * Lock the row before deleting it.
+                 */
+                $work->refresh();
+
+                /*
+                 * WorkService remains responsible for deleting the
+                 * project's associated data/files.
+                 */
+                $service->delete($work);
+
+                /*
+                 * Normalize remaining projects.
+                 */
+                $this->normalizeProjectOrder();
+            },
+        );
+
+        $this->resetForm();
 
         $this->dispatch(
             'notify',
-            message: 'Project deleted successfully.'
+            message: 'Project deleted successfully.',
         );
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Toggle Published
+    |--------------------------------------------------------------------------
+    */
+
     public function togglePublished(int $id): void
     {
-        $work = Work::query()->findOrFail($id);
+        $work = Work::query()
+            ->findOrFail($id);
 
-        $work->update([
-            'is_published' => ! $work->is_published,
-        ]);
+        $this->authorize(
+            'update',
+            $work,
+        );
+
+        /*
+         * Atomic boolean toggle.
+         *
+         * This avoids trusting the stale value that may be sitting
+         * inside the Livewire component.
+         */
+        Work::query()
+            ->whereKey($work->id)
+            ->update([
+                'is_published' => ! (bool) $work->is_published,
+            ]);
     }
 
-    public function removeExistingImage(string $path): void
-    {
-        if (
-            ! in_array(
-                $path,
-                $this->removeImages,
-                true
-            )
-        ) {
+    /*
+    |--------------------------------------------------------------------------
+    | Remove Existing Image
+    |--------------------------------------------------------------------------
+    */
+
+    public function removeExistingImage(
+        string $path,
+    ): void {
+        $path = trim($path);
+
+        if ($path === '') {
+            return;
+        }
+
+        /*
+         * Do not allow arbitrary values to accumulate in the component.
+         *
+         * The actual WorkService should also verify that every removal
+         * path belongs to the Work being edited before deleting anything.
+         */
+        if (! in_array(
+            $path,
+            $this->removeImages,
+            true,
+        )) {
             $this->removeImages[] = $path;
         }
     }
 
-    public function restoreExistingImage(string $path): void
-    {
+    /*
+    |--------------------------------------------------------------------------
+    | Restore Existing Image
+    |--------------------------------------------------------------------------
+    */
+
+    public function restoreExistingImage(
+        string $path,
+    ): void {
+        $path = trim($path);
+
+        if ($path === '') {
+            return;
+        }
+
         $this->removeImages = array_values(
             array_diff(
                 $this->removeImages,
-                [$path]
-            )
+                [$path],
+            ),
         );
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Upload Validation
+    |--------------------------------------------------------------------------
+    */
+
+    public function updatedImages(): void
+    {
+        $this->validate([
+            'images' => [
+                'nullable',
+                'array',
+                'max:' . self::MAX_IMAGES,
+            ],
+
+            'images.*' => [
+                'nullable',
+                'file',
+                'image',
+                'mimes:jpg,jpeg,png,webp,gif',
+                'max:' . self::MAX_IMAGE_SIZE_KB,
+            ],
+        ]);
+
+        $this->validateTotalImageSize();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Total Image Size
+    |--------------------------------------------------------------------------
+    */
+
+    protected function validateTotalImageSize(): void
+    {
+        if ($this->images === []) {
+            return;
+        }
+
+        $totalBytes = 0;
+
+        foreach ($this->images as $image) {
+            $size = $image->getSize();
+
+            if (is_int($size)) {
+                $totalBytes += $size;
+            }
+        }
+
+        $maxBytes =
+            self::MAX_TOTAL_IMAGE_SIZE_KB * 1024;
+
+        if ($totalBytes > $maxBytes) {
+            throw ValidationException::withMessages([
+                'images' =>
+                    'The combined size of uploaded images may not exceed 50 MB.',
+            ]);
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cancel
+    |--------------------------------------------------------------------------
+    */
 
     public function cancel(): void
     {
         $this->resetForm();
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Normalize Project Order
+    |--------------------------------------------------------------------------
+    */
+
     protected function normalizeProjectOrder(): void
     {
-        Work::query()
+        $projects = Work::query()
+            ->lockForUpdate()
             ->orderBy('sort_order')
             ->orderBy('id')
-            ->get()
-            ->each(
-                function (Work $work, int $position) {
-                    if ($work->sort_order !== $position) {
-                        $work->update([
-                            'sort_order' => $position,
-                        ]);
-                    }
-                }
-            );
+            ->get();
+
+        foreach (
+            $projects as $position => $work
+        ) {
+            $position = (int) $position;
+
+            /*
+             * Avoid unnecessary UPDATE statements.
+             */
+            if ((int) $work->sort_order === $position) {
+                continue;
+            }
+
+            Work::query()
+                ->whereKey($work->id)
+                ->update([
+                    'sort_order' => $position,
+                ]);
+        }
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Reset Form
+    |--------------------------------------------------------------------------
+    */
 
     protected function resetForm(): void
     {
@@ -397,7 +784,6 @@ class Index extends Component
             'title',
             'description',
             'url',
-            'category',
             'is_published',
             'sortAfterId',
             'images',
@@ -406,21 +792,39 @@ class Index extends Component
         ]);
 
         $this->is_published = true;
+
         $this->category = '';
+
         $this->sortAfterId = null;
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Render
+    |--------------------------------------------------------------------------
+    */
+
     public function render()
     {
+        $this->authorize(
+            'viewAny',
+            Work::class,
+        );
+
+        /*
+         * One query gets everything needed for both the project list
+         * and the ordering dropdown.
+         */
         $works = Work::query()
-            ->orderBy('sort_order', 'asc')
-            ->orderBy('id', 'asc')
+            ->orderBy('sort_order')
+            ->orderBy('id')
             ->get();
 
         $orderOptions = $works
             ->reject(
-                fn (Work $work) => $this->editingId !== null &&
-                    $work->id === $this->editingId
+                fn (Work $work): bool =>
+                    $this->editingId !== null
+                    && (int) $work->id === (int) $this->editingId,
             )
             ->values();
 
@@ -428,8 +832,8 @@ class Index extends Component
             'livewire.teams.projects.index',
             compact(
                 'works',
-                'orderOptions'
-            )
+                'orderOptions',
+            ),
         );
     }
 }

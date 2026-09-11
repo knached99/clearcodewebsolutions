@@ -3,8 +3,6 @@
 namespace App\Services;
 
 use App\Mail\GuestTicketVerificationCodeMail;
-use App\Notifications\NewTicketNotification;
-use Illuminate\Support\Facades\Notification;
 use App\Models\Team;
 use App\Models\Ticket;
 use App\Models\TicketVerification;
@@ -55,17 +53,6 @@ class TicketService
                 'message' => $data['message'],
             ]);
 
-            /*
-             * Queue the team notification after the ticket has been
-             * successfully committed to the database.
-             *
-             * This prevents the mail worker from attempting to process
-             * a ticket that could still be rolled back.
-             */
-            DB::afterCommit(function () use ($ticket) {
-                $this->notifyTeamsOfNewTicket($ticket);
-            });
-
             return [
                 'ticket' => $ticket,
                 'token' => $token,
@@ -84,41 +71,13 @@ class TicketService
         /*
          * Teams are guaranteed to exist.
          *
-         * The first team by ID is always the primary team assigned to
-         * newly-created tickets.
+         * The first team by ID is always the primary team assigned
+         * to newly-created tickets.
          */
         return Team::query()
             ->orderBy('id')
             ->firstOrFail();
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Team Notifications
-    |--------------------------------------------------------------------------
-    */
-
-  protected function notifyTeamsOfNewTicket(Ticket $ticket): void
-{
-    $members = Team::query()
-        ->with('members:id,email')
-        ->orderBy('id')
-        ->get()
-        ->flatMap(
-            fn (Team $team) => $team->members
-        )
-        ->unique('id')
-        ->values();
-
-    if ($members->isEmpty()) {
-        return;
-    }
-
-    Notification::send(
-        $members,
-        new NewTicketNotification($ticket),
-    );
-}
 
     /*
     |--------------------------------------------------------------------------
@@ -151,15 +110,15 @@ class TicketService
     ): void {
         session()->put(
             'guest_ticket_access.' . $ticket->id,
-            now()->addMinutes($minutes)->timestamp
+            now()->addMinutes($minutes)->timestamp,
         );
     }
 
     public function hasGuestTicketAccess(Ticket $ticket): bool
     {
-        $expiresAt = session(
-            'guest_ticket_access.' . $ticket->id
-        );
+        $key = 'guest_ticket_access.' . $ticket->id;
+
+        $expiresAt = session($key);
 
         if (! $expiresAt) {
             return false;
@@ -176,18 +135,16 @@ class TicketService
 
     public function requireGuestTicketAccess(Ticket $ticket): void
     {
-        $expiresAt = session(
-            "guest_ticket_access.{$ticket->id}"
-        );
+        $key = "guest_ticket_access.{$ticket->id}";
+
+        $expiresAt = session($key);
 
         if (! $expiresAt) {
             abort(404);
         }
 
         if ((int) $expiresAt < now()->timestamp) {
-            session()->forget(
-                "guest_ticket_access.{$ticket->id}"
-            );
+            session()->forget($key);
 
             abort(404);
         }
@@ -196,7 +153,7 @@ class TicketService
     public function revokeGuestTicketAccess(Ticket $ticket): void
     {
         session()->forget(
-            'guest_ticket_access.' . $ticket->id
+            'guest_ticket_access.' . $ticket->id,
         );
     }
 
@@ -213,22 +170,25 @@ class TicketService
         $email = Str::lower(trim($email));
 
         if (
-            $email === '' ||
-            ! filter_var($email, FILTER_VALIDATE_EMAIL)
+            $email === ''
+            || ! filter_var($email, FILTER_VALIDATE_EMAIL)
         ) {
             return false;
         }
 
         $emailKey = 'guest-ticket-email:' . hash(
             'sha256',
-            $email
+            $email,
         );
 
         $ipKey = 'guest-ticket-email-ip:' . $ipAddress;
 
+        /*
+         * Rate-limit before performing database work or sending mail.
+         */
         if (
-            RateLimiter::tooManyAttempts($emailKey, 3) ||
-            RateLimiter::tooManyAttempts($ipKey, 10)
+            RateLimiter::tooManyAttempts($emailKey, 3)
+            || RateLimiter::tooManyAttempts($ipKey, 10)
         ) {
             return false;
         }
@@ -242,10 +202,7 @@ class TicketService
          * This prevents email enumeration.
          */
         $hasTicket = Ticket::query()
-            ->whereRaw(
-                'LOWER(email) = ?',
-                [$email]
-            )
+            ->whereRaw('LOWER(email) = ?', [$email])
             ->exists();
 
         if (! $hasTicket) {
@@ -265,10 +222,7 @@ class TicketService
         /*
          * Generate a cryptographically secure 6-digit code.
          */
-        $code = (string) random_int(
-            100000,
-            999999
-        );
+        $code = (string) random_int(100000, 999999);
 
         $verification = TicketVerification::create([
             'email' => $email,
@@ -287,7 +241,7 @@ class TicketService
             new GuestTicketVerificationCodeMail(
                 code: $code,
                 expiresAt: $verification->expires_at,
-            )
+            ),
         );
 
         return true;
@@ -308,22 +262,25 @@ class TicketService
         $code = trim($code);
 
         if (
-            $email === '' ||
-            ! preg_match('/^\d{6}$/', $code)
+            $email === ''
+            || ! preg_match('/^\d{6}$/', $code)
         ) {
             return null;
         }
 
         $emailKey = 'guest-ticket-code:' . hash(
             'sha256',
-            $email
+            $email,
         );
 
         $ipKey = 'guest-ticket-code-ip:' . $ipAddress;
 
+        /*
+         * Rate-limit verification attempts.
+         */
         if (
-            RateLimiter::tooManyAttempts($emailKey, 10) ||
-            RateLimiter::tooManyAttempts($ipKey, 20)
+            RateLimiter::tooManyAttempts($emailKey, 10)
+            || RateLimiter::tooManyAttempts($ipKey, 20)
         ) {
             return null;
         }
@@ -356,7 +313,7 @@ class TicketService
 
         if (! Hash::check(
             $code,
-            $verification->code_hash
+            $verification->code_hash,
         )) {
             return null;
         }
@@ -374,7 +331,7 @@ class TicketService
         $tickets = Ticket::query()
             ->whereRaw(
                 'LOWER(email) = ?',
-                [$email]
+                [$email],
             )
             ->latest('last_activity_at')
             ->get()
@@ -407,7 +364,7 @@ class TicketService
             ->whereKey($ticketId)
             ->whereRaw(
                 'LOWER(email) = ?',
-                [$email]
+                [$email],
             )
             ->first();
     }
@@ -422,6 +379,10 @@ class TicketService
         Ticket $ticket,
         string $token,
     ): bool {
+        /*
+         * Guest tokens are 32 random bytes represented as
+         * 64 hexadecimal characters.
+         */
         if (! preg_match('/^[a-fA-F0-9]{64}$/', $token)) {
             return false;
         }
@@ -432,11 +393,11 @@ class TicketService
          * Check the original token stored on the ticket.
          */
         if (
-            $ticket->guest_token_hash &&
-            is_string($ticket->guest_token_hash) &&
-            hash_equals(
+            $ticket->guest_token_hash
+            && is_string($ticket->guest_token_hash)
+            && hash_equals(
                 $ticket->guest_token_hash,
-                $tokenHash
+                $tokenHash,
             )
         ) {
             return true;
@@ -469,11 +430,11 @@ class TicketService
             throw new \InvalidArgumentException('Invalid URL');
         }
 
-        return rtrim(config('app.url'), '/') .
-            '/tickets/' .
-            $ticket->ticket_number .
-            '/' .
-            $token;
+        return rtrim(config('app.url'), '/')
+            . '/tickets/'
+            . $ticket->ticket_number
+            . '/'
+            . $token;
     }
 
     /*
@@ -505,15 +466,13 @@ class TicketService
     protected function generateTicketNumber(): string
     {
         do {
-            $ticketNumber =
-                'TCKT-' . strtoupper(
-                    Str::random(8)
-                );
+            $ticketNumber = 'TCKT-' . Str::upper(
+                Str::random(8),
+            );
         } while (
-            Ticket::where(
-                'ticket_number',
-                $ticketNumber
-            )->exists()
+            Ticket::query()
+                ->where('ticket_number', $ticketNumber)
+                ->exists()
         );
 
         return $ticketNumber;
@@ -533,7 +492,7 @@ class TicketService
         $ticket->forceFill([
             'guest_token_hash' => hash(
                 'sha256',
-                $token
+                $token,
             ),
         ])->save();
 

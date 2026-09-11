@@ -12,10 +12,15 @@ use Illuminate\Support\Facades\Notification;
 
 class TestimonialService
 {
+    /**
+     * Create a pending testimonial.
+     *
+     * Database work is completed before synchronous emails are sent.
+     */
     public function create(array $data): Testimonials
     {
-        $testimonial = DB::transaction(function () use ($data) {
-            return Testimonials::create([
+        $testimonial = DB::transaction(function () use ($data): Testimonials {
+            return Testimonials::query()->create([
                 'name' => $data['name'],
                 'email' => $data['email'] ?? null,
                 'company' => $data['company'] ?? null,
@@ -32,22 +37,21 @@ class TestimonialService
         });
 
         /*
-         * Send confirmation directly to the person
-         * who submitted the testimonial.
+         * Synchronous email to the person who submitted
+         * the testimonial.
          */
         if (filled($testimonial->email)) {
-            Notification::route(
-                'mail',
-                $testimonial->email
-            )->notify(
-                new TestimonialSubmittedNotification(
-                    $testimonial
-                )
-            );
+            Notification::route('mail', $testimonial->email)
+                ->notify(
+                    new TestimonialSubmittedNotification($testimonial)
+                );
         }
 
         /*
-         * Send notification to every user/admin.
+         * Synchronous notification to all administrators/users.
+         *
+         * Keep this after the transaction so a mail failure
+         * cannot roll back the testimonial itself.
          */
         $admins = User::query()
             ->whereNotNull('email')
@@ -55,87 +59,141 @@ class TestimonialService
             ->get(['id', 'name', 'email']);
 
         foreach ($admins as $admin) {
-
-            Notification::route(
-                'mail',
-                $admin->email
-            )->notify(
-                new NewTestimonialSubmittedNotification(
-                    $testimonial
-                )
-            );
-
+            Notification::route('mail', $admin->email)
+                ->notify(
+                    new NewTestimonialSubmittedNotification($testimonial)
+                );
         }
 
         return $testimonial;
     }
 
+    /**
+     * Approve and publish a testimonial.
+     *
+     * The approval notification is sent only when the testimonial
+     * transitions from a non-approved state to approved.
+     */
     public function approve(Testimonials $testimonial): Testimonials
     {
-        $wasAlreadyApproved = $testimonial->isApproved();
+        $result = DB::transaction(function () use ($testimonial): array {
+            $testimonial = Testimonials::query()
+                ->whereKey($testimonial->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        $testimonial->update([
-            'status' => Testimonials::STATUS_APPROVED,
-            'is_published' => true,
-            'published_at' => $testimonial->published_at ?? now(),
-            'moderated_at' => now(),
-        ]);
+            $wasAlreadyApproved = $testimonial->isApproved();
 
-        $testimonial->refresh();
+            $testimonial->update([
+                'status' => Testimonials::STATUS_APPROVED,
+                'is_published' => true,
+                'published_at' => $testimonial->published_at ?? now(),
+                'moderated_at' => now(),
+            ]);
 
-        if (! $wasAlreadyApproved && filled($testimonial->email)) {
-            Notification::route(
-                'mail',
-                $testimonial->email
-            )->notify(
-                new TestimonialApprovedNotification(
-                    $testimonial
-                )
-            );
+            return [
+                'testimonial' => $testimonial->fresh(),
+                'wasAlreadyApproved' => $wasAlreadyApproved,
+            ];
+        });
+
+        $testimonial = $result['testimonial'];
+
+        if (
+            ! $result['wasAlreadyApproved']
+            && filled($testimonial->email)
+        ) {
+            Notification::route('mail', $testimonial->email)
+                ->notify(
+                    new TestimonialApprovedNotification($testimonial)
+                );
         }
 
         return $testimonial;
     }
 
+    /**
+     * Deny a testimonial and remove it from publication.
+     */
     public function deny(Testimonials $testimonial): Testimonials
     {
-        $testimonial->update([
-            'status' => Testimonials::STATUS_DENIED,
-            'is_published' => false,
-            'published_at' => null,
-            'moderated_at' => now(),
-        ]);
+        return DB::transaction(function () use ($testimonial): Testimonials {
+            $testimonial = Testimonials::query()
+                ->whereKey($testimonial->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        return $testimonial->refresh();
+            $testimonial->update([
+                'status' => Testimonials::STATUS_DENIED,
+                'is_published' => false,
+                'published_at' => null,
+                'moderated_at' => now(),
+            ]);
+
+            return $testimonial->fresh();
+        });
     }
 
+    /**
+     * Permanently delete a testimonial.
+     */
     public function delete(Testimonials $testimonial): void
     {
-        $testimonial->delete();
+        DB::transaction(function () use ($testimonial): void {
+            $testimonial = Testimonials::query()
+                ->whereKey($testimonial->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $testimonial->delete();
+        });
     }
 
+    /**
+     * Publish a testimonial.
+     */
     public function publish(Testimonials $testimonial): Testimonials
     {
         return $this->approve($testimonial);
     }
 
+    /**
+     * Remove a testimonial from the public website
+     * without changing its moderation status.
+     */
     public function unpublish(Testimonials $testimonial): Testimonials
     {
-        $testimonial->update([
-            'is_published' => false,
-            'published_at' => null,
-        ]);
+        return DB::transaction(function () use ($testimonial): Testimonials {
+            $testimonial = Testimonials::query()
+                ->whereKey($testimonial->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        return $testimonial->refresh();
+            $testimonial->update([
+                'is_published' => false,
+                'published_at' => null,
+            ]);
+
+            return $testimonial->fresh();
+        });
     }
 
-    public function toggleFeatured(
-        Testimonials $testimonial
-    ): Testimonials {
-        $testimonial->update([
-            'is_featured' => ! $testimonial->is_featured,
-        ]);
+    /**
+     * Toggle the featured state.
+     */
+    public function toggleFeatured(Testimonials $testimonial): Testimonials
+    {
+        return DB::transaction(function () use ($testimonial): Testimonials {
+            $testimonial = Testimonials::query()
+                ->whereKey($testimonial->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        return $testimonial->refresh();
+            $testimonial->update([
+                'is_featured' => ! $testimonial->is_featured,
+            ]);
+
+            return $testimonial->fresh();
+        });
     }
 }

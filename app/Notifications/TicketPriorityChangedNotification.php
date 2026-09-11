@@ -4,14 +4,11 @@ namespace App\Notifications;
 
 use App\Models\Ticket;
 use App\Services\TicketService;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class TicketPriorityChangedNotification extends Notification implements ShouldQueue
+class TicketPriorityChangedNotification extends Notification
 {
-    use Queueable;
 
     public function __construct(
         public Ticket $ticket,

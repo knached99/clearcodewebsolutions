@@ -9,9 +9,12 @@ use App\Rules\UniqueTeamInvitation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use Throwable;
 
 new class extends Component
 {
@@ -24,6 +27,10 @@ new class extends Component
 
     public string $inviteRole = 'member';
 
+    private const INVITE_MAX_ATTEMPTS = 10;
+
+    private const INVITE_DECAY_SECONDS = 900;
+
     /**
      * Open the invitation modal.
      */
@@ -31,15 +38,13 @@ new class extends Component
     {
         $this->authorize(
             'inviteMember',
-            $this->team
+            $this->team,
         );
 
         $this->resetValidation();
 
         $this->inviteEmail = '';
-
         $this->inviteRole = TeamRole::Member->value;
-
         $this->show = true;
     }
 
@@ -51,9 +56,7 @@ new class extends Component
         $this->resetValidation();
 
         $this->inviteEmail = '';
-
         $this->inviteRole = TeamRole::Member->value;
-
         $this->show = false;
     }
 
@@ -64,13 +67,17 @@ new class extends Component
     {
         return [
             'inviteEmail' => [
+                'bail',
                 'required',
                 'string',
-                'email',
-                'max:255',
+                'lowercase',
+                'email:rfc,dns,spoof',
+                'max:254',
                 new UniqueTeamInvitation($this->team),
             ],
+
             'inviteRole' => [
+                'bail',
                 'required',
                 'string',
                 'in:' . implode(',', [
@@ -86,162 +93,305 @@ new class extends Component
      */
     public function invite(): void
     {
-        /**
-         * Authorize using TeamPolicy::inviteMember().
+        /*
+         * Always authorize again at the point of action.
          *
-         * This checks TeamPermission::CreateInvitation rather
-         * than requiring the user's pivot role to literally be
-         * "admin".
+         * The modal being opened successfully is not sufficient
+         * authorization because permissions can change afterwards.
          */
         $this->authorize(
             'inviteMember',
-            $this->team
+            $this->team,
+        );
+
+        /*
+         * Normalize before validation so the value that is validated
+         * is the value that will actually be stored.
+         */
+        $this->inviteEmail = strtolower(
+            trim($this->inviteEmail),
         );
 
         $this->validate();
 
-        $email = strtolower(
-            trim($this->inviteEmail)
-        );
-
-        /**
-         * Generate a strong temporary password.
-         *
-         * It is never stored in plaintext in the database.
-         * Only the queued notification receives it.
+        /*
+         * Prevent an individual user/IP from repeatedly creating
+         * invitations and triggering account/password operations.
          */
-        $temporaryPassword = Str::password(
-            length: 20,
-            letters: true,
-            numbers: true,
-            symbols: true,
+        $this->ensureRateLimit();
+
+        $inviter = auth()->user();
+
+        abort_unless(
+            $inviter,
+            403,
         );
 
-        $invitation = DB::transaction(
-            function () use (
-                $email,
-                $temporaryPassword
-            ): TeamInvitation {
-                $inviter = auth()->user();
+        $email = $this->inviteEmail;
+        $role = $this->inviteRole;
 
-                abort_unless(
-                    $inviter,
-                    403
-                );
-
-                /**
-                 * Find an existing account by normalized email.
-                 */
-                $user = User::query()
-                    ->whereRaw(
-                        'LOWER(email) = ?',
-                        [$email]
-                    )
-                    ->first();
-
-                /**
-                 * Create the account if it does not exist.
-                 */
-                if (! $user) {
-                    $user = User::create([
-                        'name' => Str::before(
-                            $email,
-                            '@'
-                        ),
-                        'email' => $email,
-                        'password' => Hash::make(
-                            $temporaryPassword
-                        ),
-                        'email_verified_at' => now(),
-                    ]);
-
-                    /**
-                     * Force the invited account to change its password.
-                     */
-                    $user->forceFill([
-                        'must_change_password' => true,
-                    ])->save();
-                } else {
-                    /**
-                     * Existing users also receive a temporary password
-                     * and must change it before continuing.
-                     *
-                     * We deliberately do NOT overwrite their existing
-                     * email verification state.
-                     */
-                    $user->forceFill([
-                        'password' => Hash::make(
-                            $temporaryPassword
-                        ),
-                        'must_change_password' => true,
-                    ])->save();
-                }
-
-                /**
-                 * Safety check:
-                 *
-                 * UniqueTeamInvitation normally prevents an existing
-                 * member from reaching this point, but enforce it again
-                 * server-side.
-                 */
-                abort_if(
-                    $this->team
-                        ->members()
-                        ->whereKey($user->id)
-                        ->exists(),
-                    422,
-                    __('This user is already a member of the team.')
-                );
-
-                /**
-                 * Create the invitation.
-                 */
-                return TeamInvitation::create([
-                    'team_id' => $this->team->id,
-                    'email' => $email,
-                    'role' => $this->inviteRole,
-                    'invited_by' => $inviter->id,
-                    'expires_at' => now()->addDays(3),
-                ]);
-            }
-        );
-
-        /**
-         * Queue the invitation email.
+        /*
+         * Generate the temporary password only if a new account
+         * actually needs one.
          *
-         * The TeamInvitation notification implements ShouldQueue
-         * and uses afterCommit(), so the email is processed by the
-         * queue after the database transaction has committed.
+         * Existing users must NOT have their current password
+         * overwritten merely because they were invited.
+         */
+        $temporaryPassword = null;
+
+        try {
+            $invitation = DB::transaction(
+                function () use (
+                    $email,
+                    $role,
+                    $inviter,
+                    &$temporaryPassword,
+                ): TeamInvitation {
+                    /*
+                     * Lock the team row so concurrent invitation
+                     * operations for this team are serialized.
+                     */
+                    $team = Team::query()
+                        ->lockForUpdate()
+                        ->findOrFail($this->team->id);
+
+                    /*
+                     * Re-authorize against the current team instance.
+                     */
+                    $this->authorize(
+                        'inviteMember',
+                        $team,
+                    );
+
+                    /*
+                     * Re-check membership inside the transaction.
+                     *
+                     * The validation rule is useful for UX, but it
+                     * cannot protect against concurrent requests.
+                     */
+                    $existingUser = User::query()
+                        ->where('email', $email)
+                        ->first();
+
+                    /*
+                     * Existing users should retain their password.
+                     *
+                     * They can simply receive the invitation and use
+                     * their existing account credentials.
+                     */
+                    if ($existingUser) {
+                        if (
+                            $team->members()
+                                ->whereKey($existingUser->id)
+                                ->exists()
+                        ) {
+                            throw ValidationException::withMessages([
+                                'inviteEmail' => __(
+                                    'This user is already a member of the team.'
+                                ),
+                            ]);
+                        }
+                    } else {
+                        /*
+                         * New account.
+                         *
+                         * Generate the temporary password only when
+                         * there is actually a new account to create.
+                         */
+                        $temporaryPassword = Str::password(
+                            length: 20,
+                            letters: true,
+                            numbers: true,
+                            symbols: true,
+                        );
+
+                        $existingUser = User::create([
+                            'name' => Str::before(
+                                $email,
+                                '@',
+                            ),
+                            'email' => $email,
+                            'password' => Hash::make(
+                                $temporaryPassword,
+                            ),
+                            'email_verified_at' => now(),
+                            'must_change_password' => true,
+                        ]);
+                    }
+
+                    /*
+                     * Re-check membership immediately before creating
+                     * the invitation.
+                     */
+                    if (
+                        $team->members()
+                            ->whereKey($existingUser->id)
+                            ->exists()
+                    ) {
+                        throw ValidationException::withMessages([
+                            'inviteEmail' => __(
+                                'This user is already a member of the team.'
+                            ),
+                        ]);
+                    }
+
+                    /*
+                     * Re-check for an existing invitation.
+                     *
+                     * This protects against concurrent requests even
+                     * if the validation rule was bypassed or stale.
+                     */
+                    $existingInvitation = TeamInvitation::query()
+                        ->where('team_id', $team->id)
+                        ->where('email', $email)
+                        ->whereNull('accepted_at')
+                        ->where('expires_at', '>', now())
+                        ->exists();
+
+                    if ($existingInvitation) {
+                        throw ValidationException::withMessages([
+                            'inviteEmail' => __(
+                                'An active invitation already exists for this email address.'
+                            ),
+                        ]);
+                    }
+
+                    return TeamInvitation::create([
+                        'team_id' => $team->id,
+                        'email' => $email,
+                        'role' => $role,
+                        'invited_by' => $inviter->id,
+                        'expires_at' => now()->addDays(3),
+                    ]);
+                },
+            );
+        } catch (ValidationException $exception) {
+            throw $exception;
+        } catch (Throwable $exception) {
+            report($exception);
+
+            $this->addError(
+                'inviteEmail',
+                __(
+                    'The invitation could not be created. Please try again.'
+                ),
+            );
+
+            return;
+        }
+
+        /*
+         * Rate-limit only after a successful invitation transaction.
+         */
+        $this->hitRateLimit();
+
+        /*
+         * Send the invitation after the transaction has committed.
+         *
+         * If the notification implements ShouldQueue + afterCommit(),
+         * the actual mail delivery will still happen asynchronously.
+         *
+         * The temporary password is only present for newly-created
+         * accounts.
          */
         Notification::route(
             'mail',
-            $email
+            $email,
         )->notify(
             new TeamInvitationNotification(
                 $invitation->id,
                 $temporaryPassword,
-            )
+            ),
         );
 
         $this->resetValidation();
 
         $this->inviteEmail = '';
-
         $this->inviteRole = TeamRole::Member->value;
-
         $this->show = false;
 
         session()->flash(
             'success',
-            __('Invitation sent successfully.')
+            __('Invitation sent successfully.'),
         );
 
         $this->dispatch(
-            'team-member-invited'
+            'team-member-invited',
+        );
+    }
+
+    /**
+     * Ensure invitation attempts are rate-limited.
+     */
+    protected function ensureRateLimit(): void
+    {
+        $ip = request()->ip() ?? 'unknown';
+
+        $emailKey = 'team-invite:email:' . hash(
+            'sha256',
+            $this->inviteEmail,
+        );
+
+        $ipKey = 'team-invite:ip:' . hash(
+            'sha256',
+            $ip,
+        );
+
+        /*
+         * Keep the email-specific limit and IP-specific limit
+         * independent.
+         */
+        if (
+            RateLimiter::tooManyAttempts(
+                $emailKey,
+                self::INVITE_MAX_ATTEMPTS,
+            )
+            || RateLimiter::tooManyAttempts(
+                $ipKey,
+                self::INVITE_MAX_ATTEMPTS,
+            )
+        ) {
+            $seconds = max(
+                RateLimiter::availableIn($emailKey),
+                RateLimiter::availableIn($ipKey),
+            );
+
+            $minutes = max(
+                1,
+                (int) ceil($seconds / 60),
+            );
+
+            abort(
+                429,
+                "Too many invitation attempts. Please try again in {$minutes} minute(s).",
+            );
+        }
+    }
+
+    /**
+     * Consume the invitation rate limits.
+     */
+    protected function hitRateLimit(): void
+    {
+        $ip = request()->ip() ?? 'unknown';
+
+        RateLimiter::hit(
+            'team-invite:email:' . hash(
+                'sha256',
+                $this->inviteEmail,
+            ),
+            self::INVITE_DECAY_SECONDS,
+        );
+
+        RateLimiter::hit(
+            'team-invite:ip:' . hash(
+                'sha256',
+                $ip,
+            ),
+            self::INVITE_DECAY_SECONDS,
         );
     }
 };
-?>
 
 <div>
 

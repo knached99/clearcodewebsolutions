@@ -3,13 +3,11 @@
 namespace App\Notifications;
 
 use App\Models\Testimonials;
-use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class TestimonialApprovedNotification extends Notification
 {
-    use Queueable;
 
     public function __construct(
         public Testimonials $testimonial
