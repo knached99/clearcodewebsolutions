@@ -94,7 +94,7 @@
                     <span>⌁</span>
                 </div>
 
-                <h3>Web/Mobile Applications</h3>
+                <h3>Mobile Applications</h3>
 
                 <p>
                     Powerful custom applications designed around
