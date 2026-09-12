@@ -14,15 +14,17 @@
 
         <x-home.services id="services" />
 
+        <x-home.about id="about" />
+
         <x-home.work id="work" />
-
+        
         <x-home.team id="team" />
-
+        
         <x-home.process id="process" />
 
-        <livewire:home.testimonials.slider id="testimonials" />
+        <x-home.pricing-model id="pricing"/>
 
-        <x-home.about id="about" />
+        <livewire:home.testimonials.slider id="testimonials" />
         
         <livewire:home.testimonials.form id="testimonial-form"/>
 
