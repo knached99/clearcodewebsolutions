@@ -25,7 +25,7 @@
 
                     <div class="col-12">
 
-                     <h1 class="text-indigo-200 font-black" style="font-weight: 900;">
+                     <h1 class="text-indigo-200 font-black" style="font-weight: 900; font-size: 60px;">
                                 ClearCode<br>
                                 Web Solutions
                             </h1>
@@ -52,7 +52,7 @@
 
                         <div class="col-12">
 
-                            <h1 style="font-weight: 600;">
+                            <h1 style="font-weight: 600; font-size: 40px;">
                                 Building the web<br>
                                 Clearly
                             </h1>
