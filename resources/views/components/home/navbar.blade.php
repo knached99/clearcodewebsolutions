@@ -34,33 +34,7 @@
                 <span>Services</span>
             </a>
 
-             <a
-                href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#about' : '#about' }}"
-                class="cc-nav-link"
-            >
-                <span>About</span>
-            </a>
-
-            <a
-                href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#work' : '#work' }}"
-                class="cc-nav-link"
-            >
-                <span>Our Work</span>
-            </a>
-
-             <a
-                href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#team' : '#team' }}"
-                class="cc-nav-link"
-            >
-                <span>Our Team</span>
-            </a>
-
-            <a
-                href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#process' : '#process' }}"
-                class="cc-nav-link"
-            >
-                <span>Our Process</span>
-            </a>
+    
 
             <a
                 href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#pricing' : '#pricing' }}"
@@ -225,79 +199,7 @@
                 </span>
             </a>
 
-             {{-- About --}}
-            <a
-                href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#about' : '#about' }}"
-                class="cc-mobile-link"
-            >
-                <span class="cc-mobile-link__number">
-                    03
-                </span>
 
-                <span class="cc-mobile-link__text">
-                    About
-                </span>
-
-                <span class="cc-mobile-link__arrow">
-                    ↗
-                </span>
-            </a>
-
-
-            {{-- Our Work --}}
-            <a
-                href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#work' : '#work' }}"
-                class="cc-mobile-link"
-            >
-                <span class="cc-mobile-link__number">
-                    04
-                </span>
-
-                <span class="cc-mobile-link__text">
-                    Our Work
-                </span>
-
-                <span class="cc-mobile-link__arrow">
-                    ↗
-                </span>
-            </a>
-
-            {{-- Our Team --}}
-            <a
-                href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#team' : '#team' }}"
-                class="cc-mobile-link"
-            >
-                <span class="cc-mobile-link__number">
-                    05
-                </span>
-
-                <span class="cc-mobile-link__text">
-                    Our Team
-                </span>
-
-                <span class="cc-mobile-link__arrow">
-                    ↗
-                </span>
-            </a>
-
-
-             {{-- Process --}}
-            <a
-                href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#process' : '#process' }}"
-                class="cc-mobile-link"
-            >
-                <span class="cc-mobile-link__number">
-                    06
-                </span>
-
-                <span class="cc-mobile-link__text">
-                    Our Process
-                </span>
-
-                <span class="cc-mobile-link__arrow">
-                    ↗
-                </span>
-            </a>
 
              {{-- Pricing --}}
             <a
@@ -305,7 +207,7 @@
                 class="cc-mobile-link"
             >
                 <span class="cc-mobile-link__number">
-                    07
+                    03
                 </span>
 
                 <span class="cc-mobile-link__text">
@@ -325,7 +227,7 @@
                 class="cc-mobile-link"
             >
                 <span class="cc-mobile-link__number">
-                    08
+                    04
                 </span>
 
                 <span class="cc-mobile-link__text">
@@ -344,7 +246,7 @@
                 class="cc-mobile-link"
             >
                 <span class="cc-mobile-link__number">
-                    09
+                    05
                 </span>
 
                 <span class="cc-mobile-link__text">
@@ -363,7 +265,7 @@
                 class="cc-mobile-link"
             >
                 <span class="cc-mobile-link__number">
-                    10
+                    06
                 </span>
 
                 <span class="cc-mobile-link__text">
@@ -382,7 +284,7 @@
                 class="cc-mobile-link"
             >
                 <span class="cc-mobile-link__number">
-                    11
+                    07
                 </span>
 
                 <span class="cc-mobile-link__text">
