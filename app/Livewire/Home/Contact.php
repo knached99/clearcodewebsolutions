@@ -4,10 +4,11 @@ namespace App\Livewire\Home;
 
 use App\Notifications\NewTicketNotification;
 use App\Notifications\TicketReceivedNotification;
-use App\Services\TicketService;
 use App\Services\RecaptchaService;
+use App\Services\TicketService;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Component;
@@ -18,25 +19,16 @@ class Contact extends Component
 {
     use UsesSpamProtection;
 
+    private const RATE_LIMIT_MAX_ATTEMPTS = 3;
+    private const RATE_LIMIT_DECAY_SECONDS = 60;
+    private const RECAPTCHA_MAX_LENGTH = 4096;
+
     public string $name = '';
-
     public string $email = '';
-
     public string $subject = '';
-
     public string $message = '';
 
-    /**
-     * Spatie honeypot data.
-     *
-     * This replaces the custom $website honeypot field.
-     */
     public HoneypotData $extraFields;
-
-    /**
-     * Fresh reCAPTCHA v3 token generated immediately before submission.
-     */
-    public string $recaptchaToken = '';
 
     public bool $submitted = false;
 
@@ -45,6 +37,19 @@ class Contact extends Component
     public function mount(): void
     {
         $this->extraFields = new HoneypotData();
+    }
+
+    protected function subjects(): array
+    {
+        return [
+            'Website Design',
+            'Website Development',
+            'Mobile App Development',
+            'E-Commerce',
+            'Website Redesign',
+            'Maintenance & Support',
+            'Other',
+        ];
     }
 
     protected function rules(): array
@@ -56,7 +61,6 @@ class Contact extends Component
                 'string',
                 'min:2',
                 'max:80',
-                'regex:/\A[\pL\pM]+(?:[ .\'-][\pL\pM]+)*\z/u',
             ],
 
             'email' => [
@@ -72,15 +76,7 @@ class Contact extends Component
                 'bail',
                 'required',
                 'string',
-                Rule::in([
-                    'Website Design',
-                    'Website Development',
-                    'Mobile App Development',
-                    'E-Commerce',
-                    'Website Redesign',
-                    'Maintenance & Support',
-                    'Other',
-                ]),
+                Rule::in($this->subjects()),
             ],
 
             'message' => [
@@ -90,27 +86,26 @@ class Contact extends Component
                 'min:20',
                 'max:5000',
             ],
-
-            'recaptchaToken' => [
-                'bail',
-                'required',
-                'string',
-                'max:4096',
-            ],
         ];
     }
 
-    public function updated($property): void
+    protected function messages(): array
     {
-        $rules = $this->typingRules($property);
+        return [
+            'name.required' => 'Please tell us your name.',
+            'name.min' => 'Your name must be at least 2 characters.',
+            'name.max' => 'Your name is too long.',
 
-        if ($rules === []) {
-            return;
-        }
+            'email.required' => 'Please enter your email address.',
+            'email.email' => 'Please enter a valid email address.',
 
-        $this->validateOnly($property, [
-            $property => $rules,
-        ]);
+            'subject.required' => 'Please select a subject.',
+            'subject.in' => 'Please select a valid subject.',
+
+            'message.required' => 'Please tell us how we can help.',
+            'message.min' => 'Your message should be at least 20 characters.',
+            'message.max' => 'Your message is too long.',
+        ];
     }
 
     protected function typingRules(string $property): array
@@ -122,7 +117,6 @@ class Contact extends Component
                 'string',
                 'min:2',
                 'max:80',
-                'regex:/\A[\pL\pM]+(?:[ .\'-][\pL\pM]+)*\z/u',
             ],
 
             'email' => [
@@ -138,15 +132,7 @@ class Contact extends Component
                 'bail',
                 'required',
                 'string',
-                Rule::in([
-                    'Website Design',
-                    'Website Development',
-                    'Mobile App Development',
-                    'E-Commerce',
-                    'Website Redesign',
-                    'Maintenance & Support',
-                    'Other',
-                ]),
+                Rule::in($this->subjects()),
             ],
 
             'message' => [
@@ -157,22 +143,36 @@ class Contact extends Component
                 'max:5000',
             ],
 
-            'recaptchaToken' => [],
-
             default => [],
         };
     }
 
+    public function updated($property): void
+    {
+        $rules = $this->typingRules($property);
+
+        if ($rules === []) {
+            return;
+        }
+
+        $this->validateOnly($property, [
+            $property => $rules,
+        ]);
+    }
+
     /**
-     * Called when the visitor clicks Submit.
+     * Browser-side preparation step.
      *
-     * reCAPTCHA is generated immediately before the final submission.
+     * The final submit() method repeats all security-sensitive
+     * checks because this method cannot be trusted as an
+     * authorization/security boundary.
      */
     public function prepareSubmit(): void
     {
+        $this->submitted = false;
+
         $this->resetValidation([
             'form',
-            'recaptchaToken',
         ]);
 
         $this->validate([
@@ -185,130 +185,191 @@ class Contact extends Component
         $this->dispatch('execute-contact-recaptcha');
     }
 
- 
-   public function submit(
-    string $recaptchaToken,
-    TicketService $ticketService,
-    RecaptchaService $recaptchaService,
-): void {
-    $this->submitted = false;
-
-    /*
-     * The browser controls this value.
-     *
-     * Store it only long enough to perform validation.
-     */
-    $this->recaptchaToken = $recaptchaToken;
-
-    /*
-     * Spatie honeypot.
-     */
-    $this->protectAgainstSpam();
-
-    /*
-     * Rate limit BEFORE calling Google or sending mail.
-     */
-    $key = $this->rateLimitKey();
-
-    if (RateLimiter::tooManyAttempts($key, 3)) {
-        $seconds = RateLimiter::availableIn($key);
-
-        throw ValidationException::withMessages([
-            'email' => "Too many attempts. Please try again in {$seconds} seconds.",
-        ]);
-    }
-
-    /*
-     * Validate the complete form.
-     */
-    $this->validate();
-
-    /*
-     * Verify reCAPTCHA server side.
-     */
-    $recaptcha = $recaptchaService->verifyRecaptcha(
-        token: $recaptchaToken,
-        expectedAction: 'contact_submit',
-    );
-
-    if (! $recaptcha['success']) {
-        $this->addError(
-            'form',
-            $recaptcha['message'],
-        );
-
-        return;
-    }
-
-    /*
-     * Only consume the rate-limit attempt after
-     * validation and reCAPTCHA succeed.
-     */
-    RateLimiter::hit($key, 60);
-
-    /*
-     * Explicitly construct the service input.
-     */
-    $ticketData = [
-        'name' => $this->name,
-        'email' => $this->email,
-        'subject' => $this->subject,
-        'message' => $this->message,
-    ];
-
-    /*
-     * Create ticket.
-     */
-    $result = $ticketService->createTicket($ticketData);
-
-    $ticket = $result['ticket'];
-    $token = $result['token'];
-
-    /*
-     * Customer notification.
-     */
-    Notification::route(
-        'mail',
-        $ticket->email,
-    )->notify(
-        new TicketReceivedNotification(
-            $ticket,
-            $token,
-        ),
-    );
-
-    /*
-     * Team notification.
-     */
-    $recipients = $ticket->team
-        ->members()
-        ->select([
-            'users.id',
-            'users.name',
-            'users.email',
-        ])
-        ->get();
-
-    if ($recipients->isNotEmpty()) {
-        Notification::send(
-            $recipients,
-            new NewTicketNotification($ticket),
-        );
-    }
-
-    /*
-     * Success.
-     */
-    $this->ticketNumber = $ticket->ticket_number;
-
-    $this->resetForm();
-
-    $this->submitted = true;
-}
-
     /**
-     * Build a bounded rate-limit key.
+     * Final submission endpoint.
+     *
+     * Security order:
+     *
+     * 1. Rate-limit check
+     * 2. Rate-limit hit
+     * 3. Honeypot
+     * 4. Cheap Laravel validation
+     * 5. reCAPTCHA
+     * 6. Business/service operation
+     * 7. Database
      */
+    public function submit(
+        string $recaptchaToken,
+        TicketService $ticketService,
+        RecaptchaService $recaptchaService,
+    ): void {
+        $this->submitted = false;
+
+        /*
+         * ---------------------------------------------------------
+         * 1. RATE LIMIT CHECK
+         * ---------------------------------------------------------
+         */
+
+        $key = $this->rateLimitKey();
+
+        if (
+            RateLimiter::tooManyAttempts(
+                $key,
+                self::RATE_LIMIT_MAX_ATTEMPTS,
+            )
+        ) {
+            $seconds = RateLimiter::availableIn($key);
+
+            throw ValidationException::withMessages([
+                'form' => $this->rateLimitMessage($seconds),
+            ]);
+        }
+
+        /*
+         * ---------------------------------------------------------
+         * 2. RATE LIMIT HIT
+         * ---------------------------------------------------------
+         *
+         * Consume the attempt BEFORE reCAPTCHA.
+         */
+
+        RateLimiter::hit(
+            $key,
+            self::RATE_LIMIT_DECAY_SECONDS,
+        );
+
+        /*
+         * ---------------------------------------------------------
+         * 3. HONEYPOT
+         * ---------------------------------------------------------
+         */
+
+        $this->protectAgainstSpam();
+
+        /*
+         * ---------------------------------------------------------
+         * 4. CHEAP LARAVEL VALIDATION
+         * ---------------------------------------------------------
+         */
+
+        $this->validate();
+
+        $this->validateRecaptchaToken($recaptchaToken);
+
+        /*
+         * ---------------------------------------------------------
+         * 5. RECAPTCHA
+         * ---------------------------------------------------------
+         */
+
+        $recaptcha = $recaptchaService->verifyRecaptcha(
+            token: $recaptchaToken,
+            expectedAction: 'contact_submit',
+        );
+
+        if (! $recaptcha['success']) {
+            $this->addError(
+                'form',
+                $recaptcha['message'],
+            );
+
+            return;
+        }
+
+        /*
+         * ---------------------------------------------------------
+         * 6. BUSINESS VALIDATION / SERVICE
+         * ---------------------------------------------------------
+         */
+
+        $ticketData = [
+            'name' => trim($this->name),
+            'email' => strtolower(trim($this->email)),
+            'subject' => $this->subject,
+            'message' => trim($this->message),
+        ];
+
+        /*
+         * ---------------------------------------------------------
+         * 7. DATABASE
+         * ---------------------------------------------------------
+         *
+         * TicketService performs the actual ticket creation.
+         */
+
+        $result = $ticketService->createTicket(
+            $ticketData,
+        );
+
+        $ticket = $result['ticket'];
+        $token = $result['token'];
+
+        /*
+         * Notifications happen AFTER the database operation.
+         *
+         * These notification classes should implement ShouldQueue
+         * if you want mail delivery to happen asynchronously.
+         */
+
+        Notification::route(
+            'mail',
+            $ticket->email,
+        )->notify(
+            new TicketReceivedNotification(
+                $ticket,
+                $token,
+            ),
+        );
+
+        $recipients = $ticket->team
+            ->members()
+            ->select([
+                'users.id',
+                'users.name',
+                'users.email',
+            ])
+            ->get();
+
+        if ($recipients->isNotEmpty()) {
+            Notification::send(
+                $recipients,
+                new NewTicketNotification(
+                    $ticket,
+                ),
+            );
+        }
+
+        $this->ticketNumber = $ticket->ticket_number;
+
+        $this->resetForm();
+
+        $this->submitted = true;
+
+        $this->dispatch('contact-submitted');
+    }
+
+    protected function validateRecaptchaToken(string $token): void
+    {
+        Validator::make(
+            [
+                'recaptchaToken' => $token,
+            ],
+            [
+                'recaptchaToken' => [
+                    'bail',
+                    'required',
+                    'string',
+                    'max:' . self::RECAPTCHA_MAX_LENGTH,
+                ],
+            ],
+            [
+                'recaptchaToken.required' =>
+                    'Please wait a moment and try submitting again.',
+            ],
+        )->validate();
+    }
+
     protected function rateLimitKey(): string
     {
         $ip = request()->ip() ?? 'unknown';
@@ -319,7 +380,22 @@ class Contact extends Component
         );
     }
 
-  
+    protected function rateLimitMessage(int $seconds): string
+    {
+        $seconds = max(1, $seconds);
+
+        if ($seconds < 60) {
+            return "Too many submissions. Please try again in {$seconds} seconds.";
+        }
+
+        $minutes = max(
+            1,
+            (int) ceil($seconds / 60),
+        );
+
+        return "Too many submissions. Please try again in {$minutes} minute(s).";
+    }
+
     protected function resetForm(): void
     {
         $this->reset([
@@ -327,24 +403,19 @@ class Contact extends Component
             'email',
             'subject',
             'message',
-            'recaptchaToken',
         ]);
 
-        /*
-         * Generate a new Spatie honeypot payload for the next form.
-         */
-        $this->extraFields = new \Spatie\Honeypot\Http\Livewire\Concerns\HoneypotData();
-
         $this->ticketNumber = null;
-    }
 
-    public function addError($name, $message)
-    {
-        parent::addError($name, $message);
+        $this->extraFields = new HoneypotData();
+
+        $this->resetValidation();
     }
 
     public function render()
     {
-        return view('livewire.home.contact');
+        return view(
+            'livewire.home.contact',
+        );
     }
 }

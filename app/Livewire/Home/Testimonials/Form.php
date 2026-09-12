@@ -2,9 +2,10 @@
 
 namespace App\Livewire\Home\Testimonials;
 
-use App\Services\TestimonialService;
 use App\Services\RecaptchaService;
+use App\Services\TestimonialService;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Spatie\Honeypot\Http\Livewire\Concerns\HoneypotData;
@@ -14,27 +15,18 @@ class Form extends Component
 {
     use UsesSpamProtection;
 
+    private const RATE_LIMIT_MAX_ATTEMPTS = 3;
+    private const RATE_LIMIT_DECAY_SECONDS = 3600;
+    private const RECAPTCHA_MAX_LENGTH = 4096;
+
     public string $name = '';
-
     public string $email = '';
-
     public string $company = '';
-
     public string $role = '';
-
     public string $message = '';
-
     public int $rating = 0;
 
-    /**
-     * Spatie honeypot data.
-     */
     public HoneypotData $extraFields;
-
-    /**
-     * Fresh reCAPTCHA v3 token.
-     */
-    public string $recaptchaToken = '';
 
     public bool $submitted = false;
 
@@ -92,13 +84,6 @@ class Form extends Component
                 'integer',
                 Rule::in([1, 2, 3, 4, 5]),
             ],
-
-            'recaptchaToken' => [
-                'bail',
-                'required',
-                'string',
-                'max:4096',
-            ],
         ];
     }
 
@@ -106,36 +91,22 @@ class Form extends Component
     {
         return [
             'name.required' => 'Please tell us your name.',
-
             'name.regex' => 'Please enter a valid name.',
+            'name.min' => 'Your name must be at least 2 characters.',
+            'name.max' => 'Your name is too long.',
 
             'email.email' => 'Please enter a valid email address.',
 
+            'company.max' => 'Your company name is too long.',
+            'role.max' => 'Your role is too long.',
+
             'message.required' => 'Please share your experience with us.',
-
             'message.min' => 'Your testimonial should be at least 20 characters.',
-
             'message.max' => 'Your testimonial is too long.',
 
             'rating.required' => 'Please select a rating.',
-
             'rating.in' => 'Please select a rating from 1 to 5.',
-
-            'recaptchaToken.required' => 'Please wait a moment and try submitting again.',
         ];
-    }
-
-    public function updated($property): void
-    {
-        $rules = $this->typingRules($property);
-
-        if ($rules === []) {
-            return;
-        }
-
-        $this->validateOnly($property, [
-            $property => $rules,
-        ]);
     }
 
     protected function typingRules(string $property): array
@@ -182,15 +153,23 @@ class Form extends Component
                 Rule::in([1, 2, 3, 4, 5]),
             ],
 
-            'recaptchaToken' => [],
-
             default => [],
         };
     }
 
-    /**
-     * Set testimonial rating.
-     */
+    public function updated($property): void
+    {
+        $rules = $this->typingRules($property);
+
+        if ($rules === []) {
+            return;
+        }
+
+        $this->validateOnly($property, [
+            $property => $rules,
+        ]);
+    }
+
     public function setRating(int $rating): void
     {
         if (! in_array($rating, [1, 2, 3, 4, 5], true)) {
@@ -203,13 +182,19 @@ class Form extends Component
     }
 
     /**
-     * Called when the user clicks Submit.
+     * Browser-side preparation step.
+     *
+     * This does NOT perform the final submission.
+     * The final submit() method independently repeats all
+     * security-sensitive checks because Livewire methods
+     * can be invoked directly by an attacker.
      */
     public function prepareSubmit(): void
     {
+        $this->submitted = false;
+
         $this->resetValidation([
             'form',
-            'recaptchaToken',
         ]);
 
         $this->validate([
@@ -221,13 +206,21 @@ class Form extends Component
             'rating' => $this->rules()['rating'],
         ]);
 
-        $this->dispatch(
-            'execute-testimonial-recaptcha',
-        );
+        $this->dispatch('execute-testimonial-recaptcha');
     }
 
     /**
-     * Final submission after reCAPTCHA has been generated.
+     * Final submission endpoint.
+     *
+     * Security order:
+     *
+     * 1. Rate-limit check
+     * 2. Rate-limit hit
+     * 3. Honeypot
+     * 4. Cheap Laravel validation
+     * 5. reCAPTCHA verification
+     * 6. Business/service operation
+     * 7. Database
      */
     public function submit(
         string $recaptchaToken,
@@ -236,35 +229,76 @@ class Form extends Component
     ): void {
         $this->submitted = false;
 
-        $this->recaptchaToken = $recaptchaToken;
-
         /*
-         * Spatie honeypot + minimum-time protection.
+         * ---------------------------------------------------------
+         * 1. RATE LIMIT CHECK
+         * ---------------------------------------------------------
          */
-        $this->protectAgainstSpam();
 
-        /*
-         * Rate-limit before making the external reCAPTCHA request.
-         */
         $key = $this->rateLimitKey();
 
-        if (RateLimiter::tooManyAttempts($key, 3)) {
+        if (
+            RateLimiter::tooManyAttempts(
+                $key,
+                self::RATE_LIMIT_MAX_ATTEMPTS,
+            )
+        ) {
+            $seconds = RateLimiter::availableIn($key);
+
+            $minutes = max(
+                1,
+                (int) ceil($seconds / 60),
+            );
+
             $this->addError(
                 'form',
-                'Too many submissions. Please try again later.',
+                "Too many submissions. Please try again in {$minutes} minute(s).",
             );
 
             return;
         }
 
         /*
-         * Validate the complete form.
+         * ---------------------------------------------------------
+         * 2. RATE LIMIT HIT
+         * ---------------------------------------------------------
+         *
+         * Consume the attempt BEFORE contacting Google.
+         *
+         * This prevents an attacker from repeatedly submitting
+         * invalid reCAPTCHA tokens and forcing unlimited external
+         * reCAPTCHA requests.
          */
-        $this->validate();
+
+        RateLimiter::hit(
+            $key,
+            self::RATE_LIMIT_DECAY_SECONDS,
+        );
 
         /*
-         * Verify reCAPTCHA server-side.
+         * ---------------------------------------------------------
+         * 3. HONEYPOT
+         * ---------------------------------------------------------
          */
+
+        $this->protectAgainstSpam();
+
+        /*
+         * ---------------------------------------------------------
+         * 4. CHEAP LARAVEL VALIDATION
+         * ---------------------------------------------------------
+         */
+
+        $this->validate();
+
+        $this->validateRecaptchaToken($recaptchaToken);
+
+        /*
+         * ---------------------------------------------------------
+         * 5. RECAPTCHA
+         * ---------------------------------------------------------
+         */
+
         $recaptcha = $recaptchaService->verifyRecaptcha(
             token: $recaptchaToken,
             expectedAction: 'testimonial_submit',
@@ -280,24 +314,38 @@ class Form extends Component
         }
 
         /*
-         * Consume the rate-limit attempt only after the
-         * security checks succeed.
-         */
-        RateLimiter::hit($key, 3600);
-
-        /*
-         * Explicitly construct the business data.
+         * ---------------------------------------------------------
+         * 6. BUSINESS VALIDATION / SERVICE
+         * ---------------------------------------------------------
          *
-         * Do NOT pass all Livewire properties to the service.
+         * Explicitly construct the business payload.
+         *
+         * Never pass all Livewire properties to the service.
          */
+
         $testimonialData = [
-            'name' => $this->name,
-            'email' => $this->email ?: null,
-            'company' => $this->company ?: null,
-            'role' => $this->role ?: null,
-            'message' => $this->message,
+            'name' => trim($this->name),
+            'email' => $this->email !== ''
+                ? strtolower(trim($this->email))
+                : null,
+            'company' => $this->company !== ''
+                ? trim($this->company)
+                : null,
+            'role' => $this->role !== ''
+                ? trim($this->role)
+                : null,
+            'message' => trim($this->message),
             'rating' => $this->rating,
         ];
+
+        /*
+         * ---------------------------------------------------------
+         * 7. DATABASE
+         * ---------------------------------------------------------
+         *
+         * TestimonialService is responsible for the actual
+         * persistence operation.
+         */
 
         $service->create($testimonialData);
 
@@ -305,9 +353,28 @@ class Form extends Component
 
         $this->submitted = true;
 
-        $this->dispatch(
-            'testimonial-submitted',
-        );
+        $this->dispatch('testimonial-submitted');
+    }
+
+    protected function validateRecaptchaToken(string $token): void
+    {
+        Validator::make(
+            [
+                'recaptchaToken' => $token,
+            ],
+            [
+                'recaptchaToken' => [
+                    'bail',
+                    'required',
+                    'string',
+                    'max:' . self::RECAPTCHA_MAX_LENGTH,
+                ],
+            ],
+            [
+                'recaptchaToken.required' =>
+                    'Please wait a moment and try submitting again.',
+            ],
+        )->validate();
     }
 
     protected function rateLimitKey(): string
@@ -320,7 +387,6 @@ class Form extends Component
         );
     }
 
-
     protected function resetForm(): void
     {
         $this->reset([
@@ -329,22 +395,16 @@ class Form extends Component
             'company',
             'role',
             'message',
-            'recaptchaToken',
         ]);
 
         $this->rating = 0;
 
-        /*
-         * Fresh honeypot payload.
-         */
-        $this->extraFields = new \Spatie\Honeypot\Http\Livewire\Concerns\HoneypotData();
+        $this->extraFields = new HoneypotData();
+
+        $this->resetValidation();
     }
 
-   public function addError($name, $message)
-    {
-        parent::addError($name, $message);
-    }
-        public function render()
+    public function render()
     {
         return view(
             'livewire.home.testimonials.form',

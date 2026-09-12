@@ -3,9 +3,10 @@
 namespace App\Livewire\Home\Tickets;
 
 use App\Models\Ticket;
-use App\Services\TicketService;
 use App\Services\RecaptchaService;
+use App\Services\TicketService;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Validator;
 use Livewire\Component;
 use Spatie\Honeypot\Http\Livewire\Concerns\HoneypotData;
 use Spatie\Honeypot\Http\Livewire\Concerns\UsesSpamProtection;
@@ -28,11 +29,11 @@ class TicketSearch extends Component
     private const VERIFY_IP_MAX_ATTEMPTS = 15;
     private const VERIFY_IP_DECAY_SECONDS = 900;
 
-    private const RECAPTCHA_MIN_SCORE = 0.5;
+    private const VERIFIED_TICKETS_SESSION_KEY =
+        'ticket_search.verified_ticket_ids';
 
-    private const VERIFIED_TICKETS_SESSION_KEY = 'ticket_search.verified_ticket_ids';
-
-    private const VERIFIED_EMAIL_SESSION_KEY = 'ticket_search.verified_email';
+    private const VERIFIED_EMAIL_SESSION_KEY =
+        'ticket_search.verified_email';
 
     public string $email = '';
 
@@ -40,15 +41,13 @@ class TicketSearch extends Component
 
     public HoneypotData $extraFields;
 
-    public string $recaptchaToken = '';
-
     public bool $emailVerificationSent = false;
 
     /**
      * UI state only.
      *
-     * These IDs are intentionally NOT used as the authorization
-     * boundary. The authoritative copy is kept in the session.
+     * These IDs are NOT the authorization boundary.
+     * The session is authoritative.
      */
     public array $verifiedTicketIds = [];
 
@@ -58,9 +57,6 @@ class TicketSearch extends Component
     {
         $this->extraFields = new HoneypotData();
 
-        /*
-         * Restore server-side verification state if it still exists.
-         */
         $this->restoreVerifiedTicketState();
     }
 
@@ -76,13 +72,6 @@ class TicketSearch extends Component
             'email' => $this->emailRules(),
 
             'verificationCode' => $this->verificationRules(),
-
-            'recaptchaToken' => [
-                'bail',
-                'required',
-                'string',
-                'max:' . self::RECAPTCHA_MAX_LENGTH,
-            ],
         ];
     }
 
@@ -119,9 +108,26 @@ class TicketSearch extends Component
         ];
     }
 
+    protected function validateRecaptchaToken(
+        string $token,
+    ): void {
+        Validator::make(
+            [
+                'recaptchaToken' => $token,
+            ],
+            [
+                'recaptchaToken' => $this->recaptchaRules(),
+            ],
+            [
+                'recaptchaToken.required' =>
+                    'Please wait a moment and try again.',
+            ],
+        )->validate();
+    }
+
     /*
     |--------------------------------------------------------------------------
-    | Rate limiting
+    | Rate Limiting
     |--------------------------------------------------------------------------
     */
 
@@ -190,7 +196,7 @@ class TicketSearch extends Component
 
     /*
     |--------------------------------------------------------------------------
-    | Send verification code
+    | Send Verification Code
     |--------------------------------------------------------------------------
     */
 
@@ -199,101 +205,156 @@ class TicketSearch extends Component
         $this->resetValidation([
             'form',
             'email',
-            'recaptchaToken',
         ]);
 
         $this->validate([
             'email' => $this->emailRules(),
         ]);
 
-        $this->protectAgainstSpam();
-
         $this->dispatch(
             'execute-ticket-send-recaptcha',
         );
     }
 
-   public function sendVerificationCode(
-    string $recaptchaToken,
-    TicketService $ticketService,
-    RecaptchaService $recaptchaService,
-): void {
-    $this->recaptchaToken = $recaptchaToken;
+    /**
+     * Security order:
+     *
+     * 1. Rate-limit check
+     * 2. Rate-limit hit
+     * 3. Honeypot
+     * 4. Cheap Laravel validation
+     * 5. reCAPTCHA
+     * 6. TicketService/business validation
+     * 7. Database
+     */
+    public function sendVerificationCode(
+        string $recaptchaToken,
+        TicketService $ticketService,
+        RecaptchaService $recaptchaService,
+    ): void {
+        /*
+         * ---------------------------------------------------------
+         * 1. RATE LIMIT CHECK
+         * ---------------------------------------------------------
+         */
 
-    $this->protectAgainstSpam();
-
-    $this->validate([
-        'email' => $this->emailRules(),
-        'recaptchaToken' => $this->recaptchaRules(),
-    ]);
-
-    $this->ensureRateLimit(
-        action: 'send-verification',
-        maxAttempts: self::SEND_EMAIL_MAX_ATTEMPTS,
-        decaySeconds: self::SEND_EMAIL_DECAY_SECONDS,
-        value: $this->email,
-    );
-
-    $this->ensureRateLimit(
-        action: 'send-verification-ip',
-        maxAttempts: self::SEND_IP_MAX_ATTEMPTS,
-        decaySeconds: self::SEND_IP_DECAY_SECONDS,
-    );
-
-    $recaptcha = $recaptchaService->verifyRecaptcha(
-        token: $recaptchaToken,
-        expectedAction: 'ticket_verification_send',
-    );
-
-    if (! $recaptcha['success']) {
-        $this->addError(
-            'form',
-            $recaptcha['message'],
+        $this->ensureRateLimit(
+            action: 'send-verification',
+            maxAttempts: self::SEND_EMAIL_MAX_ATTEMPTS,
+            decaySeconds: self::SEND_EMAIL_DECAY_SECONDS,
+            value: $this->email,
         );
 
-        return;
-    }
-
-    $this->hitRateLimit(
-        action: 'send-verification',
-        decaySeconds: self::SEND_EMAIL_DECAY_SECONDS,
-        value: $this->email,
-    );
-
-    $this->hitRateLimit(
-        action: 'send-verification-ip',
-        decaySeconds: self::SEND_IP_DECAY_SECONDS,
-    );
-
-    $sent = $ticketService->sendGuestTicketVerificationCode(
-        email: $this->email,
-        ipAddress: request()->ip() ?? 'unknown',
-    );
-
-    if (! $sent) {
-        $this->addError(
-            'form',
-            'Please wait a moment before requesting another verification code.',
+        $this->ensureRateLimit(
+            action: 'send-verification-ip',
+            maxAttempts: self::SEND_IP_MAX_ATTEMPTS,
+            decaySeconds: self::SEND_IP_DECAY_SECONDS,
         );
 
-        return;
+        /*
+         * ---------------------------------------------------------
+         * 2. RATE LIMIT HIT
+         * ---------------------------------------------------------
+         *
+         * Consume attempts BEFORE contacting Google.
+         */
+
+        $this->hitRateLimit(
+            action: 'send-verification',
+            decaySeconds: self::SEND_EMAIL_DECAY_SECONDS,
+            value: $this->email,
+        );
+
+        $this->hitRateLimit(
+            action: 'send-verification-ip',
+            decaySeconds: self::SEND_IP_DECAY_SECONDS,
+        );
+
+        /*
+         * ---------------------------------------------------------
+         * 3. HONEYPOT
+         * ---------------------------------------------------------
+         */
+
+        $this->protectAgainstSpam();
+
+        /*
+         * ---------------------------------------------------------
+         * 4. CHEAP LARAVEL VALIDATION
+         * ---------------------------------------------------------
+         */
+
+        $this->validate([
+            'email' => $this->emailRules(),
+        ]);
+
+        $this->validateRecaptchaToken(
+            $recaptchaToken,
+        );
+
+        /*
+         * ---------------------------------------------------------
+         * 5. RECAPTCHA
+         * ---------------------------------------------------------
+         */
+
+        $recaptcha = $recaptchaService->verifyRecaptcha(
+            token: $recaptchaToken,
+            expectedAction: 'ticket_verification_send',
+        );
+
+        if (! $recaptcha['success']) {
+            $this->addError(
+                'form',
+                $recaptcha['message'],
+            );
+
+            return;
+        }
+
+        /*
+         * ---------------------------------------------------------
+         * 6. BUSINESS VALIDATION / SERVICE
+         * ---------------------------------------------------------
+         */
+
+        $sent = $ticketService->sendGuestTicketVerificationCode(
+            email: strtolower(trim($this->email)),
+            ipAddress: request()->ip() ?? 'unknown',
+        );
+
+        /*
+         * ---------------------------------------------------------
+         * 7. DATABASE
+         * ---------------------------------------------------------
+         *
+         * TicketService handles the verification-code persistence.
+         */
+
+        if (! $sent) {
+            $this->addError(
+                'form',
+                'Please wait a moment before requesting another verification code.',
+            );
+
+            return;
+        }
+
+        $this->clearVerifiedTicketState();
+
+        $this->emailVerificationSent = true;
+
+        $this->verificationCode = '';
+
+        $this->resetErrorBag([
+            'email',
+            'form',
+        ]);
     }
-
-    $this->clearVerifiedTicketState();
-
-    $this->emailVerificationSent = true;
-    $this->verificationCode = '';
-    $this->recaptchaToken = '';
-
-    $this->resetErrorBag([
-        'email',
-        'recaptchaToken',
-    ]);
-}
 
     /*
     |--------------------------------------------------------------------------
-    | Verify email
+    | Verify Email
     |--------------------------------------------------------------------------
     */
 
@@ -301,35 +362,39 @@ class TicketSearch extends Component
     {
         $this->resetValidation([
             'form',
-            'recaptchaToken',
         ]);
 
         $this->validate([
             'email' => $this->emailRules(),
             'verificationCode' => $this->verificationRules(),
         ]);
-
-        $this->protectAgainstSpam();
 
         $this->dispatch(
             'execute-ticket-verify-recaptcha',
         );
     }
 
+    /**
+     * Security order:
+     *
+     * 1. Rate-limit check
+     * 2. Rate-limit hit
+     * 3. Honeypot
+     * 4. Cheap Laravel validation
+     * 5. reCAPTCHA
+     * 6. TicketService/business validation
+     * 7. Database
+     */
     public function verifyEmail(
         string $recaptchaToken,
         TicketService $ticketService,
         RecaptchaService $recaptchaService,
     ): void {
-        $this->recaptchaToken = $recaptchaToken;
-
-        $this->protectAgainstSpam();
-
-        $this->validate([
-            'email' => $this->emailRules(),
-            'verificationCode' => $this->verificationRules(),
-            'recaptchaToken' => $this->recaptchaRules(),
-        ]);
+        /*
+         * ---------------------------------------------------------
+         * 1. RATE LIMIT CHECK
+         * ---------------------------------------------------------
+         */
 
         $this->ensureRateLimit(
             action: 'verify-email',
@@ -343,6 +408,52 @@ class TicketSearch extends Component
             maxAttempts: self::VERIFY_IP_MAX_ATTEMPTS,
             decaySeconds: self::VERIFY_IP_DECAY_SECONDS,
         );
+
+        /*
+         * ---------------------------------------------------------
+         * 2. RATE LIMIT HIT
+         * ---------------------------------------------------------
+         */
+
+        $this->hitRateLimit(
+            action: 'verify-email',
+            decaySeconds: self::VERIFY_EMAIL_DECAY_SECONDS,
+            value: $this->email,
+        );
+
+        $this->hitRateLimit(
+            action: 'verify-email-ip',
+            decaySeconds: self::VERIFY_IP_DECAY_SECONDS,
+        );
+
+        /*
+         * ---------------------------------------------------------
+         * 3. HONEYPOT
+         * ---------------------------------------------------------
+         */
+
+        $this->protectAgainstSpam();
+
+        /*
+         * ---------------------------------------------------------
+         * 4. CHEAP LARAVEL VALIDATION
+         * ---------------------------------------------------------
+         */
+
+        $this->validate([
+            'email' => $this->emailRules(),
+            'verificationCode' => $this->verificationRules(),
+        ]);
+
+        $this->validateRecaptchaToken(
+            $recaptchaToken,
+        );
+
+        /*
+         * ---------------------------------------------------------
+         * 5. RECAPTCHA
+         * ---------------------------------------------------------
+         */
 
         $recaptcha = $recaptchaService->verifyRecaptcha(
             token: $recaptchaToken,
@@ -358,22 +469,23 @@ class TicketSearch extends Component
             return;
         }
 
-        $this->hitRateLimit(
-            action: 'verify-email',
-            decaySeconds: self::VERIFY_EMAIL_DECAY_SECONDS,
-            value: $this->email,
-        );
-
-        $this->hitRateLimit(
-            action: 'verify-email-ip',
-            decaySeconds: self::VERIFY_IP_DECAY_SECONDS,
-        );
+        /*
+         * ---------------------------------------------------------
+         * 6. BUSINESS VALIDATION / SERVICE
+         * ---------------------------------------------------------
+         */
 
         $tickets = $ticketService->verifyGuestTicketVerificationCode(
-            email: $this->email,
+            email: strtolower(trim($this->email)),
             code: $this->verificationCode,
             ipAddress: request()->ip() ?? 'unknown',
         );
+
+        /*
+         * ---------------------------------------------------------
+         * 7. DATABASE / VERIFIED RESULT
+         * ---------------------------------------------------------
+         */
 
         if (! $tickets) {
             $this->addError(
@@ -384,20 +496,38 @@ class TicketSearch extends Component
             return;
         }
 
-        $this->recaptchaToken = '';
-
         /*
-         * Store the authoritative verification state server-side.
-         *
-         * The Livewire property below remains UI state only.
+         * Store only validated ticket IDs in the session.
          */
+
         $ticketIds = collect($tickets)
             ->pluck('id')
+            ->filter(
+                fn ($id): bool =>
+                    is_int($id)
+                    || (
+                        is_string($id)
+                        && ctype_digit($id)
+                    ),
+            )
             ->map(
                 fn ($id): int => (int) $id,
             )
+            ->filter(
+                fn (int $id): bool => $id > 0,
+            )
+            ->unique()
             ->values()
             ->all();
+
+        if ($ticketIds === []) {
+            $this->addError(
+                'form',
+                'No tickets were found for this email address.',
+            );
+
+            return;
+        }
 
         session()->put(
             self::VERIFIED_TICKETS_SESSION_KEY,
@@ -409,14 +539,13 @@ class TicketSearch extends Component
             strtolower(trim($this->email)),
         );
 
-        /*
-         * UI state.
-         */
         $this->verifiedTicketIds = $ticketIds;
 
         /*
-         * If exactly one ticket exists, redirect immediately.
+         * Exactly one ticket:
+         * immediately generate its access token.
          */
+
         if (count($tickets) === 1) {
             $ticket = $tickets[0];
 
@@ -441,8 +570,10 @@ class TicketSearch extends Component
         }
 
         /*
-         * Multiple tickets.
+         * Multiple tickets:
+         * show the selection UI.
          */
+
         $this->showTicketSelection = true;
 
         $this->resetErrorBag();
@@ -450,7 +581,7 @@ class TicketSearch extends Component
 
     /*
     |--------------------------------------------------------------------------
-    | Select ticket
+    | Select Ticket
     |--------------------------------------------------------------------------
     */
 
@@ -461,8 +592,9 @@ class TicketSearch extends Component
         /*
          * Never trust the client-controlled Livewire array.
          *
-         * Read the authoritative IDs from the session instead.
+         * The session is the authorization boundary.
          */
+
         $verifiedTicketIds = $this->getVerifiedTicketIds();
 
         if (! in_array(
@@ -473,9 +605,6 @@ class TicketSearch extends Component
             abort(403);
         }
 
-        /*
-         * The email stored in the session is authoritative.
-         */
         $verifiedEmail = $this->getVerifiedEmail();
 
         if ($verifiedEmail === null) {
@@ -483,8 +612,9 @@ class TicketSearch extends Component
         }
 
         /*
-         * Confirm that this ticket still belongs to the verified email.
+         * Confirm ticket ownership again against the database.
          */
+
         $ticket = $ticketService->findVerifiedEmailTicket(
             email: $verifiedEmail,
             ticketId: $ticketId,
@@ -494,25 +624,15 @@ class TicketSearch extends Component
             abort(404);
         }
 
-        /*
-         * Generate a fresh access token.
-         */
         $token = $ticketService->rotateGuestTicketToken(
             ticket: $ticket,
         );
 
-        /*
-         * Grant short-lived server-side access.
-         */
         $ticketService->grantGuestTicketAccess(
             ticket: $ticket,
             minutes: 60,
         );
 
-        /*
-         * The temporary email-verification selection state is no
-         * longer needed once this ticket has its own session access.
-         */
         $this->clearVerifiedTicketState();
 
         $this->redirectRoute(
@@ -526,7 +646,7 @@ class TicketSearch extends Component
 
     /*
     |--------------------------------------------------------------------------
-    | Change email
+    | Change Email
     |--------------------------------------------------------------------------
     */
 
@@ -535,10 +655,13 @@ class TicketSearch extends Component
         $this->clearVerifiedTicketState();
 
         $this->email = '';
+
         $this->emailVerificationSent = false;
+
         $this->showTicketSelection = false;
+
         $this->verificationCode = '';
-        $this->recaptchaToken = '';
+
         $this->verifiedTicketIds = [];
 
         $this->resetErrorBag();
@@ -548,7 +671,7 @@ class TicketSearch extends Component
 
     /*
     |--------------------------------------------------------------------------
-    | Server-side verification state
+    | Server-side Verification State
     |--------------------------------------------------------------------------
     */
 
@@ -565,8 +688,8 @@ class TicketSearch extends Component
 
         if (
             ! is_array($ticketIds)
-            || $verifiedEmail === null
             || ! is_string($verifiedEmail)
+            || trim($verifiedEmail) === ''
         ) {
             $this->clearVerifiedTicketState();
 
@@ -575,7 +698,8 @@ class TicketSearch extends Component
 
         $ticketIds = collect($ticketIds)
             ->filter(
-                fn ($id): bool => is_int($id)
+                fn ($id): bool =>
+                    is_int($id)
                     || (
                         is_string($id)
                         && ctype_digit($id)
@@ -597,8 +721,12 @@ class TicketSearch extends Component
             return;
         }
 
-        $this->email = strtolower(trim($verifiedEmail));
+        $this->email = strtolower(
+            trim($verifiedEmail),
+        );
+
         $this->verifiedTicketIds = $ticketIds;
+
         $this->showTicketSelection = true;
     }
 
@@ -614,6 +742,14 @@ class TicketSearch extends Component
         }
 
         return collect($ticketIds)
+            ->filter(
+                fn ($id): bool =>
+                    is_int($id)
+                    || (
+                        is_string($id)
+                        && ctype_digit($id)
+                    ),
+            )
             ->map(
                 fn ($id): int => (int) $id,
             )
@@ -631,11 +767,16 @@ class TicketSearch extends Component
             self::VERIFIED_EMAIL_SESSION_KEY,
         );
 
-        if (! is_string($email) || trim($email) === '') {
+        if (
+            ! is_string($email)
+            || trim($email) === ''
+        ) {
             return null;
         }
 
-        return strtolower(trim($email));
+        return strtolower(
+            trim($email),
+        );
     }
 
     protected function clearVerifiedTicketState(): void
@@ -646,9 +787,9 @@ class TicketSearch extends Component
         ]);
 
         $this->verifiedTicketIds = [];
+
         $this->showTicketSelection = false;
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -661,11 +802,15 @@ class TicketSearch extends Component
         $this->clearVerifiedTicketState();
 
         $this->email = '';
+
         $this->verificationCode = '';
-        $this->recaptchaToken = '';
+
         $this->emailVerificationSent = false;
+
         $this->verifiedTicketIds = [];
+
         $this->showTicketSelection = false;
+
         $this->extraFields = new HoneypotData();
 
         $this->resetValidation();
@@ -682,18 +827,23 @@ class TicketSearch extends Component
         $tickets = collect();
 
         $verifiedTicketIds = $this->getVerifiedTicketIds();
+
         $verifiedEmail = $this->getVerifiedEmail();
 
         /*
-         * Only load tickets that were authenticated by the
-         * server-side email verification flow.
+         * Only load tickets that were authenticated through
+         * the server-side verification flow.
          */
+
         if (
             $verifiedTicketIds !== []
             && $verifiedEmail !== null
         ) {
             $tickets = Ticket::query()
-                ->whereIn('id', $verifiedTicketIds)
+                ->whereIn(
+                    'id',
+                    $verifiedTicketIds,
+                )
                 ->whereRaw(
                     'LOWER(email) = ?',
                     [$verifiedEmail],

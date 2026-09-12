@@ -14,9 +14,9 @@
 <body style="
     margin: 0;
     padding: 0;
-    background-color: #f4f4f5;
+    background-color: #09090b;
     font-family: Arial, Helvetica, sans-serif;
-    color: #18181b;
+    color: #fafafa;
 ">
 
 <table
@@ -26,7 +26,7 @@
     role="presentation"
     style="
         width: 100%;
-        background-color: #f4f4f5;
+        background-color: #09090b;
         padding: 40px 20px;
     "
 >
@@ -41,7 +41,8 @@
                 style="
                     width: 100%;
                     max-width: 560px;
-                    background-color: #ffffff;
+                    background-color: #111113;
+                    border: 1px solid #27272a;
                     border-radius: 14px;
                     overflow: hidden;
                 "
@@ -53,7 +54,7 @@
 
                         <div style="
                             margin-bottom: 12px;
-                            color: #B247B2;
+                            color: #c45ac4;
                             font-size: 11px;
                             font-weight: 700;
                             letter-spacing: 2px;
@@ -63,7 +64,7 @@
 
                         <h1 style="
                             margin: 0 0 16px;
-                            color: #18181b;
+                            color: #ffffff;
                             font-size: 28px;
                             line-height: 1.2;
                             font-weight: 700;
@@ -73,7 +74,7 @@
 
                         <p style="
                             margin: 0 0 28px;
-                            color: #71717a;
+                            color: #a1a1aa;
                             font-size: 15px;
                             line-height: 1.7;
                         ">
@@ -85,15 +86,15 @@
                         <div style="
                             margin-bottom: 28px;
                             padding: 24px;
-                            border: 1px solid #e4e4e7;
+                            border: 1px solid #3f2445;
                             border-radius: 12px;
-                            background-color: #fafafa;
+                            background-color: #18121b;
                             text-align: center;
                         ">
 
                             <div style="
                                 margin-bottom: 10px;
-                                color: #71717a;
+                                color: #a855a8;
                                 font-size: 10px;
                                 font-weight: 700;
                                 letter-spacing: 1.5px;
@@ -102,7 +103,7 @@
                             </div>
 
                             <div style="
-                                color: #18181b;
+                                color: #ffffff;
                                 font-size: 34px;
                                 line-height: 1.2;
                                 font-weight: 700;
@@ -115,19 +116,19 @@
 
                         <p style="
                             margin: 0 0 8px;
-                            color: #52525b;
+                            color: #d4d4d8;
                             font-size: 13px;
                             line-height: 1.6;
                         ">
                             This code expires at
-                            <strong>
+                            <strong style="color: #ffffff;">
                                 {{ $expiresAt->format('g:i A') }}
                             </strong>.
                         </p>
 
                         <p style="
                             margin: 0;
-                            color: #a1a1aa;
+                            color: #71717a;
                             font-size: 12px;
                             line-height: 1.6;
                         ">
@@ -142,13 +143,16 @@
                 <tr>
                     <td style="
                         padding: 20px 40px;
-                        border-top: 1px solid #e4e4e7;
-                        color: #a1a1aa;
+                        border-top: 1px solid #27272a;
+                        background-color: #0d0d0f;
+                        color: #71717a;
                         font-size: 11px;
                         line-height: 1.5;
                     ">
                         This is an automated message from
-                        {{ config('app.name') }}.
+                        <span style="color: #a855a8;">
+                            {{ config('app.name') }}
+                        </span>.
                         Please do not reply to this email.
                     </td>
                 </tr>
