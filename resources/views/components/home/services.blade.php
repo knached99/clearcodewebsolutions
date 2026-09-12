@@ -94,7 +94,7 @@
                     <span>⌁</span>
                 </div>
 
-                <h3>Web Applications</h3>
+                <h3>Web/Mobile Applications</h3>
 
                 <p>
                     Powerful custom applications designed around
@@ -103,6 +103,8 @@
 
                 <div class="cc-service-card__tags">
                     <span>Laravel</span>
+                    <span>React Native</span>
+                    <span>IOS and Android</span>
                     <span>APIs</span>
                     <span>Dashboards</span>
                 </div>
