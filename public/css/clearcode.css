@@ -2801,7 +2801,6 @@ html {
     text-transform: uppercase;
 }
 
-
 /* =============================================================
    PRICING
    ============================================================= */
@@ -2828,7 +2827,9 @@ html {
 
 .pricing-eyebrow {
     margin-bottom: 18px;
+
     color: #c8a2c8;
+
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 3px;
@@ -2836,7 +2837,9 @@ html {
 
 .pricing-header h2 {
     margin: 0 0 22px;
+
     color: #fff;
+
     font-size: clamp(42px, 6vw, 76px);
     font-weight: 600;
     line-height: .98;
@@ -2846,7 +2849,9 @@ html {
 .pricing-header p {
     max-width: 520px;
     margin: 0 auto;
+
     color: #a1a1aa;
+
     font-size: 16px;
     line-height: 1.7;
 }
@@ -2859,19 +2864,27 @@ html {
 .pricing-switch-wrapper {
     display: flex;
     justify-content: center;
+
     margin-bottom: 55px;
 }
 
 .pricing-switch {
     position: relative;
+
     display: grid;
     grid-template-columns: 1fr 1fr;
+
     width: 270px;
     height: 58px;
     padding: 5px;
+
     border: 1px solid #27272a;
     border-radius: 999px;
+
     background: #09090b;
+
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .025);
 }
 
 .pricing-switch__pill {
@@ -2887,22 +2900,26 @@ html {
     background:
         linear-gradient(
             135deg,
-            #4c1d95 0%,
-            #7c3aed 55%,
-            #b247b2 100%
+            #4c1d95,
+            #7c3aed
         );
 
-    transform: translateX(0);
+    box-shadow:
+        0 4px 16px rgba(124, 58, 237, .25);
+
+    transform: translate3d(0, 0, 0);
 
     transition:
-        transform 550ms cubic-bezier(.77, 0, .175, 1);
+        transform 450ms cubic-bezier(.65, 0, .35, 1);
+
+    will-change: transform;
 
     z-index: 0;
 }
 
 .pricing-switch.monthly-active
     .pricing-switch__pill {
-    transform: translateX(100%);
+    transform: translate3d(100%, 0, 0);
 }
 
 .pricing-switch__button {
@@ -2911,6 +2928,7 @@ html {
 
     border: 0;
     outline: 0;
+
     background: transparent;
 
     color: #71717a;
@@ -2922,7 +2940,7 @@ html {
     cursor: pointer;
 
     transition:
-        color 350ms ease;
+        color 250ms ease;
 }
 
 .pricing-switch__button.is-active {
@@ -2934,10 +2952,25 @@ html {
    Pricing Grid
    ------------------------------------------------------------- */
 
+/*
+ * The grid itself owns the vertical space.
+ *
+ * The cards are layered inside it, so switching cards cannot
+ * change the position of anything below this component.
+ */
+
 .pricing-grid {
     position: relative;
+
+    width: 100%;
     max-width: 620px;
+
+    /*
+     * Reserve the space occupied by the larger card.
+     * The cards themselves remain naturally sized.
+     */
     min-height: 610px;
+
     margin: 0 auto;
 }
 
@@ -2946,8 +2979,17 @@ html {
    Card
    ------------------------------------------------------------- */
 
-.pricing-card {
+.pricing-grid > .pricing-card {
+    position: absolute;
+    top: 0;
+    left: 0;
+
     width: 100%;
+}
+
+.pricing-card {
+    box-sizing: border-box;
+
     padding: 42px;
 
     border: 1px solid #27272a;
@@ -2962,6 +3004,13 @@ html {
 
     box-shadow:
         0 30px 80px rgba(0, 0, 0, .35);
+
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+
+    will-change: transform, opacity;
+
+    transform: translate3d(0, 0, 0);
 }
 
 .pricing-card--featured {
@@ -2970,11 +3019,12 @@ html {
 
 
 /* -------------------------------------------------------------
-   Card top
+   Card Top
    ------------------------------------------------------------- */
 
 .pricing-card__label {
     display: inline-block;
+
     margin-bottom: 18px;
 
     color: #c8a2c8;
@@ -3012,6 +3062,7 @@ html {
 .pricing-card__price {
     display: flex;
     align-items: baseline;
+
     margin-top: 40px;
 }
 
@@ -3049,6 +3100,7 @@ html {
 
 .pricing-card__divider {
     height: 1px;
+
     margin: 38px 0 28px;
 
     background: #27272a;
@@ -3088,6 +3140,8 @@ html {
     width: 22px;
     height: 22px;
 
+    flex: 0 0 22px;
+
     border-radius: 50%;
 
     background: #1c1230;
@@ -3125,9 +3179,13 @@ html {
 
     text-decoration: none;
 
+    box-shadow:
+        0 8px 24px rgba(76, 29, 149, .16);
+
     transition:
-        transform 250ms ease,
-        background 250ms ease;
+        transform 220ms ease,
+        box-shadow 220ms ease,
+        background 220ms ease;
 }
 
 .pricing-card__button:hover {
@@ -3139,43 +3197,70 @@ html {
             #5b21b6,
             #9333ea
         );
+
+    box-shadow:
+        0 12px 30px rgba(124, 58, 237, .24);
 }
 
 
 /* -------------------------------------------------------------
-   Card transition
+   Card Transition
    ------------------------------------------------------------- */
 
+/*
+ * Clean, subtle crossfade.
+ *
+ * No scale.
+ * No blur.
+ * No height animation.
+ *
+ * This keeps the pricing component feeling expensive rather
+ * than overly animated.
+ */
+
 .pricing-enter {
+    z-index: 2;
+
     transition:
-        opacity 450ms ease,
-        transform 550ms cubic-bezier(.77, 0, .175, 1);
+        opacity 350ms ease,
+        transform 400ms cubic-bezier(.22, 1, .36, 1);
 }
 
 .pricing-enter-start {
     opacity: 0;
-    transform: translateY(20px) scale(.98);
+
+    transform:
+        translate3d(0, 12px, 0);
 }
 
 .pricing-enter-end {
     opacity: 1;
-    transform: translateY(0) scale(1);
+
+    transform:
+        translate3d(0, 0, 0);
 }
 
+
 .pricing-leave {
+    z-index: 1;
+
     transition:
-        opacity 250ms ease,
-        transform 250ms ease;
+        opacity 220ms ease,
+        transform 300ms ease;
 }
 
 .pricing-leave-start {
     opacity: 1;
-    transform: translateY(0) scale(1);
+
+    transform:
+        translate3d(0, 0, 0);
 }
 
 .pricing-leave-end {
     opacity: 0;
-    transform: translateY(-10px) scale(.98);
+
+    transform:
+        translate3d(0, -6px, 0);
 }
 
 
@@ -3218,7 +3303,7 @@ html {
 
 
 /* -------------------------------------------------------------
-   Reduced motion
+   Reduced Motion
    ------------------------------------------------------------- */
 
 @media (prefers-reduced-motion: reduce) {
@@ -3233,5 +3318,4 @@ html {
     .pricing-leave {
         transition: none !important;
     }
-
 }
