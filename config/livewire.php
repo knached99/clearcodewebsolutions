@@ -204,7 +204,7 @@ return [
 
     'navigate' => [
         'show_progress_bar' => true,
-        'progress_bar_color' => '#2299dd',
+        'progress_bar_color' => 'linear-gradient(90deg, #6D28D9 0%, #7C3AED 35%, #A78BFA 70%, #DDD6FE 100%)',
     ],
 
     /*
