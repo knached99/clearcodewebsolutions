@@ -13,13 +13,14 @@ class WorkService
     private const IMAGE_DIRECTORY = 'works';
 
     public function create(
+        int $teamId, 
         array $data,
         array $images = []
     ): Work {
         $data['images'] = $this->storeImages($images);
 
         return Work::create(
-            $this->workData($data)
+            $this->workData($data, $teamId)
         );
     }
 
@@ -56,7 +57,7 @@ class WorkService
         ];
 
         $work->update(
-            $this->workData($data)
+            $this->workData($data, (int) $work->team_id)
         );
 
         return $work->refresh();
@@ -90,16 +91,18 @@ class WorkService
         );
     }
 
-    protected function workData(array $data): array
+    protected function workData(array $data,int $teamId): array 
     {
-        return [
-            'title' => $data['title'],
-            'description' => $data['description'] ?? null,
-            'category' => $data['category'] ?? 'WEB DEVELOPMENT',
-            'url' => $data['url'] ?? null,
-            'images' => $data['images'] ?? [],
-            'is_published' => $data['is_published'] ?? true,
-            'sort_order' => $data['sort_order'] ?? 0,
-        ];
+    return [
+        'team_id' => $teamId,
+        'title' => $data['title'],
+        'description' => $data['description'] ?? null,
+        'category' => $data['category'] ?? 'WEB DEVELOPMENT',
+        'url' => $data['url'] ?? null,
+        'images' => $data['images'] ?? [],
+        'is_published' => $data['is_published'] ?? true,
+        'sort_order' => $data['sort_order'] ?? 0,
+    ];
     }
+
 }

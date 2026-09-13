@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use App\Models\Work;
 
 /**
  * @property int $id
@@ -26,6 +27,7 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, Membership> $memberships
  * @property-read Collection<int, User> $members
  * @property-read Collection<int, Ticket> $tickets
+ * @property-read Collection<int, Work> $works
  */
 #[Fillable([
     'name',
@@ -113,6 +115,12 @@ class Team extends Model
     public function tickets(): HasMany
     {
         return $this->hasMany(Ticket::class);
+    }
+
+    // gets all the projects belonging to this team 
+    public function works(): HasMany 
+    {
+        return $this->hasMany(Work::class);
     }
 
     /**

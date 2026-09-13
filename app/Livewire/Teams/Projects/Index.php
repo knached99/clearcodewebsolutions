@@ -2,8 +2,10 @@
 
 namespace App\Livewire\Teams\Projects;
 
+use App\Models\Team;
 use App\Models\Work;
 use App\Services\WorkService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Livewire\Component;
@@ -13,6 +15,14 @@ use Throwable;
 class Index extends Component
 {
     use WithFileUploads;
+
+    /*
+    |--------------------------------------------------------------------------
+    | Current Team
+    |--------------------------------------------------------------------------
+    */
+
+    public Team $team;
 
     /*
     |--------------------------------------------------------------------------
@@ -31,17 +41,6 @@ class Index extends Component
     public string $category = '';
 
     public bool $is_published = true;
-
-    /*
-    |--------------------------------------------------------------------------
-    | Ordering
-    |--------------------------------------------------------------------------
-    |
-    | ID of the project this project should appear AFTER.
-    |
-    | null = first position.
-    |
-    */
 
     public ?int $sortAfterId = null;
 
@@ -74,6 +73,66 @@ class Index extends Component
     private const MAX_IMAGE_SIZE_KB = 10240;
 
     private const MAX_TOTAL_IMAGE_SIZE_KB = 51200;
+
+    /*
+    |--------------------------------------------------------------------------
+    | Mount
+    |--------------------------------------------------------------------------
+    */
+
+    public function mount(): void
+    {
+        $this->team = $this->resolveCurrentTeam();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Current Team
+    |--------------------------------------------------------------------------
+    */
+
+    private function resolveCurrentTeam(): Team
+    {
+        $user = Auth::user();
+
+        abort_unless(
+            $user !== null,
+            403,
+            'You must be authenticated.',
+        );
+
+        $team = $user->currentTeam;
+
+        abort_unless(
+            $team !== null,
+            403,
+            'No current team is selected.',
+        );
+
+        abort_unless(
+            $user->belongsToTeam($team),
+            403,
+            'You do not belong to this team.',
+        );
+
+        return $team;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Team Work
+    |--------------------------------------------------------------------------
+    |
+    | Always retrieve projects through the current team.
+    |
+    */
+
+    private function findTeamWork(int $id): Work
+    {
+        return $this->team
+            ->works()
+            ->findOrFail($id);
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -115,7 +174,6 @@ class Index extends Component
             'sortAfterId' => [
                 'nullable',
                 'integer',
-                'exists:works,id',
             ],
 
             'images' => [
@@ -137,29 +195,38 @@ class Index extends Component
     protected function messages(): array
     {
         return [
-            'title.required' => 'Please enter a project title.',
+            'title.required' =>
+                'Please enter a project title.',
 
-            'title.max' => 'The project title may not exceed 255 characters.',
+            'title.max' =>
+                'The project title may not exceed 255 characters.',
 
-            'description.max' => 'The project description is too long.',
+            'description.max' =>
+                'The project description is too long.',
 
-            'url.url' => 'Please enter a valid project URL.',
+            'url.url' =>
+                'Please enter a valid project URL.',
 
-            'url.max' => 'The project URL is too long.',
+            'url.max' =>
+                'The project URL is too long.',
 
-            'category.required' => 'Please select a project category.',
+            'category.required' =>
+                'Please select a project category.',
 
-            'category.in' => 'Please select a valid project category.',
+            'category.in' =>
+                'Please select a valid project category.',
 
-            'sortAfterId.exists' => 'The selected project could not be found.',
+            'images.max' =>
+                'You may upload up to 10 images.',
 
-            'images.max' => 'You may upload up to 10 images.',
+            'images.*.image' =>
+                'Each uploaded file must be a valid image.',
 
-            'images.*.image' => 'Each uploaded file must be a valid image.',
+            'images.*.mimes' =>
+                'Only JPG, JPEG, PNG, WEBP, and GIF images are allowed.',
 
-            'images.*.mimes' => 'Only JPG, JPEG, PNG, WEBP, and GIF images are allowed.',
-
-            'images.*.max' => 'Each image may not exceed 10 MB.',
+            'images.*.max' =>
+                'Each image may not exceed 10 MB.',
         ];
     }
 
@@ -171,23 +238,37 @@ class Index extends Component
 
     public function create(): void
     {
-        $this->authorize('create', Work::class);
+        $this->authorize(
+            'create',
+            Work::class,
+        );
 
         $this->resetForm();
 
         $this->showForm = true;
 
         /*
-         * New projects default to the end of the current list.
-         *
-         * sortAfterId stores the project after which the new project
-         * should be inserted.
+         * Only projects belonging to the current team.
          */
-        $this->sortAfterId = Work::query()
+        $this->sortAfterId = $this->team
+            ->works()
             ->orderByDesc('sort_order')
             ->orderByDesc('id')
             ->value('id');
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Remove New Image
+    |--------------------------------------------------------------------------
+    */
+
+    public function removeNewImage(int $index): void
+    {
+        unset($this->images[$index]);
+        $this->images = array_values($this->images);
+    }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -197,10 +278,15 @@ class Index extends Component
 
     public function edit(int $id): void
     {
-        $work = Work::query()
-            ->findOrFail($id);
+        /*
+         * Centralized team-scoped lookup.
+         */
+        $work = $this->findTeamWork($id);
 
-        $this->authorize('update', $work);
+        $this->authorize(
+            'update',
+            $work,
+        );
 
         $this->editingId = $work->id;
 
@@ -221,17 +307,10 @@ class Index extends Component
         $this->is_published = (bool) $work->is_published;
 
         /*
-         * Find the project immediately before this one.
-         *
-         * Because ordering is:
-         *
-         * sort_order ASC
-         * id ASC
-         *
-         * the previous project is the highest project with an ordering
-         * position before the current project.
+         * Find previous project ONLY within current team.
          */
-        $this->sortAfterId = Work::query()
+        $this->sortAfterId = $this->team
+            ->works()
             ->where(function ($query) use ($work) {
                 $query
                     ->where(
@@ -256,9 +335,6 @@ class Index extends Component
             ->orderByDesc('id')
             ->value('id');
 
-        /*
-         * Clear temporary upload state when switching projects.
-         */
         $this->images = [];
 
         $this->removeImages = [];
@@ -274,18 +350,27 @@ class Index extends Component
 
     public function save(WorkService $service): void
     {
-        $this->authorize(
-            $this->editingId !== null
-                ? 'update'
-                : 'create',
-            $this->editingId !== null
-                ? Work::query()->findOrFail($this->editingId)
-                : Work::class,
-        );
+        $work = null;
 
-        /*
-         * Normalize simple fields before validation.
-         */
+        if ($this->editingId !== null) {
+            /*
+             * Centralized team-scoped lookup.
+             */
+            $work = $this->findTeamWork(
+                $this->editingId
+            );
+
+            $this->authorize(
+                'update',
+                $work,
+            );
+        } else {
+            $this->authorize(
+                'create',
+                Work::class,
+            );
+        }
+
         $this->title = trim($this->title);
 
         $this->description = trim($this->description);
@@ -294,25 +379,16 @@ class Index extends Component
 
         $this->category = trim($this->category);
 
-        /*
-         * Validate all submitted data.
-         */
         $validated = $this->validate();
 
-        /*
-         * Validate the aggregate upload size.
-         */
         $this->validateTotalImageSize();
 
-        /*
-         * Capture the selected placement.
-         */
         $sortAfterId = $this->sortAfterId !== null
             ? (int) $this->sortAfterId
             : null;
 
         /*
-         * A project cannot be positioned after itself.
+         * Cannot move a project after itself.
          */
         if (
             $this->editingId !== null
@@ -323,13 +399,12 @@ class Index extends Component
         }
 
         /*
-         * Verify that sortAfterId still exists.
-         *
-         * The dropdown may have been rendered several seconds/minutes
-         * ago and another project could have been deleted meanwhile.
+         * The selected "after" project must belong to
+         * the current team.
          */
         if ($sortAfterId !== null) {
-            $afterExists = Work::query()
+            $afterExists = $this->team
+                ->works()
                 ->whereKey($sortAfterId)
                 ->exists();
 
@@ -339,12 +414,12 @@ class Index extends Component
         }
 
         /*
-         * Temporarily place the project at the end.
-         *
-         * reorderProjects() will calculate the final position.
+         * Temporarily put the project at the end of THIS team's list.
          */
         $validated['sort_order'] =
-            ((int) Work::query()->max('sort_order')) + 1;
+            ((int) $this->team
+                ->works()
+                ->max('sort_order')) + 1;
 
         try {
             DB::transaction(
@@ -353,13 +428,16 @@ class Index extends Component
                     $validated,
                     $sortAfterId,
                 ): void {
-                    /*
-                     * Editing an existing project.
-                     */
                     if ($this->editingId !== null) {
-                        $work = Work::query()
+                        /*
+                         * Team-scoped + locked.
+                         */
+                        $work = $this->team
+                            ->works()
                             ->lockForUpdate()
-                            ->findOrFail($this->editingId);
+                            ->findOrFail(
+                                $this->editingId
+                            );
 
                         $this->authorize(
                             'update',
@@ -373,10 +451,6 @@ class Index extends Component
                             $this->removeImages,
                         );
 
-                        /*
-                         * Re-fetch the project so the reorder operates
-                         * on its current persisted state.
-                         */
                         $work->refresh();
 
                         $this->reorderProjects(
@@ -393,9 +467,10 @@ class Index extends Component
                     }
 
                     /*
-                     * Creating a new project.
+                     * Service gets the team and assigns team_id.
                      */
                     $work = $service->create(
+                        (int) $this->team->id,
                         $validated,
                         $this->images,
                     );
@@ -424,9 +499,6 @@ class Index extends Component
             return;
         }
 
-        /*
-         * Reset only after the transaction succeeds.
-         */
         $message = session('project_success');
 
         $this->resetForm();
@@ -441,12 +513,6 @@ class Index extends Component
     |--------------------------------------------------------------------------
     | Reorder Projects
     |--------------------------------------------------------------------------
-    |
-    | Rebuild the complete ordering.
-    |
-    | null = first position.
-    | otherwise = immediately after $afterId.
-    |
     */
 
     protected function reorderProjects(
@@ -454,20 +520,17 @@ class Index extends Component
         ?int $afterId,
     ): void {
         /*
-         * Lock the ordering set while rebuilding it.
+         * IMPORTANT:
          *
-         * This prevents two simultaneous reorder operations from reading
-         * the same old ordering and overwriting one another.
+         * The ordering is per-team.
          */
-        $projects = Work::query()
+        $projects = $this->team
+            ->works()
             ->lockForUpdate()
             ->orderBy('sort_order')
             ->orderBy('id')
             ->get();
 
-        /*
-         * Remove the project being moved.
-         */
         $orderedProjects = $projects
             ->reject(
                 fn (Work $work): bool =>
@@ -475,9 +538,6 @@ class Index extends Component
             )
             ->values();
 
-        /*
-         * Insert at the requested location.
-         */
         if ($afterId === null) {
             $orderedProjects->prepend($project);
         } else {
@@ -486,10 +546,6 @@ class Index extends Component
                     (int) $work->id === (int) $afterId,
             );
 
-            /*
-             * If the target disappeared between validation and the
-             * transaction, safely fall back to the beginning.
-             */
             if ($afterIndex === false) {
                 $orderedProjects->prepend($project);
             } else {
@@ -506,17 +562,9 @@ class Index extends Component
             }
         }
 
-        /*
-         * Normalize positions.
-         */
-        $orderedProjects = $orderedProjects->values();
-
-        /*
-         * Avoid unnecessary UPDATE queries for projects that are
-         * already in the correct position.
-         */
         foreach (
-            $orderedProjects as $position => $work
+            $orderedProjects->values()
+            as $position => $work
         ) {
             $position = (int) $position;
 
@@ -524,7 +572,8 @@ class Index extends Component
                 continue;
             }
 
-            Work::query()
+            $this->team
+                ->works()
                 ->whereKey($work->id)
                 ->update([
                     'sort_order' => $position,
@@ -542,36 +591,31 @@ class Index extends Component
         int $id,
         WorkService $service,
     ): void {
-        $work = Work::query()
-            ->findOrFail($id);
+        /*
+         * Centralized team-scoped lookup.
+         */
+        $work = $this->findTeamWork($id);
 
         $this->authorize(
             'delete',
             $work,
         );
 
-        /*
-         * Keep deletion + ordering normalization atomic.
-         */
         DB::transaction(
             function () use (
                 $work,
                 $service,
             ): void {
                 /*
-                 * Lock the row before deleting it.
+                 * Lock the correct team row.
                  */
-                $work->refresh();
+                $work = $this->team
+                    ->works()
+                    ->lockForUpdate()
+                    ->findOrFail($work->id);
 
-                /*
-                 * WorkService remains responsible for deleting the
-                 * project's associated data/files.
-                 */
                 $service->delete($work);
 
-                /*
-                 * Normalize remaining projects.
-                 */
                 $this->normalizeProjectOrder();
             },
         );
@@ -592,21 +636,18 @@ class Index extends Component
 
     public function togglePublished(int $id): void
     {
-        $work = Work::query()
-            ->findOrFail($id);
+        /*
+         * Centralized team-scoped lookup.
+         */
+        $work = $this->findTeamWork($id);
 
         $this->authorize(
             'update',
             $work,
         );
 
-        /*
-         * Atomic boolean toggle.
-         *
-         * This avoids trusting the stale value that may be sitting
-         * inside the Livewire component.
-         */
-        Work::query()
+        $this->team
+            ->works()
             ->whereKey($work->id)
             ->update([
                 'is_published' => ! (bool) $work->is_published,
@@ -619,29 +660,24 @@ class Index extends Component
     |--------------------------------------------------------------------------
     */
 
-    public function removeExistingImage(
-        string $path,
-    ): void {
-        $path = trim($path);
+   public function removeExistingImage(string $image): void
+{
+    $image = trim($image);
 
-        if ($path === '') {
-            return;
-        }
-
-        /*
-         * Do not allow arbitrary values to accumulate in the component.
-         *
-         * The actual WorkService should also verify that every removal
-         * path belongs to the Work being edited before deleting anything.
-         */
-        if (! in_array(
-            $path,
-            $this->removeImages,
-            true,
-        )) {
-            $this->removeImages[] = $path;
-        }
+    if ($image === '') {
+        return;
     }
+
+    if (! in_array($image, $this->removeImages, true)) {
+        $this->removeImages[] = $image;
+    }
+
+    $this->removeImages = array_values(
+        array_unique($this->removeImages)
+    );
+}
+
+    
 
     /*
     |--------------------------------------------------------------------------
@@ -674,23 +710,7 @@ class Index extends Component
 
     public function updatedImages(): void
     {
-        $this->validate([
-            'images' => [
-                'nullable',
-                'array',
-                'max:' . self::MAX_IMAGES,
-            ],
-
-            'images.*' => [
-                'nullable',
-                'file',
-                'image',
-                'mimes:jpg,jpeg,png,webp,gif',
-                'max:' . self::MAX_IMAGE_SIZE_KB,
-            ],
-        ]);
-
-        $this->validateTotalImageSize();
+        $this->validateUploadedImages();
     }
 
     /*
@@ -726,6 +746,26 @@ class Index extends Component
         }
     }
 
+    private function validateUploadedImages(): void 
+    {
+        $this->validate([
+         'images' => [
+            'nullable',
+            'array',
+            'max:' . self::MAX_IMAGES,
+        ],
+
+        'images.*' => [
+            'nullable',
+            'file',
+            'image',
+            'mimes:jpg,jpeg,png,webp,gif',
+            'max:' . self::MAX_IMAGE_SIZE_KB,
+        ],
+    ]);
+    $this->validateTotalImageSize();
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Cancel
@@ -745,7 +785,11 @@ class Index extends Component
 
     protected function normalizeProjectOrder(): void
     {
-        $projects = Work::query()
+        /*
+         * Only normalize this team's projects.
+         */
+        $projects = $this->team
+            ->works()
             ->lockForUpdate()
             ->orderBy('sort_order')
             ->orderBy('id')
@@ -756,14 +800,12 @@ class Index extends Component
         ) {
             $position = (int) $position;
 
-            /*
-             * Avoid unnecessary UPDATE statements.
-             */
             if ((int) $work->sort_order === $position) {
                 continue;
             }
 
-            Work::query()
+            $this->team
+                ->works()
                 ->whereKey($work->id)
                 ->update([
                     'sort_order' => $position,
@@ -784,6 +826,7 @@ class Index extends Component
             'title',
             'description',
             'url',
+            'category',
             'is_published',
             'sortAfterId',
             'images',
@@ -798,6 +841,19 @@ class Index extends Component
         $this->sortAfterId = null;
     }
 
+    private function removeUploadedImage(int $index): void 
+    {
+        if (!array_key_exists($index, $this->images)) {
+            return; 
+        }
+
+        unset($this->images[$index]);
+        $this->images = array_values($this->images);
+        $this->validateUploadedImages();
+    }
+
+   
+
     /*
     |--------------------------------------------------------------------------
     | Render
@@ -811,11 +867,8 @@ class Index extends Component
             Work::class,
         );
 
-        /*
-         * One query gets everything needed for both the project list
-         * and the ordering dropdown.
-         */
-        $works = Work::query()
+        $works = $this->team
+            ->works()
             ->orderBy('sort_order')
             ->orderBy('id')
             ->get();
