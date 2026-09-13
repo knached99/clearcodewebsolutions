@@ -56,32 +56,6 @@ class AppServiceProvider extends ServiceProvider
         app()->booted(function () {
             app('router')->matched(function ($event) {
                 $route = $event->route;
-
-                if ($route->getName() === 'custom.livewire.update') {
-                    Log::info('LIVEWIRE ROUTE MATCHED', [
-                        'method' => request()->method(),
-                        'uri' => request()->getRequestUri(),
-                        'route' => $route->getName(),
-
-                        'headers' => [
-                            'content_type' => request()->header('Content-Type'),
-                            'x_livewire' => request()->header('X-Livewire'),
-                            'accept' => request()->header('Accept'),
-                            'origin' => request()->header('Origin'),
-                            'referer' => request()->header('Referer'),
-                        ],
-
-                        'payload' => request()->all(),
-
-                        'raw_content' => request()->getContent(),
-
-                        'has_components' => request()->has('components'),
-
-                        'component_count' => is_array(request()->input('components'))
-                            ? count(request()->input('components'))
-                            : null,
-                    ]);
-                }
             });
         });
     }

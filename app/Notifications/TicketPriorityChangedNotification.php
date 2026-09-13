@@ -30,20 +30,11 @@ class TicketPriorityChangedNotification extends Notification
             ticket: $this->ticket,
             minutes: 60 * 24 * 30,
         );
-        \Log::info('PRIORITY NOTIFICATION TOKEN', [
-            'ticket' => $this->ticket->ticket_number,
-            'token' => $token,
-            'token_length' => strlen($token),
-        ]);
-
+   
         $url = $ticketService->createGuestTicketUrl(
             ticket: $this->ticket,
             token: $token,
         );
-
-        \Log::info('PRIORITY NOTIFICATION URL', [
-            'url' => $url,
-        ]);
 
         return (new MailMessage)
             ->subject(
