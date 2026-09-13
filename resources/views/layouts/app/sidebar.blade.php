@@ -22,6 +22,183 @@
             overflow: hidden;
         }
 
+        /* Loading animation start */
+        /*
+|--------------------------------------------------------------------------
+| Application Loader
+|--------------------------------------------------------------------------
+*/
+
+.cc-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background:
+        radial-gradient(
+            circle at 50% 50%,
+            rgba(124, 58, 237, 0.10) 0%,
+            rgba(79, 70, 229, 0.045) 25%,
+            transparent 55%
+        ),
+        #050507;
+
+    opacity: 1;
+    visibility: visible;
+
+    transition:
+        opacity 450ms cubic-bezier(0.4, 0, 0.2, 1),
+        visibility 450ms ease;
+}
+
+.cc-loader.is-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.cc-loader__content {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 150px;
+    height: 150px;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Soft ambient glow
+|--------------------------------------------------------------------------
+*/
+
+.cc-loader__glow {
+    position: absolute;
+
+    width: 105px;
+    height: 105px;
+
+    border-radius: 50%;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(167, 139, 250, 0.30) 0%,
+            rgba(139, 92, 246, 0.16) 35%,
+            rgba(79, 70, 229, 0.06) 60%,
+            transparent 75%
+        );
+
+    filter: blur(18px);
+
+    animation: cc-loader-glow 2s ease-in-out infinite;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Your actual loader.svg
+|--------------------------------------------------------------------------
+*/
+
+.cc-loader__image {
+    position: relative;
+    z-index: 2;
+
+    width: 82px;
+    height: 82px;
+
+    object-fit: contain;
+
+    filter:
+        drop-shadow(0 0 7px rgba(196, 181, 253, 0.35))
+        drop-shadow(0 0 20px rgba(139, 92, 246, 0.28));
+
+    animation:
+        cc-loader-pulse 1.7s ease-in-out infinite;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Small surrounding light
+|--------------------------------------------------------------------------
+*/
+
+.cc-loader__halo {
+    position: absolute;
+
+    width: 116px;
+    height: 116px;
+
+    border: 1px solid rgba(167, 139, 250, 0.12);
+    border-radius: 50%;
+
+    box-shadow:
+        inset 0 0 25px rgba(124, 58, 237, 0.04),
+        0 0 30px rgba(124, 58, 237, 0.05);
+
+    animation: cc-loader-halo 2.5s ease-in-out infinite;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Animations
+|--------------------------------------------------------------------------
+*/
+
+@keyframes cc-loader-pulse {
+    0%,
+    100% {
+        transform: scale(0.94);
+        opacity: 0.82;
+    }
+
+    50% {
+        transform: scale(1.04);
+        opacity: 1;
+    }
+}
+
+@keyframes cc-loader-glow {
+    0%,
+    100% {
+        transform: scale(0.82);
+        opacity: 0.55;
+    }
+
+    50% {
+        transform: scale(1.08);
+        opacity: 1;
+    }
+}
+
+@keyframes cc-loader-halo {
+    0%,
+    100% {
+        transform: scale(0.94);
+        opacity: 0.45;
+    }
+
+    50% {
+        transform: scale(1.04);
+        opacity: 0.85;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cc-loader__image,
+    .cc-loader__glow,
+    .cc-loader__halo {
+        animation: none;
+    }
+}
+
+        /* Loading animation end */
         /*
         |--------------------------------------------------------------------------
         | Application shell
@@ -789,6 +966,29 @@
 
 <body class="min-h-screen bg-[#050507] text-white">
 
+<!-- Application Loader -->
+<div
+    id="cc-loader"
+    class="cc-loader"
+    role="status"
+    aria-label="Loading"
+>
+    <div class="cc-loader__content">
+
+        <div class="cc-loader__glow"></div>
+
+        <div class="cc-loader__halo"></div>
+
+        <img
+            src="{{ asset('assets/img/loader.svg') }}"
+            alt=""
+            class="cc-loader__image"
+        >
+
+    </div>
+</div>
+<!-- Application Loader --> 
+
     <div class="cc-app-shell">
 
         <flux:sidebar
@@ -1017,6 +1217,31 @@
         </flux:toast.group>
 
     @endpersist
+
+    <script>
+    (() => {
+        const hideLoader = () => {
+            const loader = document.getElementById('cc-loader');
+
+            if (!loader) return;
+
+            loader.classList.add('is-hidden');
+
+            setTimeout(() => {
+                loader.remove();
+            }, 500);
+        };
+
+        if (document.readyState === 'complete') {
+            hideLoader();
+        } else {
+            window.addEventListener('load', hideLoader, {
+                once: true
+            });
+        }
+    })();
+</script>
+
 
     @fluxScripts
 

@@ -192,7 +192,23 @@ new class extends Component
 <section class="w-full">
 
     @include('partials.settings-heading')
+    @push('styles')
+        <style>
+        [data-test="team-name-input"] {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
 
+    [data-test="team-name-input"] input {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+    }
+
+    </style>
+    @endpush
     <flux:heading level="2" class="sr-only">
         {{ __('Teams') }}
     </flux:heading>
@@ -226,10 +242,10 @@ new class extends Component
             ============================================================= --}}
             <div class="relative px-6 py-6 sm:px-8">
 
-                <div class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                <div class="space-y-6">
 
                     {{-- Team identity --}}
-                    <div class="flex min-w-0 items-center gap-4">
+                    <div class="flex min-w-0 items-start gap-4">
 
                         <div class="relative shrink-0">
 
@@ -245,12 +261,14 @@ new class extends Component
 
                         </div>
 
-
-                        <div class="min-w-0">
+                        <div class="min-w-0 flex-1">
 
                             <div class="flex flex-wrap items-center gap-2">
 
-                                <h3 class="max-w-[min(70vw,520px)] truncate text-xl font-semibold tracking-tight text-white">
+                                {{-- Don't truncate the team name --}}
+                                <h3
+                                    class="min-w-0 break-words text-xl font-semibold leading-tight tracking-tight text-white"
+                                >
                                     {{ $teamData['name'] }}
                                 </h3>
 
@@ -278,7 +296,7 @@ new class extends Component
 
                             </div>
 
-                            <p class="mt-1 truncate text-xs text-white/25">
+                            <p class="mt-1 break-all text-xs text-white/25">
                                 {{ $teamData['slug'] }}
                             </p>
 
@@ -292,45 +310,50 @@ new class extends Component
 
                         <form
                             wire:submit="updateTeam"
-                            class="flex w-full items-end gap-2 lg:max-w-[440px]"
+                            class="rounded-2xl border border-white/7 bg-white/[0.025] p-4 shadow-inner shadow-black/10"
                             novalidate
                         >
 
-                            <div class="min-w-0 flex-1">
+                            <div class="flex flex-col gap-3 lg:flex-row lg:items-end">
 
-                                <flux:input
-                                    wire:model="teamName"
-                                    :label="__('Team name')"
-                                    :error="$errors->first('teamName')"
-                                    data-test="team-name-input"
-                                />
+                                <div class="min-w-0 flex-1">
+
+                                    <flux:input
+                                        wire:model="teamName"
+                                        :label="__('Team name')"
+                                        :error="$errors->first('teamName')"
+                                        data-test="team-name-input"
+                                        class="w-full"
+                                    />
+
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    class="inline-flex h-10 w-full shrink-0 cursor-pointer items-center justify-center gap-2 rounded-lg border border-purple-300/20 bg-linear-to-r from-purple-600 via-violet-500 to-fuchsia-500 px-5 text-xs font-semibold text-white shadow-lg shadow-purple-950/30 transition duration-300 hover:-translate-y-0.5 hover:shadow-purple-900/30 focus:outline-none focus:ring-2 focus:ring-purple-400/40 active:translate-y-0 lg:w-auto"
+                                    data-test="team-save-button"
+                                >
+
+                                    <svg
+                                        class="h-3.5 w-3.5"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        aria-hidden="true"
+                                    >
+                                        <path
+                                            d="M5 12.5 9.5 17 19 7"
+                                            stroke="currentColor"
+                                            stroke-width="1.8"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        />
+                                    </svg>
+
+                                    {{ __('Save') }}
+
+                                </button>
 
                             </div>
-
-                            <button
-                                type="submit"
-                                class="inline-flex h-10 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-lg border border-purple-300/20 bg-linear-to-r from-purple-600 via-violet-500 to-fuchsia-500 px-4 text-xs font-semibold text-white shadow-lg shadow-purple-950/30 transition duration-300 hover:-translate-y-0.5 hover:shadow-purple-900/30 focus:outline-none focus:ring-2 focus:ring-purple-400/40 active:translate-y-0"
-                                data-test="team-save-button"
-                            >
-
-                                <svg
-                                    class="h-3.5 w-3.5"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    aria-hidden="true"
-                                >
-                                    <path
-                                        d="M5 12.5 9.5 17 19 7"
-                                        stroke="currentColor"
-                                        stroke-width="1.8"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    />
-                                </svg>
-
-                                {{ __('Save') }}
-
-                            </button>
 
                         </form>
 
@@ -339,6 +362,7 @@ new class extends Component
                 </div>
 
             </div>
+
 
 
             {{-- ============================================================
