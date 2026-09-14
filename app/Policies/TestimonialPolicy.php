@@ -1,54 +1,65 @@
-<?php 
+<?php
 
 namespace App\Policies;
 
-use App\Enums\TeamPermission; 
-use App\Models\Testimonial; 
-use App\Models\User; 
+use App\Enums\TeamPermission;
+use App\Models\Testimonials;
+use App\Models\User;
 
-class TestimonialPolicy 
+class TestimonialPolicy
 {
-    // determines whether or not the user can view any testimonial
-    public function viewAny(User $user): bool 
+    public function viewAny(User $user): bool
     {
-        $team = $user->currentTeam; 
+        $team = $user->currentTeam;
 
-        return $team !== null && $user->hasTeamPermission($team, TeamPermission::ViewTestimonials);
+        return $team !== null
+            && $user->hasTeamPermission(
+                $team,
+                TeamPermission::ViewTestimonials
+            );
     }
 
-    // determines if they can view a specific testimonial 
-    public function view(User $user, Testimonial $testimonial): bool 
+    public function view(User $user, Testimonials $testimonial): bool
     {
-        $team = $user->currentTeam; 
+        $team = $user->currentTeam;
 
-        return $team !== null && $user->hasTeamPermission($team, TeamPermission::ViewTestimonials);
+        return $team !== null
+            && $user->hasTeamPermission(
+                $team,
+                TeamPermission::ViewTestimonials
+            );
     }
 
-    // determine if they can approve a testimonial 
-    public function approve(User $user, Testimonial $testimonial): bool 
+    public function approve(User $user, Testimonials $testimonial): bool
     {
-        $team = $user->currentTeam; 
-        
-        return $team !== null && $user->hasTeamPermission($team, TeamPermission::ApproveTestimonial);
+        $team = $user->currentTeam;
+
+        return $team !== null
+            && $user->hasTeamPermission(
+                $team,
+                TeamPermission::ApproveTestimonial
+            );
     }
 
-    // determine if they can decline a testimonial 
-
-    public function deny(User $user, Testimonial $testimonial): bool 
+    public function deny(User $user, Testimonials $testimonial): bool
     {
-        $team = $user->currentTeam; 
-        
-        return $team !== null && $user->hasTeamPermission($team, TeamPermission::DenyTestimonial);
+        $team = $user->currentTeam;
+
+        return $team !== null
+            && $user->hasTeamPermission(
+                $team,
+                TeamPermission::DenyTestimonial
+            );
     }
 
-    // determine if they can delete a testimonial 
-
-    public function delete(User $user, Testimonial $testimonial): bool 
+    public function delete(User $user, Testimonials $testimonial): bool
     {
-        $team = $user->currentTeam; 
+        $team = $user->currentTeam;
 
-        return $team !== null && $user->hasTeamPermission($team, TeamPermission::DeleteTestimonial);
+        return $team !== null
+            && $user->hasTeamPermission(
+                $team,
+                TeamPermission::DeleteTestimonial
+            );
     }
-
-
 }

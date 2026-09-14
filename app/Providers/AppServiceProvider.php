@@ -4,7 +4,9 @@ namespace App\Providers;
 
 use Carbon\CarbonImmutable;
 use App\Models\Work;
+use App\Models\Testimonials;
 use App\Policies\WorkPolicy;
+use App\Policies\TestimonialPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -33,7 +35,16 @@ class AppServiceProvider extends ServiceProvider
         $this->configureDefaults();
 
         Schema::defaultStringLength(191);
-        Gate::policy(Work::class, WorkPolicy::class);
+        Gate::policy(
+            Work::class,
+            WorkPolicy::class
+        );
+
+        Gate::policy(
+            Testimonials::class,
+            TestimonialPolicy::class
+        );        
+        
         /*
          * Livewire update route.
          *
@@ -41,6 +52,7 @@ class AppServiceProvider extends ServiceProvider
          * Keep Livewire's original $handle. Do not wrap it in
          * app()->call() or invoke it ourselves.
          */
+        
         Livewire::setUpdateRoute(function ($handle) {
             return Route::post('/custom/livewire/update', $handle)
                 ->middleware(['web'])
