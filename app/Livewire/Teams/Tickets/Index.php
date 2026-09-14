@@ -103,7 +103,7 @@ class Index extends Component
             'sort' => [
                 'required',
                 'string',
-                'in:latest,oldest',
+                'in:latest,oldest,priority_urgent,priority_high,priority_normal,priority_low',
             ],
             'search' => [
                 'nullable',
@@ -353,17 +353,71 @@ class Index extends Component
                     $this->priority,
                 ),
             )
-            ->orderBy(
-                'last_activity_at',
-                $this->sort === 'oldest'
-                    ? 'asc'
-                    : 'desc',
+            ->when(
+                in_array($this->sort, [
+                    'priority_urgent',
+                    'priority_high',
+                    'priority_normal',
+                    'priority_low',
+                ], true),
+                function ($query): void {
+                    $priorityOrder = match ($this->sort) {
+                        'priority_urgent' => [
+                            'urgent',
+                            'high',
+                            'normal',
+                            'low',
+                        ],
+
+                        'priority_high' => [
+                            'high',
+                            'urgent',
+                            'normal',
+                            'low',
+                        ],
+
+                        'priority_normal' => [
+                            'normal',
+                            'urgent',
+                            'high',
+                            'low',
+                        ],
+
+                        'priority_low' => [
+                            'low',
+                            'normal',
+                            'high',
+                            'urgent',
+                        ],
+                    };
+
+                    $case = 'CASE priority ';
+
+                    foreach ($priorityOrder as $index => $priority) {
+                        $case .= "WHEN ? THEN {$index} ";
+                    }
+
+                    $case .= 'ELSE ' . count($priorityOrder) . ' END';
+
+                    $bindings = $priorityOrder;
+
+                    $query->orderByRaw(
+                        $case,
+                        $bindings,
+                    );
+                },
             )
-            ->orderBy(
-                'id',
-                $this->sort === 'oldest'
-                    ? 'asc'
-                    : 'desc',
+            ->when(
+                in_array($this->sort, ['latest', 'oldest'], true),
+                function ($query): void {
+                    $direction = $this->sort === 'oldest'
+                        ? 'asc'
+                        : 'desc';
+
+                    $query
+                        ->orderBy('last_activity_at', $direction)
+                        ->orderBy('id', $direction);
+                },
             )
             ->get();
 

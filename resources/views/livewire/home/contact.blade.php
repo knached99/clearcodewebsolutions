@@ -44,7 +44,7 @@
                         <div>
                             <strong>Message sent.</strong>
 
-                            <span>
+                            <span class="text-gray-100">
                                 Thanks for reaching out. We'll be in touch soon.
                             </span>
                         </div>
@@ -70,7 +70,7 @@
                 @endif
 
                 {{-- Honeypot --}}
-                 @honeypot
+                @honeypot
 
                 <div class="cc-form-row">
 
@@ -260,38 +260,38 @@
 </section>
 
 @push('styles')
-<style>
-/* ==========================================================================
-   RECAPTCHA
-   ========================================================================== */
+    <style>
+        /* ==========================================================================
+                               RECAPTCHA
+                               ========================================================================== */
 
-/*
- * reCAPTCHA v3 badge is hidden because the required disclosure
- * is displayed directly beneath the contact form submit button.
- */
-.grecaptcha-badge {
-    visibility: hidden !important;
-}
+        /*
+                             * reCAPTCHA v3 badge is hidden because the required disclosure
+                             * is displayed directly beneath the contact form submit button.
+                             */
+        .grecaptcha-badge {
+            visibility: hidden !important;
+        }
 
-.cc-contact-form__recaptcha {
-    margin: 10px 0 0;
-    color: rgba(255, 255, 255, .28);
-    font-size: 9px;
-    line-height: 1.5;
-    text-align: center;
-}
+        .cc-contact-form__recaptcha {
+            margin: 10px 0 0;
+            color: #fff;
+            font-size: 12px;
+            line-height: 1.5;
+            text-align: center;
+        }
 
-.cc-contact-form__recaptcha a {
-    color: rgba(255, 255, 255, .42);
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 2px;
-}
+        .cc-contact-form__recaptcha a {
+            color: rgb(194, 119, 255);
+            text-decoration: underline;
+            text-decoration-thickness: 1px;
+            text-underline-offset: 2px;
+        }
 
-.cc-contact-form__recaptcha a:hover {
-    color: rgba(255, 255, 255, .7);
-}
-</style>
+        .cc-contact-form__recaptcha a:hover {
+            color: rgba(137, 28, 253, 0.7);
+        }
+    </style>
 @endpush
 
 @once

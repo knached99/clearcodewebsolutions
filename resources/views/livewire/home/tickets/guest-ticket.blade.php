@@ -1,202 +1,196 @@
-<div
-    class="guest-ticket-page"
-    x-data="{
-        lightbox: false,
-        lightboxSrc: '',
-        lightboxName: '',
+<div class="guest-ticket-page" x-data="{
+    lightbox: false,
+    lightboxSrc: '',
+    lightboxName: '',
 
-        showToTop: false,
+    showToTop: false,
 
-        highlightedMessage: @js($highlightMessageId),
+    highlightedMessage: @js($highlightMessageId),
 
-        toast: false,
-        toastHeading: '',
-        toastText: '',
-        toastVariant: 'success',
-        toastTimer: null,
+    toast: false,
+    toastHeading: '',
+    toastText: '',
+    toastVariant: 'success',
+    toastTimer: null,
 
-        openLightbox(src, name = '') {
-            this.lightboxSrc = src;
-            this.lightboxName = name;
-            this.lightbox = true;
+    openLightbox(src, name = '') {
+        this.lightboxSrc = src;
+        this.lightboxName = name;
+        this.lightbox = true;
 
-            document.body.classList.add('overflow-hidden');
-        },
+        document.body.classList.add('overflow-hidden');
+    },
 
-        closeLightbox() {
-            this.lightbox = false;
-            this.lightboxSrc = '';
-            this.lightboxName = '';
+    closeLightbox() {
+        this.lightbox = false;
+        this.lightboxSrc = '';
+        this.lightboxName = '';
 
-            document.body.classList.remove('overflow-hidden');
-        },
+        document.body.classList.remove('overflow-hidden');
+    },
 
-        scrollToTop() {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
+    scrollToTop() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    },
+
+    scrollToMessage(id) {
+        const element = document.getElementById(
+            'ticket-message-' + id
+        );
+
+        if (!element) {
+            return;
+        }
+
+        setTimeout(() => {
+            element.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
             });
-        },
 
-        scrollToMessage(id) {
-            const element = document.getElementById(
-                'ticket-message-' + id
+            element.classList.remove(
+                'message-highlight-active'
             );
 
-            if (!element) {
-                return;
-            }
+            void element.offsetWidth;
+
+            element.classList.add(
+                'message-highlight-active'
+            );
 
             setTimeout(() => {
-                element.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center'
-                });
-
                 element.classList.remove(
                     'message-highlight-active'
                 );
+            }, 8000);
+        }, 450);
+    },
 
-                void element.offsetWidth;
+    showToast(heading, text, variant = 'success') {
+        if (this.toastTimer) {
+            clearTimeout(this.toastTimer);
+            this.toastTimer = null;
+        }
 
-                element.classList.add(
-                    'message-highlight-active'
-                );
+        this.toastHeading = heading;
+        this.toastText = text;
+        this.toastVariant = variant;
+        this.toast = true;
 
-                setTimeout(() => {
-                    element.classList.remove(
-                        'message-highlight-active'
+        this.toastTimer = setTimeout(() => {
+            this.toast = false;
+            this.toastTimer = null;
+        }, 3500);
+    },
+
+    async copyMessageLink(id) {
+        const url =
+            window.location.origin +
+            window.location.pathname +
+            '?message=' +
+            encodeURIComponent(id);
+
+        try {
+            let copied = false;
+
+            if (
+                navigator.clipboard &&
+                window.isSecureContext
+            ) {
+                try {
+                    await navigator.clipboard.writeText(url);
+                    copied = true;
+                } catch (clipboardError) {
+                    console.warn(
+                        'Clipboard API failed. Trying fallback.',
+                        clipboardError
                     );
-                }, 8000);
-            }, 450);
-        },
-
-        showToast(heading, text, variant = 'success') {
-            if (this.toastTimer) {
-                clearTimeout(this.toastTimer);
-                this.toastTimer = null;
+                }
             }
 
-            this.toastHeading = heading;
-            this.toastText = text;
-            this.toastVariant = variant;
-            this.toast = true;
+            if (!copied) {
+                const textarea =
+                    document.createElement('textarea');
 
-            this.toastTimer = setTimeout(() => {
-                this.toast = false;
-                this.toastTimer = null;
-            }, 3500);
-        },
+                textarea.value = url;
 
-        async copyMessageLink(id) {
-            const url =
-                window.location.origin +
-                window.location.pathname +
-                '?message=' +
-                encodeURIComponent(id);
+                textarea.style.position = 'fixed';
+                textarea.style.top = '0';
+                textarea.style.left = '0';
+                textarea.style.width = '1px';
+                textarea.style.height = '1px';
+                textarea.style.padding = '0';
+                textarea.style.border = '0';
+                textarea.style.outline = '0';
+                textarea.style.boxShadow = 'none';
+                textarea.style.background = 'transparent';
+                textarea.style.opacity = '0';
 
-            try {
-                let copied = false;
-
-                if (
-                    navigator.clipboard &&
-                    window.isSecureContext
-                ) {
-                    try {
-                        await navigator.clipboard.writeText(url);
-                        copied = true;
-                    } catch (clipboardError) {
-                        console.warn(
-                            'Clipboard API failed. Trying fallback.',
-                            clipboardError
-                        );
-                    }
-                }
-
-                if (!copied) {
-                    const textarea =
-                        document.createElement('textarea');
-
-                    textarea.value = url;
-
-                    textarea.style.position = 'fixed';
-                    textarea.style.top = '0';
-                    textarea.style.left = '0';
-                    textarea.style.width = '1px';
-                    textarea.style.height = '1px';
-                    textarea.style.padding = '0';
-                    textarea.style.border = '0';
-                    textarea.style.outline = '0';
-                    textarea.style.boxShadow = 'none';
-                    textarea.style.background = 'transparent';
-                    textarea.style.opacity = '0';
-
-                    textarea.setAttribute(
-                        'readonly',
-                        ''
-                    );
-
-                    document.body.appendChild(textarea);
-
-                    textarea.focus();
-                    textarea.select();
-
-                    textarea.setSelectionRange(
-                        0,
-                        textarea.value.length
-                    );
-
-                    copied =
-                        document.execCommand('copy');
-
-                    textarea.remove();
-                }
-
-                if (!copied) {
-                    throw new Error(
-                        'Copy operation failed.'
-                    );
-                }
-
-                this.showToast(
-                    'Link copied!',
-                    'The message link is ready to share.',
-                    'success'
+                textarea.setAttribute(
+                    'readonly',
+                    ''
                 );
 
-            } catch (error) {
-                console.error(
-                    'Unable to copy message link.',
-                    error
+                document.body.appendChild(textarea);
+
+                textarea.focus();
+                textarea.select();
+
+                textarea.setSelectionRange(
+                    0,
+                    textarea.value.length
                 );
 
-                this.showToast(
-                    'Couldn’t copy link',
-                    'Please try again.',
-                    'danger'
+                copied =
+                    document.execCommand('copy');
+
+                textarea.remove();
+            }
+
+            if (!copied) {
+                throw new Error(
+                    'Copy operation failed.'
                 );
             }
+
+            this.showToast(
+                'Link copied!',
+                'The message link is ready to share.',
+                'success'
+            );
+
+        } catch (error) {
+            console.error(
+                'Unable to copy message link.',
+                error
+            );
+
+            this.showToast(
+                'Couldn’t copy link',
+                'Please try again.',
+                'danger'
+            );
         }
-    }"
-    x-init="
-        const updateScrollButton = () => {
-            showToTop = window.scrollY > 500;
-        };
+    }
+}" x-init="const updateScrollButton = () => {
+    showToTop = window.scrollY > 500;
+};
 
-        window.addEventListener(
-            'scroll',
-            updateScrollButton,
-            { passive: true }
-        );
+window.addEventListener(
+    'scroll',
+    updateScrollButton, { passive: true }
+);
 
-        updateScrollButton();
+updateScrollButton();
 
-        if (highlightedMessage) {
-            setTimeout(() => {
-                scrollToMessage(highlightedMessage);
-            }, 500);
-        }
-    "
+if (highlightedMessage) {
+    setTimeout(() => {
+        scrollToMessage(highlightedMessage);
+    }, 500);
+}"
     @keydown.escape.window="
         if (lightbox) {
             closeLightbox();
@@ -208,40 +202,24 @@
                 toastTimer = null;
             }
         }
-    "
->
+    ">
 
     @php
-        $messagesCollection = collect(
-            $ticket->messages ?? []
-        )
+        $messagesCollection = collect($ticket->messages ?? [])
             ->sortBy('created_at')
             ->values();
 
         $messageCount = $messagesCollection->count();
 
-        $statusValue = strtolower(
-            (string) ($ticket->status ?? 'open')
-        );
+        $statusValue = strtolower((string) ($ticket->status ?? 'open'));
 
-        $priorityValue = strtolower(
-            (string) ($ticket->priority ?? 'normal')
-        );
+        $priorityValue = strtolower((string) ($ticket->priority ?? 'normal'));
 
-        $customerName = (string) (
-            $ticket->name ?? 'Customer'
-        );
+        $customerName = (string) ($ticket->name ?? 'Customer');
 
-        $customerInitial = strtoupper(
-            substr(
-                trim($customerName),
-                0,
-                1
-            )
-        );
+        $customerInitial = strtoupper(substr(trim($customerName), 0, 1));
 
-        $isClosed =
-            $statusValue === 'closed';
+        $isClosed = $statusValue === 'closed';
     @endphp
 
 
@@ -249,35 +227,24 @@
        TOAST NOTIFICATION
     ========================================================== --}}
 
-    <div
-        x-show="toast"
-        x-cloak
-        x-transition:enter="toast-enter"
-        x-transition:enter-start="toast-enter-start"
-        x-transition:enter-end="toast-enter-end"
-        x-transition:leave="toast-leave"
-        x-transition:leave-start="toast-leave-start"
-        x-transition:leave-end="toast-leave-end"
-        class="ticket-toast"
+    <div x-show="toast" x-cloak x-transition:enter="toast-enter" x-transition:enter-start="toast-enter-start"
+        x-transition:enter-end="toast-enter-end" x-transition:leave="toast-leave"
+        x-transition:leave-start="toast-leave-start" x-transition:leave-end="toast-leave-end" class="ticket-toast"
         :class="{
             'ticket-toast-success': toastVariant === 'success',
             'ticket-toast-danger': toastVariant === 'danger',
             'ticket-toast-info': toastVariant === 'info'
         }"
-        role="status"
-        aria-live="polite"
-    >
+        role="status" aria-live="polite">
 
         <div class="ticket-toast-icon">
 
-            <i
-                class="fa-solid"
+            <i class="fa-solid"
                 :class="{
                     'fa-check': toastVariant === 'success',
                     'fa-circle-exclamation': toastVariant === 'danger',
                     'fa-circle-info': toastVariant === 'info'
-                }"
-            ></i>
+                }"></i>
 
         </div>
 
@@ -289,9 +256,7 @@
 
         </div>
 
-        <button
-            type="button"
-            class="ticket-toast-close"
+        <button type="button" class="ticket-toast-close"
             @click.stop="
                 toast = false;
 
@@ -300,8 +265,7 @@
                     toastTimer = null;
                 }
             "
-            aria-label="Close notification"
-        >
+            aria-label="Close notification">
 
             <i class="fa-solid fa-xmark"></i>
 
@@ -314,10 +278,7 @@
        DECORATIVE BACKGROUND
     ========================================================== --}}
 
-    <div
-        class="ticket-background"
-        aria-hidden="true"
-    >
+    <div class="ticket-background" aria-hidden="true">
 
         <div class="purple-orb orb-one"></div>
         <div class="purple-orb orb-two"></div>
@@ -341,10 +302,7 @@
 
         <div class="ticket-navigation">
 
-            <a
-                href="{{ route('home') }}"
-                class="ticket-back"
-            >
+            <a href="{{ route('home') }}" class="ticket-back">
 
                 <span class="ticket-back-icon">
                     <i class="fa-solid fa-arrow-left"></i>
@@ -396,8 +354,7 @@
                         class="
                             status-pill
                             status-{{ $statusValue }}
-                        "
-                    >
+                        ">
 
                         <span class="status-dot"></span>
 
@@ -407,20 +364,17 @@
 
 
                     @if ($priorityValue)
-
                         <span
                             class="
                                 priority-pill
                                 priority-{{ $priorityValue }}
-                            "
-                        >
+                            ">
 
                             <i class="fa-solid fa-bolt"></i>
 
                             {{ ucfirst($priorityValue) }}
 
                         </span>
-
                     @endif
 
                 </div>
@@ -536,10 +490,7 @@
 
                         {{ $messageCount }}
 
-                        {{ $messageCount === 1
-                            ? 'message'
-                            : 'messages'
-                        }}
+                        {{ $messageCount === 1 ? 'message' : 'messages' }}
 
                     </div>
 
@@ -559,37 +510,17 @@
 
                         @php
 
-                            $authorName = (string) (
-                                $message->author_name
-                                ?: 'Support'
-                            );
+                            $authorName = (string) ($message->author_name ?: 'Support');
 
-                            $authorType = strtolower(
-                                (string)
-                                $message->author_type
-                            );
+                            $authorType = strtolower((string) $message->author_type);
 
-                            $isCustomer =
-                                $authorType === 'guest';
+                            $isCustomer = $authorType === 'guest';
 
-                            $initial = strtoupper(
-                                substr(
-                                    trim($authorName),
-                                    0,
-                                    1
-                                )
-                            );
+                            $initial = strtoupper(substr(trim($authorName), 0, 1));
 
-                            $messageBody = (string) (
-                                $message->message ?? ''
-                            );
+                            $messageBody = (string) ($message->message ?? '');
 
-                            $messageDate =
-                                $message->created_at
-                                    ? $message->created_at->format(
-                                        'M d, Y · h:i A'
-                                    )
-                                    : '';
+                            $messageDate = $message->created_at ? $message->created_at->format('M d, Y · h:i A') : '';
 
                             /*
                              * IMPORTANT:
@@ -604,57 +535,35 @@
                              * This variable contains persisted
                              * TicketMessageAttachment models.
                              */
-                            $messageAttachments =
-                                $message->attachments
-                                ?? collect();
+                            $messageAttachments = $message->attachments ?? collect();
 
-                            $isHighlighted =
-                                $highlightMessageId
-                                &&
-                                (int)
-                                $highlightMessageId
-                                ===
-                                (int)
-                                $message->id;
-
+                            $isHighlighted = $highlightMessageId && (int) $highlightMessageId === (int) $message->id;
                         @endphp
 
 
-                        <article
-                            id="ticket-message-{{ $message->id }}"
+                        <article id="ticket-message-{{ $message->id }}"
                             class="
                                 ticket-message
-                                {{ $isCustomer
-                                    ? 'customer-message'
-                                    : 'support-message'
-                                }}
-                                {{ $isHighlighted
-                                    ? 'message-highlight'
-                                    : ''
-                                }}
+                                {{ $isCustomer ? 'customer-message' : 'support-message' }}
+                                {{ $isHighlighted ? 'message-highlight' : '' }}
                             "
-                            data-message-id="{{ $message->id }}"
-                        >
+                            data-message-id="{{ $message->id }}">
 
 
                             {{-- NEW REPLY INDICATOR --}}
 
                             @if ($isHighlighted)
-
-                                <div
-                                    class="new-reply-indicator"
+                                <div class="new-reply-indicator"
                                     x-show="
                                         highlightedMessage ==
                                         {{ $message->id }}
-                                    "
-                                >
+                                    ">
 
                                     <i class="fa-solid fa-sparkles"></i>
 
                                     New reply
 
-                                    <button
-                                        type="button"
+                                    <button type="button"
                                         @click="
                                             highlightedMessage = null;
 
@@ -671,15 +580,13 @@
                                                 'message-highlight-active'
                                             );
                                         "
-                                        aria-label="Dismiss highlight"
-                                    >
+                                        aria-label="Dismiss highlight">
 
                                         <i class="fa-solid fa-xmark"></i>
 
                                     </button>
 
                                 </div>
-
                             @endif
 
 
@@ -693,13 +600,9 @@
                                 <div class="message-avatar">
 
                                     @if ($isCustomer)
-
                                         {{ $initial ?: 'C' }}
-
                                     @else
-
                                         <i class="fa-solid fa-headset"></i>
-
                                     @endif
 
                                 </div>
@@ -721,10 +624,7 @@
                                             </span>
 
                                             <span class="author-role">
-                                                {{ $isCustomer
-                                                    ? 'You'
-                                                    : 'Support'
-                                                }}
+                                                {{ $isCustomer ? 'You' : 'Support' }}
                                             </span>
 
                                         </div>
@@ -736,89 +636,53 @@
 
                                     <div class="message-bubble">
 
-                                        @if (
-                                            trim($messageBody) !== ''
-                                        )
-
+                                        @if (trim($messageBody) !== '')
                                             <div class="message-content">
                                                 {!! nl2br(e($messageBody)) !!}
                                             </div>
-
                                         @endif
 
 
                                         {{-- PERSISTED MESSAGE ATTACHMENTS --}}
 
-                                        @if (
-                                            $messageAttachments->isNotEmpty()
-                                        )
-
+                                        @if ($messageAttachments->isNotEmpty())
                                             <div class="attachments-grid">
 
-                                                @foreach (
-                                                    $messageAttachments
-                                                    as $attachment
-                                                )
-
+                                                @foreach ($messageAttachments as $attachment)
                                                     @php
 
-                                                        $attachmentPath =
-                                                            (string) (
-                                                                $attachment->path
-                                                                ?? ''
-                                                            );
+                                                        $attachmentPath = (string) ($attachment->path ?? '');
 
                                                         $attachmentName =
-                                                            (string) (
-                                                                $attachment->original_name
-                                                                ?? 'Attachment'
-                                                            );
+                                                            (string) ($attachment->original_name ?? 'Attachment');
 
-                                                        $attachmentUrl =
-                                                            $attachmentPath
-                                                                ? asset(
-                                                                    'storage/' .
-                                                                    ltrim(
-                                                                        $attachmentPath,
-                                                                        '/'
-                                                                    )
-                                                                )
-                                                                : '';
-
+                                                        $attachmentUrl = $attachmentPath
+                                                            ? asset('storage/' . ltrim($attachmentPath, '/'))
+                                                            : '';
                                                     @endphp
 
 
                                                     @if ($attachmentUrl)
-
-                                                        <button
-                                                            type="button"
-                                                            class="attachment-card"
+                                                        <button type="button" class="attachment-card"
                                                             @click="
                                                                 openLightbox(
                                                                     @js($attachmentUrl),
                                                                     @js($attachmentName)
                                                                 )
-                                                            "
-                                                        >
+                                                            ">
 
-                                                            <img
-                                                                src="{{ $attachmentUrl }}"
-                                                                alt="{{ $attachmentName }}"
-                                                                loading="lazy"
-                                                            >
+                                                            <img src="{{ $attachmentUrl }}"
+                                                                alt="{{ $attachmentName }}" loading="lazy">
 
                                                             <span class="attachment-hover">
                                                                 <i class="fa-solid fa-expand"></i>
                                                             </span>
 
                                                         </button>
-
                                                     @endif
-
                                                 @endforeach
 
                                             </div>
-
                                         @endif
 
                                     </div>
@@ -829,32 +693,20 @@
                                     <div class="message-footer">
 
                                         @if ($messageDate)
-
-                                            <time
-                                                class="message-date"
-                                                datetime="{{ $message->created_at?->toISOString() }}"
-                                            >
+                                            <time class="message-date"
+                                                datetime="{{ $message->created_at?->toISOString() }}">
                                                 {{ $messageDate }}
                                             </time>
-
                                         @endif
 
 
-                                        <div
-                                            class="message-link-wrapper"
-                                            x-data="{ showTooltip: false }"
-                                        >
+                                        <div class="message-link-wrapper" x-data="{ showTooltip: false }">
 
-                                            <button
-                                                type="button"
-                                                class="message-link"
+                                            <button type="button" class="message-link"
                                                 @click="copyMessageLink({{ $message->id }})"
-                                                @mouseenter="showTooltip = true"
-                                                @mouseleave="showTooltip = false"
-                                                @focus="showTooltip = true"
-                                                @blur="showTooltip = false"
-                                                aria-label="Copy link to message #{{ $message->id }}"
-                                            >
+                                                @mouseenter="showTooltip = true" @mouseleave="showTooltip = false"
+                                                @focus="showTooltip = true" @blur="showTooltip = false"
+                                                aria-label="Copy link to message #{{ $message->id }}">
 
                                                 <i class="fa-solid fa-link"></i>
 
@@ -864,18 +716,13 @@
 
                                             </button>
 
-                                            <div
-                                                class="message-link-tooltip"
-                                                x-show="showTooltip"
+                                            <div class="message-link-tooltip" x-show="showTooltip"
                                                 x-transition:enter="tooltip-enter"
                                                 x-transition:enter-start="tooltip-enter-start"
                                                 x-transition:enter-end="tooltip-enter-end"
                                                 x-transition:leave="tooltip-leave"
                                                 x-transition:leave-start="tooltip-leave-start"
-                                                x-transition:leave-end="tooltip-leave-end"
-                                                x-cloak
-                                                role="tooltip"
-                                            >
+                                                x-transition:leave-end="tooltip-leave-end" x-cloak role="tooltip">
                                                 Copy link to message #{{ $message->id }}
                                             </div>
 
@@ -907,7 +754,6 @@
                             </p>
 
                         </div>
-
                     @endforelse
 
                 </div>
@@ -917,7 +763,7 @@
                    REPLY SECTION
                 ================================================== --}}
 
-                @if (! $isClosed)
+                @if (!$isClosed)
 
                     <div class="reply-section">
 
@@ -951,7 +797,6 @@
                         {{-- SUCCESS MESSAGE --}}
 
                         @if (session()->has('ticket-success'))
-
                             <div class="success-message">
 
                                 <div class="success-icon">
@@ -971,25 +816,15 @@
                                 </div>
 
                             </div>
-
                         @endif
 
 
                         {{-- REPLY BOX --}}
 
-                        <div
-                            class="reply-box"
-                            wire:loading.class="is-sending"
-                            wire:target="sendReply"
-                        >
+                        <div class="reply-box" wire:loading.class="is-sending" wire:target="sendReply">
 
-                            <textarea
-                                id="ticket-message"
-                                class="reply-textarea"
-                                wire:model.defer="message"
-                                placeholder="Write your message here..."
-                                maxlength="10000"
-                            ></textarea>
+                            <textarea id="ticket-message" class="reply-textarea" wire:model.defer="message"
+                                placeholder="Write your message here..." maxlength="10000"></textarea>
 
 
                             {{-- =================================================
@@ -1005,12 +840,8 @@
 
                                     <label class="attachment-input">
 
-                                        <input
-                                            type="file"
-                                            wire:model="attachments"
-                                            multiple
-                                            accept="image/jpeg,image/png,image/webp,image/gif"
-                                        >
+                                        <input type="file" wire:model="attachments" multiple
+                                            accept="image/jpeg,image/png,image/webp,image/gif">
 
                                         <i class="fa-solid fa-paperclip"></i>
 
@@ -1027,40 +858,27 @@
 
                                         <div class="upload-preview">
 
-                                            @foreach (
-                                                $attachments
-                                                as $index => $attachment
-                                            )
-
+                                            @foreach ($attachments as $index => $attachment)
                                                 @if ($attachment)
+                                                    <div wire:key="guest-upload-{{ $index }}"
+                                                        class="upload-item">
 
-                                                    <div
-                                                        wire:key="guest-upload-{{ $index }}"
-                                                        class="upload-item"
-                                                    >
-
-                                                        <img
-                                                            src="{{ $attachment->temporaryUrl() }}"
+                                                        <img src="{{ $attachment->temporaryUrl() }}"
                                                             alt="{{ $attachment->getClientOriginalName() }}"
-                                                            class="upload-preview-image"
-                                                        >
+                                                            class="upload-preview-image">
 
-                                                        <button
-                                                            type="button"
+                                                        <button type="button"
                                                             wire:click="removeAttachment({{ $index }})"
                                                             wire:loading.attr="disabled"
                                                             wire:target="removeAttachment"
-                                                            aria-label="Remove {{ $attachment->getClientOriginalName() }}"
-                                                        >
+                                                            aria-label="Remove {{ $attachment->getClientOriginalName() }}">
 
                                                             <i class="fa-solid fa-xmark"></i>
 
                                                         </button>
 
                                                     </div>
-
                                                 @endif
-
                                             @endforeach
 
                                         </div>
@@ -1070,11 +888,7 @@
 
                                     {{-- UPLOAD LOADING --}}
 
-                                    <div
-                                        class="upload-loading"
-                                        wire:loading
-                                        wire:target="attachments"
-                                    >
+                                    <div class="upload-loading" wire:loading wire:target="attachments">
 
                                         <i class="fa-solid fa-spinner fa-spin"></i>
 
@@ -1087,18 +901,10 @@
 
                                 {{-- SEND BUTTON --}}
 
-                                <button
-                                    type="button"
-                                    class="send-button"
-                                    wire:click="sendReply"
-                                    wire:loading.attr="disabled"
-                                    wire:target="sendReply"
-                                >
+                                <button type="button" class="send-button" wire:click="sendReply"
+                                    wire:loading.attr="disabled" wire:target="sendReply">
 
-                                    <span
-                                        wire:loading.remove
-                                        wire:target="sendReply"
-                                    >
+                                    <span wire:loading.remove wire:target="sendReply">
 
                                         <i class="fa-solid fa-paper-plane"></i>
 
@@ -1107,10 +913,7 @@
                                     </span>
 
 
-                                    <span
-                                        wire:loading
-                                        wire:target="sendReply"
-                                    >
+                                    <span wire:loading wire:target="sendReply">
 
                                         <i class="fa-solid fa-spinner fa-spin"></i>
 
@@ -1128,7 +931,6 @@
                         {{-- MESSAGE ERROR --}}
 
                         @error('message')
-
                             <div class="field-error">
 
                                 <i class="fa-solid fa-circle-exclamation"></i>
@@ -1136,14 +938,12 @@
                                 {{ $message }}
 
                             </div>
-
                         @enderror
 
 
                         {{-- ATTACHMENT ERROR --}}
 
                         @error('attachments')
-
                             <div class="field-error">
 
                                 <i class="fa-solid fa-circle-exclamation"></i>
@@ -1151,11 +951,9 @@
                                 {{ $message }}
 
                             </div>
-
                         @enderror
 
                         @error('attachments.*')
-
                             <div class="field-error">
 
                                 <i class="fa-solid fa-circle-exclamation"></i>
@@ -1163,13 +961,10 @@
                                 {{ $message }}
 
                             </div>
-
                         @enderror
 
                     </div>
-
                 @else
-
                     {{-- CLOSED TICKET --}}
 
                     <div class="closed-ticket">
@@ -1225,11 +1020,9 @@
                             </strong>
 
                             @if ($ticket->email)
-
                                 <span>
                                     {{ $ticket->email }}
                                 </span>
-
                             @endif
 
                         </div>
@@ -1326,8 +1119,7 @@
                     <p>
                         {{ $isClosed
                             ? 'Open a new ticket and our team will get back to you.'
-                            : 'Send us a message and our team will get back to you.'
-                        }}
+                            : 'Send us a message and our team will get back to you.' }}
                     </p>
 
                     <div class="help-status">
@@ -1351,20 +1143,9 @@
        LIGHTBOX
     ========================================================== --}}
 
-    <div
-        class="ticket-lightbox"
-        x-show="lightbox"
-        x-cloak
-        x-transition.opacity
-        @click.self="closeLightbox()"
-    >
+    <div class="ticket-lightbox" x-show="lightbox" x-cloak x-transition.opacity @click.self="closeLightbox()">
 
-        <button
-            type="button"
-            class="lightbox-close"
-            @click="closeLightbox()"
-            aria-label="Close"
-        >
+        <button type="button" class="lightbox-close" @click="closeLightbox()" aria-label="Close">
 
             <i class="fa-solid fa-xmark"></i>
 
@@ -1373,15 +1154,9 @@
 
         <div class="lightbox-content">
 
-            <img
-                :src="lightboxSrc"
-                :alt="lightboxName"
-            >
+            <img :src="lightboxSrc" :alt="lightboxName">
 
-            <div
-                class="lightbox-caption"
-                x-text="lightboxName"
-            ></div>
+            <div class="lightbox-caption" x-text="lightboxName"></div>
 
         </div>
 
@@ -1392,15 +1167,8 @@
        BACK TO TOP
     ========================================================== --}}
 
-    <button
-        type="button"
-        class="ticket-to-top"
-        x-show="showToTop"
-        x-cloak
-        x-transition.opacity
-        @click="scrollToTop()"
-        aria-label="Back to top"
-    >
+    <button type="button" class="ticket-to-top" x-show="showToTop" x-cloak x-transition.opacity
+        @click="scrollToTop()" aria-label="Back to top">
 
         <i class="fa-solid fa-arrow-up"></i>
 
@@ -1408,7 +1176,6 @@
 
 
     <style>
-
         /* =========================================================
            BASE
         ========================================================== */
@@ -1421,21 +1188,17 @@
             position: relative;
             isolation: isolate;
             min-height: 100vh;
-            padding: 24px 20px 100px;
+            padding: clamp(90px, 9vw, 125px) 20px 100px;
             overflow: hidden;
             color: #fff;
 
             background:
-                radial-gradient(
-                    circle at 15% 10%,
+                radial-gradient(circle at 15% 10%,
                     rgba(124, 58, 237, .14),
-                    transparent 28%
-                ),
-                radial-gradient(
-                    circle at 85% 15%,
+                    transparent 28%),
+                radial-gradient(circle at 85% 15%,
                     rgba(168, 85, 247, .10),
-                    transparent 25%
-                ),
+                    transparent 25%),
                 #070609;
         }
 
@@ -1449,10 +1212,8 @@
             right: 24px;
             bottom: 24px;
 
-            width: min(
-                420px,
-                calc(100vw - 48px)
-            );
+            width: min(420px,
+                    calc(100vw - 48px));
 
             min-height: 72px;
 
@@ -1463,20 +1224,17 @@
             padding: 14px 16px;
 
             border:
-                1px solid
-                rgba(255,255,255,.12);
+                1px solid rgba(255, 255, 255, .12);
 
             border-radius: 14px;
 
             background:
-                rgba(18,18,24,.96);
+                rgba(18, 18, 24, .96);
 
             box-shadow:
-                0 18px 45px
-                rgba(0,0,0,.28),
+                0 18px 45px rgba(0, 0, 0, .28),
 
-                0 4px 14px
-                rgba(0,0,0,.16);
+                0 4px 14px rgba(0, 0, 0, .16);
 
             backdrop-filter: blur(14px);
             -webkit-backdrop-filter: blur(14px);
@@ -1501,39 +1259,36 @@
 
         .ticket-toast-success {
             border-color:
-                rgba(74,222,128,.22);
+                rgba(74, 222, 128, .22);
         }
 
-        .ticket-toast-success
-        .ticket-toast-icon {
+        .ticket-toast-success .ticket-toast-icon {
             background:
-                rgba(74,222,128,.14);
+                rgba(74, 222, 128, .14);
 
             color: #4ade80;
         }
 
         .ticket-toast-danger {
             border-color:
-                rgba(248,113,113,.22);
+                rgba(248, 113, 113, .22);
         }
 
-        .ticket-toast-danger
-        .ticket-toast-icon {
+        .ticket-toast-danger .ticket-toast-icon {
             background:
-                rgba(248,113,113,.14);
+                rgba(248, 113, 113, .14);
 
             color: #f87171;
         }
 
         .ticket-toast-info {
             border-color:
-                rgba(96,165,250,.22);
+                rgba(96, 165, 250, .22);
         }
 
-        .ticket-toast-info
-        .ticket-toast-icon {
+        .ticket-toast-info .ticket-toast-icon {
             background:
-                rgba(96,165,250,.14);
+                rgba(96, 165, 250, .14);
 
             color: #60a5fa;
         }
@@ -1556,7 +1311,7 @@
 
         .ticket-toast-content span {
             color:
-                rgba(255,255,255,.68);
+                rgba(255, 255, 255, .68);
 
             font-size: 13px;
             line-height: 1.4;
@@ -1579,7 +1334,7 @@
             border-radius: 8px;
 
             background: transparent;
-            color: rgba(255,255,255,.48);
+            color: rgba(255, 255, 255, .48);
 
             cursor: pointer;
 
@@ -1591,7 +1346,7 @@
 
         .ticket-toast-close:hover {
             background:
-                rgba(255,255,255,.08);
+                rgba(255, 255, 255, .08);
 
             color: #fff;
         }
@@ -1646,11 +1401,7 @@
 
             .ticket-toast {
                 top:
-                    calc(
-                        64px +
-                        env(safe-area-inset-top) +
-                        8px
-                    );
+                    calc(64px + env(safe-area-inset-top) + 8px);
 
                 right: 12px;
                 bottom: auto;
@@ -1697,11 +1448,7 @@
 
             .ticket-toast {
                 top:
-                    calc(
-                        60px +
-                        env(safe-area-inset-top) +
-                        8px
-                    );
+                    calc(60px + env(safe-area-inset-top) + 8px);
 
                 right: 10px;
                 left: 10px;
@@ -1742,15 +1489,11 @@
             opacity: .035;
 
             background-image:
-                linear-gradient(
-                    rgba(255,255,255,.5) 1px,
-                    transparent 1px
-                ),
-                linear-gradient(
-                    90deg,
-                    rgba(255,255,255,.5) 1px,
-                    transparent 1px
-                );
+                linear-gradient(rgba(255, 255, 255, .5) 1px,
+                    transparent 1px),
+                linear-gradient(90deg,
+                    rgba(255, 255, 255, .5) 1px,
+                    transparent 1px);
 
             background-size: 70px 70px;
         }
@@ -1803,25 +1546,30 @@
 
 
         /* =========================================================
-           NAVIGATION
+        NAVIGATION
         ========================================================== */
 
         .ticket-navigation {
             position: relative;
-            z-index: 100;
+            z-index: 20;
 
             display: flex;
             align-items: center;
-
             width: 100%;
+
+            /*
+            * Creates responsive spacing below the site navigation.
+            * clamp(min, preferred, max)
+            */
+            margin-top: 0;
             margin-bottom: 18px;
 
-            pointer-events: auto;
+            pointer-events: none;
         }
 
         .ticket-back {
             position: relative;
-            z-index: 101;
+            z-index: 21;
 
             display: inline-flex;
             align-items: center;
@@ -1829,20 +1577,14 @@
 
             padding: 8px 13px 8px 8px;
 
-            border:
-                1px solid
-                rgba(255,255,255,.08);
-
+            border: 1px solid rgba(255, 255, 255, .08);
             border-radius: 999px;
 
             color: #aaa0b3;
-
-            background:
-                rgba(15,12,19,.92);
+            background: rgba(15, 12, 19, .92);
 
             box-shadow:
-                0 8px 25px
-                rgba(0,0,0,.25);
+                0 8px 25px rgba(0, 0, 0, .25);
 
             text-decoration: none;
 
@@ -1851,6 +1593,9 @@
 
             pointer-events: auto;
             cursor: pointer;
+
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
 
             transition:
                 color .2s ease,
@@ -1863,10 +1608,10 @@
             color: #fff;
 
             border-color:
-                rgba(168,85,247,.35);
+                rgba(168, 85, 247, .35);
 
             background:
-                rgba(124,58,237,.16);
+                rgba(124, 58, 237, .16);
 
             transform:
                 translateX(-2px);
@@ -1878,13 +1623,20 @@
 
             width: 25px;
             height: 25px;
+            flex: 0 0 25px;
 
             border-radius: 50%;
 
             color: #d8b4fe;
 
             background:
-                rgba(124,58,237,.15);
+                rgba(124, 58, 237, .15);
+
+            pointer-events: none;
+        }
+
+        .ticket-back>span:last-child {
+            pointer-events: none;
         }
 
 
@@ -1900,24 +1652,19 @@
             padding: 30px;
 
             border:
-                1px solid
-                rgba(168,85,247,.18);
+                1px solid rgba(168, 85, 247, .18);
 
             border-radius: 26px;
 
             background:
-                linear-gradient(
-                    135deg,
-                    rgba(30,20,45,.96),
-                    rgba(11,9,15,.94)
-                );
+                linear-gradient(135deg,
+                    rgba(30, 20, 45, .96),
+                    rgba(11, 9, 15, .94));
 
             box-shadow:
-                0 30px 90px
-                rgba(0,0,0,.45),
+                0 30px 90px rgba(0, 0, 0, .45),
 
-                inset 0 1px
-                rgba(255,255,255,.04);
+                inset 0 1px rgba(255, 255, 255, .04);
         }
 
         .hero-glow {
@@ -1968,15 +1715,12 @@
             color: #fff;
 
             background:
-                linear-gradient(
-                    135deg,
+                linear-gradient(135deg,
                     #9333ea,
-                    #6d28d9
-                );
+                    #6d28d9);
 
             box-shadow:
-                0 10px 35px
-                rgba(124,58,237,.35);
+                0 10px 35px rgba(124, 58, 237, .35);
         }
 
         .ticket-brand-label,
@@ -2020,11 +1764,10 @@
             font-weight: 800;
 
             border:
-                1px solid
-                rgba(255,255,255,.08);
+                1px solid rgba(255, 255, 255, .08);
 
             background:
-                rgba(255,255,255,.035);
+                rgba(255, 255, 255, .035);
         }
 
         .status-dot {
@@ -2036,8 +1779,7 @@
             background: #a855f7;
 
             box-shadow:
-                0 0 12px
-                #a855f7;
+                0 0 12px #a855f7;
         }
 
         .status-closed .status-dot {
@@ -2050,10 +1792,10 @@
             color: #f0abfc;
 
             border-color:
-                rgba(217,70,239,.2);
+                rgba(217, 70, 239, .2);
 
             background:
-                rgba(217,70,239,.08);
+                rgba(217, 70, 239, .08);
         }
 
         .hero-content {
@@ -2111,13 +1853,12 @@
             padding: 12px;
 
             border:
-                1px solid
-                rgba(255,255,255,.06);
+                1px solid rgba(255, 255, 255, .06);
 
             border-radius: 14px;
 
             background:
-                rgba(255,255,255,.025);
+                rgba(255, 255, 255, .025);
         }
 
         .hero-meta-icon {
@@ -2132,7 +1873,7 @@
             color: #c084fc;
 
             background:
-                rgba(124,58,237,.12);
+                rgba(124, 58, 237, .12);
         }
 
         .hero-meta-item span,
@@ -2179,22 +1920,17 @@
         .conversation-card,
         .sidebar-card {
             border:
-                1px solid
-                rgba(168,85,247,.12);
+                1px solid rgba(168, 85, 247, .12);
 
             background:
-                linear-gradient(
-                    145deg,
-                    rgba(22,17,28,.96),
-                    rgba(9,8,12,.96)
-                );
+                linear-gradient(145deg,
+                    rgba(22, 17, 28, .96),
+                    rgba(9, 8, 12, .96));
 
             box-shadow:
-                0 25px 70px
-                rgba(0,0,0,.32),
+                0 25px 70px rgba(0, 0, 0, .32),
 
-                inset 0 1px
-                rgba(255,255,255,.025);
+                inset 0 1px rgba(255, 255, 255, .025);
         }
 
         .conversation-card {
@@ -2210,8 +1946,7 @@
             padding: 25px 28px;
 
             border-bottom:
-                1px solid
-                rgba(255,255,255,.055);
+                1px solid rgba(255, 255, 255, .055);
         }
 
         .section-kicker {
@@ -2229,8 +1964,7 @@
             background: #a855f7;
 
             box-shadow:
-                0 0 10px
-                #a855f7;
+                0 0 10px #a855f7;
         }
 
         .conversation-header h2 {
@@ -2250,11 +1984,10 @@
             color: #c084fc;
 
             background:
-                rgba(124,58,237,.10);
+                rgba(124, 58, 237, .10);
 
             border:
-                1px solid
-                rgba(168,85,247,.12);
+                1px solid rgba(168, 85, 247, .12);
 
             font-size: 11px;
             font-weight: 800;
@@ -2339,51 +2072,42 @@
             font-weight: 900;
 
             background:
-                linear-gradient(
-                    145deg,
+                linear-gradient(145deg,
                     #29232f,
-                    #151219
-                );
+                    #151219);
 
             border:
-                1px solid
-                rgba(255,255,255,.08);
+                1px solid rgba(255, 255, 255, .08);
 
             box-shadow:
-                0 5px 18px
-                rgba(0,0,0,.25);
+                0 5px 18px rgba(0, 0, 0, .25);
         }
 
         .support-message .message-avatar {
             color: #fff;
 
             background:
-                linear-gradient(
-                    145deg,
+                linear-gradient(145deg,
                     #a855f7,
-                    #6d28d9
-                );
+                    #6d28d9);
 
             border-color:
-                rgba(216,180,254,.30);
+                rgba(216, 180, 254, .30);
 
             box-shadow:
-                0 7px 24px
-                rgba(124,58,237,.28);
+                0 7px 24px rgba(124, 58, 237, .28);
         }
 
         .customer-message .message-avatar {
             color: #d8b4fe;
 
             border-color:
-                rgba(168,85,247,.22);
+                rgba(168, 85, 247, .22);
 
             background:
-                linear-gradient(
-                    145deg,
-                    rgba(124,58,237,.30),
-                    rgba(49,30,69,.90)
-                );
+                linear-gradient(145deg,
+                    rgba(124, 58, 237, .30),
+                    rgba(49, 30, 69, .90));
         }
 
 
@@ -2439,7 +2163,7 @@
             color: #a78bbd;
 
             background:
-                rgba(168,85,247,.07);
+                rgba(168, 85, 247, .07);
 
             font-size: 7px;
             font-weight: 900;
@@ -2464,8 +2188,7 @@
             border: 1px solid transparent;
 
             box-shadow:
-                0 4px 18px
-                rgba(0,0,0,.15);
+                0 4px 18px rgba(0, 0, 0, .15);
 
             transition:
                 transform .2s ease,
@@ -2482,20 +2205,17 @@
                 6px 20px 20px 20px;
 
             border-color:
-                rgba(255,255,255,.08);
+                rgba(255, 255, 255, .08);
 
             background:
-                linear-gradient(
-                    145deg,
+                linear-gradient(145deg,
                     #28232e,
-                    #1b1720
-                );
+                    #1b1720);
 
             color: #e9e2ee;
 
             box-shadow:
-                0 7px 24px
-                rgba(0,0,0,.22);
+                0 7px 24px rgba(0, 0, 0, .22);
         }
 
         .support-message .message-bubble::before {
@@ -2512,11 +2232,9 @@
             background: #28232e;
 
             clip-path:
-                polygon(
-                    100% 0,
+                polygon(100% 0,
                     100% 100%,
-                    0 100%
-                );
+                    0 100%);
         }
 
         .customer-message .message-bubble {
@@ -2524,20 +2242,17 @@
                 20px 6px 20px 20px;
 
             border-color:
-                rgba(216,180,254,.20);
+                rgba(216, 180, 254, .20);
 
             background:
-                linear-gradient(
-                    145deg,
+                linear-gradient(145deg,
                     #9333ea,
-                    #6d28d9
-                );
+                    #6d28d9);
 
             color: #fff;
 
             box-shadow:
-                0 8px 28px
-                rgba(109,40,217,.24);
+                0 8px 28px rgba(109, 40, 217, .24);
         }
 
         .customer-message .message-bubble::before {
@@ -2554,11 +2269,9 @@
             background: #6d28d9;
 
             clip-path:
-                polygon(
-                    0 0,
+                polygon(0 0,
                     100% 100%,
-                    0 100%
-                );
+                    0 100%);
         }
 
         .message-content {
@@ -2646,50 +2359,39 @@
                 15px 16px;
 
             border:
-                1px solid
-                rgba(192,132,252,.38);
+                1px solid rgba(192, 132, 252, .38);
 
             border-radius: 20px;
 
             background:
-                radial-gradient(
-                    circle at 50% 50%,
-                    rgba(168,85,247,.13),
-                    transparent 65%
-                );
+                radial-gradient(circle at 50% 50%,
+                    rgba(168, 85, 247, .13),
+                    transparent 65%);
 
             box-shadow:
-                0 0 0 1px
-                rgba(168,85,247,.08),
+                0 0 0 1px rgba(168, 85, 247, .08),
 
-                0 0 45px
-                rgba(124,58,237,.15);
+                0 0 45px rgba(124, 58, 237, .15);
 
             animation:
-                highlightedMessagePulse
-                2s ease-in-out 0s 3;
+                highlightedMessagePulse 2s ease-in-out 0s 3;
         }
 
-        .ticket-message.message-highlight
-        .message-bubble {
+        .ticket-message.message-highlight .message-bubble {
             box-shadow:
-                0 0 35px
-                rgba(168,85,247,.28);
+                0 0 35px rgba(168, 85, 247, .28);
         }
 
         .ticket-message.message-highlight-active {
             z-index: 6;
 
             animation:
-                highlightedMessagePulse
-                1.5s ease-in-out 0s 3;
+                highlightedMessagePulse 1.5s ease-in-out 0s 3;
         }
 
-        .ticket-message.message-highlight-active
-        .message-bubble {
+        .ticket-message.message-highlight-active .message-bubble {
             box-shadow:
-                0 0 40px
-                rgba(192,132,252,.35);
+                0 0 40px rgba(192, 132, 252, .35);
         }
 
         .new-reply-indicator {
@@ -2711,23 +2413,19 @@
                 6px 9px 6px 8px;
 
             border:
-                1px solid
-                rgba(216,180,254,.30);
+                1px solid rgba(216, 180, 254, .30);
 
             border-radius: 999px;
 
             color: #f3e8ff;
 
             background:
-                linear-gradient(
-                    135deg,
+                linear-gradient(135deg,
                     #9333ea,
-                    #581c87
-                );
+                    #581c87);
 
             box-shadow:
-                0 8px 25px
-                rgba(88,28,135,.35);
+                0 8px 25px rgba(88, 28, 135, .35);
 
             font-size: 8px;
             font-weight: 900;
@@ -2758,7 +2456,7 @@
             color: #fff;
 
             background:
-                rgba(255,255,255,.10);
+                rgba(255, 255, 255, .10);
 
             cursor: pointer;
 
@@ -2768,7 +2466,7 @@
 
         .new-reply-indicator button:hover {
             background:
-                rgba(255,255,255,.20);
+                rgba(255, 255, 255, .20);
         }
 
         @keyframes highlightedMessagePulse {
@@ -2776,20 +2474,16 @@
             0%,
             100% {
                 box-shadow:
-                    0 0 0 1px
-                    rgba(168,85,247,.08),
+                    0 0 0 1px rgba(168, 85, 247, .08),
 
-                    0 0 45px
-                    rgba(124,58,237,.16);
+                    0 0 45px rgba(124, 58, 237, .16);
             }
 
             50% {
                 box-shadow:
-                    0 0 0 2px
-                    rgba(192,132,252,.20),
+                    0 0 0 2px rgba(192, 132, 252, .20),
 
-                    0 0 75px
-                    rgba(168,85,247,.34);
+                    0 0 75px rgba(168, 85, 247, .34);
             }
         }
 
@@ -2802,10 +2496,8 @@
             display: grid;
 
             grid-template-columns:
-                repeat(
-                    auto-fit,
-                    minmax(115px, 1fr)
-                );
+                repeat(auto-fit,
+                    minmax(115px, 1fr));
 
             gap: 7px;
 
@@ -2825,8 +2517,7 @@
             padding: 0;
 
             border:
-                1px solid
-                rgba(255,255,255,.10);
+                1px solid rgba(255, 255, 255, .10);
 
             border-radius: 12px;
 
@@ -2860,7 +2551,7 @@
             color: #fff;
 
             background:
-                rgba(88,28,135,.55);
+                rgba(88, 28, 135, .55);
 
             opacity: 0;
 
@@ -2868,8 +2559,7 @@
                 opacity .25s ease;
         }
 
-        .attachment-card:hover
-        .attachment-hover {
+        .attachment-card:hover .attachment-hover {
             opacity: 1;
         }
 
@@ -2897,11 +2587,10 @@
             color: #a855f7;
 
             background:
-                rgba(124,58,237,.09);
+                rgba(124, 58, 237, .09);
 
             border:
-                1px solid
-                rgba(168,85,247,.12);
+                1px solid rgba(168, 85, 247, .12);
 
             font-size: 25px;
         }
@@ -2929,15 +2618,12 @@
             padding: 28px;
 
             border-top:
-                1px solid
-                rgba(255,255,255,.055);
+                1px solid rgba(255, 255, 255, .055);
 
             background:
-                linear-gradient(
-                    180deg,
-                    rgba(124,58,237,.035),
-                    rgba(0,0,0,.08)
-                );
+                linear-gradient(180deg,
+                    rgba(124, 58, 237, .035),
+                    rgba(0, 0, 0, .08));
         }
 
         .reply-header {
@@ -2975,13 +2661,12 @@
             overflow: hidden;
 
             border:
-                1px solid
-                rgba(168,85,247,.13);
+                1px solid rgba(168, 85, 247, .13);
 
             border-radius: 18px;
 
             background:
-                rgba(5,4,7,.65);
+                rgba(5, 4, 7, .65);
 
             transition:
                 border-color .2s ease,
@@ -2990,14 +2675,12 @@
 
         .reply-box:focus-within {
             border-color:
-                rgba(168,85,247,.35);
+                rgba(168, 85, 247, .35);
 
             box-shadow:
-                0 0 0 3px
-                rgba(124,58,237,.08),
+                0 0 0 3px rgba(124, 58, 237, .08),
 
-                0 20px 50px
-                rgba(0,0,0,.25);
+                0 20px 50px rgba(0, 0, 0, .25);
         }
 
         .reply-box.is-sending {
@@ -3043,8 +2726,7 @@
             padding: 12px;
 
             border-top:
-                1px solid
-                rgba(255,255,255,.05);
+                1px solid rgba(255, 255, 255, .05);
         }
 
         .reply-tools {
@@ -3076,7 +2758,7 @@
             color: #8d8592;
 
             background:
-                rgba(255,255,255,.025);
+                rgba(255, 255, 255, .025);
 
             font-size: 11px;
 
@@ -3090,7 +2772,7 @@
             color: #d8b4fe;
 
             background:
-                rgba(124,58,237,.10);
+                rgba(124, 58, 237, .10);
         }
 
         .attachment-input input {
@@ -3128,15 +2810,13 @@
             border-radius: 10px;
 
             border:
-                1px solid
-                rgba(168,85,247,.25);
+                1px solid rgba(168, 85, 247, .25);
 
             background:
-                rgba(255,255,255,.04);
+                rgba(255, 255, 255, .04);
 
             box-shadow:
-                0 5px 18px
-                rgba(0,0,0,.25);
+                0 5px 18px rgba(0, 0, 0, .25);
         }
 
         .upload-preview-image {
@@ -3153,8 +2833,7 @@
                 transform .2s ease;
         }
 
-        .upload-item:hover
-        .upload-preview-image {
+        .upload-item:hover .upload-preview-image {
             transform: scale(1.05);
         }
 
@@ -3175,15 +2854,14 @@
             padding: 0;
 
             border:
-                1px solid
-                rgba(255,255,255,.15);
+                1px solid rgba(255, 255, 255, .15);
 
             border-radius: 50%;
 
             color: #fff;
 
             background:
-                rgba(0,0,0,.72);
+                rgba(0, 0, 0, .72);
 
             cursor: pointer;
 
@@ -3194,7 +2872,7 @@
 
         .upload-item button:hover {
             background:
-                rgba(239,68,68,.85);
+                rgba(239, 68, 68, .85);
 
             transform:
                 scale(1.08);
@@ -3243,15 +2921,12 @@
             color: #fff;
 
             background:
-                linear-gradient(
-                    135deg,
+                linear-gradient(135deg,
                     #9333ea,
-                    #6d28d9
-                );
+                    #6d28d9);
 
             box-shadow:
-                0 10px 25px
-                rgba(109,40,217,.22);
+                0 10px 25px rgba(109, 40, 217, .22);
 
             font-size: 12px;
             font-weight: 850;
@@ -3268,8 +2943,7 @@
                 translateY(-1px);
 
             box-shadow:
-                0 14px 35px
-                rgba(109,40,217,.32);
+                0 14px 35px rgba(109, 40, 217, .32);
         }
 
         .send-button:disabled {
@@ -3292,13 +2966,12 @@
             padding: 12px 14px;
 
             border:
-                1px solid
-                rgba(168,85,247,.12);
+                1px solid rgba(168, 85, 247, .12);
 
             border-radius: 12px;
 
             background:
-                rgba(124,58,237,.06);
+                rgba(124, 58, 237, .06);
         }
 
         .success-icon {
@@ -3355,13 +3028,12 @@
             padding: 17px;
 
             border:
-                1px solid
-                rgba(255,255,255,.06);
+                1px solid rgba(255, 255, 255, .06);
 
             border-radius: 14px;
 
             background:
-                rgba(255,255,255,.025);
+                rgba(255, 255, 255, .025);
         }
 
         .closed-icon {
@@ -3376,7 +3048,7 @@
             color: #77717d;
 
             background:
-                rgba(255,255,255,.04);
+                rgba(255, 255, 255, .04);
         }
 
         .closed-ticket strong,
@@ -3434,18 +3106,15 @@
             color: #fff;
 
             background:
-                linear-gradient(
-                    135deg,
+                linear-gradient(135deg,
                     #9333ea,
-                    #581c87
-                );
+                    #581c87);
 
             font-size: 13px;
             font-weight: 900;
 
             box-shadow:
-                0 8px 25px
-                rgba(124,58,237,.20);
+                0 8px 25px rgba(124, 58, 237, .20);
         }
 
         .customer-info {
@@ -3484,8 +3153,7 @@
             padding: 12px 0;
 
             border-bottom:
-                1px solid
-                rgba(255,255,255,.04);
+                1px solid rgba(255, 255, 255, .04);
         }
 
         .detail-row:last-child {
@@ -3529,17 +3197,14 @@
             padding: 23px;
 
             border:
-                1px solid
-                rgba(168,85,247,.16);
+                1px solid rgba(168, 85, 247, .16);
 
             border-radius: 20px;
 
             background:
-                linear-gradient(
-                    145deg,
-                    rgba(76,29,149,.24),
-                    rgba(16,10,22,.96)
-                );
+                linear-gradient(145deg,
+                    rgba(76, 29, 149, .24),
+                    rgba(16, 10, 22, .96));
         }
 
         .help-glow {
@@ -3573,11 +3238,9 @@
             color: #fff;
 
             background:
-                linear-gradient(
-                    135deg,
+                linear-gradient(135deg,
                     #9333ea,
-                    #6d28d9
-                );
+                    #6d28d9);
         }
 
         .sidebar-help h3 {
@@ -3622,8 +3285,7 @@
             background: #a855f7;
 
             box-shadow:
-                0 0 10px
-                #a855f7;
+                0 0 10px #a855f7;
         }
 
 
@@ -3643,7 +3305,7 @@
             padding: 30px;
 
             background:
-                rgba(3,2,5,.94);
+                rgba(3, 2, 5, .94);
 
             backdrop-filter: blur(15px);
         }
@@ -3666,8 +3328,7 @@
             border-radius: 15px;
 
             box-shadow:
-                0 30px 100px
-                rgba(0,0,0,.65);
+                0 30px 100px rgba(0, 0, 0, .65);
         }
 
         .lightbox-caption {
@@ -3690,15 +3351,14 @@
             height: 42px;
 
             border:
-                1px solid
-                rgba(255,255,255,.08);
+                1px solid rgba(255, 255, 255, .08);
 
             border-radius: 50%;
 
             color: #fff;
 
             background:
-                rgba(255,255,255,.05);
+                rgba(255, 255, 255, .05);
 
             cursor: pointer;
 
@@ -3709,7 +3369,7 @@
 
         .lightbox-close:hover {
             background:
-                rgba(168,85,247,.20);
+                rgba(168, 85, 247, .20);
 
             transform:
                 rotate(90deg);
@@ -3735,23 +3395,19 @@
             height: 44px;
 
             border:
-                1px solid
-                rgba(168,85,247,.2);
+                1px solid rgba(168, 85, 247, .2);
 
             border-radius: 13px;
 
             color: #fff;
 
             background:
-                linear-gradient(
-                    135deg,
+                linear-gradient(135deg,
                     #7e22ce,
-                    #581c87
-                );
+                    #581c87);
 
             box-shadow:
-                0 15px 35px
-                rgba(0,0,0,.4);
+                0 15px 35px rgba(0, 0, 0, .4);
 
             cursor: pointer;
 
@@ -3804,8 +3460,7 @@
                 .45rem .7rem;
 
             border:
-                1px solid
-                rgba(255,255,255,.12);
+                1px solid rgba(255, 255, 255, .12);
 
             border-radius: .5rem;
 
@@ -3819,11 +3474,9 @@
             white-space: nowrap;
 
             box-shadow:
-                0 10px 25px
-                rgba(0,0,0,.25),
+                0 10px 25px rgba(0, 0, 0, .25),
 
-                0 2px 8px
-                rgba(0,0,0,.15);
+                0 2px 8px rgba(0, 0, 0, .15);
 
             pointer-events: none;
         }
@@ -3842,16 +3495,13 @@
             background: #171421;
 
             border-right:
-                1px solid
-                rgba(255,255,255,.12);
+                1px solid rgba(255, 255, 255, .12);
 
             border-bottom:
-                1px solid
-                rgba(255,255,255,.12);
+                1px solid rgba(255, 255, 255, .12);
 
             transform:
-                translate(-50%, -4px)
-                rotate(45deg);
+                translate(-50%, -4px) rotate(45deg);
         }
 
         .tooltip-enter {
@@ -3864,16 +3514,14 @@
             opacity: 0;
 
             transform:
-                translateX(-50%)
-                translateY(4px);
+                translateX(-50%) translateY(4px);
         }
 
         .tooltip-enter-end {
             opacity: 1;
 
             transform:
-                translateX(-50%)
-                translateY(0);
+                translateX(-50%) translateY(0);
         }
 
         .tooltip-leave {
@@ -3886,16 +3534,14 @@
             opacity: 1;
 
             transform:
-                translateX(-50%)
-                translateY(0);
+                translateX(-50%) translateY(0);
         }
 
         .tooltip-leave-end {
             opacity: 0;
 
             transform:
-                translateX(-50%)
-                translateY(4px);
+                translateX(-50%) translateY(4px);
         }
 
 
@@ -3925,7 +3571,7 @@
 
             .guest-ticket-page {
                 padding:
-                    18px 12px 80px;
+                    clamp(82px, 12vw, 105px) 12px 80px;
             }
 
             .ticket-layout {
@@ -3953,6 +3599,10 @@
 
 
         @media (max-width: 600px) {
+
+            .guest-ticket-page {
+                padding-top: clamp(78px, 15vs, 96px);
+            }
 
             .ticket-navigation {
                 margin-bottom: 13px;
@@ -4048,10 +3698,8 @@
 
             .attachments-grid {
                 grid-template-columns:
-                    repeat(
-                        2,
-                        minmax(0, 1fr)
-                    );
+                    repeat(2,
+                        minmax(0, 1fr));
 
                 max-width: 300px;
             }
@@ -4116,7 +3764,6 @@
                     .01ms !important;
             }
         }
-
     </style>
 
 </div>

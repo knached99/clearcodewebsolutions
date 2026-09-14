@@ -1,109 +1,106 @@
-<div
-    x-data="{
-        dragging: false,
-        draggingTicket: null,
-        dragColumn: null,
-        moving: false,
+<div x-data="{
+    dragging: false,
+    draggingTicket: null,
+    dragColumn: null,
+    moving: false,
 
-        startDrag(event, ticketId) {
-            this.dragging = true;
-            this.draggingTicket = String(ticketId);
+    startDrag(event, ticketId) {
+        this.dragging = true;
+        this.draggingTicket = String(ticketId);
 
-            event.dataTransfer.effectAllowed = 'move';
-            event.dataTransfer.setData('text/plain', String(ticketId));
-            event.dataTransfer.setData('ticket-id', String(ticketId));
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', String(ticketId));
+        event.dataTransfer.setData('ticket-id', String(ticketId));
 
-            event.currentTarget.classList.add(
-                'opacity-40',
-                'scale-[0.97]',
-                'rotate-1'
+        event.currentTarget.classList.add(
+            'opacity-40',
+            'scale-[0.97]',
+            'rotate-1'
+        );
+    },
+
+    endDrag(event) {
+        this.dragging = false;
+        this.draggingTicket = null;
+        this.dragColumn = null;
+
+        event.currentTarget.classList.remove(
+            'opacity-40',
+            'scale-[0.97]',
+            'rotate-1'
+        );
+    },
+
+    dragOver(event, column) {
+        event.preventDefault();
+
+        if (!this.dragging || this.moving) {
+            return;
+        }
+
+        event.dataTransfer.dropEffect = 'move';
+        this.dragColumn = column;
+    },
+
+    dragEnter(event, column) {
+        event.preventDefault();
+
+        if (!this.dragging || this.moving) {
+            return;
+        }
+
+        this.dragColumn = column;
+    },
+
+    dragLeave(event) {
+        if (
+            event.relatedTarget &&
+            event.currentTarget.contains(event.relatedTarget)
+        ) {
+            return;
+        }
+
+        this.dragColumn = null;
+    },
+
+    async drop(event, column) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (this.moving || !this.dragging) {
+            return;
+        }
+
+        const ticketId =
+            event.dataTransfer.getData('ticket-id') ||
+            event.dataTransfer.getData('text/plain');
+
+        if (!ticketId) {
+            return;
+        }
+
+        this.moving = true;
+        this.dragging = false;
+        this.dragColumn = null;
+
+        try {
+            await $wire.call(
+                'moveTicket',
+                Number(ticketId),
+                column
             );
-        },
 
-        endDrag(event) {
-            this.dragging = false;
+            this.$dispatch('ticket-moved');
+        } catch (error) {
+            console.error('Unable to move ticket:', error);
+        } finally {
+            this.moving = false;
             this.draggingTicket = null;
             this.dragColumn = null;
-
-            event.currentTarget.classList.remove(
-                'opacity-40',
-                'scale-[0.97]',
-                'rotate-1'
-            );
-        },
-
-        dragOver(event, column) {
-            event.preventDefault();
-
-            if (!this.dragging || this.moving) {
-                return;
-            }
-
-            event.dataTransfer.dropEffect = 'move';
-            this.dragColumn = column;
-        },
-
-        dragEnter(event, column) {
-            event.preventDefault();
-
-            if (!this.dragging || this.moving) {
-                return;
-            }
-
-            this.dragColumn = column;
-        },
-
-        dragLeave(event) {
-            if (
-                event.relatedTarget &&
-                event.currentTarget.contains(event.relatedTarget)
-            ) {
-                return;
-            }
-
-            this.dragColumn = null;
-        },
-
-        async drop(event, column) {
-            event.preventDefault();
-            event.stopPropagation();
-
-            if (this.moving || !this.dragging) {
-                return;
-            }
-
-            const ticketId =
-                event.dataTransfer.getData('ticket-id') ||
-                event.dataTransfer.getData('text/plain');
-
-            if (!ticketId) {
-                return;
-            }
-
-            this.moving = true;
-            this.dragging = false;
-            this.dragColumn = null;
-
-            try {
-                await $wire.call(
-                    'moveTicket',
-                    Number(ticketId),
-                    column
-                );
-
-                this.$dispatch('ticket-moved');
-            } catch (error) {
-                console.error('Unable to move ticket:', error);
-            } finally {
-                this.moving = false;
-                this.draggingTicket = null;
-                this.dragColumn = null;
-            }
         }
-    }"
-    x-on:ticket-moved.window="moving = false"
-    class="min-h-full overflow-hidden bg-[#09070f] text-white"
->
+    }
+}" x-on:ticket-moved.window="moving = false"
+    class="min-h-full overflow-hidden bg-[#09070f] text-white">
     {{-- Header --}}
     <div class="border-b border-white/10 px-6 py-5">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -126,31 +123,20 @@
 
                 {{-- Search --}}
                 <div class="relative min-w-0 flex-1 sm:max-w-md">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
+                    <svg xmlns="http://www.w3.org/2000/svg"
                         class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/40"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                    >
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="11" cy="11" r="8" />
                         <path d="m21 21-4.3-4.3" />
                     </svg>
 
-                    <input
-                        type="search"
-                        wire:model.live.debounce.300ms="search"
-                        placeholder="Search tickets..."
-                        class="w-full rounded-xl border border-white/10 bg-white/[0.04] py-2.5 pl-10 pr-4 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/30"
-                    />
+                    <input type="search" wire:model.live.debounce.300ms="search" placeholder="Search tickets..."
+                        class="w-full rounded-xl border border-white/10 bg-white/[0.04] py-2.5 pl-10 pr-4 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/30" />
                 </div>
 
                 {{-- Priority --}}
-                <select
-                    wire:model.live="priority"
-                    class="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-white outline-none focus:border-violet-500/50"
-                >
+                <select wire:model.live="priority"
+                    class="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-white outline-none focus:border-violet-500/50">
                     <option value="all" class="bg-[#12101a]">
                         All priorities
                     </option>
@@ -160,7 +146,7 @@
                     </option>
 
                     <option value="normal" class="bg-[#12101a]">
-                    Normala
+                        Normal
                     </option>
 
                     <option value="high" class="bg-[#12101a]">
@@ -173,16 +159,30 @@
                 </select>
 
                 {{-- Sort --}}
-                <select
-                    wire:model.live="sort"
-                    class="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-white outline-none focus:border-violet-500/50"
-                >
+                <select wire:model.live="sort"
+                    class="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-white outline-none focus:border-violet-500/50">
                     <option value="latest" class="bg-[#12101a]">
                         Latest activity
                     </option>
 
                     <option value="oldest" class="bg-[#12101a]">
                         Oldest activity
+                    </option>
+
+                    <option value="priority_urgent" class="bg-[#12101a]">
+                        Urgent first
+                    </option>
+
+                    <option value="priority_high" class="bg-[#12101a]">
+                        High first
+                    </option>
+
+                    <option value="priority_normal" class="bg-[#12101a]">
+                        Normal first
+                    </option>
+
+                    <option value="priority_low" class="bg-[#12101a]">
+                        Low first
                     </option>
                 </select>
             </div>
@@ -202,19 +202,16 @@
                 ];
             @endphp
 
-            @foreach($statuses as $statusKey => $statusLabel)
-                <button
-                    type="button"
-                    wire:click="$set('status', '{{ $statusKey }}')"
-                    class="relative shrink-0 px-4 py-3 text-sm font-medium transition {{ $status === $statusKey ? 'text-white' : 'text-white/40 hover:text-white/70' }}"
-                >
+            @foreach ($statuses as $statusKey => $statusLabel)
+                <button type="button" wire:click="$set('status', '{{ $statusKey }}')"
+                    class="relative shrink-0 px-4 py-3 text-sm font-medium transition {{ $status === $statusKey ? 'text-white' : 'text-white/40 hover:text-white/70' }}">
                     {{ $statusLabel }}
 
                     <span class="ml-1.5 text-xs text-white/30">
                         {{ $counts[$statusKey] ?? 0 }}
                     </span>
 
-                    @if($status === $statusKey)
+                    @if ($status === $statusKey)
                         <span class="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-violet-500"></span>
                     @endif
                 </button>
@@ -250,16 +247,13 @@
         @endphp
 
         <div class="grid min-w-[1200px] grid-cols-4 gap-4">
-            @foreach($columns as $column => $meta)
-
+            @foreach ($columns as $column => $meta)
                 @php
                     $columnTickets = $tickets->where('status', $column);
                 @endphp
 
-                <section
-                    wire:key="kanban-column-{{ $column }}"
-                    class="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/[0.025]"
-                >
+                <section wire:key="kanban-column-{{ $column }}"
+                    class="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/[0.025]">
                     {{-- Column header --}}
                     <div class="border-b border-white/10 px-4 py-4">
                         <div class="flex items-center gap-2">
@@ -280,31 +274,22 @@
                     </div>
 
                     {{-- Drop zone --}}
-                    <div
-                        class="relative flex min-h-[520px] flex-1 flex-col gap-3 p-3 transition"
+                    <div class="relative flex min-h-[520px] flex-1 flex-col gap-3 p-3 transition"
                         x-on:dragover.prevent="dragOver($event, '{{ $column }}')"
                         x-on:dragenter.prevent="dragEnter($event, '{{ $column }}')"
-                        x-on:dragleave="dragLeave($event)"
-                        x-on:drop.prevent.stop="drop($event, '{{ $column }}')"
+                        x-on:dragleave="dragLeave($event)" x-on:drop.prevent.stop="drop($event, '{{ $column }}')"
                         :class="{
-                            'bg-violet-500/[0.08] ring-1 ring-inset ring-violet-400/30':
-                                dragColumn === '{{ $column }}'
-                        }"
-                    >
+                            'bg-violet-500/[0.08] ring-1 ring-inset ring-violet-400/30': dragColumn === '{{ $column }}'
+                        }">
 
                         @forelse($columnTickets as $ticket)
-
-                            <div
-                                wire:key="ticket-{{ $ticket->id }}"
-                                draggable="true"
+                            <div wire:key="ticket-{{ $ticket->id }}" draggable="true"
                                 x-on:dragstart="startDrag($event, '{{ $ticket->id }}')"
                                 x-on:dragend="endDrag($event)"
                                 class="group cursor-grab rounded-xl border border-white/10 bg-[#12101a] p-4 shadow-sm transition hover:border-white/20 hover:bg-[#171420] active:cursor-grabbing"
                                 :class="{
-                                    'opacity-40 scale-[0.97] rotate-1':
-                                        draggingTicket === '{{ $ticket->id }}'
-                                }"
-                            >
+                                    'opacity-40 scale-[0.97] rotate-1': draggingTicket === '{{ $ticket->id }}'
+                                }">
                                 {{-- Ticket number / priority --}}
                                 <div class="flex items-center justify-between gap-3">
                                     <span class="font-mono text-xs text-white/35">
@@ -321,8 +306,7 @@
                                     @endphp
 
                                     <span
-                                        class="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide {{ $priorityClasses[$ticket->priority] ?? 'bg-white/10 text-white/50' }}"
-                                    >
+                                        class="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide {{ $priorityClasses[$ticket->priority] ?? 'bg-white/10 text-white/50' }}">
                                         {{ $ticket->priority }}
                                     </span>
                                 </div>
@@ -333,16 +317,12 @@
                                         {{ $ticket->subject }}
                                     </h3>
 
-                                    <a
-                                        href="{{ route('team.tickets.show', [
-                                            'current_team' => $team->slug,
-                                            'ticket' => $ticket->ticket_number,
-                                        ]) }}"
-                                        wire:navigate
-                                        draggable="false"
-                                        @click.stop
-                                        class="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-violet-400 transition hover:text-violet-300 hover:underline"
-                                    >
+                                    <a href="{{ route('team.tickets.show', [
+                                        'current_team' => $team->slug,
+                                        'ticket' => $ticket->ticket_number,
+                                    ]) }}"
+                                        wire:navigate draggable="false" @click.stop
+                                        class="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-violet-400 transition hover:text-violet-300 hover:underline">
                                         View ticket
                                         <span aria-hidden="true">→</span>
                                     </a>
@@ -350,7 +330,8 @@
 
                                 {{-- Customer --}}
                                 <div class="mt-3 flex items-center gap-2">
-                                    <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-xs font-semibold text-white/50">
+                                    <div
+                                        class="flex size-7 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-xs font-semibold text-white/50">
                                         {{ strtoupper(substr($ticket->name ?: $ticket->email, 0, 1)) }}
                                     </div>
 
@@ -369,15 +350,10 @@
                                 <div class="mt-4 flex items-center justify-between border-t border-white/[0.06] pt-3">
                                     <div class="flex items-center gap-3 text-[11px] text-white/30">
                                         <span class="inline-flex items-center gap-1">
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                class="size-3.5"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="2"
-                                            >
-                                                <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="size-3.5" viewBox="0 0 24 24"
+                                                fill="none" stroke="currentColor" stroke-width="2">
+                                                <path
+                                                    d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
                                             </svg>
 
                                             {{ $ticket->messages_count }}
@@ -395,30 +371,17 @@
                         @empty
 
                             {{-- Empty column --}}
-                            <div
-                                class="flex min-h-[180px] flex-1 items-center justify-center rounded-xl border border-dashed border-white/10 text-center transition"
+                            <div class="flex min-h-[180px] flex-1 items-center justify-center rounded-xl border border-dashed border-white/10 text-center transition"
                                 :class="{
-                                    'border-violet-400/30 bg-violet-500/[0.04]':
-                                        dragColumn === '{{ $column }}'
-                                }"
-                            >
+                                    'border-violet-400/30 bg-violet-500/[0.04]': dragColumn === '{{ $column }}'
+                                }">
                                 <div>
-                                    <div class="mx-auto flex size-10 items-center justify-center rounded-full bg-white/[0.04]">
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            class="size-5 text-white/20"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="1.5"
-                                        >
-                                            <rect
-                                                width="18"
-                                                height="18"
-                                                x="3"
-                                                y="3"
-                                                rx="2"
-                                            />
+                                    <div
+                                        class="mx-auto flex size-10 items-center justify-center rounded-full bg-white/[0.04]">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="size-5 text-white/20"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="1.5">
+                                            <rect width="18" height="18" x="3" y="3" rx="2" />
 
                                             <path d="M3 9h18" />
                                         </svg>
@@ -429,7 +392,6 @@
                                     </p>
                                 </div>
                             </div>
-
                         @endforelse
                     </div>
                 </section>
