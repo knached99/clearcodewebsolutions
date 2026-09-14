@@ -300,7 +300,7 @@ new #[Title('Teams')] class extends Component {
                                         <flux:button variant="ghost" size="sm"
                                             icon="arrow-right-start-on-rectangle" x-data=""
                                             x-on:click.prevent="$dispatch('open-modal', 'leave-team-{{ $team->id }}')"
-                                            class="cursor-pointer text-white/20! hover:bg-red-400/8! hover:text-red-300!"
+                                            class="cursor-pointer text-gray-200! hover:bg-red-400/8! hover:text-red-300!"
                                             data-test="team-leave-button" />
 
                                     </flux:tooltip>
