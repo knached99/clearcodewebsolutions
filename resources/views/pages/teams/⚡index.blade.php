@@ -1,11 +1,10 @@
 <?php
 
 use App\Actions\Teams\CreateTeam;
-use App\Data\UserTeam;
 use App\Models\Team;
 use App\Rules\TeamName;
 use Flux\Flux;
-use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
@@ -16,6 +15,9 @@ new #[Title('Teams')] class extends Component
 {
     public string $name = '';
 
+    /**
+     * Create a new team.
+     */
     public function createTeam(
         CreateTeam $createTeam
     ): void {
@@ -54,27 +56,54 @@ new #[Title('Teams')] class extends Component
         );
     }
 
+    /**
+     * Leave a team.
+     */
     public function leaveTeam(
         int $teamId
     ): void {
-        $team = Team::findOrFail($teamId);
-
         $user = Auth::user();
+
+        $team = Team::query()
+            ->findOrFail($teamId);
 
         Gate::authorize(
             'leave',
             $team
         );
 
-        $fallbackTeam = $user->isCurrentTeam($team)
-            ? $user->fallbackTeam($team)
-            : null;
+        /*
+         * Determine whether the team being left is the
+         * currently selected team.
+         */
+        $wasCurrentTeam = $user->isCurrentTeam($team);
 
+        /*
+         * Find a fallback before deleting the membership.
+         *
+         * We explicitly exclude the team being left.
+         */
+        $fallbackTeam = null;
+
+        if ($wasCurrentTeam) {
+            $fallbackTeam = $user->teams()
+                ->where('teams.id', '!=', $team->id)
+                ->orderBy('teams.id')
+                ->first();
+        }
+
+        /*
+         * Remove the membership.
+         */
         $team->memberships()
             ->where('user_id', $user->id)
             ->delete();
 
-        if ($fallbackTeam) {
+        /*
+         * If the user left their current team, select another
+         * team if one exists. Otherwise clear current_team_id.
+         */
+        if ($wasCurrentTeam) {
             $user->switchTeam($fallbackTeam);
         }
 
@@ -97,17 +126,21 @@ new #[Title('Teams')] class extends Component
     }
 
     /**
-     * @return Collection<int, UserTeam>
+     * Get all teams belonging to the authenticated user.
+     *
+     * @return Collection<int, Team>
      */
     #[Computed]
     public function teams(): Collection
     {
-        return Auth::user()->toUserTeams(
-            includeCurrent: true
-        );
+        return Auth::user()
+            ->teams()
+            ->orderBy('teams.id')
+            ->get();
     }
 };
 ?>
+
 
 <section class="w-full">
 

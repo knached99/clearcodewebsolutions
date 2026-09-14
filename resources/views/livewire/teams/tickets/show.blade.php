@@ -266,7 +266,9 @@
             <div class="flex min-w-0 items-center gap-3">
 
                 <a
-                    href="{{ route('dashboard') }}"
+                    href="{{ auth()->check() && auth()->user()->currentTeam
+                    ? route('dashboard', ['current_team' => auth()->user()->currentTeam])
+                    : route('onboarding') }}"
                     wire:navigate
                     class="group flex size-11 shrink-0 items-center justify-center rounded-2xl border border-[#e5e0eb] bg-white text-[#706a79] shadow-[0_3px_12px_rgba(40,30,60,.04)] transition hover:border-[#cfc4e5] hover:bg-[#f7f3ff] hover:text-[#7865b5] dark:border-white/10 dark:bg-white/5 dark:text-white/50"
                 >

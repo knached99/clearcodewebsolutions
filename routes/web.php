@@ -8,6 +8,7 @@ use App\Http\Controllers\WorkController;
 use App\Livewire\Home\Tickets\TicketSearch;
 use App\Livewire\Teams\Projects\Index as AdminWorksIndex;
 use App\Livewire\Teams\Testimonials\Index as AdminTestimonialsIndex;
+use App\Livewire\RequiredOnboarding;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -18,6 +19,23 @@ use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')
     ->name('home');
+
+/*
+|--------------------------------------------------------------------------
+| Onboarding
+|--------------------------------------------------------------------------
+|
+| IMPORTANT:
+| This route is intentionally NOT inside {current_team}.
+|
+*/
+
+Route::get('/onboarding', RequiredOnboarding::class)
+    ->middleware([
+        'auth',
+        'verified',
+    ])
+    ->name('onboarding');
 
 /*
 |--------------------------------------------------------------------------
@@ -32,14 +50,6 @@ Route::get('/tickets', TicketSearch::class)
 |--------------------------------------------------------------------------
 | Guest Ticket
 |--------------------------------------------------------------------------
-|
-| Customer URL:
-|
-| /tickets/TCKT-123/64_CHARACTER_TOKEN
-|
-| IMPORTANT:
-| This route is completely independent from the team/admin routes.
-|
 */
 
 Route::get('/tickets/{ticketNumber}/{token?}', [
@@ -83,13 +93,6 @@ Route::get('/projects/{work}', [
 |--------------------------------------------------------------------------
 | Team / Admin
 |--------------------------------------------------------------------------
-|
-| Internal URL:
-|
-| /{current_team}/tickets/TCKT-123
-|
-| This route is NOT used for customer emails.
-|
 */
 
 Route::prefix('{current_team}')

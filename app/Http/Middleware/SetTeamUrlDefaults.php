@@ -2,47 +2,54 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\TeamInvitation;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\URL;
 use Symfony\Component\HttpFoundation\Response;
 
 class SetTeamUrlDefaults
 {
     /**
-     * Set the default URL parameters for team-based routes.
+     * Handle an incoming request.
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = $request->user();
+        /*
+         * If the URL already contains current_team, use it.
+         *
+         * Example:
+         *
+         * /khaled-nacheds-team/dashboard
+         */
+        if ($request->route('current_team')) {
+            URL::defaults([
+                'current_team' => $request->route('current_team'),
+            ]);
 
-        if ($user) {
-            $team = $user->currentTeam
-                ?? $user->fallbackTeam();
+            return $next($request);
+        }
 
-            if (! $team) {
-                $invitation = TeamInvitation::query()
-                    ->with('team')
-                    ->whereRaw('LOWER(email) = ?', [
-                        strtolower((string) $user->email),
-                    ])
-                    ->whereNull('accepted_at')
-                    ->where(function ($query) {
-                        $query
-                            ->whereNull('expires_at')
-                            ->orWhere('expires_at', '>', now());
-                    })
-                    ->latest('id')
-                    ->first();
-
-                $team = $invitation?->team;
-            }
+        /*
+         * For routes such as /login and /onboarding there is no
+         * current_team route parameter.
+         *
+         * If an authenticated user has a valid current team,
+         * provide it as the URL-generation default.
+         *
+         * This makes:
+         *
+         * route('dashboard')
+         *
+         * work while rendering the authenticated application.
+         */
+        if (Auth::check()) {
+            $user = Auth::user();
+            $team = $user->currentTeam;
 
             if ($team) {
                 URL::defaults([
                     'current_team' => $team->slug,
-                    'team' => $team->slug,
                 ]);
             }
         }

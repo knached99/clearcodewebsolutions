@@ -1,82 +1,155 @@
 <?php
 
-use App\Data\UserTeam;
 use App\Models\Team;
-use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
-new class extends Component {
+new class extends Component
+{
+    /**
+     * Get the currently selected team.
+     */
     public function currentTeam(): ?array
     {
         $team = Auth::user()->currentTeam;
 
-        return $team ? [
+        if (! $team) {
+            return null;
+        }
+
+        return [
             'id' => $team->id,
             'name' => $team->name,
             'slug' => $team->slug,
-        ] : null;
+        ];
     }
 
     /**
-     * @return Collection<int, UserTeam>
+     * Get all teams the authenticated user belongs to.
+     *
+     * @return Collection<int, Team>
      */
     public function teams(): Collection
     {
-        return Auth::user()->toUserTeams(includeCurrent: true);
+        return Auth::user()
+            ->teams()
+            ->orderBy('teams.id')
+            ->get();
     }
 
+    /**
+     * Switch the authenticated user's current team.
+     */
     public function switchTeam(string $slug): void
     {
         $user = Auth::user();
 
+        $team = Team::query()
+            ->where('slug', $slug)
+            ->firstOrFail();
+
         abort_unless(
-            $user->belongsToTeam($team = Team::where('slug', $slug)->firstOrFail()),
+            $user->belongsToTeam($team),
             403
         );
 
         $currentTeamSlug = $user->currentTeam?->slug;
 
-        $user->switchTeam($team);
+        if (! $user->switchTeam($team)) {
+            abort(403);
+        }
 
-        if (! request()->header('Referer')) {
-            $this->redirectRoute('dashboard', ['current_team' => $team->slug], navigate: true);
+        $referer = request()->header('Referer');
+
+        /*
+         * If there is no previous URL, go to the dashboard
+         * with the selected team explicitly supplied.
+         */
+        if (! $referer) {
+            $this->redirectRoute(
+                'dashboard',
+                [
+                    'current_team' => $team->slug,
+                ],
+                navigate: true
+            );
 
             return;
         }
 
+        /*
+         * If there wasn't a previously selected team,
+         * we cannot replace a team segment in the URL.
+         */
         if (! $currentTeamSlug) {
-            $this->redirect(request()->header('Referer'), navigate: true);
+            $this->redirect(
+                $referer,
+                navigate: true
+            );
 
             return;
         }
 
+        /*
+         * Replace either:
+         *
+         *   /old-team/...
+         *
+         * or:
+         *
+         *   ?current_team=old-team
+         *
+         * with the newly selected team.
+         */
         $redirectTo = $this->replaceCurrentTeamInReferer(
-            request()->header('Referer'),
-            $currentTeamSlug,
-            $team->slug,
-        );
-
-        $this->redirect($redirectTo ?? request()->header('Referer'), navigate: true);
-    }
-
-    protected function replaceCurrentTeamInReferer(string $referer, string $currentTeamSlug, string $newTeamSlug): ?string
-    {
-        $redirectTo = preg_replace(
-            '#/'.preg_quote($currentTeamSlug, '#').'(?=/|\?|$)#',
-            '/'.$newTeamSlug,
             $referer,
-            1,
+            $currentTeamSlug,
+            $team->slug
         );
 
-        return preg_replace(
-            '#([?&]current_team=)'.preg_quote($currentTeamSlug, '#').'(?=&|$)#',
-            '$1'.$newTeamSlug,
+        $this->redirect(
             $redirectTo ?? $referer,
-            1,
+            navigate: true
         );
     }
-}; ?>
+
+    /**
+     * Replace the current team slug in a URL.
+     */
+    protected function replaceCurrentTeamInReferer(
+        string $referer,
+        string $currentTeamSlug,
+        string $newTeamSlug
+    ): ?string {
+        /*
+         * Handle team-prefixed URLs:
+         *
+         * /old-team/projects
+         * /old-team/settings
+         */
+        $redirectTo = preg_replace(
+            '#/' . preg_quote($currentTeamSlug, '#') . '(?=/|\?|$)#',
+            '/' . $newTeamSlug,
+            $referer,
+            1
+        );
+
+        /*
+         * Handle query-string URLs:
+         *
+         * ?current_team=old-team
+         */
+        return preg_replace(
+            '#([?&]current_team=)' . preg_quote($currentTeamSlug, '#') . '(?=&|$)#',
+            '$1' . $newTeamSlug,
+            $redirectTo ?? $referer,
+            1
+        );
+    }
+};
+?>
+
 
 <div>
     <flux:dropdown position="bottom" align="start">

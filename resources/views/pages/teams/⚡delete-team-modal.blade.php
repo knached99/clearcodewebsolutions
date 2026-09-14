@@ -113,7 +113,7 @@ new class extends Component
     #[Computed]
     public function otherTeams(): Collection
     {
-        return Auth::user()->toUserTeams();
+        return Auth::user()->teams();
     }
 };
 ?>

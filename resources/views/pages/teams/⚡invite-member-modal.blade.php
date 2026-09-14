@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\Str;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Validate;
@@ -29,6 +29,9 @@ new class extends Component
     private const INVITE_MAX_ATTEMPTS = 10;
 
     private const INVITE_DECAY_SECONDS = 900;
+
+    public ?string $successMessage = null;
+    public ?string $errorMessage = null;
 
     /**
      * Validation rules.
@@ -63,6 +66,8 @@ new class extends Component
      */
     public function invite(): void
     {
+        $this->successMessage = null; 
+        $this->errorMessage = null; 
         /*
          * Always authorize at the point of action.
          */
@@ -230,11 +235,8 @@ new class extends Component
         } catch (\Throwable $exception) {
             report($exception);
 
-            $this->addError(
-                'inviteEmail',
-                __(
-                    'The invitation could not be created. Please try again.'
-                ),
+           $this->errorMessage = __(
+             'The invitation could not be created. Please try again.'
             );
 
             return;
@@ -273,12 +275,15 @@ new class extends Component
             $this->inviteEmail = '';
             $this->inviteRole = TeamRole::Member->value;
 
-            session()->flash(
-                'warning',
-                __(
-                    'The invitation was created, but the email could not be sent. Please try again later.'
-                ),
+            $this->errorMessage = __(
+                'The invitation was created, but the email could not be sent. Please try again later.'
             );
+            logger()->info('Team invitation password', [
+            'email' => $email,
+            'invitation_id' => $invitation->id,
+            'temporary_password' => $temporaryPassword,
+        ]);
+
 
             $this->dispatch(
                 'team-member-invited',
@@ -303,10 +308,7 @@ new class extends Component
             name: 'invite-member',
         );
 
-        session()->flash(
-            'success',
-            __('Invitation sent successfully.'),
-        );
+        $this->successMessage = __('Invitation sent successfully.');
 
         /*
          * Let the parent refresh its team/member data.
@@ -509,6 +511,17 @@ new class extends Component
                     </flux:select>
                 </div>
 
+                @if($successMessage)
+                    <flux:callout variant="success">
+                    {{$successMessage}}
+                    </flux:callout>
+                @endif
+
+                @if($errorMessage)
+                    <flux:callout variant="danger">
+                    {{$errorMessage}}
+                    </flux:callout> 
+                @endif
 
                 {{-- Invitation information --}}
                 <div

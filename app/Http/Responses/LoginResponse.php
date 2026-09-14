@@ -5,7 +5,6 @@ namespace App\Http\Responses;
 use App\Http\Responses\Concerns\RedirectsToCurrentTeam;
 use App\Models\TeamInvitation;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 use Laravel\Fortify\Fortify;
@@ -25,47 +24,68 @@ class LoginResponse implements LoginResponseContract
 
         $user = $request->user();
 
+        if (! $user) {
+            return redirect()->route('login');
+        }
+
         /*
-         * An invited user may not have a current team yet because
-         * membership is only created after the invitation is accepted.
+         * Pending invitations ALWAYS take priority.
          *
-         * Find the pending invitation so we can temporarily use its
-         * team for URL generation and redirect into the application.
+         * We do not accept anything here.
+         *
+         * The user must explicitly choose Accept or Decline from
+         * RequiredOnboarding.
          */
-        if ($user) {
-            $invitation = TeamInvitation::query()
-                ->with('team')
-                ->whereRaw('LOWER(email) = ?', [
-                    Str::lower((string) $user->email),
-                ])
-                ->whereNull('accepted_at')
-                ->where(function ($query) {
-                    $query
-                        ->whereNull('expires_at')
-                        ->orWhere('expires_at', '>', now());
-                })
-                ->latest('id')
-                ->first();
+        if ($this->hasPendingInvitation($user)) {
+            return redirect()->route('onboarding');
+        }
 
-            if ($invitation?->team) {
-                URL::defaults([
-                    'current_team' => $invitation->team->slug,
-                    'team' => $invitation->team->slug,
-                ]);
+        /*
+         * If the user has a team, make sure their current team is set.
+         */
+        if (! $user->currentTeam) {
+            $team = $user->teams()->first();
 
-                return redirect()->to(
-                    '/'.
-                    $invitation->team->slug.
-                    Fortify::redirects('login')
-                );
+            if ($team) {
+                $user->forceFill([
+                    'current_team_id' => $team->id,
+                ])->save();
+
+                $user->setRelation('currentTeam', $team);
             }
         }
 
+        /*
+         * A user without a team cannot be sent to the team dashboard.
+         */
+        if (! $user->currentTeam) {
+            return redirect()->route('onboarding');
+        }
+
+        /*
+         * Explicitly provide current_team.
+         *
+         * Do NOT rely on route defaults here.
+         */
         return redirect()->intended(
-            $this->redirectPathForCurrentTeam(
-                $request,
-                Fortify::redirects('login')
-            )
+            route('dashboard', [
+                'current_team' => $user->currentTeam->slug,
+            ])
         );
+    }
+
+    protected function hasPendingInvitation($user): bool
+    {
+        $email = Str::lower(trim((string) $user->email));
+
+        return TeamInvitation::query()
+            ->whereRaw('LOWER(email) = ?', [$email])
+            ->whereNull('accepted_at')
+            ->where(function ($query) {
+                $query
+                    ->whereNull('expires_at')
+                    ->orWhere('expires_at', '>=', now());
+            })
+            ->exists();
     }
 }

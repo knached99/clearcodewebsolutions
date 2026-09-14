@@ -9,7 +9,7 @@ use App\Models\User;
 class TeamPolicy
 {
     /**
-     * Determine whether the user can view any models.
+     * Determine whether the user can view any teams.
      */
     public function viewAny(User $user): bool
     {
@@ -17,7 +17,7 @@ class TeamPolicy
     }
 
     /**
-     * Determine whether the user can view the model.
+     * Determine whether the user can view the team.
      */
     public function view(User $user, Team $team): bool
     {
@@ -25,7 +25,7 @@ class TeamPolicy
     }
 
     /**
-     * Determine whether the user can create models.
+     * Determine whether the user can create teams.
      */
     public function create(User $user): bool
     {
@@ -33,68 +33,106 @@ class TeamPolicy
     }
 
     /**
-     * Determine whether the user can update the model.
+     * Determine whether the user can update the team.
      */
-    public function update(User $user, Team $team): bool
-    {
-        return $user->hasTeamPermission($team, TeamPermission::UpdateTeam);
+    public function update(
+        User $user,
+        Team $team,
+    ): bool {
+        return $user->hasTeamPermission(
+            $team,
+            TeamPermission::UpdateTeam,
+        );
     }
 
     /**
      * Determine whether the user can leave the team.
      */
-    public function leave(User $user, Team $team): bool
-    {
+    public function leave(
+        User $user,
+        Team $team,
+    ): bool {
         return ! $team->is_personal
             && $user->belongsToTeam($team)
             && ! $user->ownsTeam($team);
     }
 
     /**
-     * Determine whether the user can add a member to the team.
+     * Determine whether the user can add a member.
      */
-    public function addMember(User $user, Team $team): bool
-    {
-        return $user->hasTeamPermission($team, TeamPermission::AddMember);
+    public function addMember(
+        User $user,
+        Team $team,
+    ): bool {
+        return $user->hasTeamPermission(
+            $team,
+            TeamPermission::AddMember,
+        );
     }
 
     /**
-     * Determine whether the user can update a member's role in the team.
+     * Determine whether the user can update a member's role.
      */
-    public function updateMember(User $user, Team $team): bool
-    {
-        return $user->hasTeamPermission($team, TeamPermission::UpdateMember);
+    public function updateMember(
+        User $user,
+        Team $team,
+    ): bool {
+        return $user->hasTeamPermission(
+            $team,
+            TeamPermission::UpdateMember,
+        );
     }
 
     /**
-     * Determine whether the user can remove a member from the team.
+     * Determine whether the user can remove a member.
      */
-    public function removeMember(User $user, Team $team): bool
-    {
-        return $user->hasTeamPermission($team, TeamPermission::RemoveMember);
+    public function removeMember(
+        User $user,
+        Team $team,
+    ): bool {
+        return $user->hasTeamPermission(
+            $team,
+            TeamPermission::RemoveMember,
+        );
     }
 
     /**
-     * Determine whether the user can invite members to the team.
+     * Determine whether the user can invite members.
      */
-    public function inviteMember(User $user, Team $team): bool
-    {
-        return $user->hasTeamPermission($team, TeamPermission::CreateInvitation);
+    public function inviteMember(
+        User $user,
+        Team $team,
+    ): bool {
+        return $user->hasTeamPermission(
+            $team,
+            TeamPermission::CreateInvitation,
+        );
     }
 
     /**
      * Determine whether the user can cancel invitations.
      */
-    public function cancelInvitation(User $user, Team $team): bool
-    {
-        return $user->hasTeamPermission($team, TeamPermission::CancelInvitation);
+    public function cancelInvitation(
+        User $user,
+        Team $team,
+    ): bool {
+        return $user->hasTeamPermission(
+            $team,
+            TeamPermission::CancelInvitation,
+        );
     }
 
     /**
-     * Determine whether the user can delete the model.
+     * Determine whether the user can delete the team.
      */
-    public function delete(User $user, Team $team): bool
-    {
-        return ! $team->is_personal && $user->hasTeamPermission($team, TeamPermission::DeleteTeam);
+    public function delete(
+        User $user,
+        Team $team,
+    ): bool {
+        return ! $team->is_personal
+            && $user->hasTeamPermission(
+                $team,
+                TeamPermission::DeleteTeam,
+            );
     }
 }

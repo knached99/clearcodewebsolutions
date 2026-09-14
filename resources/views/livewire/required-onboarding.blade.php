@@ -56,6 +56,7 @@
         class="cc-onboarding-modal"
     >
         <div class="relative overflow-hidden rounded-2xl">
+
             {{-- Background glow --}}
             <div
                 class="pointer-events-none absolute -right-32 -top-32 h-64 w-64 rounded-full bg-purple-600/20 blur-3xl"
@@ -93,6 +94,7 @@
                 {{-- Invitations --}}
                 <div class="space-y-3">
                     @forelse ($this->pendingInvitations as $invitation)
+
                         <div
                             wire:key="invitation-{{ $invitation['id'] }}"
                             class="rounded-xl border border-purple-500/20 bg-white/[0.03] p-4"
@@ -156,14 +158,13 @@
                             @enderror
 
                             {{-- Actions --}}
-                            <div
-                                class="mt-4 flex items-center justify-end gap-2"
-                            >
+                            <div class="mt-4 flex items-center justify-end gap-2">
+
                                 <flux:button
                                     type="button"
                                     variant="ghost"
                                     class="cursor-pointer text-zinc-400 hover:bg-white/5 hover:text-white"
-                                    wire:click="declineInvitation('{{ $invitation['code'] }}')"
+                                    wire:click="declineInvitation(@js($invitation['code']))"
                                     wire:confirm="Are you sure you want to decline this invitation? Your invited account will be deleted."
                                 >
                                     Decline
@@ -173,7 +174,7 @@
                                     type="button"
                                     variant="primary"
                                     class="cursor-pointer bg-purple-600 hover:bg-purple-500"
-                                    wire:click="acceptInvitation('{{ $invitation['code'] }}')"
+                                    wire:click="acceptInvitation(@js($invitation['code']))"
                                     wire:loading.attr="disabled"
                                     wire:target="acceptInvitation"
                                 >
@@ -191,9 +192,12 @@
                                         Accepting...
                                     </span>
                                 </flux:button>
+
                             </div>
                         </div>
+
                     @empty
+
                         <div
                             class="rounded-xl border border-zinc-800 bg-white/[0.02] p-5 text-center"
                         >
@@ -201,6 +205,7 @@
                                 No pending invitations.
                             </flux:text>
                         </div>
+
                     @endforelse
                 </div>
 
@@ -221,6 +226,7 @@
         class="cc-onboarding-modal"
     >
         <div class="relative overflow-hidden rounded-2xl">
+
             {{-- Background glow --}}
             <div
                 class="pointer-events-none absolute -right-32 -top-32 h-64 w-64 rounded-full bg-purple-600/20 blur-3xl"
@@ -234,6 +240,7 @@
 
                 {{-- Header --}}
                 <div class="space-y-3">
+
                     <div
                         class="flex size-12 items-center justify-center rounded-xl bg-purple-500/10 ring-1 ring-purple-500/20"
                     >
@@ -253,6 +260,7 @@
                             password before continuing.
                         </flux:text>
                     </div>
+
                 </div>
 
 
@@ -264,7 +272,9 @@
 
                     {{-- New password --}}
                     <div class="space-y-2">
+
                         <div class="relative">
+
                             <flux:input
                                 wire:model.live="newPassword"
                                 label="New password"
@@ -273,7 +283,6 @@
                                 class="pr-11"
                             />
 
-                            {{-- Password visibility toggle --}}
                             <button
                                 type="button"
                                 x-on:click="passwordVisible = !passwordVisible"
@@ -293,11 +302,12 @@
                                     class="size-5"
                                 />
                             </button>
+
                         </div>
 
-                        {{-- New password error --}}
                         @error('newPassword')
                             <div class="flex items-start gap-2 px-1">
+
                                 <flux:icon
                                     name="exclamation-circle"
                                     class="mt-0.5 size-4 shrink-0 text-red-400"
@@ -309,18 +319,22 @@
                                 >
                                     {{ $message }}
                                 </flux:text>
+
                             </div>
                         @enderror
+
                     </div>
 
 
                     {{-- Password strength --}}
                     <div
-                        x-show="$wire.newPassword.length > 0"
+                        x-show="($wire.newPassword ?? '').length > 0"
                         x-transition
                         class="space-y-3 pt-1"
                     >
+
                         <div class="flex items-center justify-between">
+
                             <flux:text
                                 size="sm"
                                 class="text-zinc-500"
@@ -333,120 +347,119 @@
                                 x-text="passwordStrengthLabel"
                                 class="text-purple-400"
                             ></flux:text>
+
                         </div>
+
 
                         {{-- Strength bars --}}
                         <div class="flex gap-1.5">
-                            <template
-                                x-for="i in 5"
-                                :key="i"
-                            >
+
+                            <template x-for="i in 5" :key="i">
+
                                 <div
                                     class="h-1.5 flex-1 rounded-full transition-all duration-300"
-                                    :class="
-                                        i <= passwordStrength
-                                            ? 'bg-purple-500'
-                                            : 'bg-zinc-800'
-                                    "
+                                    :class="i <= passwordStrength
+                                        ? 'bg-purple-500'
+                                        : 'bg-zinc-800'"
                                 ></div>
+
                             </template>
+
                         </div>
 
+
                         {{-- Requirements --}}
-                        <div
-                            class="grid grid-cols-1 gap-1.5 sm:grid-cols-2"
-                        >
+                        <div class="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+
                             {{-- 8 characters --}}
                             <div
                                 class="flex items-center gap-2 text-xs"
-                                :class="
-                                    $wire.newPassword.length >= 8
-                                        ? 'text-purple-400'
-                                        : 'text-zinc-600'
-                                "
+                                :class="($wire.newPassword ?? '').length >= 8
+                                    ? 'text-purple-400'
+                                    : 'text-zinc-600'"
                             >
                                 <span
-                                    x-text="$wire.newPassword.length >= 8 ? '✓' : '○'"
+                                    x-text="($wire.newPassword ?? '').length >= 8 ? '✓' : '○'"
                                     class="w-3"
                                 ></span>
 
                                 8+ characters
                             </div>
 
+
                             {{-- Lowercase --}}
                             <div
                                 class="flex items-center gap-2 text-xs"
-                                :class="
-                                    /[a-z]/.test($wire.newPassword)
-                                        ? 'text-purple-400'
-                                        : 'text-zinc-600'
-                                "
+                                :class="/[a-z]/.test($wire.newPassword ?? '')
+                                    ? 'text-purple-400'
+                                    : 'text-zinc-600'"
                             >
                                 <span
-                                    x-text="/[a-z]/.test($wire.newPassword) ? '✓' : '○'"
+                                    x-text="/[a-z]/.test($wire.newPassword ?? '') ? '✓' : '○'"
                                     class="w-3"
                                 ></span>
 
                                 Lowercase letter
                             </div>
 
+
                             {{-- Uppercase --}}
                             <div
                                 class="flex items-center gap-2 text-xs"
-                                :class="
-                                    /[A-Z]/.test($wire.newPassword)
-                                        ? 'text-purple-400'
-                                        : 'text-zinc-600'
-                                "
+                                :class="/[A-Z]/.test($wire.newPassword ?? '')
+                                    ? 'text-purple-400'
+                                    : 'text-zinc-600'"
                             >
                                 <span
-                                    x-text="/[A-Z]/.test($wire.newPassword) ? '✓' : '○'"
+                                    x-text="/[A-Z]/.test($wire.newPassword ?? '') ? '✓' : '○'"
                                     class="w-3"
                                 ></span>
 
                                 Uppercase letter
                             </div>
 
+
                             {{-- Number --}}
                             <div
                                 class="flex items-center gap-2 text-xs"
-                                :class="
-                                    /[0-9]/.test($wire.newPassword)
-                                        ? 'text-purple-400'
-                                        : 'text-zinc-600'
-                                "
+                                :class="/[0-9]/.test($wire.newPassword ?? '')
+                                    ? 'text-purple-400'
+                                    : 'text-zinc-600'"
                             >
                                 <span
-                                    x-text="/[0-9]/.test($wire.newPassword) ? '✓' : '○'"
+                                    x-text="/[0-9]/.test($wire.newPassword ?? '') ? '✓' : '○'"
                                     class="w-3"
                                 ></span>
 
                                 Number
                             </div>
 
+
                             {{-- Special character --}}
                             <div
                                 class="flex items-center gap-2 text-xs"
-                                :class="
-                                    /[^A-Za-z0-9]/.test($wire.newPassword)
-                                        ? 'text-purple-400'
-                                        : 'text-zinc-600'
-                                "
+                                :class="/[^A-Za-z0-9]/.test($wire.newPassword ?? '')
+                                    ? 'text-purple-400'
+                                    : 'text-zinc-600'"
                             >
                                 <span
-                                    x-text="/[^A-Za-z0-9]/.test($wire.newPassword) ? '✓' : '○'"
+                                    x-text="/[^A-Za-z0-9]/.test($wire.newPassword ?? '') ? '✓' : '○'"
                                     class="w-3"
                                 ></span>
 
                                 Special character
                             </div>
+
                         </div>
+
                     </div>
 
 
                     {{-- Confirm password --}}
                     <div class="space-y-2">
+
                         <div class="relative">
+
                             <flux:input
                                 wire:model.live="newPassword_confirmation"
                                 label="Confirm new password"
@@ -455,7 +468,6 @@
                                 class="pr-11"
                             />
 
-                            {{-- Confirmation visibility toggle --}}
                             <button
                                 type="button"
                                 x-on:click="confirmationVisible = !confirmationVisible"
@@ -475,11 +487,13 @@
                                     class="size-5"
                                 />
                             </button>
+
                         </div>
 
-                        {{-- Confirmation error --}}
+
                         @error('newPassword_confirmation')
                             <div class="flex items-start gap-2 px-1">
+
                                 <flux:icon
                                     name="exclamation-circle"
                                     class="mt-0.5 size-4 shrink-0 text-red-400"
@@ -491,15 +505,18 @@
                                 >
                                     {{ $message }}
                                 </flux:text>
+
                             </div>
                         @enderror
 
+
                         {{-- Live match indicator --}}
                         <div
-                            x-show="$wire.newPassword_confirmation.length > 0"
+                            x-show="($wire.newPassword_confirmation ?? '').length > 0"
                             x-transition
                             class="pt-1"
                         >
+
                             <template x-if="passwordsMatch">
                                 <div
                                     class="flex items-center gap-2 px-1 text-xs text-purple-400"
@@ -517,12 +534,15 @@
                                     <span>Passwords do not match</span>
                                 </div>
                             </template>
+
                         </div>
+
                     </div>
 
 
                     {{-- Submit --}}
                     <div class="pt-2">
+
                         <flux:button
                             type="submit"
                             variant="primary"
@@ -544,9 +564,11 @@
                                 Updating password...
                             </span>
                         </flux:button>
+
                     </div>
 
                 </form>
+
             </div>
         </div>
     </flux:modal>

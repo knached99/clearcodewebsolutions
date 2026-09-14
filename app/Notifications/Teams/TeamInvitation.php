@@ -8,15 +8,10 @@ use Illuminate\Notifications\Notification;
 
 class TeamInvitation extends Notification
 {
-    /**
-     * Do not serialize the entire User model.
-     * The invitation ID and temporary password are all that are required.
-     */
     public function __construct(
         public int $invitationId,
-        public string $temporaryPassword,
+        public ?string $temporaryPassword = null,
     ) {
-        $this->afterCommit();
     }
 
     public function via(object $notifiable): array
@@ -33,7 +28,9 @@ class TeamInvitation extends Notification
             ])
             ->findOrFail($this->invitationId);
 
-        return (new MailMessage)
+        $mail = new MailMessage();
+
+        $mail
             ->subject(
                 __("You've been invited to join :teamName", [
                     'teamName' => $invitation->team->name,
@@ -46,17 +43,24 @@ class TeamInvitation extends Notification
                     'inviterName' => $invitation->inviter->name,
                     'teamName' => $invitation->team->name,
                 ]
-            ))
-            ->line(__('Your account has been created for you.'))
-            ->line(__('Email: :email', [
-                'email' => $invitation->email,
-            ]))
-            ->line(__('Temporary password: :password', [
-                'password' => $this->temporaryPassword,
-            ]))
-            ->line(
-                __('This temporary password is valid only until you create your new password.')
-            )
+            ));
+
+        if ($this->temporaryPassword !== null) {
+            $mail
+                ->line(__('Your account has been created for you.'))
+                ->line(__('Email: :email', [
+                    'email' => $invitation->email,
+                ]))
+                ->line(__('Temporary password: :password', [
+                    'password' => $this->temporaryPassword,
+                ]));
+        } else {
+            $mail->line(
+                __('You already have an account. Sign in using your existing password.')
+            );
+        }
+
+        $mail
             ->action(
                 __('Sign In'),
                 route('login', [
@@ -66,6 +70,8 @@ class TeamInvitation extends Notification
             ->line(
                 __('For security, you will be required to create a new password before accessing your account.')
             );
+
+        return $mail;
     }
 
     public function toArray(object $notifiable): array

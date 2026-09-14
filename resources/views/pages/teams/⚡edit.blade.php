@@ -287,7 +287,7 @@ new class extends Component
                                 @if ($teamData['is_personal'])
 
                                     <span
-                                        class="inline-flex shrink-0 items-center rounded-full border border-white/8 bg-white/[0.025] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-white/30"
+                                        class="inline-flex shrink-0 items-center rounded-full border border-white/8 bg-white/[0.025] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-white"
                                     >
                                         {{ __('Personal') }}
                                     </span>
@@ -296,7 +296,7 @@ new class extends Component
 
                             </div>
 
-                            <p class="mt-1 break-all text-xs text-white/25">
+                            <p class="mt-1 break-all text-xs text-white">
                                 {{ $teamData['slug'] }}
                             </p>
 
@@ -416,7 +416,7 @@ new class extends Component
                                 </h4>
 
                                 <span
-                                    class="rounded-full border border-white/7 bg-white/[0.025] px-2 py-0.5 text-[9px] font-medium text-white/30"
+                                    class="rounded-full border border-white/7 bg-white/[0.025] px-2 py-0.5 text-[9px] font-medium text-white"
                                 >
                                     {{ count($members) }}
                                 </span>
@@ -429,7 +429,7 @@ new class extends Component
                                 $this->permissions->canRemoveMember
                             )
 
-                                <p class="mt-0.5 text-[11px] text-white/20">
+                                <p class="mt-0.5 text-[11px] text-white">
                                     {{ __('People with access to this team') }}
                                 </p>
 
@@ -502,7 +502,7 @@ new class extends Component
 
                                     <div class="flex min-w-0 items-center gap-2">
 
-                                        <span class="truncate text-sm font-medium text-white/75">
+                                        <span class="truncate text-sm font-medium text-white">
                                             {{ $member['name'] }}
                                         </span>
 
@@ -518,7 +518,7 @@ new class extends Component
 
                                     </div>
 
-                                    <p class="max-w-[45vw] truncate text-[11px] text-white/25 sm:max-w-none">
+                                    <p class="max-w-[45vw] truncate text-[11px] text-white sm:max-w-none">
                                         {{ $member['email'] }}
                                     </p>
 
@@ -573,7 +573,7 @@ new class extends Component
                                 @else
 
                                     <span
-                                        class="inline-flex items-center rounded-lg border border-white/7 bg-white/[0.025] px-2.5 py-1.5 text-[10px] font-medium text-white/35"
+                                        class="inline-flex items-center rounded-lg border border-white/7 bg-white/[0.025] px-2.5 py-1.5 text-[10px] font-medium text-white"
                                     >
                                         {{ $member['role_label'] }}
                                     </span>
@@ -594,7 +594,7 @@ new class extends Component
                                                 variant="ghost"
                                                 size="sm"
                                                 icon="x-mark"
-                                                class="cursor-pointer text-white/20! hover:bg-red-400/8! hover:text-red-300!"
+                                                class="cursor-pointer text-white! hover:bg-red-400/8! hover:text-red-300!"
                                                 data-test="member-remove-button"
                                             />
 
@@ -631,7 +631,7 @@ new class extends Component
                             <div class="mx-auto flex h-10 w-10 items-center justify-center rounded-xl border border-white/7 bg-white/[0.025]">
 
                                 <svg
-                                    class="h-4 w-4 text-white/20"
+                                    class="h-4 w-4 text-white"
                                     viewBox="0 0 24 24"
                                     fill="none"
                                     aria-hidden="true"
@@ -653,7 +653,7 @@ new class extends Component
 
                             </div>
 
-                            <p class="mt-3 text-xs font-medium text-white/35">
+                            <p class="mt-3 text-xs font-medium text-white">
                                 {{ __('No team members yet.') }}
                             </p>
 
@@ -709,7 +709,7 @@ new class extends Component
 
                             <div class="flex items-center gap-2">
 
-                                <h4 class="text-sm font-semibold text-white/75">
+                                <h4 class="text-sm font-semibold text-white">
                                     {{ __('Pending invitations') }}
                                 </h4>
 
@@ -721,7 +721,7 @@ new class extends Component
 
                             </div>
 
-                            <p class="mt-0.5 text-[11px] text-white/20">
+                            <p class="mt-0.5 text-[11px] text-white">
                                 {{ __('Waiting for these people to join your team') }}
                             </p>
 
@@ -746,7 +746,7 @@ new class extends Component
                                     >
 
                                         <svg
-                                            class="h-4 w-4 text-white/25"
+                                            class="h-4 w-4 text-white"
                                             viewBox="0 0 24 24"
                                             fill="none"
                                             aria-hidden="true"
@@ -777,7 +777,7 @@ new class extends Component
                                             {{ $invitation['email'] }}
                                         </p>
 
-                                        <p class="mt-0.5 text-[11px] text-white/20">
+                                        <p class="mt-0.5 text-[11px] text-white">
                                             {{ $invitation['role_label'] }}
                                         </p>
 
@@ -798,7 +798,7 @@ new class extends Component
                                                 variant="ghost"
                                                 size="sm"
                                                 icon="x-mark"
-                                                class="cursor-pointer text-white/20! hover:bg-red-400/8! hover:text-red-300!"
+                                                class="cursor-pointer text-white! hover:bg-red-400/8! hover:text-red-300!"
                                                 data-test="invitation-cancel-button"
                                             />
 
@@ -875,7 +875,7 @@ new class extends Component
                                     {{ __('Delete team') }}
                                 </p>
 
-                                <p class="mt-0.5 text-[11px] text-white/20">
+                                <p class="mt-0.5 text-[11px] text-white">
                                     {{ __('Permanently delete this team and its data. This cannot be undone.') }}
                                 </p>
 
