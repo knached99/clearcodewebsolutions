@@ -1,3 +1,4 @@
+<title>Internal Server Error</title>
 <style>
     .error500 {
         position: relative;

@@ -1,3 +1,4 @@
+<title>Page Not Found</title>
 <style>
     body {
         background-color: #000 !important;

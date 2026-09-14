@@ -1,3 +1,4 @@
+<title>Forbidden</title>
 <style>
     body {
         background-color: #000 !important;
