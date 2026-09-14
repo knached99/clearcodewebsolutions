@@ -3058,13 +3058,13 @@ if (highlightedMessage) {
 
         .closed-ticket strong {
             color: #c5bdca;
-            font-size: 12px;
+            font-size: 14px;
         }
 
         .closed-ticket span {
             margin-top: 3px;
-            color: #625b68;
-            font-size: 10px;
+            color: #fff;
+            font-size: 12px;
         }
 
 
