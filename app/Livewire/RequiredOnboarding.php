@@ -278,7 +278,7 @@ class RequiredOnboarding extends Component
         ]);
 
         $user->forceFill([
-            'password' => Hash::make($validated['newPassword']),
+            'password' => $validated['newPassword'],
             'must_change_password' => false,
         ])->save();
 

@@ -251,6 +251,13 @@ new class extends Component
          * Send the notification after the database transaction has
          * successfully committed.
          */
+         logger()->info('Sending team invitation', [
+            'email' => $email,
+            'invitation_id' => $invitation->id,
+            'temporary_password' => $temporaryPassword,
+            'is_new_user' => $temporaryPassword !== null,
+        ]);
+
         try {
             Notification::route(
                 'mail',
