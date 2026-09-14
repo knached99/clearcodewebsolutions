@@ -17,6 +17,11 @@ readonly class TeamPermissions
         public bool $canCreateProject,
         public bool $canUpdateProject,
         public bool $canDeleteProject,
+        
+        public bool $canViewTestimonials,
+        public bool $canApproveTestimonial,
+        public bool $canDenyTestimonial,
+        public bool $canDeleteTestimonial,
     ) {
         //
     }

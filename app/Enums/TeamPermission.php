@@ -18,4 +18,9 @@ enum TeamPermission: string
     case UpdateProject = 'project:update';
     case DeleteProject = 'project:delete';
 
+    case ViewTestimonials = 'testimonial:view';
+    case ApproveTestimonial = 'testimonial:approve';
+    case DenyTestimonial = 'testimonial:deny';
+    case DeleteTestimonial = 'testimonial:delete';
+
 }

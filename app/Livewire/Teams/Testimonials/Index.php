@@ -27,6 +27,15 @@ class Index extends Component
 
     public function mount(?Testimonials $testimonial = null): void
     {
+        /*
+         * Only users with testimonial:view can access
+         * the testimonials page at all.
+         */
+        $this->authorize(
+            'viewAny',
+            Testimonials::class
+        );
+
         if (! $testimonial) {
             return;
         }
@@ -83,7 +92,9 @@ class Index extends Component
         }
 
         $this->selectedTestimonialId = $testimonialId;
+
         $this->pendingAction = $action;
+
         $this->showActionModal = true;
     }
 
@@ -144,7 +155,13 @@ class Index extends Component
         );
 
         switch ($this->pendingAction) {
+
             case 'approve':
+
+                $this->authorize(
+                    'approve',
+                    $testimonial
+                );
 
                 $service->approve($testimonial);
 
@@ -157,6 +174,11 @@ class Index extends Component
 
             case 'deny':
 
+                $this->authorize(
+                    'deny',
+                    $testimonial
+                );
+
                 $service->deny($testimonial);
 
                 session()->flash(
@@ -167,6 +189,11 @@ class Index extends Component
                 break;
 
             case 'delete':
+
+                $this->authorize(
+                    'delete',
+                    $testimonial
+                );
 
                 $service->delete($testimonial);
 
@@ -194,6 +221,11 @@ class Index extends Component
             $testimonialId
         );
 
+        $this->authorize(
+            'approve',
+            $testimonial
+        );
+
         $service->approve($testimonial);
 
         session()->flash(
@@ -210,6 +242,11 @@ class Index extends Component
             $testimonialId
         );
 
+        $this->authorize(
+            'deny',
+            $testimonial
+        );
+
         $service->deny($testimonial);
 
         session()->flash(
@@ -224,6 +261,11 @@ class Index extends Component
     ): void {
         $testimonial = Testimonials::findOrFail(
             $testimonialId
+        );
+
+        $this->authorize(
+            'delete',
+            $testimonial
         );
 
         $service->delete($testimonial);

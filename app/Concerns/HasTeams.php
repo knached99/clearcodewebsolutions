@@ -168,6 +168,22 @@ trait HasTeams
             canDeleteProject: $role?->hasPermission(
                 TeamPermission::DeleteProject
             ) ?? false,
+
+            canViewTestimonials: $role?->hasPermission(
+            TeamPermission::ViewTestimonials
+        ) ?? false,
+
+            canApproveTestimonial: $role?->hasPermission(
+                TeamPermission::ApproveTestimonial
+            ) ?? false,
+
+            canDenyTestimonial: $role?->hasPermission(
+                TeamPermission::DenyTestimonial
+            ) ?? false,
+
+            canDeleteTestimonial: $role?->hasPermission(
+                TeamPermission::DeleteTestimonial
+    ) ?? false,
         );
     }
 
