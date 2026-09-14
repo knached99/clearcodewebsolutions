@@ -170,10 +170,8 @@ new class extends Component
 
                             'email' => $email,
 
-                            'password' => Hash::make(
-                                $temporaryPassword,
-                            ),
-
+                            'password' => $temporaryPassword,
+                            
                             'email_verified_at' => now(),
 
                             'must_change_password' => true,
