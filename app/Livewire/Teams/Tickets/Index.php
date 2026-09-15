@@ -362,33 +362,10 @@ class Index extends Component
                 ], true),
                 function ($query): void {
                     $priorityOrder = match ($this->sort) {
-                        'priority_urgent' => [
-                            'urgent',
-                            'high',
-                            'normal',
-                            'low',
-                        ],
-
-                        'priority_high' => [
-                            'high',
-                            'urgent',
-                            'normal',
-                            'low',
-                        ],
-
-                        'priority_normal' => [
-                            'normal',
-                            'urgent',
-                            'high',
-                            'low',
-                        ],
-
-                        'priority_low' => [
-                            'low',
-                            'normal',
-                            'high',
-                            'urgent',
-                        ],
+                        'priority_urgent' => ['urgent', 'high', 'normal', 'low'],
+                        'priority_high' => ['high', 'urgent', 'normal', 'low'],
+                        'priority_normal' => ['normal', 'urgent', 'high', 'low'],
+                        'priority_low' => ['low', 'normal', 'high', 'urgent'],
                     };
 
                     $case = 'CASE priority ';
@@ -404,7 +381,7 @@ class Index extends Component
                     $query->orderByRaw(
                         $case,
                         $bindings,
-                    );
+                    )->orderBy('last_activity_at', 'desc');
                 },
             )
             ->when(

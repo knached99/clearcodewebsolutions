@@ -103,38 +103,29 @@ class RequiredOnboarding extends Component
 
     #[Computed]
     public function pendingInvitations()
-    {
-        $user = Auth::user();
+{
+    $user = Auth::user();
 
-        if (! $user) {
-            return collect();
-        }
-
-        $email = strtolower(trim((string) $user->email));
-
-        return TeamInvitation::query()
-            ->with([
-                'inviter',
-                'team',
-            ])
-            ->whereRaw('LOWER(email) = ?', [$email])
-            ->whereNull('accepted_at')
-            ->where(function ($query) {
-                $query
-                    ->whereNull('expires_at')
-                    ->orWhere('expires_at', '>=', now());
-            })
-            ->get()
-            ->map(function (TeamInvitation $invitation) {
-                return [
-                    'id' => $invitation->id,
-                    'code' => $invitation->code,
-                    'inviter_name' => $invitation->inviter?->name ?? 'Someone',
-                    'team_name' => $invitation->team?->name ?? 'Unknown team',
-                    'expires_at' => $invitation->expires_at,
-                ];
-            });
+    if (! $user) {
+        return collect();
     }
+
+    $email = strtolower(trim((string) $user->email));
+
+    return TeamInvitation::query()
+        ->with([
+            'inviter',
+            'team',
+        ])
+        ->whereRaw('LOWER(email) = ?', [$email])
+        ->whereNull('accepted_at')
+        ->where(function ($query) {
+            $query
+                ->whereNull('expires_at')
+                ->orWhere('expires_at', '>=', now());
+        })
+        ->get();
+}
 
     public function acceptInvitation(string $code): void
     {
@@ -212,6 +203,19 @@ class RequiredOnboarding extends Component
             text: 'Invitation accepted.',
             variant: 'success',
         );
+
+        // if no pwd change is required (only for existing users with a password)
+        // then on accepted invitation, will redirect to curr team's dashboard 
+        if (!$this->showChangePasswordModal) {
+            $user->refresh();
+
+            if ($user->currentTeam) {
+                $this->redirect(route('dashboard', ['current_team' => $user->currentTeam->slug]), navigate: true);
+            }
+            return; 
+        }
+
+        $this->redirect(route('onboarding'), navigate:true);
     }
 
     public function declineInvitation(string $code): void
