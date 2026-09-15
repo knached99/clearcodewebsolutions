@@ -186,10 +186,15 @@ window.addEventListener(
 
 updateScrollButton();
 
+// scrolls to specific message
 if (highlightedMessage) {
     setTimeout(() => {
         scrollToMessage(highlightedMessage);
     }, 500);
+} else {
+    setTimeout(() => {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+    }, 300);
 }"
     @keydown.escape.window="
         if (lightbox) {
