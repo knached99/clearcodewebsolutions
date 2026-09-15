@@ -189,7 +189,33 @@ new class extends Component
 };
 ?>
 
-<section class="w-full">
+<section
+    x-data="{
+        htmlIsDark: document.documentElement.classList.contains('dark'),
+        observer: null,
+
+        init() {
+            this.observer = new MutationObserver(() => {
+                this.htmlIsDark = document.documentElement.classList.contains('dark');
+            });
+
+            this.observer.observe(document.documentElement, {
+                attributes: true,
+                attributeFilter: ['class'],
+            });
+
+            this.$nextTick(() => {
+                this.htmlIsDark = document.documentElement.classList.contains('dark');
+            });
+        },
+
+        get isLightMode() {
+            return !this.htmlIsDark;
+        }
+    }"
+    :class="{ 'light': isLightMode }"
+    class="cc-team-edit-settings w-full transition-colors duration-300"
+>
 
     @include('partials.settings-heading')
     @push('styles')

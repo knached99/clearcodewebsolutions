@@ -1,0 +1,4673 @@
+/* ============================================================
+ | ClearCode Theme
+ | Dark mode is the default.
+ | Light mode is activated when <html> does not have .dark.
+ * ============================================================ */
+html {
+    outline: 10px solid red !important;
+}
+
+:root {
+    --cc-lime: #add322;
+
+    /* Light */
+    --cc-bg: #f7f8f5;
+    --cc-surface: #ffffff;
+    --cc-surface-soft: rgba(24, 24, 27, 0.025);
+    --cc-surface-hover: rgba(24, 24, 27, 0.045);
+
+    --cc-text: #18181b;
+    --cc-text-muted: rgba(24, 24, 27, 0.55);
+    --cc-text-subtle: rgba(24, 24, 27, 0.38);
+
+    --cc-border: rgba(24, 24, 27, 0.09);
+    --cc-border-soft: rgba(24, 24, 27, 0.06);
+
+    --cc-sidebar-bg: #ffffff;
+    --cc-card-bg: #ffffff;
+    --cc-input-bg: rgba(255, 255, 255, 0.75);
+}
+
+/* ============================================================
+ | Dark Theme
+ * ============================================================ */
+
+html.dark {
+    --cc-bg: #050507;
+    --cc-surface: #0a0a0e;
+    --cc-surface-soft: rgba(255, 255, 255, 0.025);
+    --cc-surface-hover: rgba(255, 255, 255, 0.045);
+
+    --cc-text: #ffffff;
+    --cc-text-muted: rgba(255, 255, 255, 0.50);
+    --cc-text-subtle: rgba(255, 255, 255, 0.30);
+
+    --cc-border: rgba(255, 255, 255, 0.10);
+    --cc-border-soft: rgba(255, 255, 255, 0.06);
+
+    --cc-sidebar-bg: #050507;
+    --cc-card-bg: #12101a;
+    --cc-input-bg: rgba(255, 255, 255, 0.04);
+}
+
+/* ============================================================
+ | Base
+ * ============================================================ */
+
+html,
+body {
+    width: 100%;
+    min-width: 100%;
+    min-height: 100%;
+    margin: 0;
+    background: var(--cc-bg) !important;
+    color: var(--cc-text);
+}
+
+body {
+    min-height: 100vh;
+}
+
+ /* ------------------------------------------------------------
+         | Application Loader
+         * ------------------------------------------------------------ */
+
+        .cc-loader {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background:
+                radial-gradient(
+                    circle at 50% 50%,
+                    rgba(124, 58, 237, 0.10) 0%,
+                    rgba(79, 70, 229, 0.045) 25%,
+                    transparent 55%
+                ),
+                #050507;
+            opacity: 1;
+            visibility: visible;
+            transition:
+                opacity 450ms cubic-bezier(0.4, 0, 0.2, 1),
+                visibility 450ms ease;
+        }
+
+        .cc-loader.is-hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .cc-loader__content {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 150px;
+            height: 150px;
+        }
+
+        .cc-loader__glow {
+            position: absolute;
+            width: 105px;
+            height: 105px;
+            border-radius: 50%;
+            background:
+                radial-gradient(
+                    circle,
+                    rgba(167, 139, 250, 0.30) 0%,
+                    rgba(139, 92, 246, 0.16) 35%,
+                    rgba(79, 70, 229, 0.06) 60%,
+                    transparent 75%
+                );
+            filter: blur(18px);
+            animation: cc-loader-glow 2s ease-in-out infinite;
+        }
+
+        .cc-loader__image {
+            position: relative;
+            z-index: 2;
+            width: 82px;
+            height: 82px;
+            object-fit: contain;
+            filter:
+                drop-shadow(0 0 7px rgba(196, 181, 253, 0.35))
+                drop-shadow(0 0 20px rgba(139, 92, 246, 0.28));
+            animation: cc-loader-pulse 1.7s ease-in-out infinite;
+        }
+
+        .cc-loader__halo {
+            position: absolute;
+            width: 116px;
+            height: 116px;
+            border: 1px solid rgba(167, 139, 250, 0.12);
+            border-radius: 50%;
+            box-shadow:
+                inset 0 0 25px rgba(124, 58, 237, 0.04),
+                0 0 30px rgba(124, 58, 237, 0.05);
+            animation: cc-loader-halo 2.5s ease-in-out infinite;
+        }
+
+        @keyframes cc-loader-pulse {
+            0%,
+            100% {
+                transform: scale(0.94);
+                opacity: 0.82;
+            }
+
+            50% {
+                transform: scale(1.04);
+                opacity: 1;
+            }
+        }
+
+        @keyframes cc-loader-glow {
+            0%,
+            100% {
+                transform: scale(0.82);
+                opacity: 0.55;
+            }
+
+            50% {
+                transform: scale(1.08);
+                opacity: 1;
+            }
+        }
+
+        @keyframes cc-loader-halo {
+            0%,
+            100% {
+                transform: scale(0.94);
+                opacity: 0.45;
+            }
+
+            50% {
+                transform: scale(1.04);
+                opacity: 0.85;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .cc-loader__image,
+            .cc-loader__glow,
+            .cc-loader__halo {
+                animation: none;
+            }
+        }
+
+
+/* ============================================================
+ | Application Shell
+ * ============================================================ */
+
+.cc-app-shell {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    min-height: 100vh;
+    overflow: hidden;
+    background: var(--cc-bg);
+}
+
+/* ============================================================
+ | Sidebar
+ * ============================================================ */
+
+.cc-sidebar {
+    flex: 0 0 auto;
+    height: 100vh !important;
+    max-height: 100vh !important;
+
+    background:
+        radial-gradient(
+            circle at 15% 0%,
+            rgba(139, 92, 246, 0.055),
+            transparent 28%
+        ),
+        linear-gradient(
+            180deg,
+            #ffffff 0%,
+            #f4f5f1 100%
+        ) !important;
+
+    border-right: 1px solid var(--cc-border-soft) !important;
+
+    box-shadow:
+        15px 0 40px rgba(24, 24, 27, 0.06);
+}
+
+html.dark .cc-sidebar {
+    background:
+        radial-gradient(
+            circle at 15% 0%,
+            rgba(139, 92, 246, 0.10),
+            transparent 28%
+        ),
+        linear-gradient(
+            180deg,
+            #0a0a0e 0%,
+            #050507 100%
+        ) !important;
+
+    border-right-color: rgba(255, 255, 255, 0.07) !important;
+
+    box-shadow:
+        15px 0 50px rgba(0, 0, 0, 0.28);
+}
+
+/* ============================================================
+ | Sidebar Header
+ * ============================================================ */
+
+.cc-sidebar-header {
+    padding: 14px 14px 16px;
+    border-bottom: 1px solid var(--cc-border-soft);
+}
+
+.cc-brand {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    width: 100%;
+    min-width: 0;
+    text-decoration: none;
+}
+
+.cc-brand-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    overflow: hidden;
+
+    border: 1px solid rgba(173, 211, 34, 0.20);
+    border-radius: 12px;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 0 0 1px rgba(24, 24, 27, 0.025),
+        0 8px 24px rgba(24, 24, 27, 0.08);
+}
+
+html.dark .cc-brand-logo {
+    background: #000000;
+
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.025),
+        0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.cc-brand-logo img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 4px;
+    object-fit: contain;
+    object-position: center;
+}
+
+.cc-brand-copy {
+    min-width: 0;
+    overflow: hidden;
+}
+
+.cc-brand-name {
+    color: var(--cc-text);
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cc-brand-subtitle {
+    margin-top: 4px;
+    color: var(--cc-lime);
+    font-size: 8px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+/* ============================================================
+ | Team Switcher
+ * ============================================================ */
+
+.cc-team-switcher {
+    margin: 10px 10px 6px;
+    padding: 2px;
+
+    border: 1px solid var(--cc-border-soft);
+    border-radius: 12px;
+
+    background: var(--cc-surface-soft);
+}
+
+/* ============================================================
+ | Navigation
+ * ============================================================ */
+
+.cc-nav {
+    padding: 6px 9px;
+}
+
+.cc-nav-item {
+    position: relative;
+    min-height: 40px;
+    margin: 2px 0;
+
+    border-radius: 10px;
+
+    color: var(--cc-text-muted) !important;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    transition:
+        color 150ms ease,
+        background 150ms ease,
+        transform 150ms ease;
+}
+
+.cc-nav-item:hover {
+    color: var(--cc-text) !important;
+    background: var(--cc-surface-hover);
+    transform: translateX(1px);
+}
+
+.cc-nav-item[data-current="true"],
+.cc-nav-item[aria-current="page"] {
+    color: var(--cc-text) !important;
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(173, 211, 34, 0.095),
+            rgba(139, 92, 246, 0.045)
+        );
+}
+
+.cc-nav-item[data-current="true"]::before,
+.cc-nav-item[aria-current="page"]::before {
+    content: '';
+
+    position: absolute;
+    left: 0;
+    top: 8px;
+    bottom: 8px;
+
+    width: 2px;
+
+    border-radius: 999px;
+
+    background: var(--cc-lime);
+
+    box-shadow:
+        0 0 10px rgba(173, 211, 34, 0.55);
+}
+
+.cc-nav-item svg {
+    width: 17px;
+    height: 17px;
+}
+
+/* ============================================================
+ | Sidebar Footer
+ * ============================================================ */
+
+.cc-sidebar-footer {
+    padding: 10px;
+    border-top: 1px solid var(--cc-border-soft);
+}
+
+/* ============================================================
+ | Main Content
+ * ============================================================ */
+
+.cc-main-shell {
+    flex: 1 1 auto;
+    width: 0;
+    min-width: 0;
+    height: 100vh;
+    min-height: 0;
+    overflow: hidden;
+
+    background:
+        radial-gradient(
+            circle at 80% 0%,
+            rgba(139, 92, 246, 0.025),
+            transparent 30%
+        ),
+        var(--cc-bg);
+}
+
+html.dark .cc-main-shell {
+    background:
+        radial-gradient(
+            circle at 80% 0%,
+            rgba(139, 92, 246, 0.035),
+            transparent 30%
+        ),
+        #050507;
+}
+
+.cc-main-shell > main,
+.cc-main-shell [data-flux-main] {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: transparent !important;
+}
+
+/* ============================================================
+ | Mobile Header
+ * ============================================================ */
+
+.cc-mobile-header {
+    background: #ffffff !important;
+    border-bottom: 1px solid var(--cc-border-soft) !important;
+    box-shadow: 0 8px 30px rgba(24, 24, 27, 0.06);
+}
+
+html.dark .cc-mobile-header {
+    background: #08080c !important;
+    border-bottom-color: rgba(255, 255, 255, 0.07) !important;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+}
+
+/* ============================================================
+ | Scrollbars
+ * ============================================================ */
+
+.cc-main-shell ::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+}
+
+.cc-main-shell ::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.cc-main-shell ::-webkit-scrollbar-thumb {
+    background: rgba(24, 24, 27, 0.12);
+    border-radius: 999px;
+}
+
+html.dark .cc-main-shell ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.10);
+}
+
+.cc-main-shell ::-webkit-scrollbar-thumb:hover {
+    background: rgba(173, 211, 34, 0.40);
+}
+
+/* ============================================================
+ | Tickets
+ * ============================================================ */
+
+.cc-tickets {
+    min-height: 100%;
+    color: var(--cc-text);
+    background: var(--cc-bg);
+}
+
+/* Borders */
+
+.cc-tickets .border-white\/10 {
+    border-color: var(--cc-border);
+}
+
+.cc-tickets .border-white\/\[0\.06\] {
+    border-color: var(--cc-border-soft);
+}
+
+/* Text */
+
+.cc-tickets .text-white {
+    color: var(--cc-text);
+}
+
+.cc-tickets .text-white\/70 {
+    color: rgba(24, 24, 27, 0.72);
+}
+
+.cc-tickets .text-white\/50 {
+    color: var(--cc-text-muted);
+}
+
+.cc-tickets .text-white\/40 {
+    color: rgba(24, 24, 27, 0.45);
+}
+
+.cc-tickets .text-white\/35 {
+    color: var(--cc-text-subtle);
+}
+
+.cc-tickets .text-white\/30 {
+    color: var(--cc-text-subtle);
+}
+
+.cc-tickets .text-white\/25 {
+    color: rgba(24, 24, 27, 0.28);
+}
+
+html.dark .cc-tickets .text-white\/70 {
+    color: rgba(255, 255, 255, 0.70);
+}
+
+html.dark .cc-tickets .text-white\/50 {
+    color: rgba(255, 255, 255, 0.50);
+}
+
+html.dark .cc-tickets .text-white\/40 {
+    color: rgba(255, 255, 255, 0.40);
+}
+
+html.dark .cc-tickets .text-white\/35 {
+    color: rgba(255, 255, 255, 0.35);
+}
+
+html.dark .cc-tickets .text-white\/30 {
+    color: rgba(255, 255, 255, 0.30);
+}
+
+html.dark .cc-tickets .text-white\/25 {
+    color: rgba(255, 255, 255, 0.25);
+}
+
+/* ============================================================
+ | Ticket Search / Filters
+ * ============================================================ */
+
+.cc-tickets input[type="search"],
+.cc-tickets select {
+    color: var(--cc-text);
+
+    border-color: var(--cc-border);
+
+    background: var(--cc-input-bg);
+}
+
+.cc-tickets input[type="search"]::placeholder {
+    color: var(--cc-text-subtle);
+}
+
+.cc-tickets select option {
+    color: #18181b;
+    background: #ffffff;
+}
+
+html.dark .cc-tickets select option {
+    color: #ffffff;
+    background: #12101a;
+}
+
+/* ============================================================
+ | Kanban Columns
+ * ============================================================ */
+
+.cc-tickets section {
+    border-color: var(--cc-border) !important;
+    background: var(--cc-surface-soft) !important;
+}
+
+/* ============================================================
+ | Ticket Cards
+ * ============================================================ */
+
+.cc-tickets .cc-ticket-card,
+.cc-tickets .group {
+    border-color: var(--cc-border) !important;
+    background: var(--cc-card-bg) !important;
+
+    box-shadow:
+        0 2px 8px rgba(24, 24, 27, 0.035),
+        0 8px 24px rgba(24, 24, 27, 0.025);
+}
+
+html.dark .cc-tickets .cc-ticket-card,
+html.dark .cc-tickets .group {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+.cc-tickets .group:hover {
+    border-color: rgba(24, 24, 27, 0.16) !important;
+    background: #fafafa !important;
+}
+
+html.dark .cc-tickets .group:hover {
+    border-color: rgba(255, 255, 255, 0.20) !important;
+    background: #171420 !important;
+}
+
+/* ============================================================
+ | Priority Badges
+ * ============================================================ */
+
+html:not(.dark) .cc-tickets .bg-slate-400\/10 {
+    background: rgba(100, 116, 139, 0.10);
+    color: #475569;
+}
+
+html:not(.dark) .cc-tickets .bg-blue-400\/10 {
+    background: rgba(59, 130, 246, 0.10);
+    color: #2563eb;
+}
+
+html:not(.dark) .cc-tickets .bg-orange-400\/10 {
+    background: rgba(249, 115, 22, 0.10);
+    color: #ea580c;
+}
+
+html:not(.dark) .cc-tickets .bg-red-400\/10 {
+    background: rgba(239, 68, 68, 0.10);
+    color: #dc2626;
+}
+
+/* ============================================================
+ | Order Select
+ * ============================================================ */
+
+.cc-order-trigger {
+    color: var(--cc-text);
+
+    border-color: var(--cc-border);
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(139, 92, 246, 0.055),
+            rgba(255, 255, 255, 0.85)
+        ),
+        var(--cc-card-bg);
+
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.8),
+        0 12px 35px rgba(24, 24, 27, 0.06);
+}
+
+html.dark .cc-order-trigger {
+    background:
+        linear-gradient(
+            135deg,
+            rgba(139, 92, 246, 0.12),
+            rgba(255, 255, 255, 0.035)
+        ),
+        rgba(8, 8, 13, 0.92);
+
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.035),
+        0 12px 35px rgba(0, 0, 0, 0.20);
+}
+
+.cc-order-trigger:hover {
+    border-color: rgba(173, 211, 34, 0.35);
+}
+
+.cc-order-trigger__eyebrow {
+    color: var(--cc-text-subtle);
+}
+
+.cc-order-trigger__value {
+    color: var(--cc-text);
+}
+
+.cc-order-trigger__chevron {
+    color: var(--cc-text-subtle);
+    background: var(--cc-surface-soft);
+}
+
+.cc-order-dropdown {
+    border-color: var(--cc-border);
+
+    background:
+        radial-gradient(
+            circle at 100% 0%,
+            rgba(139, 92, 246, 0.08),
+            transparent 35%
+        ),
+        linear-gradient(
+            180deg,
+            #ffffff,
+            #f7f8f5
+        );
+
+    box-shadow:
+        0 25px 80px rgba(24, 24, 27, 0.14);
+}
+
+html.dark .cc-order-dropdown {
+    background:
+        radial-gradient(
+            circle at 100% 0%,
+            rgba(139, 92, 246, 0.14),
+            transparent 35%
+        ),
+        linear-gradient(
+            180deg,
+            rgba(17, 15, 25, 0.98),
+            rgba(7, 7, 11, 0.99)
+        );
+
+    box-shadow:
+        0 25px 80px rgba(0, 0, 0, 0.55);
+}
+
+/* ============================================================
+ | Mobile
+ * ============================================================ */
+
+@media (max-width: 1023px) {
+    body {
+        overflow: auto;
+    }
+
+    .cc-app-shell {
+        height: auto;
+        min-height: 100vh;
+        overflow: visible;
+    }
+
+    .cc-sidebar {
+        height: 100dvh !important;
+        max-height: 100dvh !important;
+    }
+
+    .cc-main-shell {
+        width: 100%;
+        height: auto;
+        min-height: calc(100vh - 57px);
+        overflow: visible;
+    }
+
+    .cc-main-shell > main,
+    .cc-main-shell [data-flux-main] {
+        height: auto;
+        min-height: calc(100vh - 57px);
+        overflow: visible;
+    }
+}
+
+/* ============================================================
+ | Accessibility
+ * ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}
+
+
+/* ============================================================
+ | Tickets
+ * ============================================================ */
+
+.cc-tickets {
+    min-height: 100%;
+    color: var(--cc-text);
+    background: var(--cc-bg);
+}
+
+/* ------------------------------------------------------------
+ | Borders
+ * ------------------------------------------------------------ */
+
+.cc-tickets .border-white\/10 {
+    border-color: var(--cc-border) !important;
+}
+
+.cc-tickets .border-white\/\[0\.06\] {
+    border-color: var(--cc-border-soft) !important;
+}
+
+.cc-tickets .border-dashed {
+    border-color: var(--cc-border) !important;
+}
+
+/* ------------------------------------------------------------
+ | Text
+ * ------------------------------------------------------------ */
+
+.cc-tickets .text-white {
+    color: var(--cc-text) !important;
+}
+
+.cc-tickets .text-white\/70 {
+    color: var(--cc-text-muted) !important;
+}
+
+.cc-tickets .text-white\/50 {
+    color: var(--cc-text-muted) !important;
+}
+
+.cc-tickets .text-white\/40 {
+    color: rgba(24, 24, 27, 0.45) !important;
+}
+
+.cc-tickets .text-white\/35 {
+    color: var(--cc-text-subtle) !important;
+}
+
+.cc-tickets .text-white\/30 {
+    color: var(--cc-text-subtle) !important;
+}
+
+.cc-tickets .text-white\/25 {
+    color: rgba(24, 24, 27, 0.28) !important;
+}
+
+html.dark .cc-tickets .text-white\/40 {
+    color: rgba(255, 255, 255, 0.40) !important;
+}
+
+html.dark .cc-tickets .text-white\/35 {
+    color: rgba(255, 255, 255, 0.35) !important;
+}
+
+html.dark .cc-tickets .text-white\/30 {
+    color: rgba(255, 255, 255, 0.30) !important;
+}
+
+html.dark .cc-tickets .text-white\/25 {
+    color: rgba(255, 255, 255, 0.25) !important;
+}
+
+/* ------------------------------------------------------------
+ | Search / Filters
+ * ------------------------------------------------------------ */
+
+.cc-tickets input[type="search"],
+.cc-tickets select {
+    color: var(--cc-text) !important;
+    border-color: var(--cc-border) !important;
+    background: var(--cc-input-bg) !important;
+}
+
+.cc-tickets input[type="search"]::placeholder {
+    color: var(--cc-text-subtle) !important;
+}
+
+.cc-tickets select option {
+    color: #18181b;
+    background: #ffffff;
+}
+
+html.dark .cc-tickets select option {
+    color: #ffffff;
+    background: #12101a;
+}
+
+/* ------------------------------------------------------------
+ | Kanban Columns
+ * ------------------------------------------------------------ */
+
+.cc-tickets section {
+    border-color: var(--cc-border) !important;
+    background: var(--cc-surface-soft) !important;
+}
+
+/* Column count badge */
+.cc-tickets section .bg-white\/\[0\.06\] {
+    background: rgba(24, 24, 27, 0.06) !important;
+    color: var(--cc-text-muted) !important;
+}
+
+html.dark .cc-tickets section .bg-white\/\[0\.06\] {
+    background: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* ------------------------------------------------------------
+ | Ticket Cards
+ * ------------------------------------------------------------ */
+
+.cc-tickets .cc-ticket-card,
+.cc-tickets .group {
+    border-color: var(--cc-border) !important;
+    background: var(--cc-card-bg) !important;
+
+    box-shadow:
+        0 2px 8px rgba(24, 24, 27, 0.035),
+        0 8px 24px rgba(24, 24, 27, 0.025);
+}
+
+.cc-tickets .group:hover {
+    border-color: rgba(24, 24, 27, 0.16) !important;
+    background: #fafafa !important;
+}
+
+html.dark .cc-tickets .group {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+html.dark .cc-tickets .group:hover {
+    border-color: rgba(255, 255, 255, 0.20) !important;
+    background: #171420 !important;
+}
+
+/* ------------------------------------------------------------
+ | Customer Avatar
+ * ------------------------------------------------------------ */
+
+.cc-tickets .bg-white\/\[0\.06\] {
+    background: rgba(24, 24, 27, 0.055) !important;
+}
+
+html.dark .cc-tickets .bg-white\/\[0\.06\] {
+    background: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* ------------------------------------------------------------
+ | Empty Column
+ * ------------------------------------------------------------ */
+
+.cc-tickets .border-dashed {
+    background: transparent;
+}
+
+.cc-tickets .border-dashed .bg-white\/\[0\.04\] {
+    background: rgba(24, 24, 27, 0.04) !important;
+}
+
+html.dark .cc-tickets .border-dashed .bg-white\/\[0\.04\] {
+    background: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* ------------------------------------------------------------
+ | Drag / Drop
+ * ------------------------------------------------------------ */
+
+.cc-tickets [x-on\:dragover] {
+    background-color: transparent;
+}
+
+.cc-tickets [x-on\:dragover].drag-active {
+    background: rgba(139, 92, 246, 0.08);
+}
+
+/* Alpine drag target */
+.cc-tickets .bg-violet-500\/\[0\.08\] {
+    background: rgba(124, 58, 237, 0.08) !important;
+}
+
+.cc-tickets .bg-violet-500\/\[0\.04\] {
+    background: rgba(124, 58, 237, 0.04) !important;
+}
+
+/* ------------------------------------------------------------
+ | Priority Badges
+ * ------------------------------------------------------------ */
+
+html:not(.dark) .cc-tickets .bg-slate-400\/10 {
+    background: rgba(100, 116, 139, 0.10) !important;
+    color: #475569 !important;
+}
+
+html:not(.dark) .cc-tickets .bg-blue-400\/10 {
+    background: rgba(59, 130, 246, 0.10) !important;
+    color: #2563eb !important;
+}
+
+html:not(.dark) .cc-tickets .bg-orange-400\/10 {
+    background: rgba(249, 115, 22, 0.10) !important;
+    color: #ea580c !important;
+}
+
+html:not(.dark) .cc-tickets .bg-red-400\/10 {
+    background: rgba(239, 68, 68, 0.10) !important;
+    color: #dc2626 !important;
+}
+
+/* ------------------------------------------------------------
+ | View Ticket
+ * ------------------------------------------------------------ */
+
+.cc-tickets a.text-violet-400 {
+    color: #7c3aed !important;
+}
+
+.cc-tickets a.text-violet-400:hover {
+    color: #6d28d9 !important;
+}
+
+html.dark .cc-tickets a.text-violet-400 {
+    color: #a78bfa !important;
+}
+
+html.dark .cc-tickets a.text-violet-400:hover {
+    color: #c4b5fd !important;
+}
+
+
+/* =========================================================
+   PROJECTS ADMIN — FULL CSS
+   Dark + Light Mode
+   ========================================================= */
+
+/* =========================================================
+   BASE
+========================================================= */
+
+.cc-admin-projects {
+    --lime: #ADD322;
+    --lime-dark: #7fa800;
+
+    --purple: #8b5cf6;
+    --violet: #6d28d9;
+
+    --bg: #050408;
+    --panel: #0d0b13;
+
+    color: #fff;
+
+    background:
+        radial-gradient(
+            900px circle at 8% -5%,
+            rgba(139, 92, 246, .20),
+            transparent 55%
+        ),
+        radial-gradient(
+            700px circle at 92% 4%,
+            rgba(109, 40, 217, .16),
+            transparent 52%
+        ),
+        radial-gradient(
+            650px circle at 52% 45%,
+            rgba(91, 33, 182, .075),
+            transparent 65%
+        ),
+        radial-gradient(
+            500px circle at 15% 100%,
+            rgba(173, 211, 34, .045),
+            transparent 60%
+        ),
+        linear-gradient(
+            135deg,
+            #030205 0%,
+            #08060d 30%,
+            #0a0711 52%,
+            #06050a 78%,
+            #030305 100%
+        );
+
+    isolation: isolate;
+}
+
+/* =========================================================
+   BACKGROUND
+========================================================= */
+
+.cc-admin-projects .noise {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+
+    background:
+        radial-gradient(
+            550px circle at 25% 18%,
+            rgba(139, 92, 246, .12),
+            transparent 70%
+        ),
+        radial-gradient(
+            450px circle at 80% 28%,
+            rgba(173, 211, 34, .035),
+            transparent 70%
+        ),
+        linear-gradient(
+            115deg,
+            transparent 0%,
+            rgba(255,255,255,.012) 45%,
+            transparent 70%
+        );
+}
+
+/* =========================================================
+   GLASS
+========================================================= */
+
+.cc-admin-projects .glass {
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.045),
+            rgba(255,255,255,.018)
+        );
+
+    border: 1px solid rgba(255,255,255,.075);
+
+    box-shadow:
+        0 25px 80px rgba(0,0,0,.28),
+        inset 0 1px 0 rgba(255,255,255,.035);
+
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}
+
+/* =========================================================
+   PROJECT CARDS
+========================================================= */
+
+.cc-admin-projects .project-card {
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.045),
+            rgba(255,255,255,.012)
+        );
+
+    border: 1px solid rgba(255,255,255,.075);
+
+    box-shadow:
+        0 25px 70px rgba(0,0,0,.28),
+        inset 0 1px 0 rgba(255,255,255,.025);
+
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
+    transition:
+        transform .35s ease,
+        border-color .35s ease,
+        box-shadow .35s ease;
+}
+
+.cc-admin-projects .project-card:hover {
+    transform: translateY(-5px);
+
+    border-color: rgba(173,211,34,.22);
+
+    box-shadow:
+        0 35px 90px rgba(0,0,0,.42),
+        0 0 0 1px rgba(173,211,34,.025),
+        0 0 50px rgba(139,92,246,.035);
+}
+
+.cc-admin-projects .project-image {
+    transition:
+        transform .65s cubic-bezier(.2,.7,.2,1),
+        filter .4s ease;
+}
+
+.cc-admin-projects .project-card:hover .project-image {
+    transform: scale(1.045);
+    filter: brightness(1.08);
+}
+
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+.cc-admin-projects .action-button {
+    transition:
+        background .2s ease,
+        color .2s ease,
+        border-color .2s ease,
+        transform .2s ease;
+}
+
+.cc-admin-projects .action-button:hover {
+    transform: translateY(-1px);
+}
+
+/* =========================================================
+   INPUTS
+========================================================= */
+
+.cc-project-input {
+    background:
+        linear-gradient(
+            180deg,
+            rgba(255,255,255,.028),
+            rgba(255,255,255,.012)
+        );
+
+    border: 1px solid rgba(255,255,255,.075);
+    color: white;
+
+    transition:
+        border-color .25s ease,
+        background .25s ease,
+        box-shadow .25s ease;
+}
+
+.cc-project-input:hover {
+    border-color: rgba(255,255,255,.13);
+    background: rgba(255,255,255,.035);
+}
+
+.cc-project-input:focus {
+    border-color: rgba(173,211,34,.45);
+    background: rgba(0,0,0,.28);
+
+    box-shadow:
+        0 0 0 3px rgba(173,211,34,.045),
+        0 10px 35px rgba(0,0,0,.15);
+
+    outline: none;
+}
+
+.cc-project-input::placeholder {
+    color: rgba(255,255,255,.18);
+}
+
+.cc-project-input::-webkit-scrollbar {
+    width: 5px;
+}
+
+.cc-project-input::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,.12);
+    border-radius: 999px;
+}
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+.cc-modal-backdrop {
+    background:
+        radial-gradient(
+            circle at 50% 0%,
+            rgba(139,92,246,.14),
+            transparent 35%
+        ),
+        rgba(0,0,0,.82);
+
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}
+
+.cc-modal-panel {
+    background:
+        linear-gradient(
+            145deg,
+            rgba(20,17,28,.98),
+            rgba(8,7,12,.99)
+        );
+
+    box-shadow:
+        0 40px 120px rgba(0,0,0,.65),
+        0 0 0 1px rgba(255,255,255,.035);
+}
+
+.cc-input {
+    background: rgba(0,0,0,.24);
+    border: 1px solid rgba(255,255,255,.09);
+
+    transition:
+        border-color .2s ease,
+        box-shadow .2s ease,
+        background .2s ease;
+}
+
+.cc-input:focus {
+    background: rgba(0,0,0,.34);
+    border-color: rgba(173,211,34,.65);
+
+    box-shadow:
+        0 0 0 3px rgba(173,211,34,.08);
+
+    outline: none;
+}
+
+/* =========================================================
+   SCROLLBAR
+========================================================= */
+
+.cc-scrollbar::-webkit-scrollbar {
+    width: 7px;
+}
+
+.cc-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.cc-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,.12);
+    border-radius: 999px;
+}
+
+.cc-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,.2);
+}
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+.cc-admin-projects .status-dot {
+    box-shadow: 0 0 14px currentColor;
+}
+
+/* =========================================================
+   IMAGE PREVIEWS
+========================================================= */
+
+.cc-image-preview {
+    position: relative;
+    overflow: hidden;
+    border-radius: .75rem;
+    background: #000;
+    border: 1px solid rgba(255,255,255,.08);
+}
+
+.cc-image-preview img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+}
+
+/* =========================================================
+   LIGHT MODE
+========================================================= */
+
+.cc-admin-projects.light {
+    color: #171717;
+
+    background:
+        radial-gradient(
+            900px circle at 8% -5%,
+            rgba(139,92,246,.10),
+            transparent 55%
+        ),
+        radial-gradient(
+            700px circle at 92% 4%,
+            rgba(109,40,217,.07),
+            transparent 52%
+        ),
+        radial-gradient(
+            650px circle at 52% 45%,
+            rgba(91,33,182,.035),
+            transparent 65%
+        ),
+        radial-gradient(
+            500px circle at 15% 100%,
+            rgba(173,211,34,.035),
+            transparent 60%
+        ),
+        linear-gradient(
+            135deg,
+            #f8f8fa 0%,
+            #f2f1f6 30%,
+            #f7f7f9 55%,
+            #eeeeF2 100%
+        );
+}
+
+/* =========================================================
+   LIGHT MODE — BACKGROUND
+========================================================= */
+
+.cc-admin-projects.light .noise {
+    background:
+        radial-gradient(
+            550px circle at 25% 18%,
+            rgba(139,92,246,.055),
+            transparent 70%
+        ),
+        radial-gradient(
+            450px circle at 80% 28%,
+            rgba(173,211,34,.035),
+            transparent 70%
+        ),
+        linear-gradient(
+            115deg,
+            transparent 0%,
+            rgba(0,0,0,.012) 45%,
+            transparent 70%
+        );
+}
+
+/* =========================================================
+   LIGHT MODE — TEXT
+========================================================= */
+
+.cc-admin-projects.light .text-white {
+    color: #171717 !important;
+}
+
+.cc-admin-projects.light .text-gray-200 {
+    color: #73747a !important;
+}
+
+.cc-admin-projects.light .text-gray-300 {
+    color: #5f6065 !important;
+}
+
+.cc-admin-projects.light .text-gray-500 {
+    color: #77787d !important;
+}
+
+.cc-admin-projects.light .text-gray-600 {
+    color: #686970 !important;
+}
+
+/* Preserve text over project images */
+
+.cc-admin-projects.light
+.project-card
+.absolute
+.text-white,
+
+.cc-admin-projects.light
+.project-card
+.relative
+.text-white,
+
+.cc-admin-projects.light
+.project-card
+.text-white\/40 {
+    color: #fff !important;
+}
+
+/* Modal text */
+
+.cc-admin-projects.light .cc-modal-panel .text-white {
+    color: #171717 !important;
+}
+
+.cc-admin-projects.light .cc-modal-panel .text-gray-300 {
+    color: #5f6065 !important;
+}
+
+.cc-admin-projects.light .cc-modal-panel .text-gray-200 {
+    color: #73747a !important;
+}
+
+/* =========================================================
+   LIGHT MODE — BRAND
+========================================================= */
+
+.cc-admin-projects.light .text-\[\#ADD322\] {
+    color: #7fa800 !important;
+}
+
+/* Keep lime buttons readable */
+
+.cc-admin-projects.light .bg-\[\#ADD322\] {
+    color: #111 !important;
+}
+
+/* =========================================================
+   LIGHT MODE — GLASS
+========================================================= */
+
+.cc-admin-projects.light .glass {
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.88),
+            rgba(255,255,255,.62)
+        );
+
+    border-color: rgba(0,0,0,.075);
+
+    box-shadow:
+        0 20px 60px rgba(0,0,0,.07),
+        inset 0 1px 0 rgba(255,255,255,.95);
+
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}
+
+/* =========================================================
+   LIGHT MODE — PROJECT CARDS
+========================================================= */
+
+.cc-admin-projects.light .project-card {
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.92),
+            rgba(255,255,255,.72)
+        );
+
+    border-color: rgba(0,0,0,.075);
+
+    box-shadow:
+        0 20px 55px rgba(0,0,0,.08),
+        inset 0 1px 0 rgba(255,255,255,.95);
+}
+
+.cc-admin-projects.light .project-card:hover {
+    border-color: rgba(127,168,0,.25);
+
+    box-shadow:
+        0 30px 75px rgba(0,0,0,.13),
+        0 0 0 1px rgba(127,168,0,.035);
+}
+
+/* =========================================================
+   LIGHT MODE — BORDERS
+========================================================= */
+
+.cc-admin-projects.light .border-white\/5 { border-color: rgba(0,0,0,.06) !important; }
+.cc-admin-projects.light .border-white\/10 { border-color: rgba(0,0,0,.09) !important; }
+.cc-admin-projects.light .border-white\/15 { border-color: rgba(0,0,0,.13) !important; }
+.cc-admin-projects.light .border-white\/\[0\.06\] { border-color: rgba(0,0,0,.06) !important; }
+.cc-admin-projects.light .border-white\/\[0\.07\] { border-color: rgba(0,0,0,.075) !important; }
+.cc-admin-projects.light .border-white\/\[0\.08\] { border-color: rgba(0,0,0,.08) !important; }
+.cc-admin-projects.light .border-white\/\[0\.09\] { border-color: rgba(0,0,0,.09) !important; }
+
+/* =========================================================
+   LIGHT MODE — WHITE BACKGROUNDS
+========================================================= */
+
+.cc-admin-projects.light .bg-white\/5 { background-color: rgba(0,0,0,.035) !important; }
+.cc-admin-projects.light .bg-white\/\[0\.02\] { background-color: rgba(0,0,0,.018) !important; }
+.cc-admin-projects.light .bg-white\/\[0\.025\] { background-color: rgba(0,0,0,.022) !important; }
+.cc-admin-projects.light .bg-white\/\[0\.03\] { background-color: rgba(0,0,0,.028) !important; }
+.cc-admin-projects.light .bg-white\/\[0\.035\] { background-color: rgba(0,0,0,.03) !important; }
+.cc-admin-projects.light .bg-white\/\[0\.05\] { background-color: rgba(0,0,0,.035) !important; }
+.cc-admin-projects.light .bg-white\/\[0\.07\] { background-color: rgba(0,0,0,.045) !important; }
+.cc-admin-projects.light .bg-white\/\[0\.08\] { background-color: rgba(0,0,0,.05) !important; }
+
+/* =========================================================
+   LIGHT MODE — BLACK BACKGROUNDS
+========================================================= */
+
+.cc-admin-projects.light .bg-black\/10 {
+    background-color: rgba(0,0,0,.025) !important;
+}
+
+.cc-admin-projects.light .project-card .bg-black,
+.cc-admin-projects.light .project-card .bg-black\/60,
+.cc-admin-projects.light .project-card .bg-black\/70,
+.cc-admin-projects.light .project-card .bg-black\/75,
+.cc-admin-projects.light .project-card .bg-black\/85 {
+    color: #fff !important;
+}
+
+/* =========================================================
+   LIGHT MODE — INPUTS
+========================================================= */
+
+.cc-admin-projects.light .cc-project-input {
+    background:
+        linear-gradient(
+            180deg,
+            rgba(255,255,255,.88),
+            rgba(248,248,250,.9)
+        );
+
+    border-color: rgba(0,0,0,.10);
+    color: #171717;
+}
+
+.cc-admin-projects.light .cc-project-input:hover {
+    border-color: rgba(0,0,0,.16);
+    background: #fff;
+}
+
+.cc-admin-projects.light .cc-project-input:focus {
+    border-color: rgba(127,168,0,.55);
+    background: #fff;
+
+    box-shadow:
+        0 0 0 3px rgba(127,168,0,.08),
+        0 10px 35px rgba(0,0,0,.08);
+}
+
+.cc-admin-projects.light .cc-project-input::placeholder {
+    color: rgba(0,0,0,.35) !important;
+}
+
+.cc-admin-projects.light input,
+.cc-admin-projects.light textarea,
+.cc-admin-projects.light select {
+    color: #171717;
+}
+
+.cc-admin-projects.light input::placeholder,
+.cc-admin-projects.light textarea::placeholder {
+    color: rgba(0,0,0,.35) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — CC INPUT
+========================================================= */
+
+.cc-admin-projects.light .cc-input {
+    background: rgba(255,255,255,.75);
+    border-color: rgba(0,0,0,.10);
+    color: #171717;
+}
+
+.cc-admin-projects.light .cc-input:focus {
+    background: #fff;
+    border-color: rgba(127,168,0,.6);
+
+    box-shadow:
+        0 0 0 3px rgba(127,168,0,.08);
+}
+
+/* =========================================================
+   LIGHT MODE — DROPDOWNS
+========================================================= */
+
+.cc-admin-projects.light [x-show="open"] {
+    background: #fff !important;
+    color: #171717;
+
+    border-color: rgba(0,0,0,.09) !important;
+
+    box-shadow:
+        0 25px 60px rgba(0,0,0,.14);
+}
+
+.cc-admin-projects.light [x-show="open"] .text-white { color: #171717 !important; }
+.cc-admin-projects.light [x-show="open"] .text-gray-300 { color: #5f6065 !important; }
+.cc-admin-projects.light [x-show="open"] .text-gray-200 { color: #73747a !important; }
+.cc-admin-projects.light [x-show="open"] .hover\:bg-white\/\[0\.05\]:hover { background-color: rgba(0,0,0,.035) !important; }
+
+/* =========================================================
+   LIGHT MODE — IMAGE PLACEHOLDERS
+========================================================= */
+
+.cc-admin-projects.light .bg-black {
+    background-color: #e9e9e9;
+}
+
+.cc-admin-projects.light .project-card .bg-black {
+    background-color: #000;
+}
+
+.cc-admin-projects.light .cc-image-preview {
+    background: #e9e9e9;
+    border-color: rgba(0,0,0,.09);
+}
+
+/* =========================================================
+   LIGHT MODE — SCROLLBARS
+========================================================= */
+
+.cc-admin-projects.light .cc-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,.14); }
+.cc-admin-projects.light .cc-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,.22); }
+.cc-admin-projects.light .cc-project-input::-webkit-scrollbar-thumb { background: rgba(0,0,0,.14); }
+
+/* =========================================================
+   LIGHT MODE — MODAL
+========================================================= */
+
+.cc-admin-projects.light .cc-modal-backdrop {
+    background:
+        radial-gradient(
+            circle at 50% 0%,
+            rgba(139,92,246,.10),
+            transparent 35%
+        ),
+        rgba(0,0,0,.42);
+
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}
+
+.cc-admin-projects.light .cc-modal-panel {
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.99),
+            rgba(247,247,249,.99)
+        );
+
+    color: #171717;
+    border-color: rgba(0,0,0,.09);
+    box-shadow:
+        0 40px 100px rgba(0,0,0,.18),
+        0 0 0 1px rgba(255,255,255,.75);
+}
+
+.cc-light-modal .cc-modal-panel {
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.99),
+            rgba(247,247,249,.99)
+        );
+
+    color: #171717;
+    border-color: rgba(0,0,0,.09);
+    box-shadow:
+        0 40px 100px rgba(0,0,0,.18),
+        0 0 0 1px rgba(255,255,255,.75);
+}
+
+.cc-light-modal .cc-modal-panel .text-white { color: #171717 !important; }
+.cc-light-modal .cc-modal-panel .text-gray-300 { color: #5f6065 !important; }
+.cc-light-modal .cc-modal-panel .text-gray-200 { color: #73747a !important; }
+
+/* =========================================================
+   LIGHT MODE — MODAL FOOTER
+========================================================= */
+
+.cc-admin-projects.light .cc-modal-panel .bg-black\/10 {
+    background-color: rgba(0,0,0,.025) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — BUTTON TEXT
+========================================================= */
+
+.cc-admin-projects.light button.text-white { color: #171717 !important; }
+.cc-admin-projects.light .hover\:text-white:hover { color: #171717 !important; }
+
+/* =========================================================
+   LIGHT MODE — STATUS
+========================================================= */
+
+.cc-admin-projects.light .status-dot {
+    color: #7fa800 !important;
+    background-color: #7fa800 !important;
+}
+
+/* =========================================================
+   LIGHT MODE — IMAGE OVERLAY TEXT
+========================================================= */
+
+.cc-admin-projects.light .project-card .text-white\/40 {
+    color: rgba(255,255,255,.55) !important;
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 640px) {
+    .cc-admin-projects .mobile-full {
+        border-radius: 0;
+    }
+
+    .cc-admin-projects .project-card:hover {
+        transform: none;
+    }
+
+    .cc-admin-projects .project-card:hover .project-image {
+        transform: none;
+        filter: none;
+    }
+}
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+    .cc-admin-projects *,
+    .cc-admin-projects *::before,
+    .cc-admin-projects *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}
+
+/* =========================================================
+   ALPINE CLOAK
+========================================================= */
+
+[x-cloak] {
+    display: none !important;
+}
+
+
+
+/* Testimonials page lightmode support */
+/* =========================================================
+   LIGHT MODE
+   ========================================================= */
+
+.cc-admin-testimonials.light {
+    color: #171717;
+
+    background:
+        radial-gradient(
+            900px circle at 8% -5%,
+            rgba(139, 92, 246, .10),
+            transparent 55%
+        ),
+        radial-gradient(
+            700px circle at 92% 4%,
+            rgba(109, 40, 217, .07),
+            transparent 52%
+        ),
+        radial-gradient(
+            650px circle at 52% 45%,
+            rgba(91, 33, 182, .035),
+            transparent 65%
+        ),
+        radial-gradient(
+            500px circle at 15% 100%,
+            rgba(173, 211, 34, .035),
+            transparent 60%
+        ),
+        linear-gradient(
+            135deg,
+            #f8f8fa 0%,
+            #f2f1f6 30%,
+            #f7f7f9 55%,
+            #eeeeF2 100%
+        );
+}
+
+/* =========================================================
+   LIGHT MODE — BACKGROUND
+   ========================================================= */
+
+.cc-admin-testimonials.light .noise {
+    background:
+        radial-gradient(
+            550px circle at 25% 18%,
+            rgba(139, 92, 246, .055),
+            transparent 70%
+        ),
+        radial-gradient(
+            450px circle at 80% 28%,
+            rgba(173, 211, 34, .035),
+            transparent 70%
+        ),
+        linear-gradient(
+            115deg,
+            transparent 0%,
+            rgba(0, 0, 0, .012) 45%,
+            transparent 70%
+        );
+}
+
+/* =========================================================
+   LIGHT MODE — TEXT
+   ========================================================= */
+
+.cc-admin-testimonials.light .text-white {
+    color: #171717 !important;
+}
+
+.cc-admin-testimonials.light .text-gray-200 {
+    color: #73747a !important;
+}
+
+.cc-admin-testimonials.light .text-gray-300 {
+    color: #5f6065 !important;
+}
+
+.cc-admin-testimonials.light .text-gray-400 {
+    color: #66676d !important;
+}
+
+.cc-admin-testimonials.light .text-gray-500 {
+    color: #77787d !important;
+}
+
+.cc-admin-testimonials.light .text-gray-600 {
+    color: #686970 !important;
+}
+
+/* =========================================================
+   LIGHT MODE — BRAND / LIME
+   ========================================================= */
+
+.cc-admin-testimonials.light .text-\[\#ADD322\] {
+    color: #7fa800 !important;
+}
+
+.cc-admin-testimonials.light .bg-\[\#ADD322\] {
+    color: #111 !important;
+}
+
+.cc-admin-testimonials.light .status-dot {
+    color: #7fa800 !important;
+    background-color: #7fa800 !important;
+}
+
+/* =========================================================
+   LIGHT MODE — GLASS
+   ========================================================= */
+
+.cc-admin-testimonials.light .glass {
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255, 255, 255, .88),
+            rgba(255, 255, 255, .62)
+        );
+
+    border-color: rgba(0, 0, 0, .075);
+
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, .07),
+        inset 0 1px 0 rgba(255, 255, 255, .95);
+
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}
+
+/* =========================================================
+   LIGHT MODE — TESTIMONIAL CARDS
+   ========================================================= */
+
+.cc-admin-testimonials.light .testimonial-card {
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255, 255, 255, .92),
+            rgba(255, 255, 255, .72)
+        );
+
+    border-color: rgba(0, 0, 0, .075);
+
+    box-shadow:
+        0 20px 55px rgba(0, 0, 0, .08),
+        inset 0 1px 0 rgba(255, 255, 255, .95);
+}
+
+.cc-admin-testimonials.light .testimonial-card:hover {
+    border-color: rgba(127, 168, 0, .25);
+
+    box-shadow:
+        0 30px 75px rgba(0, 0, 0, .13),
+        0 0 0 1px rgba(127, 168, 0, .035);
+}
+
+/* =========================================================
+   LIGHT MODE — HIGHLIGHTED TESTIMONIAL
+   ========================================================= */
+
+.cc-admin-testimonials.light .testimonial-card.is-highlighted {
+    border-color: rgba(127, 168, 0, .70);
+
+    box-shadow:
+        0 0 0 1px rgba(127, 168, 0, .35),
+        0 0 25px rgba(127, 168, 0, .18),
+        0 0 70px rgba(127, 168, 0, .10),
+        0 30px 90px rgba(0, 0, 0, .12),
+        inset 0 1px 0 rgba(127, 168, 0, .15);
+}
+
+/* Keep highlighted animation visible in light mode */
+@keyframes testimonialHighlightPulseLight {
+    0%,
+    100% {
+        box-shadow:
+            0 0 0 1px rgba(127, 168, 0, .30),
+            0 0 30px rgba(127, 168, 0, .14),
+            0 0 70px rgba(139, 92, 246, .08),
+            0 30px 90px rgba(0, 0, 0, .10);
+    }
+
+    50% {
+        box-shadow:
+            0 0 0 1px rgba(127, 168, 0, .55),
+            0 0 45px rgba(127, 168, 0, .22),
+            0 0 100px rgba(139, 92, 246, .12),
+            0 30px 90px rgba(0, 0, 0, .13);
+    }
+}
+
+.cc-admin-testimonials.light .testimonial-card.is-highlighted {
+    animation: testimonialHighlightPulseLight 2.4s ease-in-out infinite;
+}
+
+/* =========================================================
+   LIGHT MODE — AVATAR
+   ========================================================= */
+
+.cc-admin-testimonials.light .avatar {
+    background:
+        linear-gradient(
+            145deg,
+            rgba(173, 211, 34, .12),
+            rgba(139, 92, 246, .10)
+        );
+
+    border-color: rgba(127, 168, 0, .20);
+
+    box-shadow:
+        0 12px 35px rgba(0, 0, 0, .08),
+        inset 0 1px 0 rgba(255, 255, 255, .95);
+
+    color: #7fa800 !important;
+}
+
+/* =========================================================
+   LIGHT MODE — INPUTS
+   ========================================================= */
+
+.cc-admin-testimonials.light .admin-input {
+    background:
+        linear-gradient(
+            180deg,
+            rgba(255, 255, 255, .88),
+            rgba(248, 248, 250, .90)
+        );
+
+    border-color: rgba(0, 0, 0, .10);
+    color: #171717 !important;
+}
+
+.cc-admin-testimonials.light .admin-input:hover {
+    border-color: rgba(0, 0, 0, .16);
+    background: #fff;
+}
+
+.cc-admin-testimonials.light .admin-input:focus {
+    border-color: rgba(127, 168, 0, .55);
+
+    background: #fff;
+
+    box-shadow:
+        0 0 0 3px rgba(127, 168, 0, .08),
+        0 10px 35px rgba(0, 0, 0, .08);
+
+    outline: none;
+}
+
+.cc-admin-testimonials.light .admin-input::placeholder {
+    color: rgba(0, 0, 0, .35) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — FILTERS
+   ========================================================= */
+
+.cc-admin-testimonials.light .filter-button {
+    color: #5f6065;
+}
+
+.cc-admin-testimonials.light .filter-button:hover {
+    color: #171717;
+    border-color: rgba(0, 0, 0, .08);
+    background: rgba(0, 0, 0, .025);
+}
+
+.cc-admin-testimonials.light .filter-button.text-\[\#ADD322\] {
+    color: #7fa800 !important;
+}
+
+/* =========================================================
+   LIGHT MODE — BORDERS
+   ========================================================= */
+
+.cc-admin-testimonials.light .border-white\/5 {
+    border-color: rgba(0, 0, 0, .06) !important;
+}
+
+.cc-admin-testimonials.light .border-white\/10 {
+    border-color: rgba(0, 0, 0, .09) !important;
+}
+
+.cc-admin-testimonials.light .border-white\/15 {
+    border-color: rgba(0, 0, 0, .13) !important;
+}
+
+.cc-admin-testimonials.light .border-white\/\[0\.055\] {
+    border-color: rgba(0, 0, 0, .055) !important;
+}
+
+.cc-admin-testimonials.light .border-white\/\[0\.06\] {
+    border-color: rgba(0, 0, 0, .06) !important;
+}
+
+.cc-admin-testimonials.light .border-white\/\[0\.07\] {
+    border-color: rgba(0, 0, 0, .07) !important;
+}
+
+.cc-admin-testimonials.light .border-white\/\[0\.08\] {
+    border-color: rgba(0, 0, 0, .08) !important;
+}
+
+.cc-admin-testimonials.light .border-white\/\[0\.09\] {
+    border-color: rgba(0, 0, 0, .09) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — WHITE BACKGROUNDS
+   ========================================================= */
+
+.cc-admin-testimonials.light .bg-white\/5 {
+    background-color: rgba(0, 0, 0, .035) !important;
+}
+
+.cc-admin-testimonials.light .bg-white\/\[0\.02\] {
+    background-color: rgba(0, 0, 0, .018) !important;
+}
+
+.cc-admin-testimonials.light .bg-white\/\[0\.025\] {
+    background-color: rgba(0, 0, 0, .022) !important;
+}
+
+.cc-admin-testimonials.light .bg-white\/\[0\.03\] {
+    background-color: rgba(0, 0, 0, .028) !important;
+}
+
+.cc-admin-testimonials.light .bg-white\/\[0\.035\] {
+    background-color: rgba(0, 0, 0, .03) !important;
+}
+
+.cc-admin-testimonials.light .bg-white\/\[0\.04\] {
+    background-color: rgba(0, 0, 0, .035) !important;
+}
+
+.cc-admin-testimonials.light .bg-white\/\[0\.05\] {
+    background-color: rgba(0, 0, 0, .035) !important;
+}
+
+.cc-admin-testimonials.light .bg-white\/\[0\.06\] {
+    background-color: rgba(0, 0, 0, .04) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — BLACK BACKGROUNDS
+   ========================================================= */
+
+.cc-admin-testimonials.light .bg-black\/\[0\.08\],
+.cc-admin-testimonials.light .bg-black\/\[0\.16\],
+.cc-admin-testimonials.light .bg-black\/10 {
+    background-color: rgba(0, 0, 0, .025) !important;
+}
+
+/* =========================================================
+   MESSAGE PANEL
+   ========================================================= */
+
+.cc-admin-testimonials.light .testimonial-card .border-white\/\[0\.055\] {
+    border-color: rgba(0, 0, 0, .07) !important;
+}
+
+.cc-admin-testimonials.light .testimonial-card .bg-black\/\[0\.16\] {
+    background: rgba(0, 0, 0, .025) !important;
+}
+
+.cc-admin-testimonials.light .testimonial-card .text-gray-400 {
+    color: #66676d !important;
+}
+
+/* Quote mark */
+.cc-admin-testimonials.light .testimonial-card .text-white\/\[0\.025\] {
+    color: rgba(0, 0, 0, .08) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — PAGINATION
+   ========================================================= */
+
+.cc-admin-testimonials.light nav[aria-label="Pagination Navigation"] span,
+.cc-admin-testimonials.light nav[aria-label="Pagination Navigation"] a {
+    background: rgba(0, 0, 0, .025);
+    border-color: rgba(0, 0, 0, .08);
+    color: rgba(24, 24, 27, .55);
+}
+
+.cc-admin-testimonials.light nav[aria-label="Pagination Navigation"] a:hover {
+    background: rgba(127, 168, 0, .07);
+    color: #7fa800;
+}
+
+/* =========================================================
+   LIGHT MODE — MODALS
+   ========================================================= */
+
+.cc-admin-testimonials.light .cc-modal-backdrop {
+    background:
+        radial-gradient(
+            circle at 50% 0%,
+            rgba(139, 92, 246, .10),
+            transparent 35%
+        ),
+        rgba(0, 0, 0, .42);
+
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}
+
+.cc-admin-testimonials.light .cc-modal-panel {
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255, 255, 255, .99),
+            rgba(247, 247, 249, .99)
+        );
+
+    color: #171717;
+
+    border-color: rgba(0, 0, 0, .09);
+
+    box-shadow:
+        0 40px 100px rgba(0, 0, 0, .18),
+        0 0 0 1px rgba(255, 255, 255, .75);
+}
+
+/* Modal text */
+
+.cc-admin-testimonials.light .cc-modal-panel .text-white {
+    color: #171717 !important;
+}
+
+.cc-admin-testimonials.light .cc-modal-panel .text-gray-300 {
+    color: #5f6065 !important;
+}
+
+.cc-admin-testimonials.light .cc-modal-panel .text-gray-400 {
+    color: #66676d !important;
+}
+
+.cc-admin-testimonials.light .cc-modal-panel .text-gray-200 {
+    color: #73747a !important;
+}
+
+/* =========================================================
+   LIGHT MODE — MODAL FOOTER
+   ========================================================= */
+
+.cc-admin-testimonials.light .cc-modal-panel .bg-black\/10 {
+    background-color: rgba(0, 0, 0, .025) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — BUTTONS
+   ========================================================= */
+
+.cc-admin-testimonials.light button.text-white {
+    color: #171717 !important;
+}
+
+.cc-admin-testimonials.light .hover\:text-white:hover {
+    color: #171717 !important;
+}
+
+/* =========================================================
+   LIGHT MODE — RED ACTIONS
+   ========================================================= */
+
+.cc-admin-testimonials.light .text-red-400 {
+    color: #dc2626 !important;
+}
+
+.cc-admin-testimonials.light .hover\:text-red-400:hover {
+    color: #dc2626 !important;
+}
+
+/* =========================================================
+   LIGHT MODE — YELLOW STATUS
+   ========================================================= */
+
+.cc-admin-testimonials.light .text-yellow-400 {
+    color: #b77900 !important;
+}
+
+/* =========================================================
+   LIGHT MODE — MOBILE
+   ========================================================= */
+
+@media (max-width: 640px) {
+    .cc-admin-testimonials.light .testimonial-card:hover {
+        transform: none;
+    }
+
+    .cc-admin-testimonials.light .testimonial-card.is-highlighted {
+        box-shadow:
+            0 0 0 1px rgba(127, 168, 0, .45),
+            0 0 25px rgba(127, 168, 0, .18),
+            0 0 55px rgba(127, 168, 0, .10),
+            0 25px 70px rgba(0, 0, 0, .10);
+    }
+}
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+    .cc-admin-testimonials.light .testimonial-card,
+    .cc-admin-testimonials.light .testimonial-card.is-highlighted {
+        animation: none;
+        transition: none;
+    }
+}
+
+/* Profile Page */
+
+/* =========================================================
+   PROFILE SETTINGS
+   DARK + LIGHT MODE
+   ========================================================= */
+
+.cc-profile-settings {
+    --cc-profile-bg: #09070f;
+    --cc-profile-surface: rgba(255, 255, 255, .025);
+    --cc-profile-border: rgba(255, 255, 255, .08);
+    --cc-profile-text: #ffffff;
+    --cc-profile-muted: rgba(255, 255, 255, .55);
+    --cc-profile-subtle: rgba(255, 255, 255, .38);
+    --cc-profile-lime: #ADD322;
+}
+
+/* =========================================================
+   LIGHT MODE — BASE
+   ========================================================= */
+
+.cc-profile-settings.light {
+    --cc-profile-bg: #ffffff;
+    --cc-profile-surface: rgba(0, 0, 0, .025);
+    --cc-profile-border: rgba(0, 0, 0, .09);
+    --cc-profile-text: #171717;
+    --cc-profile-muted: #5f6065;
+    --cc-profile-subtle: #73747a;
+
+    color: #171717;
+}
+
+/* =========================================================
+   LIGHT MODE — TEXT
+   ========================================================= */
+
+.cc-profile-settings.light .text-white {
+    color: #171717 !important;
+}
+
+.cc-profile-settings.light .text-gray-100 {
+    color: #29292d !important;
+}
+
+.cc-profile-settings.light .text-gray-200 {
+    color: #73747a !important;
+}
+
+.cc-profile-settings.light .text-gray-300 {
+    color: #5f6065 !important;
+}
+
+.cc-profile-settings.light .text-gray-400 {
+    color: #66676d !important;
+}
+
+.cc-profile-settings.light .text-gray-500 {
+    color: #77787d !important;
+}
+
+.cc-profile-settings.light .text-purple-300 {
+    color: #7650d8 !important;
+}
+
+.cc-profile-settings.light .text-purple-300\/50 {
+    color: rgba(118, 80, 216, .65) !important;
+}
+
+.cc-profile-settings.light .text-purple-300\/55 {
+    color: rgba(118, 80, 216, .70) !important;
+}
+
+.cc-profile-settings.light .text-purple-400\/50 {
+    color: rgba(118, 80, 216, .65) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — PROFILE CARD
+   ========================================================= */
+
+.cc-profile-settings.light .bg-\[\#09070f\] {
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255, 255, 255, .96),
+            rgba(247, 247, 249, .92)
+        ) !important;
+}
+
+.cc-profile-settings.light .border-white\/8 {
+    border-color: rgba(0, 0, 0, .09) !important;
+}
+
+.cc-profile-settings.light .border-white\/7 {
+    border-color: rgba(0, 0, 0, .075) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — GLASS / SURFACES
+   ========================================================= */
+
+.cc-profile-settings.light .bg-white\/\[0\.025\] {
+    background-color: rgba(0, 0, 0, .025) !important;
+}
+
+.cc-profile-settings.light .bg-white\/\[0\.035\] {
+    background-color: rgba(0, 0, 0, .03) !important;
+}
+
+.cc-profile-settings.light .bg-white\/\[0\.012\] {
+    background-color: rgba(0, 0, 0, .018) !important;
+}
+
+.cc-profile-settings.light .bg-white\/\[0\.03\] {
+    background-color: rgba(0, 0, 0, .028) !important;
+}
+
+.cc-profile-settings.light .bg-white\/5 {
+    background-color: rgba(0, 0, 0, .035) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — INPUT CONTAINERS
+   ========================================================= */
+
+.cc-profile-settings.light .focus-within\:border-purple-400\/25:focus-within {
+    border-color: rgba(118, 80, 216, .25) !important;
+}
+
+.cc-profile-settings.light .focus-within\:bg-white\/\[0\.035\]:focus-within {
+    background-color: rgba(0, 0, 0, .03) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — INPUT FIELDS
+   ========================================================= */
+
+/*
+ * Flux inputs generate their own internal styles, so these
+ * selectors intentionally target inputs inside this page.
+ */
+
+.cc-profile-settings.light input,
+.cc-profile-settings.light textarea,
+.cc-profile-settings.light select {
+    color: #171717 !important;
+}
+
+.cc-profile-settings.light input::placeholder,
+.cc-profile-settings.light textarea::placeholder {
+    color: rgba(0, 0, 0, .35) !important;
+}
+
+/* Flux input wrappers / controls */
+
+.cc-profile-settings.light [data-flux-control],
+.cc-profile-settings.light [data-flux-input] {
+    color: #171717 !important;
+}
+
+.cc-profile-settings.light [data-flux-control]:focus-within,
+.cc-profile-settings.light [data-flux-input]:focus-within {
+    border-color: rgba(118, 80, 216, .40) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — EMAIL / HEADER
+   ========================================================= */
+
+.cc-profile-settings.light .profile-email,
+.cc-profile-settings.light .profile-account-text {
+    color: #171717 !important;
+}
+
+/* =========================================================
+   LIGHT MODE — VERIFIED BADGE
+   ========================================================= */
+
+.cc-profile-settings.light .border-emerald-400\/15 {
+    border-color: rgba(16, 185, 129, .18) !important;
+}
+
+.cc-profile-settings.light .bg-emerald-400\/8 {
+    background-color: rgba(16, 185, 129, .08) !important;
+}
+
+.cc-profile-settings.light .text-emerald-300\/80 {
+    color: #047857 !important;
+}
+
+/* =========================================================
+   LIGHT MODE — EMAIL VERIFICATION
+   ========================================================= */
+
+.cc-profile-settings.light .border-amber-300\/10 {
+    border-color: rgba(180, 116, 0, .15) !important;
+}
+
+.cc-profile-settings.light .bg-amber-300\/\[0\.035\] {
+    background-color: rgba(245, 158, 11, .055) !important;
+}
+
+.cc-profile-settings.light .bg-amber-400\/8 {
+    background-color: rgba(245, 158, 11, .08) !important;
+}
+
+.cc-profile-settings.light .text-amber-300\/75 {
+    color: #a16207 !important;
+}
+
+.cc-profile-settings.light .text-amber-200\/80 {
+    color: #9a6700 !important;
+}
+
+.cc-profile-settings.light .text-amber-100 {
+    color: #854d0e !important;
+}
+
+/* =========================================================
+   LIGHT MODE — ACCOUNT DELETE SECTION
+   ========================================================= */
+
+.cc-profile-settings.light .bg-red-500\/8 {
+    background-color: rgba(239, 68, 68, .07) !important;
+}
+
+.cc-profile-settings.light .border-red-400\/10 {
+    border-color: rgba(239, 68, 68, .14) !important;
+}
+
+.cc-profile-settings.light .text-red-300\/65 {
+    color: rgba(220, 38, 38, .72) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — BUTTONS
+   ========================================================= */
+
+.cc-profile-settings.light button.text-white {
+    color: #171717 !important;
+}
+
+.cc-profile-settings.light .hover\:text-white:hover {
+    color: #171717 !important;
+}
+
+.cc-profile-settings.light .hover\:bg-white\/5:hover {
+    background-color: rgba(0, 0, 0, .035) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — SAVE BUTTON
+   ========================================================= */
+
+/*
+ * Keep the purple gradient button intact.
+ * Only adjust the glow so it doesn't look too heavy.
+ */
+
+.cc-profile-settings.light .shadow-purple-950\/30 {
+    --tw-shadow-color: rgba(76, 29, 149, .12);
+}
+
+.cc-profile-settings.light .shadow-purple-900\/30 {
+    --tw-shadow-color: rgba(76, 29, 149, .15);
+}
+
+/* =========================================================
+   LIGHT MODE — SAVE BAR
+   ========================================================= */
+
+.cc-profile-settings.light .bg-white\/\[0\.012\] {
+    background-color: rgba(0, 0, 0, .018) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — STATUS ICON
+   ========================================================= */
+
+.cc-profile-settings.light .border-white\/7.bg-white\/\[0\.025\] {
+    background-color: rgba(0, 0, 0, .025) !important;
+    border-color: rgba(0, 0, 0, .075) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — AVATAR STATUS RING
+   ========================================================= */
+
+.cc-profile-settings.light .border-\[\#09070f\] {
+    border-color: #ffffff !important;
+}
+
+/* =========================================================
+   LIGHT MODE — PROFILE AVATAR
+   ========================================================= */
+
+.cc-profile-settings.light .shadow-purple-950\/40 {
+    --tw-shadow-color: rgba(76, 29, 149, .18);
+}
+
+/* Keep the purple avatar gradient exactly as-is. */
+
+/* =========================================================
+   LIGHT MODE — DIVIDERS
+   ========================================================= */
+
+.cc-profile-settings.light .border-t.border-white\/7,
+.cc-profile-settings.light .border-t.border-white\/8 {
+    border-color: rgba(0, 0, 0, .075) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — DELETE ACCOUNT CARD
+   ========================================================= */
+
+.cc-profile-settings.light .bg-red-500\/8 {
+    background-color: rgba(239, 68, 68, .07) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — ICONS
+   ========================================================= */
+
+.cc-profile-settings.light svg.text-purple-300\/55 {
+    color: rgba(118, 80, 216, .70) !important;
+}
+
+.cc-profile-settings.light svg.text-gray-200 {
+    color: #73747a !important;
+}
+
+/* =========================================================
+   LIGHT MODE — MISC BORDER OPACITY
+   ========================================================= */
+
+.cc-profile-settings.light .border-white\/10 {
+    border-color: rgba(0, 0, 0, .10) !important;
+}
+
+.cc-profile-settings.light .border-white\/15 {
+    border-color: rgba(0, 0, 0, .13) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — BACKDROP GLOWS
+   ========================================================= */
+
+.cc-profile-settings.light .bg-purple-600\/12 {
+    background-color: rgba(124, 58, 237, .08) !important;
+}
+
+.cc-profile-settings.light .bg-fuchsia-600\/8 {
+    background-color: rgba(192, 38, 211, .055) !important;
+}
+
+.cc-profile-settings.light .bg-purple-500\/30 {
+    background-color: rgba(124, 58, 237, .20) !important;
+}
+
+.cc-profile-settings.light .bg-violet-500\/10 {
+    background-color: rgba(139, 92, 246, .07) !important;
+}
+
+.cc-profile-settings.light .bg-fuchsia-500\/25 {
+    background-color: rgba(217, 70, 239, .12) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — DELETE SECTION SURFACE
+   ========================================================= */
+
+.cc-profile-settings.light .bg-\[\#09070f\] {
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, .06);
+}
+
+/* =========================================================
+   LIGHT MODE — ACCESSIBILITY
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+    .cc-profile-settings,
+    .cc-profile-settings * {
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}
+
+/* Settings Page */
+
+/* =========================================================
+   SECURITY SETTINGS
+   DARK + LIGHT MODE
+   ========================================================= */
+
+.cc-security-settings {
+    --cc-security-bg: #09070f;
+    --cc-security-text: #ffffff;
+    --cc-security-muted: rgba(255, 255, 255, .55);
+    --cc-security-border: rgba(255, 255, 255, .08);
+}
+
+/* =========================================================
+   LIGHT MODE — BASE
+   ========================================================= */
+
+.cc-security-settings.light {
+    color: #171717;
+}
+
+/* =========================================================
+   LIGHT MODE — MAIN CARD
+   ========================================================= */
+
+.cc-security-settings.light .bg-zinc-950\/70 {
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255, 255, 255, .96),
+            rgba(247, 247, 249, .92)
+        ) !important;
+
+    border-color: rgba(0, 0, 0, .09) !important;
+
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, .07) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — PROFILE / SECURITY TEXT
+   ========================================================= */
+
+.cc-security-settings.light .text-white {
+    color: #171717 !important;
+}
+
+.cc-security-settings.light .text-gray-100 {
+    color: #29292d !important;
+}
+
+.cc-security-settings.light .text-gray-200 {
+    color: #73747a !important;
+}
+
+.cc-security-settings.light .text-gray-300 {
+    color: #5f6065 !important;
+}
+
+.cc-security-settings.light .text-gray-400 {
+    color: #66676d !important;
+}
+
+.cc-security-settings.light .text-gray-500 {
+    color: #77787d !important;
+}
+
+/* =========================================================
+   LIGHT MODE — BORDERS
+   ========================================================= */
+
+.cc-security-settings.light .border-white\/\[0\.05\] {
+    border-color: rgba(0, 0, 0, .055) !important;
+}
+
+.cc-security-settings.light .border-white\/\[0\.06\] {
+    border-color: rgba(0, 0, 0, .065) !important;
+}
+
+.cc-security-settings.light .border-white\/\[0\.07\] {
+    border-color: rgba(0, 0, 0, .075) !important;
+}
+
+.cc-security-settings.light .border-white\/\[0\.08\] {
+    border-color: rgba(0, 0, 0, .09) !important;
+}
+
+.cc-security-settings.light .border-white\/\[0\.10\] {
+    border-color: rgba(0, 0, 0, .11) !important;
+}
+
+.cc-security-settings.light .border-white\/10 {
+    border-color: rgba(0, 0, 0, .10) !important;
+}
+
+.cc-security-settings.light .border-white\/15 {
+    border-color: rgba(0, 0, 0, .14) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — WHITE SURFACES
+   ========================================================= */
+
+.cc-security-settings.light .bg-white\/\[0\.012\] {
+    background-color: rgba(0, 0, 0, .018) !important;
+}
+
+.cc-security-settings.light .bg-white\/\[0\.02\] {
+    background-color: rgba(0, 0, 0, .022) !important;
+}
+
+.cc-security-settings.light .bg-white\/\[0\.025\] {
+    background-color: rgba(0, 0, 0, .025) !important;
+}
+
+.cc-security-settings.light .bg-white\/\[0\.035\] {
+    background-color: rgba(0, 0, 0, .035) !important;
+}
+
+.cc-security-settings.light .bg-white\/5 {
+    background-color: rgba(0, 0, 0, .035) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — DARK SURFACES
+   ========================================================= */
+
+.cc-security-settings.light .bg-black\/15 {
+    background-color: rgba(0, 0, 0, .025) !important;
+}
+
+.cc-security-settings.light .bg-black\/10 {
+    background-color: rgba(0, 0, 0, .02) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — SECTION DIVIDERS
+   ========================================================= */
+
+.cc-security-settings.light .border-t.border-white\/\[0\.06\] {
+    border-color: rgba(0, 0, 0, .065) !important;
+}
+
+.cc-security-settings.light .border-b.border-white\/\[0\.06\] {
+    border-color: rgba(0, 0, 0, .065) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — PASSWORD AREA
+   ========================================================= */
+
+.cc-security-settings.light [type="password"],
+.cc-security-settings.light input[type="text"],
+.cc-security-settings.light input[type="email"] {
+    color: #171717 !important;
+}
+
+.cc-security-settings.light input::placeholder {
+    color: rgba(0, 0, 0, .35) !important;
+}
+
+/* Flux inputs */
+
+.cc-security-settings.light [data-flux-control],
+.cc-security-settings.light [data-flux-input] {
+    color: #171717 !important;
+    background-color: rgba(255, 255, 255, .82) !important;
+    border-color: rgba(0, 0, 0, .10) !important;
+}
+
+.cc-security-settings.light [data-flux-control]:focus,
+.cc-security-settings.light [data-flux-input]:focus {
+    border-color: rgba(118, 80, 216, .45) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — ICON CONTAINERS
+   ========================================================= */
+
+.cc-security-settings.light .border-violet-400\/15 {
+    border-color: rgba(124, 58, 237, .16) !important;
+}
+
+.cc-security-settings.light .bg-violet-500\/10 {
+    background-color: rgba(124, 58, 237, .08) !important;
+}
+
+.cc-security-settings.light .text-violet-300 {
+    color: #7650d8 !important;
+}
+
+.cc-security-settings.light .border-fuchsia-400\/15 {
+    border-color: rgba(192, 38, 211, .16) !important;
+}
+
+.cc-security-settings.light .bg-fuchsia-500\/10 {
+    background-color: rgba(192, 38, 211, .08) !important;
+}
+
+.cc-security-settings.light .text-fuchsia-300 {
+    color: #a235b6 !important;
+}
+
+.cc-security-settings.light .border-purple-400\/15 {
+    border-color: rgba(124, 58, 237, .16) !important;
+}
+
+.cc-security-settings.light .bg-purple-500\/10 {
+    background-color: rgba(124, 58, 237, .08) !important;
+}
+
+.cc-security-settings.light .text-purple-300 {
+    color: #7650d8 !important;
+}
+
+/* =========================================================
+   LIGHT MODE — PROTECTED / ENABLED BADGES
+   ========================================================= */
+
+.cc-security-settings.light .border-emerald-400\/10 {
+    border-color: rgba(16, 185, 129, .16) !important;
+}
+
+.cc-security-settings.light .border-emerald-400\/15 {
+    border-color: rgba(16, 185, 129, .18) !important;
+}
+
+.cc-security-settings.light .bg-emerald-400\/8 {
+    background-color: rgba(16, 185, 129, .08) !important;
+}
+
+.cc-security-settings.light .bg-emerald-400\/\[0\.05\] {
+    background-color: rgba(16, 185, 129, .06) !important;
+}
+
+.cc-security-settings.light .text-emerald-300 {
+    color: #047857 !important;
+}
+
+.cc-security-settings.light .text-emerald-300\/70 {
+    color: rgba(4, 120, 87, .78) !important;
+}
+
+.cc-security-settings.light .text-emerald-300\/80 {
+    color: rgba(4, 120, 87, .85) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — NOT ENABLED
+   ========================================================= */
+
+.cc-security-settings.light .bg-white\/\[0\.025\] {
+    background-color: rgba(0, 0, 0, .025) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — PASSKEY LIST
+   ========================================================= */
+
+.cc-security-settings.light .hover\:bg-white\/\[0\.02\]:hover {
+    background-color: rgba(0, 0, 0, .025) !important;
+}
+
+.cc-security-settings.light .bg-white\/\[0\.035\] {
+    background-color: rgba(0, 0, 0, .035) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — PASSKEY TEXT
+   ========================================================= */
+
+.cc-security-settings.light .text-red-400\/50 {
+    color: rgba(220, 38, 38, .65) !important;
+}
+
+.cc-security-settings.light .text-red-300 {
+    color: #dc2626 !important;
+}
+
+/* =========================================================
+   LIGHT MODE — DISABLE / OUTLINE BUTTONS
+   ========================================================= */
+
+.cc-security-settings.light button {
+    --tw-ring-color: rgba(118, 80, 216, .18);
+}
+
+/* Flux outline/ghost buttons */
+
+.cc-security-settings.light [data-flux-button][data-variant="outline"],
+.cc-security-settings.light [data-flux-button][data-variant="ghost"] {
+    color: #3f3f46 !important;
+}
+
+/* =========================================================
+   LIGHT MODE — DELETE PASSKEY MODAL
+   ========================================================= */
+
+.cc-security-settings.light [data-flux-modal] {
+    color: #171717;
+}
+
+.cc-security-settings.light [data-flux-modal] .text-white {
+    color: #171717 !important;
+}
+
+.cc-security-settings.light .border-red-400\/10 {
+    border-color: rgba(239, 68, 68, .14) !important;
+}
+
+.cc-security-settings.light .bg-red-500\/\[0\.07\] {
+    background-color: rgba(239, 68, 68, .07) !important;
+}
+
+.cc-security-settings.light .text-red-300 {
+    color: #dc2626 !important;
+}
+
+/* =========================================================
+   LIGHT MODE — MODAL SURFACES
+   ========================================================= */
+
+.cc-security-settings.light [data-flux-modal] .bg-zinc-950,
+.cc-security-settings.light [data-flux-modal] .bg-zinc-900 {
+    background: #ffffff !important;
+}
+
+.cc-security-settings.light [data-flux-modal] .border-white\/\[0\.08\] {
+    border-color: rgba(0, 0, 0, .09) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — SHADOWS
+   ========================================================= */
+
+.cc-security-settings.light .shadow-black\/10 {
+    --tw-shadow-color: rgba(0, 0, 0, .06);
+}
+
+/* =========================================================
+   LIGHT MODE — HOVER STATES
+   ========================================================= */
+
+.cc-security-settings.light .hover\:bg-white\/5:hover {
+    background-color: rgba(0, 0, 0, .035) !important;
+}
+
+.cc-security-settings.light .hover\:text-white:hover {
+    color: #171717 !important;
+}
+
+/* =========================================================
+   LIGHT MODE — SAVE PASSWORD BUTTON
+   ========================================================= */
+
+/*
+ * Leave Flux's primary button purple/brand colored.
+ * This only prevents dark-mode shadow treatment from making
+ * the light UI look muddy.
+ */
+
+.cc-security-settings.light .shadow-lg.shadow-purple-950\/30 {
+    --tw-shadow-color: rgba(76, 29, 149, .12);
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 640px) {
+    .cc-security-settings.light {
+        overflow-x: hidden;
+    }
+}
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+    .cc-security-settings,
+    .cc-security-settings * {
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}
+
+/* 2FA setup modal*/
+/* =========================================================
+   TWO-FACTOR AUTHENTICATION MODAL
+   DARK + LIGHT MODE
+   ========================================================= */
+
+.cc-two-factor-settings {
+    --cc-2fa-text: #ffffff;
+    --cc-2fa-muted: #d4d4d8;
+    --cc-2fa-subtle: #a1a1aa;
+    --cc-2fa-border: rgba(255, 255, 255, .08);
+    --cc-2fa-surface: rgba(255, 255, 255, .025);
+}
+
+/* =========================================================
+   LIGHT MODE — BASE
+   ========================================================= */
+
+.cc-two-factor-settings.light {
+    --cc-2fa-text: #171717;
+    --cc-2fa-muted: #5f6065;
+    --cc-2fa-subtle: #73747a;
+    --cc-2fa-border: rgba(0, 0, 0, .09);
+    --cc-2fa-surface: rgba(0, 0, 0, .025);
+
+    color: #171717;
+}
+
+/* =========================================================
+   LIGHT MODE — MAIN MODAL
+   ========================================================= */
+
+.cc-two-factor-settings.light > div {
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255, 255, 255, .99),
+            rgba(247, 247, 249, .99)
+        ) !important;
+
+    border-color: rgba(0, 0, 0, .09) !important;
+
+    box-shadow:
+        0 40px 100px rgba(0, 0, 0, .16),
+        0 0 0 1px rgba(255, 255, 255, .80);
+}
+
+/* =========================================================
+   LIGHT MODE — TEXT
+   ========================================================= */
+
+.cc-two-factor-settings.light .text-white {
+    color: #171717 !important;
+}
+
+.cc-two-factor-settings.light .text-zinc-100 {
+    color: #3f3f46 !important;
+}
+
+.cc-two-factor-settings.light .text-zinc-200 {
+    color: #52525b !important;
+}
+
+.cc-two-factor-settings.light .text-zinc-300 {
+    color: #5f6065 !important;
+}
+
+.cc-two-factor-settings.light .text-zinc-400 {
+    color: #66676d !important;
+}
+
+.cc-two-factor-settings.light .text-zinc-500 {
+    color: #73747a !important;
+}
+
+/* =========================================================
+   LIGHT MODE — PURPLE
+   ========================================================= */
+
+.cc-two-factor-settings.light .text-purple-200 {
+    color: #7048c7 !important;
+}
+
+.cc-two-factor-settings.light .text-purple-300 {
+    color: #7650d8 !important;
+}
+
+.cc-two-factor-settings.light .text-purple-400 {
+    color: #7048c7 !important;
+}
+
+.cc-two-factor-settings.light .bg-purple-600\/15 {
+    background-color: rgba(124, 58, 237, .08) !important;
+}
+
+.cc-two-factor-settings.light .bg-purple-600\/10 {
+    background-color: rgba(124, 58, 237, .07) !important;
+}
+
+.cc-two-factor-settings.light .bg-purple-950\/10 {
+    background-color: rgba(124, 58, 237, .035) !important;
+}
+
+.cc-two-factor-settings.light .bg-purple-950\/30 {
+    background-color: rgba(124, 58, 237, .055) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — PURPLE BORDERS
+   ========================================================= */
+
+.cc-two-factor-settings.light .border-purple-500\/10 {
+    border-color: rgba(118, 80, 216, .13) !important;
+}
+
+.cc-two-factor-settings.light .border-purple-500\/15 {
+    border-color: rgba(118, 80, 216, .16) !important;
+}
+
+.cc-two-factor-settings.light .border-purple-500\/20 {
+    border-color: rgba(118, 80, 216, .20) !important;
+}
+
+.cc-two-factor-settings.light .ring-purple-500\/20 {
+    --tw-ring-color: rgba(118, 80, 216, .16) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — HEADER
+   ========================================================= */
+
+.cc-two-factor-settings.light .border-b.border-purple-500\/10 {
+    border-color: rgba(0, 0, 0, .075) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — VERIFICATION PANEL
+   ========================================================= */
+
+.cc-two-factor-settings.light .border-purple-500\/10.bg-purple-950\/10 {
+    background:
+        linear-gradient(
+            145deg,
+            rgba(124, 58, 237, .035),
+            rgba(255, 255, 255, .65)
+        ) !important;
+
+    border-color: rgba(118, 80, 216, .12) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — SETUP PANEL
+   ========================================================= */
+
+.cc-two-factor-settings.light .bg-purple-950\/10 {
+    background:
+        linear-gradient(
+            145deg,
+            rgba(124, 58, 237, .035),
+            rgba(255, 255, 255, .65)
+        ) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — QR CODE CONTAINER
+   ========================================================= */
+
+/*
+ * Keep QR itself white. This is intentional because
+ * QR contrast must remain predictable in either theme.
+ */
+
+.cc-two-factor-settings.light .bg-white {
+    background-color: #ffffff !important;
+}
+
+/* =========================================================
+   LIGHT MODE — OTP / FORM CONTROLS
+   ========================================================= */
+
+.cc-two-factor-settings.light input {
+    color: #171717 !important;
+}
+
+.cc-two-factor-settings.light input::placeholder {
+    color: rgba(0, 0, 0, .35) !important;
+}
+
+/* Flux-generated inputs */
+
+.cc-two-factor-settings.light [data-flux-control],
+.cc-two-factor-settings.light [data-flux-input] {
+    color: #171717 !important;
+    background-color: rgba(255, 255, 255, .85) !important;
+    border-color: rgba(0, 0, 0, .10) !important;
+}
+
+.cc-two-factor-settings.light [data-flux-control]:focus,
+.cc-two-factor-settings.light [data-flux-input]:focus {
+    border-color: rgba(118, 80, 216, .45) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — MANUAL SETUP KEY
+   ========================================================= */
+
+.cc-two-factor-settings.light input[readonly] {
+    background: transparent !important;
+    color: #7048c7 !important;
+}
+
+.cc-two-factor-settings.light .border-l.border-purple-500\/10 {
+    border-color: rgba(118, 80, 216, .13) !important;
+}
+
+.cc-two-factor-settings.light button:hover {
+    color: #5f3ab7;
+}
+
+/* =========================================================
+   LIGHT MODE — DIVIDER
+   ========================================================= */
+
+.cc-two-factor-settings.light .bg-purple-500\/10 {
+    background-color: rgba(118, 80, 216, .12) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — OUTLINE BUTTONS
+   ========================================================= */
+
+.cc-two-factor-settings.light [data-flux-button][data-variant="outline"] {
+    color: #4a4a50 !important;
+    border-color: rgba(0, 0, 0, .10) !important;
+    background: rgba(255, 255, 255, .65) !important;
+}
+
+.cc-two-factor-settings.light [data-flux-button][data-variant="outline"]:hover {
+    border-color: rgba(118, 80, 216, .30) !important;
+    background: rgba(118, 80, 216, .05) !important;
+    color: #171717 !important;
+}
+
+/* =========================================================
+   LIGHT MODE — PRIMARY BUTTONS
+   ========================================================= */
+
+.cc-two-factor-settings.light .bg-purple-600 {
+    background-color: #7048c7 !important;
+}
+
+.cc-two-factor-settings.light .hover\:bg-purple-500:hover {
+    background-color: #7953d1 !important;
+}
+
+/* =========================================================
+   LIGHT MODE — ICONS
+   ========================================================= */
+
+.cc-two-factor-settings.light .text-purple-400 {
+    color: #7048c7 !important;
+}
+
+/* =========================================================
+   LIGHT MODE — MANUAL COPY BUTTON
+   ========================================================= */
+
+.cc-two-factor-settings.light button.border-l {
+    border-color: rgba(118, 80, 216, .13) !important;
+}
+
+.cc-two-factor-settings.light button.border-l:hover {
+    background-color: rgba(118, 80, 216, .06) !important;
+}
+
+/* =========================================================
+   LIGHT MODE — LOADING ICON
+   ========================================================= */
+
+.cc-two-factor-settings.light .text-zinc-500 {
+    color: #77787d !important;
+}
+
+/* =========================================================
+   LIGHT MODE — ERROR / CALLOUT
+   ========================================================= */
+
+.cc-two-factor-settings.light [data-flux-callout] {
+    border-color: rgba(220, 38, 38, .16);
+}
+
+/* =========================================================
+   FLUX MODAL SHELL
+   ========================================================= */
+
+/*
+ * Flux can render the modal panel outside the inner wrapper.
+ * These rules make sure the actual Flux panel also gets the
+ * light surface.
+ */
+
+.cc-two-factor-modal {
+    color: #ffffff;
+}
+
+.cc-two-factor-settings.light {
+    color-scheme: light;
+}
+
+/* Target common Flux modal surfaces */
+
+.cc-two-factor-modal[data-flux-modal],
+.cc-two-factor-modal [data-flux-modal] {
+    color: #171717;
+}
+
+.cc-two-factor-settings.light ~ * {
+    color-scheme: light;
+}
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+    .cc-two-factor-settings,
+    .cc-two-factor-settings * {
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}
+
+/* Teams settings page */
+/* =========================================================
+   TEAMS SETTINGS
+   LIGHT MODE
+   Source of truth:
+   html.dark = dark mode
+   html:not(.dark) = light mode
+   ========================================================= */
+
+.cc-teams-settings.light {
+    color: #18151f;
+}
+
+/* =========================================================
+   MAIN TEAM DIRECTORY
+   ========================================================= */
+
+.cc-teams-settings.light
+    > :where(x-pages\:settings\.layout)
+    .relative.mt-8.overflow-hidden.rounded-\[1\.75rem\] {
+    background: #ffffff !important;
+    border-color: rgba(91, 55, 130, 0.12) !important;
+    box-shadow:
+        0 20px 50px rgba(30, 18, 45, 0.08),
+        0 4px 14px rgba(30, 18, 45, 0.04) !important;
+}
+
+/* Fallback if the selector above is affected by component rendering */
+.cc-teams-settings.light .bg-\[\#09070f\] {
+    background: #ffffff !important;
+}
+
+/* Main shadow */
+.cc-teams-settings.light .shadow-black\/20 {
+    --tw-shadow-color: rgba(30, 18, 45, 0.08) !important;
+}
+
+/* =========================================================
+   BORDERS / DIVIDERS
+   ========================================================= */
+
+.cc-teams-settings.light .border-white\/8,
+.cc-teams-settings.light .border-white\/7,
+.cc-teams-settings.light .border-white\/5 {
+    border-color: rgba(91, 55, 130, 0.10) !important;
+}
+
+.cc-teams-settings.light .border-t,
+.cc-teams-settings.light .border-b {
+    border-color: rgba(91, 55, 130, 0.09) !important;
+}
+
+/* =========================================================
+   TEAM ROWS
+   ========================================================= */
+
+.cc-teams-settings.light .group {
+    background: transparent;
+}
+
+.cc-teams-settings.light .group:hover {
+    background: rgba(124, 58, 237, 0.025);
+}
+
+/* =========================================================
+   TEXT
+   ========================================================= */
+
+.cc-teams-settings.light .text-white {
+    color: #241d2d !important;
+}
+
+.cc-teams-settings.light .text-white\/75 {
+    color: #30263c !important;
+}
+
+.cc-teams-settings.light .text-white\/70 {
+    color: #3a3047 !important;
+}
+
+.cc-teams-settings.light .text-white\/45 {
+    color: #756b82 !important;
+}
+
+.cc-teams-settings.light .text-white\/35 {
+    color: #81788d !important;
+}
+
+.cc-teams-settings.light .text-white\/30 {
+    color: #8e8599 !important;
+}
+
+.cc-teams-settings.light .text-white\/20 {
+    color: #a59cab !important;
+}
+
+.cc-teams-settings.light .text-white\/15 {
+    color: #aaa1b1 !important;
+}
+
+.cc-teams-settings.light .text-zinc-200 {
+    color: #4b4258 !important;
+}
+
+.cc-teams-settings.light .text-zinc-300 {
+    color: #554c61 !important;
+}
+
+.cc-teams-settings.light .text-zinc-400 {
+    color: #70677c !important;
+}
+
+.cc-teams-settings.light .text-gray-200 {
+    color: #62596d !important;
+}
+
+/* =========================================================
+   COUNT BADGE
+   ========================================================= */
+
+.cc-teams-settings.light
+    .rounded-full.border.border-white\/7.bg-white\/\[0\.025\] {
+    background: rgba(91, 55, 130, 0.04) !important;
+    border-color: rgba(91, 55, 130, 0.11) !important;
+    color: #675c73 !important;
+}
+
+/* =========================================================
+   PERSONAL BADGE
+   ========================================================= */
+
+.cc-teams-settings.light
+    .inline-flex.shrink-0.rounded-full.border.border-white\/7 {
+    background: rgba(91, 55, 130, 0.035) !important;
+    border-color: rgba(91, 55, 130, 0.10) !important;
+    color: #8a8094 !important;
+}
+
+/* =========================================================
+   CURRENT BADGE
+   ========================================================= */
+
+.cc-teams-settings.light
+    .border-purple-400\/15.bg-purple-400\/8 {
+    background: rgba(124, 58, 237, 0.07) !important;
+    border-color: rgba(124, 58, 237, 0.17) !important;
+    color: #7c3aed !important;
+}
+
+.cc-teams-settings.light
+    .bg-purple-400.shadow-\[0_0_7px_rgba\(168\,85\,247\,\.8\)\] {
+    background: #8b5cf6 !important;
+}
+
+/* =========================================================
+   TEAM AVATARS
+   ========================================================= */
+
+.cc-teams-settings.light
+    .border-white\/8.bg-linear-to-br {
+    border-color: rgba(124, 58, 237, 0.13) !important;
+    color: rgba(109, 40, 217, 0.78) !important;
+}
+
+.cc-teams-settings.light .bg-purple-500\/15 {
+    background: rgba(124, 58, 237, 0.10) !important;
+}
+
+/* =========================================================
+   PURPLE TEXT
+   ========================================================= */
+
+.cc-teams-settings.light .text-purple-300 {
+    color: #7c3aed !important;
+}
+
+.cc-teams-settings.light .text-purple-300\/75 {
+    color: rgba(124, 58, 237, 0.78) !important;
+}
+
+/* =========================================================
+   MANAGEMENT ACCESS SEPARATOR
+   ========================================================= */
+
+.cc-teams-settings.light .bg-white\/15 {
+    background: rgba(91, 55, 130, 0.18) !important;
+}
+
+/* =========================================================
+   HEADER ICON
+   ========================================================= */
+
+.cc-teams-settings.light
+    .border-purple-400\/15.bg-linear-to-br {
+    border-color: rgba(124, 58, 237, 0.14) !important;
+}
+
+/* =========================================================
+   AMBIENT PURPLE GLOWS
+   ========================================================= */
+
+.cc-teams-settings.light .bg-purple-600\/12 {
+    background: rgba(124, 58, 237, 0.07) !important;
+}
+
+.cc-teams-settings.light .bg-fuchsia-600\/8 {
+    background: rgba(217, 70, 239, 0.045) !important;
+}
+
+/* =========================================================
+   ACTION BUTTONS ON TEAM ROWS
+   ========================================================= */
+
+.cc-teams-settings.light
+    button[data-test="team-leave-button"] {
+    color: #665d70 !important;
+}
+
+.cc-teams-settings.light
+    button[data-test="team-view-button"],
+.cc-teams-settings.light
+    button[data-test="team-edit-button"] {
+    color: #665d70 !important;
+}
+
+.cc-teams-settings.light
+    button[data-test="team-leave-button"]:hover {
+    background: rgba(239, 68, 68, 0.065) !important;
+    color: #dc2626 !important;
+}
+
+.cc-teams-settings.light
+    button[data-test="team-view-button"]:hover,
+.cc-teams-settings.light
+    button[data-test="team-edit-button"]:hover {
+    background: rgba(124, 58, 237, 0.065) !important;
+    color: #7c3aed !important;
+}
+
+/* =========================================================
+   MAIN "NEW TEAM" BUTTON
+   ========================================================= */
+
+.cc-teams-settings.light
+    [data-test="teams-new-team-button"] {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Explicitly keep icon and text white */
+.cc-teams-settings.light
+    [data-test="teams-new-team-button"] svg,
+.cc-teams-settings.light
+    [data-test="teams-new-team-button"] * {
+    color: #ffffff !important;
+}
+
+/* =========================================================
+   EMPTY STATE
+   ========================================================= */
+
+.cc-teams-settings.light
+    .border-purple-400\/10.bg-purple-500\/7 {
+    border-color: rgba(124, 58, 237, 0.12) !important;
+    background: rgba(124, 58, 237, 0.045) !important;
+}
+
+.cc-teams-settings.light .text-purple-300\/45 {
+    color: rgba(124, 58, 237, 0.55) !important;
+}
+
+.cc-teams-settings.light .text-purple-200\/75 {
+    color: rgba(109, 40, 217, 0.82) !important;
+}
+
+.cc-teams-settings.light .text-purple-100 {
+    color: #6d28d9 !important;
+}
+
+.cc-teams-settings.light
+    .border-purple-300\/15.bg-purple-500\/8 {
+    border-color: rgba(124, 58, 237, 0.15) !important;
+    background: rgba(124, 58, 237, 0.055) !important;
+}
+
+.cc-teams-settings.light
+    .border-purple-300\/15.bg-purple-500\/8:hover {
+    border-color: rgba(124, 58, 237, 0.24) !important;
+    background: rgba(124, 58, 237, 0.085) !important;
+}
+
+/* =========================================================
+   CREATE TEAM MODAL
+   ========================================================= */
+
+/*
+ * These classes live directly on the Flux modal component.
+ * The buttons themselves also have dedicated classes because
+ * Flux can teleport modal content outside the Teams wrapper.
+ */
+
+html:not(.dark) .cc-create-team-modal,
+html:not(.dark) .cc-leave-team-modal {
+    color: #302737 !important;
+}
+
+/* Modal body text */
+html:not(.dark) .cc-create-team-modal .text-white\/35,
+html:not(.dark) .cc-leave-team-modal .text-white\/35 {
+    color: #766c80 !important;
+}
+
+/* Modal warnings */
+html:not(.dark) .cc-leave-team-modal .text-red-200\/45 {
+    color: #9f2d2d !important;
+}
+
+/* Modal surfaces */
+html:not(.dark) .cc-create-team-modal > div,
+html:not(.dark) .cc-leave-team-modal > div {
+    color: #302737 !important;
+}
+
+/* Modal input shell */
+html:not(.dark)
+    .cc-create-team-modal
+    .border-white\/8.bg-white\/\[0\.025\] {
+    background: rgba(91, 55, 130, 0.035) !important;
+    border-color: rgba(91, 55, 130, 0.11) !important;
+}
+
+html:not(.dark)
+    .cc-create-team-modal
+    .border-white\/8.bg-white\/\[0\.025\]:focus-within {
+    background: rgba(124, 58, 237, 0.045) !important;
+    border-color: rgba(124, 58, 237, 0.25) !important;
+}
+
+/* Flux input */
+html:not(.dark) .cc-create-team-modal input,
+html:not(.dark) .cc-create-team-modal textarea,
+html:not(.dark) .cc-create-team-modal select {
+    color: #2c2534 !important;
+    -webkit-text-fill-color: #2c2534 !important;
+}
+
+html:not(.dark) .cc-create-team-modal input::placeholder,
+html:not(.dark) .cc-create-team-modal textarea::placeholder {
+    color: #9b92a3 !important;
+}
+
+html:not(.dark) .cc-create-team-modal label {
+    color: #61576b !important;
+}
+
+/* =========================================================
+   MODAL CANCEL BUTTON
+   ========================================================= */
+
+/*
+ * IMPORTANT:
+ * These selectors intentionally start with html:not(.dark)
+ * rather than .cc-teams-settings.light because Flux can
+ * teleport the modal outside the Teams component.
+ */
+
+html:not(.dark) .cc-team-modal-cancel {
+    background-color: #f5f3f7 !important;
+    background-image: none !important;
+
+    border-color: rgba(75, 55, 95, 0.16) !important;
+
+    color: #4f4658 !important;
+    -webkit-text-fill-color: #4f4658 !important;
+}
+
+html:not(.dark) .cc-team-modal-cancel:hover {
+    background-color: #ece9f0 !important;
+    background-image: none !important;
+
+    border-color: rgba(75, 55, 95, 0.24) !important;
+
+    color: #29222f !important;
+    -webkit-text-fill-color: #29222f !important;
+}
+
+html:not(.dark) .cc-team-modal-cancel:focus-visible {
+    color: #29222f !important;
+    -webkit-text-fill-color: #29222f !important;
+
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.20) !important;
+}
+
+/* =========================================================
+   MODAL CREATE BUTTON
+   ========================================================= */
+
+html:not(.dark) .cc-team-modal-primary {
+    background-image: linear-gradient(
+        to right,
+        #7c3aed,
+        #8b5cf6,
+        #d946ef
+    ) !important;
+
+    background-color: transparent !important;
+
+    border-color: rgba(124, 58, 237, 0.30) !important;
+
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+/*
+ * Force every descendant to stay white.
+ * This handles Flux/Tailwind inheritance and the SVG.
+ */
+
+html:not(.dark) .cc-team-modal-primary *,
+html:not(.dark) .cc-team-modal-primary svg,
+html:not(.dark) .cc-team-modal-primary span {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+html:not(.dark) .cc-team-modal-primary:hover {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+
+    background-image: linear-gradient(
+        to right,
+        #6d28d9,
+        #7c3aed,
+        #c026d3
+    ) !important;
+}
+
+/* =========================================================
+   MODAL DANGER / LEAVE TEAM BUTTON
+   ========================================================= */
+
+html:not(.dark) .cc-team-modal-danger {
+    background-color: rgba(220, 38, 38, 0.07) !important;
+    background-image: none !important;
+
+    border-color: rgba(220, 38, 38, 0.20) !important;
+
+    color: #c62828 !important;
+    -webkit-text-fill-color: #c62828 !important;
+}
+
+html:not(.dark) .cc-team-modal-danger:hover {
+    background-color: rgba(220, 38, 38, 0.12) !important;
+    background-image: none !important;
+
+    border-color: rgba(220, 38, 38, 0.30) !important;
+
+    color: #a91f1f !important;
+    -webkit-text-fill-color: #a91f1f !important;
+}
+
+/* =========================================================
+   LEAVE MODAL WARNING
+   ========================================================= */
+
+html:not(.dark)
+    .cc-leave-team-modal
+    .border-red-400\/8.bg-red-500\/\[0\.035\] {
+    border-color: rgba(239, 68, 68, 0.12) !important;
+    background: rgba(239, 68, 68, 0.045) !important;
+}
+
+html:not(.dark)
+    .cc-leave-team-modal
+    .border-red-400\/10.bg-red-500\/8 {
+    border-color: rgba(239, 68, 68, 0.14) !important;
+    background: rgba(239, 68, 68, 0.06) !important;
+}
+
+html:not(.dark) .cc-leave-team-modal .text-red-300\/65 {
+    color: rgba(220, 38, 38, 0.72) !important;
+}
+
+/* =========================================================
+   MODAL DIVIDERS
+   ========================================================= */
+
+html:not(.dark) .cc-create-team-modal .border-white\/7,
+html:not(.dark) .cc-leave-team-modal .border-white\/7 {
+    border-color: rgba(91, 55, 130, 0.10) !important;
+}
+
+/* =========================================================
+   CREATE TEAM MODAL ICON
+   ========================================================= */
+
+html:not(.dark)
+    .cc-create-team-modal
+    .border-purple-400\/15.bg-purple-500\/10 {
+    border-color: rgba(124, 58, 237, 0.15) !important;
+    background: rgba(124, 58, 237, 0.07) !important;
+}
+
+/* =========================================================
+   MODAL PURPLE GLOW
+   ========================================================= */
+
+html:not(.dark) .cc-create-team-modal .bg-purple-600\/12 {
+    background: rgba(124, 58, 237, 0.07) !important;
+}
+
+/* =========================================================
+   MODAL INPUT LABELS / ERROR STATES
+   ========================================================= */
+
+html:not(.dark) .cc-create-team-modal [data-flux-label] {
+    color: #61576b !important;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 640px) {
+    .cc-teams-settings.light
+        .relative.mt-8.overflow-hidden.rounded-\[1\.75rem\] {
+        border-radius: 1.35rem !important;
+    }
+
+    .cc-teams-settings.light .group {
+        padding-left: 1.25rem !important;
+        padding-right: 1.25rem !important;
+    }
+
+    .cc-teams-settings.light .max-w-\[60vw\] {
+        max-width: 50vw !important;
+    }
+}
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+    .cc-teams-settings.light *,
+    .cc-teams-settings.light *::before,
+    .cc-teams-settings.light *::after,
+    html:not(.dark) .cc-team-modal-cancel,
+    html:not(.dark) .cc-team-modal-primary,
+    html:not(.dark) .cc-team-modal-danger {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Edit team page */
+
+/* =========================================================
+   TEAM EDIT / DETAILS SETTINGS
+   LIGHT MODE
+   Source of truth:
+   html.dark       = dark
+   html:not(.dark) = light
+   ========================================================= */
+
+.cc-team-edit-settings.light {
+    color: #18151f;
+}
+
+/* =========================================================
+   MAIN TEAM SURFACE
+   ========================================================= */
+
+.cc-team-edit-settings.light
+    .bg-\[\#09070f\] {
+    background: #ffffff !important;
+}
+
+.cc-team-edit-settings.light
+    .shadow-black\/20 {
+    --tw-shadow-color: rgba(30, 18, 45, 0.08) !important;
+}
+
+.cc-team-edit-settings.light
+    .border-white\/10,
+.cc-team-edit-settings.light
+    .border-white\/8,
+.cc-team-edit-settings.light
+    .border-white\/7,
+.cc-team-edit-settings.light
+    .border-white\/5 {
+    border-color: rgba(91, 55, 130, 0.10) !important;
+}
+
+/* =========================================================
+   SECTION DIVIDERS
+   ========================================================= */
+
+.cc-team-edit-settings.light .border-t,
+.cc-team-edit-settings.light .border-b {
+    border-color: rgba(91, 55, 130, 0.09) !important;
+}
+
+/* =========================================================
+   GENERAL TEXT
+   ========================================================= */
+
+.cc-team-edit-settings.light .text-white {
+    color: #2c2534 !important;
+}
+
+.cc-team-edit-settings.light .text-white\/80 {
+    color: #453b4e !important;
+}
+
+.cc-team-edit-settings.light .text-white\/75 {
+    color: #4d4357 !important;
+}
+
+.cc-team-edit-settings.light .text-white\/60 {
+    color: #675d70 !important;
+}
+
+.cc-team-edit-settings.light .text-white\/50 {
+    color: #776d81 !important;
+}
+
+.cc-team-edit-settings.light .text-white\/35 {
+    color: #82788d !important;
+}
+
+.cc-team-edit-settings.light .text-white\/20 {
+    color: #9e95a7 !important;
+}
+
+.cc-team-edit-settings.light .text-white\/15 {
+    color: #aaa1b0 !important;
+}
+
+.cc-team-edit-settings.light .text-zinc-200 {
+    color: #4f4659 !important;
+}
+
+.cc-team-edit-settings.light .text-zinc-300 {
+    color: #5d5367 !important;
+}
+
+.cc-team-edit-settings.light .text-zinc-400 {
+    color: #71677a !important;
+}
+
+.cc-team-edit-settings.light .text-gray-200 {
+    color: #665d70 !important;
+}
+
+/* =========================================================
+   TEAM AVATAR
+   ========================================================= */
+
+.cc-team-edit-settings.light
+    .border-white\/10.bg-linear-to-br {
+    border-color: rgba(124, 58, 237, 0.15) !important;
+}
+
+/* Keep avatar text white because background is purple */
+.cc-team-edit-settings.light
+    .border-white\/10.bg-linear-to-br.text-white {
+    color: #ffffff !important;
+}
+
+/* Avatar glow */
+.cc-team-edit-settings.light
+    .from-purple-500\/30 {
+    opacity: 0.75;
+}
+
+/* =========================================================
+   CURRENT BADGE
+   ========================================================= */
+
+.cc-team-edit-settings.light
+    .border-purple-400\/15.bg-purple-400\/8 {
+    background: rgba(124, 58, 237, 0.07) !important;
+    border-color: rgba(124, 58, 237, 0.17) !important;
+    color: #7c3aed !important;
+}
+
+.cc-team-edit-settings.light
+    .border-purple-400\/15.bg-purple-400\/8 .bg-purple-400 {
+    background: #8b5cf6 !important;
+}
+
+/* =========================================================
+   PERSONAL BADGE
+   ========================================================= */
+
+.cc-team-edit-settings.light
+    .border-white\/8.bg-white\/\[0\.025\] {
+    background: rgba(91, 55, 130, 0.035) !important;
+    border-color: rgba(91, 55, 130, 0.11) !important;
+    color: #70667a !important;
+}
+
+/* =========================================================
+   PURPLE TEXT
+   ========================================================= */
+
+.cc-team-edit-settings.light .text-purple-300 {
+    color: #7c3aed !important;
+}
+
+.cc-team-edit-settings.light .text-purple-300\/75 {
+    color: rgba(124, 58, 237, 0.78) !important;
+}
+
+.cc-team-edit-settings.light .text-purple-300\/65 {
+    color: rgba(124, 58, 237, 0.70) !important;
+}
+
+.cc-team-edit-settings.light .text-purple-300\/60 {
+    color: rgba(124, 58, 237, 0.68) !important;
+}
+
+.cc-team-edit-settings.light .text-purple-200\/80 {
+    color: rgba(109, 40, 217, 0.84) !important;
+}
+
+/* =========================================================
+   PURPLE SURFACES
+   ========================================================= */
+
+.cc-team-edit-settings.light .bg-purple-500\/8 {
+    background: rgba(124, 58, 237, 0.045) !important;
+}
+
+.cc-team-edit-settings.light .bg-purple-500\/10 {
+    background: rgba(124, 58, 237, 0.06) !important;
+}
+
+.cc-team-edit-settings.light .bg-purple-400\/8 {
+    background: rgba(124, 58, 237, 0.055) !important;
+}
+
+.cc-team-edit-settings.light .bg-purple-400\/6 {
+    background: rgba(124, 58, 237, 0.045) !important;
+}
+
+.cc-team-edit-settings.light .bg-purple-600\/12 {
+    background: rgba(124, 58, 237, 0.07) !important;
+}
+
+.cc-team-edit-settings.light .bg-fuchsia-600\/8 {
+    background: rgba(217, 70, 239, 0.045) !important;
+}
+
+/* =========================================================
+   TEAM NAME EDIT FORM
+   ========================================================= */
+
+.cc-team-edit-settings.light
+    form.rounded-2xl.border.border-white\/7.bg-white\/\[0\.025\] {
+    background: rgba(91, 55, 130, 0.025) !important;
+    border-color: rgba(91, 55, 130, 0.11) !important;
+    box-shadow: inset 0 1px 2px rgba(30, 18, 45, 0.03) !important;
+}
+
+/* Flux input wrapper */
+.cc-team-edit-settings.light
+    [data-test="team-name-input"] {
+    color: #2c2534 !important;
+}
+
+/* Input text */
+.cc-team-edit-settings.light
+    [data-test="team-name-input"] input {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+
+    color: #2c2534 !important;
+    -webkit-text-fill-color: #2c2534 !important;
+
+    background: transparent !important;
+}
+
+/* Placeholder */
+.cc-team-edit-settings.light
+    [data-test="team-name-input"] input::placeholder {
+    color: #9b92a3 !important;
+}
+
+/* Input label */
+.cc-team-edit-settings.light
+    [data-test="team-name-input"] label {
+    color: #62596d !important;
+}
+
+/* =========================================================
+   SAVE BUTTON
+   ========================================================= */
+
+.cc-team-edit-settings.light
+    [data-test="team-save-button"] {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+
+    background-image: linear-gradient(
+        to right,
+        #7c3aed,
+        #8b5cf6,
+        #d946ef
+    ) !important;
+}
+
+.cc-team-edit-settings.light
+    [data-test="team-save-button"] svg {
+    color: #ffffff !important;
+}
+
+/* =========================================================
+   MEMBERS HEADER
+   ========================================================= */
+
+.cc-team-edit-settings.light
+    .border-purple-400\/10.bg-purple-500\/8 {
+    background: rgba(124, 58, 237, 0.045) !important;
+    border-color: rgba(124, 58, 237, 0.12) !important;
+}
+
+/* =========================================================
+   MEMBER COUNT
+   ========================================================= */
+
+.cc-team-edit-settings.light
+    .rounded-full.border.border-white\/7.bg-white\/\[0\.025\] {
+    background: rgba(91, 55, 130, 0.035) !important;
+    border-color: rgba(91, 55, 130, 0.11) !important;
+    color: #70667a !important;
+}
+
+/* =========================================================
+   INVITE MEMBER BUTTON
+   ========================================================= */
+
+.cc-team-edit-settings.light
+    [data-test="invite-member-button"] {
+    color: #6d28d9 !important;
+
+    background: rgba(124, 58, 237, 0.055) !important;
+    border-color: rgba(124, 58, 237, 0.16) !important;
+}
+
+.cc-team-edit-settings.light
+    [data-test="invite-member-button"]:hover {
+    color: #5b21b6 !important;
+    background: rgba(124, 58, 237, 0.09) !important;
+    border-color: rgba(124, 58, 237, 0.25) !important;
+}
+
+.cc-team-edit-settings.light
+    [data-test="invite-member-button"] svg {
+    color: currentColor !important;
+}
+
+/* =========================================================
+   MEMBER ROWS
+   ========================================================= */
+
+.cc-team-edit-settings.light
+    [data-test="member-row"] {
+    background: transparent;
+}
+
+.cc-team-edit-settings.light
+    [data-test="member-row"]:hover {
+    background: rgba(124, 58, 237, 0.025);
+}
+
+/* Member names */
+.cc-team-edit-settings.light
+    [data-test="member-row"] .text-white {
+    color: #312838 !important;
+}
+
+/* Member emails */
+.cc-team-edit-settings.light
+    [data-test="member-row"] .text-white {
+    color: #6e6478 !important;
+}
+
+/* =========================================================
+   OWNER BADGE
+   ========================================================= */
+
+.cc-team-edit-settings.light
+    .border-purple-400\/10.bg-purple-400\/6 {
+    background: rgba(124, 58, 237, 0.045) !important;
+    border-color: rgba(124, 58, 237, 0.11) !important;
+    color: #7c3aed !important;
+}
+
+/* =========================================================
+   MEMBER ROLE BUTTON
+   ========================================================= */
+
+/*
+ * Flux may generate the dropdown button outside portions of
+ * our original utility hierarchy, so target the test hook.
+ */
+
+.cc-team-edit-settings.light
+    [data-test="member-role-trigger"] {
+    background: rgba(91, 55, 130, 0.035) !important;
+    border-color: rgba(91, 55, 130, 0.13) !important;
+
+    color: #665d70 !important;
+    -webkit-text-fill-color: #665d70 !important;
+}
+
+.cc-team-edit-settings.light
+    [data-test="member-role-trigger"]:hover {
+    background: rgba(124, 58, 237, 0.06) !important;
+    border-color: rgba(124, 58, 237, 0.20) !important;
+    color: #6d28d9 !important;
+}
+
+/* Chevron */
+.cc-team-edit-settings.light
+    [data-test="member-role-trigger"] svg {
+    color: currentColor !important;
+}
+
+/* =========================================================
+   FLUX DROPDOWN MENU
+   ========================================================= */
+
+/*
+ * Flux dropdown menus can be teleported outside the
+ * .cc-team-edit-settings element.
+ */
+
+html:not(.dark)
+    [data-flux-menu] {
+    background: #ffffff !important;
+    color: #3b3245 !important;
+    border-color: rgba(91, 55, 130, 0.14) !important;
+
+    box-shadow:
+        0 18px 40px rgba(30, 18, 45, 0.12),
+        0 4px 12px rgba(30, 18, 45, 0.06) !important;
+}
+
+html:not(.dark)
+    [data-flux-menu-item] {
+    color: #4b4256 !important;
+}
+
+html:not(.dark)
+    [data-flux-menu-item]:hover {
+    color: #5b21b6 !important;
+    background: rgba(124, 58, 237, 0.07) !important;
+}
+
+/* Generic Flux menu item fallback */
+html:not(.dark)
+    [data-flux-menu] button,
+html:not(.dark)
+    [data-flux-menu] a {
+    color: #4b4256 !important;
+}
+
+html:not(.dark)
+    [data-flux-menu] button:hover,
+html:not(.dark)
+    [data-flux-menu] a:hover {
+    color: #5b21b6 !important;
+    background: rgba(124, 58, 237, 0.07) !important;
+}
+
+/* =========================================================
+   REMOVE MEMBER BUTTON / ICON
+   ========================================================= */
+
+.cc-team-edit-settings.light
+    [data-test="member-remove-button"] {
+    color: #6c6372 !important;
+    background-color: transparent !important;
+}
+
+.cc-team-edit-settings.light
+    [data-test="member-remove-button"] svg {
+    color: #6c6372 !important;
+    fill: currentColor !important;
+}
+
+.cc-team-edit-settings.light
+    [data-test="member-remove-button"]:hover {
+    color: #dc2626 !important;
+    background: rgba(239, 68, 68, 0.07) !important;
+}
+
+.cc-team-edit-settings.light
+    [data-test="member-remove-button"]:hover svg {
+    color: #dc2626 !important;
+}
+
+/* =========================================================
+   INVITATION SECTION
+   ========================================================= */
+
+.cc-team-edit-settings.light
+    .border-amber-300\/10.bg-amber-400\/7 {
+    background: rgba(245, 158, 11, 0.055) !important;
+    border-color: rgba(245, 158, 11, 0.14) !important;
+}
+
+.cc-team-edit-settings.light
+    .text-amber-300\/65 {
+    color: rgba(180, 83, 9, 0.70) !important;
+}
+
+.cc-team-edit-settings.light
+    .text-amber-200\/50 {
+    color: rgba(146, 64, 14, 0.78) !important;
+}
+
+/* Invitation icon boxes */
+.cc-team-edit-settings.light
+    .border-white\/7.bg-white\/\[0\.025\] {
+    background: rgba(91, 55, 130, 0.035) !important;
+    border-color: rgba(91, 55, 130, 0.11) !important;
+}
+
+/* Invitation email */
+.cc-team-edit-settings.light
+    [data-test="invitation-row"] .text-white\/60 {
+    color: #655b70 !important;
+}
+
+/* =========================================================
+   CANCEL INVITATION BUTTON / ICON
+   ========================================================= */
+
+.cc-team-edit-settings.light
+    [data-test="invitation-cancel-button"] {
+    color: #6c6372 !important;
+    background-color: transparent !important;
+}
+
+.cc-team-edit-settings.light
+    [data-test="invitation-cancel-button"] svg {
+    color: #6c6372 !important;
+    fill: currentColor !important;
+}
+
+.cc-team-edit-settings.light
+    [data-test="invitation-cancel-button"]:hover {
+    color: #dc2626 !important;
+    background: rgba(239, 68, 68, 0.07) !important;
+}
+
+.cc-team-edit-settings.light
+    [data-test="invitation-cancel-button"]:hover svg {
+    color: #dc2626 !important;
+}
+
+/* =========================================================
+   DELETE TEAM SECTION
+   ========================================================= */
+
+.cc-team-edit-settings.light
+    .bg-red-500\/\[0\.012\] {
+    background: rgba(220, 38, 38, 0.018) !important;
+}
+
+.cc-team-edit-settings.light
+    .border-red-400\/8 {
+    border-color: rgba(220, 38, 38, 0.11) !important;
+}
+
+.cc-team-edit-settings.light
+    .border-red-400\/10.bg-red-500\/7 {
+    background: rgba(220, 38, 38, 0.055) !important;
+    border-color: rgba(220, 38, 38, 0.14) !important;
+}
+
+.cc-team-edit-settings.light
+    .text-red-300\/60 {
+    color: rgba(185, 28, 28, 0.72) !important;
+}
+
+.cc-team-edit-settings.light
+    .text-red-300\/75 {
+    color: rgba(185, 28, 28, 0.82) !important;
+}
+
+/* Delete Team button */
+.cc-team-edit-settings.light
+    [data-test="delete-team-button"] {
+    background: rgba(220, 38, 38, 0.065) !important;
+    border-color: rgba(220, 38, 38, 0.18) !important;
+    color: #b91c1c !important;
+}
+
+.cc-team-edit-settings.light
+    [data-test="delete-team-button"]:hover {
+    background: rgba(220, 38, 38, 0.10) !important;
+    border-color: rgba(220, 38, 38, 0.27) !important;
+    color: #991b1b !important;
+}
+
+/* =========================================================
+   EMPTY MEMBER STATE
+   ========================================================= */
+
+.cc-team-edit-settings.light
+    .border-white\/7.bg-white\/\[0\.025\] {
+    background: rgba(91, 55, 130, 0.035) !important;
+    border-color: rgba(91, 55, 130, 0.10) !important;
+}
+
+.cc-team-edit-settings.light
+    .text-xs.font-medium.text-white {
+    color: #675d70 !important;
+}
+
+/* =========================================================
+   FLUX-TELEPORTED TOOLTIPS
+   ========================================================= */
+
+html:not(.dark)
+    [data-flux-tooltip-content] {
+    background: #ffffff !important;
+    color: #352d3e !important;
+    border: 1px solid rgba(91, 55, 130, 0.14) !important;
+
+    -webkit-text-fill-color: #352d3e !important;
+
+    box-shadow:
+        0 10px 25px rgba(30, 18, 45, 0.12),
+        0 4px 10px rgba(30, 18, 45, 0.06) !important;
+}
+
+html:not(.dark)
+    [data-flux-tooltip-content] * {
+    color: #352d3e !important;
+    -webkit-text-fill-color: #352d3e !important;
+}
+
+/* =========================================================
+   FLUX-GENERATED BUTTONS / ICONS
+   ========================================================= */
+
+html:not(.dark)
+    .cc-team-edit-settings
+    [data-flux-button] {
+    color: #62596d !important;
+}
+
+html:not(.dark)
+    .cc-team-edit-settings
+    [data-flux-button] svg {
+    color: currentColor !important;
+}
+
+/* Remove-member */
+html:not(.dark)
+    .cc-team-edit-settings
+    [data-test="member-remove-button"] {
+    color: #6c6372 !important;
+}
+
+html:not(.dark)
+    .cc-team-edit-settings
+    [data-test="member-remove-button"]:hover {
+    color: #dc2626 !important;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 640px) {
+    .cc-team-edit-settings.light
+        .relative.mt-8.overflow-hidden.rounded-\[1\.75rem\] {
+        border-radius: 1.35rem !important;
+    }
+
+    .cc-team-edit-settings.light
+        [data-test="member-row"] {
+        padding-left: 1.25rem !important;
+        padding-right: 1.25rem !important;
+    }
+
+    .cc-team-edit-settings.light
+        [data-test="invitation-row"] {
+        padding-left: 1.25rem !important;
+        padding-right: 1.25rem !important;
+    }
+}
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+    .cc-team-edit-settings.light *,
+    .cc-team-edit-settings.light *::before,
+    .cc-team-edit-settings.light *::after,
+    html:not(.dark) .cc-team-edit-settings [data-flux-button],
+    html:not(.dark) [data-flux-tooltip-content] {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+    }
+}

@@ -100,7 +100,7 @@
         }
     }
 }" x-on:ticket-moved.window="moving = false"
-    class="min-h-full overflow-hidden bg-[#09070f] text-white">
+    class="cc-tickets min-h-full overflow-hidden">
     {{-- Header --}}
     <div class="border-b border-white/10 px-6 py-5">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">

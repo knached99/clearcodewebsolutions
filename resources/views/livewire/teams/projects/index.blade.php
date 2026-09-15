@@ -1,10 +1,37 @@
 <div
     x-data="{
+        htmlIsDark: document.documentElement.classList.contains('dark'),
+        observer: null,
+
+        // Delete modal state is intentionally local to this component.
         deleteOpen: false,
         deleteId: null,
         deleteTitle: '',
 
-        confirmDelete(id, title) {
+        init() {
+            this.observer = new MutationObserver(() => {
+                this.htmlIsDark = document.documentElement.classList.contains('dark');
+            });
+
+            this.observer.observe(document.documentElement, {
+                attributes: true,
+                attributeFilter: ['class'],
+            });
+
+            this.$nextTick(() => {
+                this.htmlIsDark = document.documentElement.classList.contains('dark');
+            });
+        },
+
+        get isLightMode() {
+            return !this.htmlIsDark;
+        },
+
+        get modalModeClass() {
+            return this.isLightMode ? 'cc-light-modal' : '';
+        },
+
+        openDelete(id, title) {
             this.deleteId = id;
             this.deleteTitle = title;
             this.deleteOpen = true;
@@ -14,26 +41,29 @@
             this.deleteOpen = false;
             this.deleteId = null;
             this.deleteTitle = '';
-        }
+        },
     }"
-    class="cc-admin-projects relative min-h-screen overflow-hidden text-white"
+    :class="{ 'light': isLightMode }"
+    class="cc-admin-projects min-h-screen transition-colors duration-300"
 >
     <style>
-        [x-cloak] {
-            display: none !important;
-        }
+        /* =========================================================
+           PROJECTS ADMIN — FULL CSS
+           Dark + Light Mode
+           ========================================================= */
 
         /* =========================================================
-           PAGE
-        ========================================================= */
+           BASE
+           ========================================================= */
 
         .cc-admin-projects {
             --lime: #ADD322;
+            --lime-dark: #7fa800;
             --purple: #8b5cf6;
             --violet: #6d28d9;
             --bg: #050408;
             --panel: #0d0b13;
-
+            color: #fff;
             background:
                 radial-gradient(
                     900px circle at 8% -5%,
@@ -63,16 +93,18 @@
                     #06050a 78%,
                     #030305 100%
                 );
-
             isolation: isolate;
         }
+
+        /* =========================================================
+           BACKGROUND
+           ========================================================= */
 
         .cc-admin-projects .noise {
             position: fixed;
             inset: 0;
             z-index: -1;
             pointer-events: none;
-
             background:
                 radial-gradient(
                     550px circle at 25% 18%,
@@ -94,7 +126,7 @@
 
         /* =========================================================
            GLASS
-        ========================================================= */
+           ========================================================= */
 
         .cc-admin-projects .glass {
             background:
@@ -103,20 +135,17 @@
                     rgba(255,255,255,.045),
                     rgba(255,255,255,.018)
                 );
-
             border: 1px solid rgba(255,255,255,.075);
-
             box-shadow:
                 0 25px 80px rgba(0,0,0,.28),
                 inset 0 1px 0 rgba(255,255,255,.035);
-
             backdrop-filter: blur(18px);
             -webkit-backdrop-filter: blur(18px);
         }
 
         /* =========================================================
            PROJECT CARDS
-        ========================================================= */
+           ========================================================= */
 
         .cc-admin-projects .project-card {
             background:
@@ -125,16 +154,12 @@
                     rgba(255,255,255,.045),
                     rgba(255,255,255,.012)
                 );
-
             border: 1px solid rgba(255,255,255,.075);
-
             box-shadow:
                 0 25px 70px rgba(0,0,0,.28),
                 inset 0 1px 0 rgba(255,255,255,.025);
-
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-
             transition:
                 transform .35s ease,
                 border-color .35s ease,
@@ -143,9 +168,7 @@
 
         .cc-admin-projects .project-card:hover {
             transform: translateY(-5px);
-
             border-color: rgba(173,211,34,.22);
-
             box-shadow:
                 0 35px 90px rgba(0,0,0,.42),
                 0 0 0 1px rgba(173,211,34,.025),
@@ -165,7 +188,7 @@
 
         /* =========================================================
            ACTIONS
-        ========================================================= */
+           ========================================================= */
 
         .cc-admin-projects .action-button {
             transition:
@@ -181,7 +204,7 @@
 
         /* =========================================================
            INPUTS
-        ========================================================= */
+           ========================================================= */
 
         .cc-project-input {
             background:
@@ -190,10 +213,8 @@
                     rgba(255,255,255,.028),
                     rgba(255,255,255,.012)
                 );
-
             border: 1px solid rgba(255,255,255,.075);
             color: white;
-
             transition:
                 border-color .25s ease,
                 background .25s ease,
@@ -208,11 +229,9 @@
         .cc-project-input:focus {
             border-color: rgba(173,211,34,.45);
             background: rgba(0,0,0,.28);
-
             box-shadow:
                 0 0 0 3px rgba(173,211,34,.045),
                 0 10px 35px rgba(0,0,0,.15);
-
             outline: none;
         }
 
@@ -231,7 +250,7 @@
 
         /* =========================================================
            MODAL
-        ========================================================= */
+           ========================================================= */
 
         .cc-modal-backdrop {
             background:
@@ -241,7 +260,6 @@
                     transparent 35%
                 ),
                 rgba(0,0,0,.82);
-
             backdrop-filter: blur(18px);
             -webkit-backdrop-filter: blur(18px);
         }
@@ -253,7 +271,6 @@
                     rgba(20,17,28,.98),
                     rgba(8,7,12,.99)
                 );
-
             box-shadow:
                 0 40px 120px rgba(0,0,0,.65),
                 0 0 0 1px rgba(255,255,255,.035);
@@ -262,7 +279,6 @@
         .cc-input {
             background: rgba(0,0,0,.24);
             border: 1px solid rgba(255,255,255,.09);
-
             transition:
                 border-color .2s ease,
                 box-shadow .2s ease,
@@ -272,16 +288,14 @@
         .cc-input:focus {
             background: rgba(0,0,0,.34);
             border-color: rgba(173,211,34,.65);
-
             box-shadow:
                 0 0 0 3px rgba(173,211,34,.08);
-
             outline: none;
         }
 
         /* =========================================================
            SCROLLBAR
-        ========================================================= */
+           ========================================================= */
 
         .cc-scrollbar::-webkit-scrollbar {
             width: 7px;
@@ -302,7 +316,7 @@
 
         /* =========================================================
            STATUS
-        ========================================================= */
+           ========================================================= */
 
         .cc-admin-projects .status-dot {
             box-shadow: 0 0 14px currentColor;
@@ -310,7 +324,7 @@
 
         /* =========================================================
            IMAGE PREVIEWS
-        ========================================================= */
+           ========================================================= */
 
         .cc-image-preview {
             position: relative;
@@ -328,13 +342,439 @@
         }
 
         /* =========================================================
+           LIGHT MODE
+           ========================================================= */
+
+        .cc-admin-projects.light {
+            color: #171717;
+            background:
+                radial-gradient(
+                    900px circle at 8% -5%,
+                    rgba(139,92,246,.10),
+                    transparent 55%
+                ),
+                radial-gradient(
+                    700px circle at 92% 4%,
+                    rgba(109,40,217,.07),
+                    transparent 52%
+                ),
+                radial-gradient(
+                    650px circle at 52% 45%,
+                    rgba(91,33,182,.035),
+                    transparent 65%
+                ),
+                radial-gradient(
+                    500px circle at 15% 100%,
+                    rgba(173,211,34,.035),
+                    transparent 60%
+                ),
+                linear-gradient(
+                    135deg,
+                    #f8f8fa 0%,
+                    #f2f1f6 30%,
+                    #f7f7f9 55%,
+                    #eeeeF2 100%
+                );
+        }
+
+        /* =========================================================
+           LIGHT MODE — BACKGROUND
+           ========================================================= */
+
+        .cc-admin-projects.light .noise {
+            background:
+                radial-gradient(
+                    550px circle at 25% 18%,
+                    rgba(139,92,246,.055),
+                    transparent 70%
+                ),
+                radial-gradient(
+                    450px circle at 80% 28%,
+                    rgba(173,211,34,.035),
+                    transparent 70%
+                ),
+                linear-gradient(
+                    115deg,
+                    transparent 0%,
+                    rgba(0,0,0,.012) 45%,
+                    transparent 70%
+                );
+        }
+
+        /* =========================================================
+           LIGHT MODE — TEXT
+           ========================================================= */
+
+        .cc-admin-projects.light .text-white {
+            color: #171717 !important;
+        }
+
+        .cc-admin-projects.light .text-gray-200 {
+            color: #73747a !important;
+        }
+
+        .cc-admin-projects.light .text-gray-300 {
+            color: #5f6065 !important;
+        }
+
+        .cc-admin-projects.light .text-gray-500 {
+            color: #77787d !important;
+        }
+
+        .cc-admin-projects.light .text-gray-600 {
+            color: #686970 !important;
+        }
+
+        /* Preserve text over project images */
+
+        .cc-admin-projects.light
+        .project-card
+        .absolute
+        .text-white,
+        .cc-admin-projects.light
+        .project-card
+        .relative
+        .text-white,
+        .cc-admin-projects.light
+        .project-card
+        .text-white\/40 {
+            color: #fff !important;
+        }
+
+        /* Modal text */
+
+        .cc-admin-projects.light .cc-modal-panel .text-white {
+            color: #171717 !important;
+        }
+
+        .cc-admin-projects.light .cc-modal-panel .text-gray-300 {
+            color: #5f6065 !important;
+        }
+
+        .cc-admin-projects.light .cc-modal-panel .text-gray-200 {
+            color: #73747a !important;
+        }
+
+        /* =========================================================
+           LIGHT MODE — BRAND
+           ========================================================= */
+
+        .cc-admin-projects.light .text-\[\#ADD322\] {
+            color: #7fa800 !important;
+        }
+
+        /* Keep lime buttons readable */
+
+        .cc-admin-projects.light .bg-\[\#ADD322\] {
+            color: #111 !important;
+        }
+
+        /* =========================================================
+           LIGHT MODE — GLASS
+           ========================================================= */
+
+        .cc-admin-projects.light .glass {
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(255,255,255,.88),
+                    rgba(255,255,255,.62)
+                );
+            border-color: rgba(0,0,0,.075);
+            box-shadow:
+                0 20px 60px rgba(0,0,0,.07),
+                inset 0 1px 0 rgba(255,255,255,.95);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+        }
+
+        /* =========================================================
+           LIGHT MODE — PROJECT CARDS
+           ========================================================= */
+
+        .cc-admin-projects.light .project-card {
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(255,255,255,.92),
+                    rgba(255,255,255,.72)
+                );
+            border-color: rgba(0,0,0,.075);
+            box-shadow:
+                0 20px 55px rgba(0,0,0,.08),
+                inset 0 1px 0 rgba(255,255,255,.95);
+        }
+
+        .cc-admin-projects.light .project-card:hover {
+            border-color: rgba(127,168,0,.25);
+            box-shadow:
+                0 30px 75px rgba(0,0,0,.13),
+                0 0 0 1px rgba(127,168,0,.035);
+        }
+
+        /* =========================================================
+           LIGHT MODE — BORDERS
+           ========================================================= */
+
+        .cc-admin-projects.light .border-white\/5 { border-color: rgba(0,0,0,.06) !important; }
+        .cc-admin-projects.light .border-white\/10 { border-color: rgba(0,0,0,.09) !important; }
+        .cc-admin-projects.light .border-white\/15 { border-color: rgba(0,0,0,.13) !important; }
+        .cc-admin-projects.light .border-white\/\[0\.06\] { border-color: rgba(0,0,0,.06) !important; }
+        .cc-admin-projects.light .border-white\/\[0\.07\] { border-color: rgba(0,0,0,.075) !important; }
+        .cc-admin-projects.light .border-white\/\[0\.08\] { border-color: rgba(0,0,0,.08) !important; }
+        .cc-admin-projects.light .border-white\/\[0\.09\] { border-color: rgba(0,0,0,.09) !important; }
+
+        /* =========================================================
+           LIGHT MODE — WHITE BACKGROUNDS
+           ========================================================= */
+
+        .cc-admin-projects.light .bg-white\/5 { background-color: rgba(0,0,0,.035) !important; }
+        .cc-admin-projects.light .bg-white\/\[0\.02\] { background-color: rgba(0,0,0,.018) !important; }
+        .cc-admin-projects.light .bg-white\/\[0\.025\] { background-color: rgba(0,0,0,.022) !important; }
+        .cc-admin-projects.light .bg-white\/\[0\.03\] { background-color: rgba(0,0,0,.028) !important; }
+        .cc-admin-projects.light .bg-white\/\[0\.035\] { background-color: rgba(0,0,0,.03) !important; }
+        .cc-admin-projects.light .bg-white\/\[0\.05\] { background-color: rgba(0,0,0,.035) !important; }
+        .cc-admin-projects.light .bg-white\/\[0\.07\] { background-color: rgba(0,0,0,.045) !important; }
+        .cc-admin-projects.light .bg-white\/\[0\.08\] { background-color: rgba(0,0,0,.05) !important; }
+
+        /* =========================================================
+           LIGHT MODE — BLACK BACKGROUNDS
+           ========================================================= */
+
+        .cc-admin-projects.light .bg-black {
+            background-color: #e9e9e9;
+        }
+
+        .cc-admin-projects.light .project-card .bg-black,
+        .cc-admin-projects.light .project-card .bg-black\/60,
+        .cc-admin-projects.light .project-card .bg-black\/70,
+        .cc-admin-projects.light .project-card .bg-black\/75,
+        .cc-admin-projects.light .project-card .bg-black\/85 {
+            color: #fff !important;
+        }
+
+        /* =========================================================
+           LIGHT MODE — INPUTS
+           ========================================================= */
+
+        .cc-admin-projects.light .cc-project-input {
+            background:
+                linear-gradient(
+                    180deg,
+                    rgba(255,255,255,.88),
+                    rgba(248,248,250,.9)
+                );
+            border-color: rgba(0,0,0,.10);
+            color: #171717;
+        }
+
+        .cc-admin-projects.light .cc-project-input:hover {
+            border-color: rgba(0,0,0,.16);
+            background: #fff;
+        }
+
+        .cc-admin-projects.light .cc-project-input:focus {
+            border-color: rgba(127,168,0,.55);
+            background: #fff;
+            box-shadow:
+                0 0 0 3px rgba(127,168,0,.08),
+                0 10px 35px rgba(0,0,0,.08);
+        }
+
+        .cc-admin-projects.light .cc-project-input::placeholder {
+            color: rgba(0,0,0,.35) !important;
+        }
+
+        .cc-admin-projects.light input,
+        .cc-admin-projects.light textarea,
+        .cc-admin-projects.light select {
+            color: #171717;
+        }
+
+        .cc-admin-projects.light input::placeholder,
+        .cc-admin-projects.light textarea::placeholder {
+            color: rgba(0,0,0,.35) !important;
+        }
+
+        /* =========================================================
+           LIGHT MODE — CC INPUT
+           ========================================================= */
+
+        .cc-admin-projects.light .cc-input {
+            background: rgba(255,255,255,.75);
+            border-color: rgba(0,0,0,.10);
+            color: #171717;
+        }
+
+        .cc-admin-projects.light .cc-input:focus {
+            background: #fff;
+            border-color: rgba(127,168,0,.6);
+            box-shadow:
+                0 0 0 3px rgba(127,168,0,.08);
+        }
+
+        /* =========================================================
+           LIGHT MODE — DROPDOWNS
+           ========================================================= */
+
+        .cc-admin-projects.light [x-show="open"] {
+            background: #fff !important;
+            color: #171717;
+            border-color: rgba(0,0,0,.09) !important;
+            box-shadow:
+                0 25px 60px rgba(0,0,0,.14);
+        }
+
+        .cc-admin-projects.light [x-show="open"] .text-white { color: #171717 !important; }
+        .cc-admin-projects.light [x-show="open"] .text-gray-300 { color: #5f6065 !important; }
+        .cc-admin-projects.light [x-show="open"] .text-gray-200 { color: #73747a !important; }
+        .cc-admin-projects.light [x-show="open"] .hover\\:bg-white\\/\\[0\\.05\\]:hover { background-color: rgba(0,0,0,.035) !important; }
+
+        /* =========================================================
+           LIGHT MODE — IMAGE PLACEHOLDERS
+           ========================================================= */
+
+        .cc-admin-projects.light .bg-black {
+            background-color: #e9e9e9;
+        }
+
+        .cc-admin-projects.light .project-card .bg-black {
+            background-color: #000;
+        }
+
+        .cc-admin-projects.light .cc-image-preview {
+            background: #e9e9e9;
+            border-color: rgba(0,0,0,.09);
+        }
+
+        /* =========================================================
+           LIGHT MODE — SCROLLBARS
+           ========================================================= */
+
+        .cc-admin-projects.light .cc-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,.14); }
+        .cc-admin-projects.light .cc-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,.22); }
+        .cc-admin-projects.light .cc-project-input::-webkit-scrollbar-thumb { background: rgba(0,0,0,.14); }
+
+        /* =========================================================
+           LIGHT MODE — MODAL
+           ========================================================= */
+
+        .cc-admin-projects.light .cc-modal-backdrop {
+            background:
+                radial-gradient(
+                    circle at 50% 0%,
+                    rgba(139,92,246,.10),
+                    transparent 35%
+                ),
+                rgba(0,0,0,.42);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+        }
+
+        .cc-admin-projects.light .cc-modal-panel {
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(255,255,255,.99),
+                    rgba(247,247,249,.99)
+                );
+            color: #171717;
+            border-color: rgba(0,0,0,.09);
+            box-shadow:
+                0 40px 100px rgba(0,0,0,.18),
+                0 0 0 1px rgba(255,255,255,.75);
+        }
+
+        .cc-light-modal .cc-modal-panel {
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(255,255,255,.99),
+                    rgba(247,247,249,.99)
+                );
+            color: #171717;
+            border-color: rgba(0,0,0,.09);
+            box-shadow:
+                0 40px 100px rgba(0,0,0,.18),
+                0 0 0 1px rgba(255,255,255,.75);
+        }
+
+        .cc-light-modal .cc-modal-panel .text-white { color: #171717 !important; }
+        .cc-light-modal .cc-modal-panel .text-gray-300 { color: #5f6065 !important; }
+        .cc-light-modal .cc-modal-panel .text-gray-200 { color: #73747a !important; }
+
+        /* =========================================================
+           LIGHT MODE — MODAL FOOTER
+           ========================================================= */
+
+        .cc-admin-projects.light .cc-modal-panel .bg-black\/10 {
+            background-color: rgba(0,0,0,.025) !important;
+        }
+
+        /* =========================================================
+           LIGHT MODE — BUTTON TEXT
+           ========================================================= */
+
+        .cc-admin-projects.light button.text-white { color: #171717 !important; }
+        .cc-admin-projects.light .hover\\:text-white:hover { color: #171717 !important; }
+
+        /* =========================================================
+           LIGHT MODE — STATUS
+           ========================================================= */
+
+        .cc-admin-projects.light .status-dot {
+            color: #7fa800 !important;
+            background-color: #7fa800 !important;
+        }
+
+        /* =========================================================
+           LIGHT MODE — IMAGE OVERLAY TEXT
+           ========================================================= */
+
+        .cc-admin-projects.light .project-card .text-white\/40 {
+            color: rgba(255,255,255,.55) !important;
+        }
+
+        /* =========================================================
            MOBILE
-        ========================================================= */
+           ========================================================= */
 
         @media (max-width: 640px) {
             .cc-admin-projects .mobile-full {
                 border-radius: 0;
             }
+
+            .cc-admin-projects .project-card:hover {
+                transform: none;
+            }
+
+            .cc-admin-projects .project-card:hover .project-image {
+                transform: none;
+                filter: none;
+            }
+        }
+
+        /* =========================================================
+           REDUCED MOTION
+           ========================================================= */
+
+        @media (prefers-reduced-motion: reduce) {
+            .cc-admin-projects *,
+            .cc-admin-projects *::before,
+            .cc-admin-projects *::after {
+                scroll-behavior: auto !important;
+                transition-duration: .01ms !important;
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+            }
+        }
+
+        /* =========================================================
+           ALPINE CLOAK
+           ========================================================= */
+
+        [x-cloak] {
+            display: none !important;
         }
     </style>
 
@@ -640,7 +1080,7 @@
 
                                     <button
                                         type="button"
-                                        @click="confirmDelete({{ $work->id }}, @js($work->title))"
+                                        @click.stop="openDelete({{ $work->id }}, @js($work->title))"
                                         class="action-button cursor-pointer rounded-lg px-3 py-2 text-xs font-bold text-red-400/80 hover:bg-red-500/10 hover:text-red-400"
                                     >
                                         Delete
@@ -700,12 +1140,14 @@
     <template x-teleport="body">
 
         <div
-            x-show="deleteOpen"
-            x-cloak
-            x-transition.opacity.duration.200ms
-            class="fixed inset-0 z-[100000] flex items-center justify-center overflow-y-auto px-4 py-6"
-            @keydown.escape.window="closeDelete()"
-        >
+        x-show="deleteOpen"
+        x-cloak
+        x-transition.opacity.duration.200ms
+        class="fixed inset-0 z-[100000] flex items-center justify-center overflow-y-auto px-4 py-6"
+        :class="modalModeClass"
+        @keydown.escape.window="closeDelete()"
+    >
+
 
             {{-- BACKDROP --}}
 
@@ -844,7 +1286,7 @@
 
                         <button
                             type="button"
-                            @click="closeDelete()"
+                            @click.stop="closeDelete()"
                             class="h-11 rounded-xl border border-white/[0.08] bg-white/[0.02] px-5 text-xs font-bold text-gray-300 transition hover:border-white/[0.14] hover:bg-white/[0.05] hover:text-white"
                         >
                             Cancel
@@ -854,8 +1296,9 @@
                             type="button"
                             @click="
                                 if (deleteId) {
-                                    $wire.delete(deleteId);
+                                    const id = deleteId;
                                     closeDelete();
+                                    $wire.delete(id);
                                 }
                             "
                             wire:loading.attr="disabled"
@@ -921,6 +1364,7 @@
             x-cloak
             x-transition.opacity.duration.200ms
             class="cc-modal-backdrop fixed inset-0 z-[9999] overflow-y-auto px-3 py-4 sm:px-6 sm:py-8"
+            @click.self="$wire.cancel()"
             @keydown.escape.window="$wire.cancel()"
         >
 
@@ -1010,6 +1454,7 @@
                         <button
                             type="button"
                             wire:click="cancel"
+                            @click.stop
                             class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] text-gray-300 transition hover:border-white/15 hover:bg-white/5 hover:text-white"
                         >
                             <svg
@@ -2053,6 +2498,7 @@
                             <button
                                 type="button"
                                 wire:click="cancel"
+                                @click.stop
                                 class="rounded-xl px-4 py-2.5 text-xs font-semibold text-gray-300 transition hover:bg-white/5 hover:text-white"
                             >
                                 Cancel

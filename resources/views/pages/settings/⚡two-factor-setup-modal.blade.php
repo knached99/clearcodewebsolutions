@@ -176,9 +176,36 @@ new class extends Component {
 
 <flux:modal
     name="two-factor-setup-modal"
-    class="w-[calc(100vw-2rem)] max-w-lg md:min-w-[32rem]"
+    class="cc-two-factor-modal w-[calc(100vw-2rem)] max-w-lg md:min-w-[32rem]"
     @close="closeModal"
 >
+    <div
+        x-data="{
+            htmlIsDark: document.documentElement.classList.contains('dark'),
+            observer: null,
+
+            init() {
+                this.observer = new MutationObserver(() => {
+                    this.htmlIsDark = document.documentElement.classList.contains('dark');
+                });
+
+                this.observer.observe(document.documentElement, {
+                    attributes: true,
+                    attributeFilter: ['class'],
+                });
+
+                this.$nextTick(() => {
+                    this.htmlIsDark = document.documentElement.classList.contains('dark');
+                });
+            },
+
+            get isLightMode() {
+                return !this.htmlIsDark;
+            }
+        }"
+        :class="{ 'light': isLightMode }"
+        class="cc-two-factor-settings"
+    >
     <div class="overflow-hidden rounded-2xl border border-purple-500/15 bg-black shadow-2xl shadow-purple-950/30">
 
         {{-- Header --}}

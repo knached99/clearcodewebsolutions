@@ -1,5 +1,28 @@
 <div
-    x-data
+    x-data="{
+        htmlIsDark: document.documentElement.classList.contains('dark'),
+        observer: null,
+
+        init() {
+            this.observer = new MutationObserver(() => {
+                this.htmlIsDark = document.documentElement.classList.contains('dark');
+            });
+
+            this.observer.observe(document.documentElement, {
+                attributes: true,
+                attributeFilter: ['class'],
+            });
+
+            this.$nextTick(() => {
+                this.htmlIsDark = document.documentElement.classList.contains('dark');
+            });
+        },
+
+        get isLightMode() {
+            return !this.htmlIsDark;
+        }
+    }"
+
     x-init="
         @if ($highlightedTestimonialId)
             setTimeout(() => {
@@ -16,7 +39,10 @@
             }, 400);
         @endif
     "
-    class="cc-admin-testimonials relative min-h-screen overflow-hidden text-white"
+
+    :class="{ 'light': isLightMode }"
+
+    class="cc-admin-testimonials relative min-h-screen overflow-hidden transition-colors duration-300"
 >
     <style>
         [x-cloak] {
