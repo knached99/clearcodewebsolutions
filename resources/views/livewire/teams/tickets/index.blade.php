@@ -4,7 +4,6 @@
            TICKETS KANBAN — FULL CSS
            Dark Luxury + Light Mode
            ========================================================= */
-
         /* =========================================================
            BASE & DARK MODE (Default)
            ========================================================= */
@@ -18,32 +17,37 @@
             --panel-bg: rgba(13, 11, 19, 0.7);
 
             color: #ffffff;
-            background:
-                radial-gradient(800px circle at 10% -5%, rgba(150, 60, 150, 0.15), transparent 50%),
-                radial-gradient(900px circle at 90% 10%, rgba(109, 40, 217, 0.12), transparent 50%),
-                radial-gradient(600px circle at 50% 60%, rgba(204, 163, 255, 0.05), transparent 60%),
-                radial-gradient(500px circle at 15% 100%, rgba(173, 211, 34, 0.05), transparent 60%),
-                linear-gradient(135deg, #030205 0%, #08060d 30%, #0a0711 52%, #06050a 78%, #030305 100%);
-            background-attachment: fixed;
             isolation: isolate;
+            /* REMOVED: background and background-attachment: fixed */
         }
 
         /* =========================================================
-           NOISE TEXTURE
+           COMBINED BACKGROUND & NOISE TEXTURE
            ========================================================= */
         .cc-tickets .noise {
             position: fixed;
             inset: 0;
             z-index: -1;
             pointer-events: none;
+            /* Force hardware acceleration */
+            transform: translate3d(0, 0, 0);
+            will-change: transform;
+            /* Combined all gradients into this single, static, GPU-accelerated layer */
             background:
+                /* Noise gradients */
                 radial-gradient(550px circle at 25% 18%, rgba(204, 163, 255, 0.08), transparent 70%),
                 radial-gradient(450px circle at 80% 28%, rgba(173, 211, 34, 0.03), transparent 70%),
-                linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.015) 45%, transparent 70%);
+                linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.015) 45%, transparent 70%),
+                /* Base background gradients */
+                radial-gradient(800px circle at 10% -5%, rgba(150, 60, 150, 0.15), transparent 50%),
+                radial-gradient(900px circle at 90% 10%, rgba(109, 40, 217, 0.12), transparent 50%),
+                radial-gradient(600px circle at 50% 60%, rgba(204, 163, 255, 0.05), transparent 60%),
+                radial-gradient(500px circle at 15% 100%, rgba(173, 211, 34, 0.05), transparent 60%),
+                linear-gradient(135deg, #030205 0%, #08060d 30%, #0a0711 52%, #06050a 78%, #030305 100%);
         }
 
         /* =========================================================
-           GLASSMORPHISM
+           GLASSMORPHISM (Header Only)
            ========================================================= */
         .cc-tickets .glass-panel {
             background: linear-gradient(145deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
@@ -51,17 +55,18 @@
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
+            transform: translate3d(0, 0, 0);
         }
 
         /* =========================================================
            KANBAN COLUMNS
            ========================================================= */
         .cc-tickets .kanban-column {
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.005));
+            /* Slightly increased base opacity to compensate for removed blur */
+            background: linear-gradient(180deg, rgba(30, 25, 40, 0.5), rgba(25, 20, 30, 0.2));
             border: 1px solid rgba(255, 255, 255, 0.05);
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            /* REMOVED: backdrop-filter: blur(4px) */
             transition: border-color 0.3s ease, background 0.3s ease;
         }
 
@@ -75,21 +80,23 @@
            TICKET CARDS
            ========================================================= */
         .cc-tickets .ticket-card {
-            background: linear-gradient(145deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015));
+            /* Made the background slightly more opaque since we removed the blur */
+            background: linear-gradient(145deg, rgba(20, 18, 25, 0.6), rgba(255, 255, 255, 0.02));
             border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1),
-                border-color 0.3s ease,
-                box-shadow 0.3s ease;
-            will-change: transform;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+            transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+                border-color 0.2s ease,
+                box-shadow 0.2s ease;
+            /*
+               REMOVED: backdrop-filter: blur() (Major performance killer on lists)
+               REMOVED: will-change: transform (Consumes too much GPU RAM for lists)
+            */
         }
 
         .cc-tickets .ticket-card:hover {
-            transform: translateY(-4px) scale(1.01);
+            transform: translateY(-2px);
             border-color: rgba(204, 163, 255, 0.3);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3),
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3),
                 0 0 0 1px rgba(204, 163, 255, 0.1),
                 0 10px 30px rgba(150, 60, 150, 0.15);
         }
@@ -108,7 +115,7 @@
             background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
             border: 1px solid rgba(255, 255, 255, 0.08);
             color: #fff;
-            transition: border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+            transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
         }
 
         .cc-tickets .cc-input:hover {
@@ -189,12 +196,12 @@
         .cc-tickets.light .ticket-card {
             background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.8));
             border-color: rgba(0, 0, 0, 0.08);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 1);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 1);
         }
 
         .cc-tickets.light .ticket-card:hover {
             border-color: rgba(150, 60, 150, 0.3);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.08),
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08),
                 0 0 0 1px rgba(150, 60, 150, 0.1),
                 0 10px 30px rgba(150, 60, 150, 0.05);
         }
