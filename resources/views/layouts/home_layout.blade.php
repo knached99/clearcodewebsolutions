@@ -6,12 +6,12 @@
     <meta charset="utf-8">
 
     <title>
-        @yield('title', 'Clear Code Web Solutions')
+        {{ $title ?? 'Clear Code Web Solutions' }}
     </title>
 
     <meta
         name="description"
-        content="@yield('description', 'Clear Code Web Solutions creates modern, high-performance websites and digital solutions.')"
+        content="{{ $description ?? 'Clear Code Web Solutions creates modern, high-performance websites and digital solutions.' }}"
     >
 
     <meta
@@ -72,12 +72,12 @@
 
     <meta
         property="og:title"
-        content="@yield('og_title', 'Clear Code Web Solutions')"
+        content="{{ $og_title ?? ($title ?? 'Clear Code Web Solutions') }}"
     >
 
     <meta
         property="og:description"
-        content="@yield('og_description', 'Modern, high-performance websites and digital solutions.')"
+        content="{{ $og_description ?? ($description ?? 'Modern, high-performance websites and digital solutions.') }}"
     >
 
     <meta
@@ -118,12 +118,6 @@
         href="{{ asset('css/clearcode.css') }}"
     >
 
-    {{-- <link
-        rel="stylesheet"
-        type="text/css"
-        href="{{asset('css/custom-cursor.css')}}"
-    > --}}
-
     {{-- Browser Color --}}
 
     <meta name="theme-color" content="#B247B2">
@@ -152,18 +146,25 @@
     {{-- Initial Page Loader --}}
 
     <x-home.loader />
-    {{-- <x-home.custom-cursor/> --}}
+
+    {{-- Navbar --}}
+
+    <x-home.navbar />
 
     {{-- Page Content --}}
-    
-    {{ $slot ?? '' }}
 
-    @yield('content')
+    @if (isset($slot) && trim($slot) !== '')
+        {{ $slot }}
+    @else
+        @yield('content')
+    @endif
+
+    {{-- Footer --}}
+
+    <x-home.footer />
 
     {{-- Scripts --}}
 
-    
-    {{-- <script src="{{asset('javascript/js/custom-cursor.js')}}"></script> --}}
     <script src="{{ asset('javascript/js/demo/jquery.min.js') }}"></script>
 
     <script src="{{ asset('javascript/js/demo/modernizr.js') }}"></script>

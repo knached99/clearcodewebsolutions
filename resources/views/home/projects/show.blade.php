@@ -816,8 +816,6 @@
 
 @section('content')
 
-    <x-home.navbar />
-
     @php
         $images = $work->image_urls;
     @endphp

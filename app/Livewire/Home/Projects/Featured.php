@@ -1,6 +1,6 @@
 <?php
 
-namespace app\Livewire\Home\Projects;
+namespace App\Livewire\Home\Projects;
 
 use App\Models\Work;
 use Livewire\Component;
@@ -13,16 +13,18 @@ class Featured extends Component
 
     public function mount(): void
     {
-        $this->works = Work::query()
+        // Fetch 5 so we can determine whether more than 4 exist.
+        $works = Work::query()
             ->where('is_published', true)
             ->orderBy('sort_order')
             ->latest('id')
             ->take(5)
             ->get();
 
-        $this->hasMore = $this->works->count() > 4;
+        $this->hasMore = $works->count() > 4;
 
-        $this->works = $this->works->take(4); // only display the first 4 on the home page
+        // Only show 4 on the homepage.
+        $this->works = $works->take(4);
     }
 
     public function render()

@@ -88,7 +88,7 @@
 
         @if ($hasMore)
             <div class="cc-work-more">
-                <a href="{{ route('projects') }}" class="cc-text-link">
+                <a href="{{ route('projects.index') }}" class="cc-text-link">
                     View all projects
                     <span>↗</span>
                 </a>

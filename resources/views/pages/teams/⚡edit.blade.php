@@ -562,39 +562,34 @@ new class extends Component
                                 )
 
                                     <flux:dropdown
-                                        position="bottom"
-                                        align="end"
+                                    position="bottom"
+                                    align="end"
+                                >
+                                    <flux:button
+                                        variant="outline"
+                                        size="sm"
+                                        icon:trailing="chevron-down"
+                                        class="cursor-pointer border-gray-300! bg-white! text-gray-700! hover:bg-gray-50! hover:text-gray-900! dark:border-white/8! dark:bg-white/[0.025]! dark:text-white/50! dark:hover:bg-white/[0.05]!"
+                                        data-test="member-role-trigger"
                                     >
+                                        {{ $member['role_label'] }}
+                                    </flux:button>
 
-                                        <flux:button
-                                            variant="outline"
-                                            size="sm"
-                                            icon:trailing="chevron-down"
-                                            class="cursor-pointer border-white/8! bg-white/[0.025]! text-white/50! hover:bg-white/[0.05]!"
-                                            data-test="member-role-trigger"
-                                        >
-                                            {{ $member['role_label'] }}
-                                        </flux:button>
+                                    <flux:menu>
+                                        @foreach ($availableRoles as $role)
+                                            <flux:menu.item
+                                                as="button"
+                                                type="button"
+                                                wire:click="updateMember({{ $member['id'] }}, '{{ $role['value'] }}')"
+                                                class="cursor-pointer"
+                                                data-test="member-role-option"
+                                            >
+                                                {{ $role['label'] }}
+                                            </flux:menu.item>
+                                        @endforeach
+                                    </flux:menu>
+                                </flux:dropdown>
 
-                                        <flux:menu>
-
-                                            @foreach ($availableRoles as $role)
-
-                                                <flux:menu.item
-                                                    as="button"
-                                                    type="button"
-                                                    wire:click="updateMember({{ $member['id'] }}, '{{ $role['value'] }}')"
-                                                    class="cursor-pointer"
-                                                    data-test="member-role-option"
-                                                >
-                                                    {{ $role['label'] }}
-                                                </flux:menu.item>
-
-                                            @endforeach
-
-                                        </flux:menu>
-
-                                    </flux:dropdown>
 
                                 @else
 
@@ -614,18 +609,16 @@ new class extends Component
 
                                     <flux:modal.trigger name="remove-member-{{ $member['id'] }}">
 
+                                        <flux:modal.trigger name="remove-member-{{ $member['id'] }}">
                                         <flux:tooltip :content="__('Remove member')">
-
                                             <flux:button
                                                 variant="ghost"
                                                 size="sm"
                                                 icon="x-mark"
-                                                class="cursor-pointer text-white! hover:bg-red-400/8! hover:text-red-300!"
+                                                class="cursor-pointer text-gray-600! hover:bg-red-50! hover:text-red-600! dark:text-white! dark:hover:bg-red-400/8! dark:hover:text-red-300!"
                                                 data-test="member-remove-button"
                                             />
-
                                         </flux:tooltip>
-
                                     </flux:modal.trigger>
 
                                 @endif

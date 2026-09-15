@@ -45,6 +45,12 @@ class TeamInvitation extends Notification
                 ]
             ));
 
+        /*
+         * New user:
+         *
+         * The invitation process created their account and gave
+         * them a temporary password.
+         */
         if ($this->temporaryPassword !== null) {
             $mail
                 ->line(__('Your account has been created for you.'))
@@ -53,23 +59,27 @@ class TeamInvitation extends Notification
                 ]))
                 ->line(__('Temporary password: :password', [
                     'password' => $this->temporaryPassword,
-                ]));
+                ]))
+                ->line(
+                    __('For security, you will be required to create a new password before accessing your account.')
+                );
         } else {
+            /*
+             * Existing user:
+             *
+             * Do not tell them to create a new password.
+             */
             $mail->line(
                 __('You already have an account. Sign in using your existing password.')
             );
         }
 
-        $mail
-            ->action(
-                __('Sign In'),
-                route('login', [
-                    'invitation' => $invitation->code,
-                ])
-            )
-            ->line(
-                __('For security, you will be required to create a new password before accessing your account.')
-            );
+        $mail->action(
+            __('Sign In'),
+            route('login', [
+                'invitation' => $invitation->code,
+            ])
+        );
 
         return $mail;
     }

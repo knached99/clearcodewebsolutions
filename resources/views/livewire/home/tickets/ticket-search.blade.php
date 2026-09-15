@@ -840,7 +840,6 @@
 @endpush
 
 <div class="ticket-search-root">
-    <x-home.navbar />
 
     <main>
         <section class="ticket-search-page">

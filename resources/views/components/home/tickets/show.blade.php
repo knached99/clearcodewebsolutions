@@ -9,8 +9,6 @@
 
 @section('content')
 
-    <x-home.navbar />
-
     <main class="ticket-page">
         <div class="ticket-shell">
 {{-- 

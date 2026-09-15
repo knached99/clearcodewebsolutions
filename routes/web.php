@@ -8,6 +8,7 @@ use App\Http\Controllers\WorkController;
 use App\Livewire\Home\Tickets\TicketSearch;
 use App\Livewire\Teams\Projects\Index as AdminWorksIndex;
 use App\Livewire\Teams\Testimonials\Index as AdminTestimonialsIndex;
+use App\Livewire\Home\Projects\Index as ProjectsIndex; 
 use App\Livewire\RequiredOnboarding;
 use Illuminate\Support\Facades\Route;
 
@@ -36,6 +37,7 @@ Route::get('/onboarding', RequiredOnboarding::class)
         'verified',
     ])
     ->name('onboarding');
+
 
 /*
 |--------------------------------------------------------------------------
@@ -83,6 +85,9 @@ Route::get(
 | Public Projects
 |--------------------------------------------------------------------------
 */
+
+Route::get('/projects', ProjectsIndex::class)
+    ->name('projects.index');
 
 Route::get('/projects/{work}', [
     WorkController::class,

@@ -6,8 +6,6 @@
 
 @section('content')
 
-    <x-home.navbar />
-
     <main>
 
         <x-home.intro />

@@ -194,6 +194,14 @@ class TicketSearch extends Component
         );
     }
 
+
+    public function resetEmailVerification(): void 
+    {   
+        $this->email = '';
+        $this->verificationCode = '';
+        $this->emailVerificationSent = false; 
+        $this->resetValidation();
+    }
     /*
     |--------------------------------------------------------------------------
     | Send Verification Code

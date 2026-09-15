@@ -6,7 +6,8 @@ use Flux\Flux;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 
-new class extends Component {
+new class extends Component
+{
     public Team $team;
 
     public ?int $memberId = null;
@@ -20,17 +21,21 @@ new class extends Component {
         ?int $memberId = null,
         ?string $memberName = null,
         ?string $modalName = null,
-    ): void
-    {
+    ): void {
         $this->team = $team;
         $this->memberId = $memberId;
         $this->memberName = $memberName ?? '';
-        $this->modalName = $modalName ?? ($memberId ? "remove-member-{$memberId}" : 'remove-member');
+        $this->modalName = $modalName
+            ?? ($memberId ? "remove-member-{$memberId}" : 'remove-member');
     }
 
     public function removeMember(): void
     {
         Gate::authorize('removeMember', $this->team);
+
+        if (! $this->memberId) {
+            return;
+        }
 
         $user = User::findOrFail($this->memberId);
 
@@ -38,35 +43,93 @@ new class extends Component {
             $this->memberName = $user->name;
         }
 
+        /*
+         * Remove the user's membership from this team.
+         */
         $this->team->memberships()
             ->where('user_id', $user->id)
             ->delete();
 
+        /*
+         * If this was the user's current team, move them to another
+         * team they own. The teams.id qualification is important here
+         * because ownedTeams() joins team_members and both tables
+         * contain an id column.
+         */
         if ($user->isCurrentTeam($this->team)) {
-            $user->switchTeam($user->personalTeam());
+            $nextTeam = $user->ownedTeams()
+                ->where('teams.id', '!=', $this->team->id)
+                ->first();
+
+            if ($nextTeam) {
+                $user->switchTeam($nextTeam);
+            } else {
+                $user->forceFill([
+                    'current_team_id' => null,
+                ])->save();
+            }
         }
 
-        $this->dispatch('close-modal', name: $this->modalName);
+        $this->dispatch(
+            'close-modal',
+            name: $this->modalName,
+        );
 
-        Flux::toast(variant: 'success', text: __('Member removed.'));
+        Flux::toast(
+            variant: 'success',
+            text: __('Member removed.'),
+        );
 
-        $this->redirectRoute('teams.edit', ['team' => $this->team->slug], navigate: true);
+        $this->redirectRoute(
+            'teams.edit',
+            ['team' => $this->team->slug],
+            navigate: true,
+        );
     }
-}; ?>
-
-<flux:modal :name="$modalName" focusable class="max-w-lg">
-    <form wire:submit="removeMember" class="space-y-6">
+};
+?>
+<div>
+<flux:modal
+    :name="$modalName"
+    focusable
+    class="max-w-lg"
+>
+    <form
+        wire:submit="removeMember"
+        class="space-y-6"
+    >
         <div>
-            <flux:heading size="lg">{{ __('Remove team member') }}</flux:heading>
+            <flux:heading size="lg">
+                {{ __('Remove team member') }}
+            </flux:heading>
+
             <flux:subheading>
-                {{ __('Are you sure you want to remove :name from this team?', ['name' => $memberName]) }}
+                {{ __('Are you sure you want to remove :name from this team?', [
+                    'name' => $memberName,
+                ]) }}
             </flux:subheading>
         </div>
+
         <div class="flex justify-end space-x-2 rtl:space-x-reverse">
             <flux:modal.close>
-                <flux:button variant="filled">{{ __('Cancel') }}</flux:button>
+                <flux:button
+                    type="button"
+                    class="cursor-pointer"
+                    variant="filled"
+                >
+                    {{ __('Cancel') }}
+                </flux:button>
             </flux:modal.close>
-            <flux:button variant="danger" type="submit" data-test="remove-member-confirm">{{ __('Remove member') }}</flux:button>
+
+            <flux:button
+                class="cursor-pointer text-white!"
+                variant="danger"
+                type="submit"
+                data-test="remove-member-confirm"
+            >
+                {{ __('Remove member') }}
+            </flux:button>
         </div>
     </form>
 </flux:modal>
+</div>

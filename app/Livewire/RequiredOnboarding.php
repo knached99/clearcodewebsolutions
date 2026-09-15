@@ -2,12 +2,10 @@
 
 namespace App\Livewire;
 
-use App\Enums\TeamRole;
 use App\Models\TeamInvitation;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
@@ -50,12 +48,15 @@ class RequiredOnboarding extends Component
             return;
         }
 
+        // Make sure we are using the current database state.
+        $user->refresh();
+
         unset($this->pendingInvitations);
 
         /*
          * Step 1:
          *
-         * Pending invitations must be resolved before anything else.
+         * Pending invitations must always be resolved first.
          */
         if ($this->pendingInvitations->isNotEmpty()) {
             $this->showPendingInvitationsModal = true;
@@ -67,8 +68,11 @@ class RequiredOnboarding extends Component
         /*
          * Step 2:
          *
-         * Once invitations are resolved, force the invited user to
-         * change their temporary password.
+         * Only users who were created with a temporary password
+         * should have must_change_password = true.
+         *
+         * Existing users keep their existing password and skip
+         * this modal completely.
          */
         if ($user->must_change_password) {
             $this->showPendingInvitationsModal = false;
@@ -150,7 +154,7 @@ class RequiredOnboarding extends Component
             ]);
         }
 
-        DB::transaction(function () use ($invitation, $user, $team) {
+        DB::transaction(function () use ($invitation, $user, $team): void {
             /*
              * Add the user to the team using the invitation's role.
              */
@@ -168,8 +172,6 @@ class RequiredOnboarding extends Component
             ])->save();
 
             /*
-             * THIS IS CRITICAL.
-             *
              * The accepted team becomes the user's current team.
              */
             $user->forceFill([
@@ -182,6 +184,18 @@ class RequiredOnboarding extends Component
             $user->setRelation('currentTeam', $team);
         });
 
+        /*
+         * Refresh so must_change_password reflects the actual
+         * database value.
+         *
+         * Existing users will have false here and will therefore
+         * skip the password modal.
+         *
+         * Newly-created invited users will have true here and
+         * will be shown the password modal.
+         */
+        $user->refresh();
+
         unset($this->pendingInvitations);
 
         $this->resetPasswordFields();
@@ -190,10 +204,6 @@ class RequiredOnboarding extends Component
 
         Flux::modal('pending-invitations')->close();
 
-        /*
-         * If the invited user must change their password, show that
-         * modal next.
-         */
         if ($this->showChangePasswordModal) {
             Flux::modal('change-invitation-password')->show();
         }
@@ -202,11 +212,6 @@ class RequiredOnboarding extends Component
             text: 'Invitation accepted.',
             variant: 'success',
         );
-
-        /*
-         * Do NOT redirect to the dashboard yet if password change
-         * is still required.
-         */
     }
 
     public function declineInvitation(string $code): void
@@ -219,7 +224,7 @@ class RequiredOnboarding extends Component
 
         $invitation = $this->findPendingInvitation($code);
 
-        DB::transaction(function () use ($invitation, $user) {
+        DB::transaction(function () use ($invitation, $user): void {
             /*
              * The account is being deleted, so there is no reason
              * to switch teams.
@@ -251,7 +256,8 @@ class RequiredOnboarding extends Component
         }
 
         /*
-         * Never allow the password step before invitation resolution.
+         * Never allow the password step before all invitations
+         * have been resolved.
          */
         if ($this->pendingInvitations->isNotEmpty()) {
             throw ValidationException::withMessages([
@@ -259,8 +265,14 @@ class RequiredOnboarding extends Component
             ]);
         }
 
+        /*
+         * If this is an existing user, there is no password-change
+         * requirement. Close the modal and stop.
+         */
         if (! $user->must_change_password) {
             $this->showChangePasswordModal = false;
+
+            Flux::modal('change-invitation-password')->close();
 
             return;
         }
@@ -283,7 +295,7 @@ class RequiredOnboarding extends Component
         ])->save();
 
         /*
-         * Reload current team after the update.
+         * Reload the user after updating the password.
          */
         $user->refresh();
 
@@ -299,7 +311,7 @@ class RequiredOnboarding extends Component
         );
 
         /*
-         * Explicitly provide the required route parameter.
+         * Send the user to their current team's dashboard.
          */
         if ($user->currentTeam) {
             $this->redirect(
@@ -312,10 +324,6 @@ class RequiredOnboarding extends Component
             return;
         }
 
-        /*
-         * This should only happen if the user's team membership
-         * disappeared unexpectedly.
-         */
         $this->redirect(
             route('onboarding'),
             navigate: true,
