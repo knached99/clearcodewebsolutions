@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
 
             $table->string('ticket_number')->unique();
-
+            $table->foreignId('user_id')->after('id')->constrained('users')->cascadeOnDelete();
             $table->string('name');
             $table->string('email');
 
@@ -29,7 +29,7 @@ return new class extends Migration
             $table->timestamp('last_activity_at')->nullable();
 
             $table->timestamps();
-
+            $table->index('user_id');
             $table->index(['email']);
             $table->index(['status']);
         });
