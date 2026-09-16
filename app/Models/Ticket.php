@@ -10,6 +10,7 @@ class Ticket extends Model
 {
     protected $fillable = [
         'team_id',
+        'customer_id',
         'ticket_number',
         'name',
         'email',
@@ -27,6 +28,11 @@ class Ticket extends Model
     public function team(): BelongsTo
     {
         return $this->belongsTo(Team::class);
+    }
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
     }
 
     public function messages(): HasMany
@@ -53,5 +59,22 @@ class Ticket extends Model
     public function getRouteKeyName(): string
     {
         return 'ticket_number';
+    }
+
+    /**
+     * Find (or create) the Customer this ticket belongs to, keyed by the
+     * submitter's email, and persist the link. Called when a ticket is
+     * resolved and a charge is about to be created against it.
+     */
+    public function resolveCustomer(): Customer
+    {
+        if ($this->customer_id) {
+            return $this->customer;
+        }
+
+        $customer = Customer::resolveFromEmail($this->email, $this->name);
+        $this->update(['customer_id' => $customer->id]);
+
+        return $customer;
     }
 }

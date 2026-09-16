@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -93,5 +94,40 @@ class User extends Authenticatable implements PasskeyUser
         return ! $this->teamMemberships()
             ->where('role', TeamRole::Member->value)
             ->exists();
+    }
+
+    public function customer(): HasOne
+    {
+        return $this->hasOne(Customer::class);
+    }
+
+    /**
+     * A "customer" is a user with no team membership at all — they only
+     * ever interact with us as a client, never as staff. Used to decide
+     * whether a login should land on the team app or the customer
+     * dashboard.
+     */
+    public function isCustomer(): bool
+    {
+        return $this->teamMemberships()->doesntExist();
+    }
+
+    /**
+     * Ensure this user has a linked Customer record and pull in any
+     * tickets/invoices/transactions created before they had an account
+     * (e.g. they submitted a guest ticket, then later registered).
+     * Call this on login/registration for customer users.
+     */
+    public function resolveAsCustomer(): Customer
+    {
+        $customer = Customer::resolveFromEmail($this->email, $this->name);
+
+        if ($customer->user_id !== $this->id) {
+            $customer->update(['user_id' => $this->id]);
+        }
+
+        $customer->backfillTickets();
+
+        return $customer;
     }
 }
