@@ -9,7 +9,6 @@ use Illuminate\Notifications\Notification;
 
 class TicketStatusChangedNotification extends Notification
 {
-
     public function __construct(
         public Ticket $ticket,
         public string $oldStatus,

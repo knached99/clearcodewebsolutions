@@ -179,7 +179,7 @@ class Index extends Component
             'images' => [
                 'nullable',
                 'array',
-                'max:' . self::MAX_IMAGES,
+                'max:'.self::MAX_IMAGES,
             ],
 
             'images.*' => [
@@ -187,7 +187,7 @@ class Index extends Component
                 'file',
                 'image',
                 'mimes:jpg,jpeg,png,webp,gif',
-                'max:' . self::MAX_IMAGE_SIZE_KB,
+                'max:'.self::MAX_IMAGE_SIZE_KB,
             ],
         ];
     }
@@ -195,38 +195,27 @@ class Index extends Component
     protected function messages(): array
     {
         return [
-            'title.required' =>
-                'Please enter a project title.',
+            'title.required' => 'Please enter a project title.',
 
-            'title.max' =>
-                'The project title may not exceed 255 characters.',
+            'title.max' => 'The project title may not exceed 255 characters.',
 
-            'description.max' =>
-                'The project description is too long.',
+            'description.max' => 'The project description is too long.',
 
-            'url.url' =>
-                'Please enter a valid project URL.',
+            'url.url' => 'Please enter a valid project URL.',
 
-            'url.max' =>
-                'The project URL is too long.',
+            'url.max' => 'The project URL is too long.',
 
-            'category.required' =>
-                'Please select a project category.',
+            'category.required' => 'Please select a project category.',
 
-            'category.in' =>
-                'Please select a valid project category.',
+            'category.in' => 'Please select a valid project category.',
 
-            'images.max' =>
-                'You may upload up to 10 images.',
+            'images.max' => 'You may upload up to 10 images.',
 
-            'images.*.image' =>
-                'Each uploaded file must be a valid image.',
+            'images.*.image' => 'Each uploaded file must be a valid image.',
 
-            'images.*.mimes' =>
-                'Only JPG, JPEG, PNG, WEBP, and GIF images are allowed.',
+            'images.*.mimes' => 'Only JPG, JPEG, PNG, WEBP, and GIF images are allowed.',
 
-            'images.*.max' =>
-                'Each image may not exceed 10 MB.',
+            'images.*.max' => 'Each image may not exceed 10 MB.',
         ];
     }
 
@@ -268,7 +257,6 @@ class Index extends Component
         unset($this->images[$index]);
         $this->images = array_values($this->images);
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -533,8 +521,7 @@ class Index extends Component
 
         $orderedProjects = $projects
             ->reject(
-                fn (Work $work): bool =>
-                    (int) $work->id === (int) $project->id,
+                fn (Work $work): bool => (int) $work->id === (int) $project->id,
             )
             ->values();
 
@@ -542,8 +529,7 @@ class Index extends Component
             $orderedProjects->prepend($project);
         } else {
             $afterIndex = $orderedProjects->search(
-                fn (Work $work): bool =>
-                    (int) $work->id === (int) $afterId,
+                fn (Work $work): bool => (int) $work->id === (int) $afterId,
             );
 
             if ($afterIndex === false) {
@@ -563,8 +549,7 @@ class Index extends Component
         }
 
         foreach (
-            $orderedProjects->values()
-            as $position => $work
+            $orderedProjects->values() as $position => $work
         ) {
             $position = (int) $position;
 
@@ -660,24 +645,22 @@ class Index extends Component
     |--------------------------------------------------------------------------
     */
 
-   public function removeExistingImage(string $image): void
-{
-    $image = trim($image);
+    public function removeExistingImage(string $image): void
+    {
+        $image = trim($image);
 
-    if ($image === '') {
-        return;
+        if ($image === '') {
+            return;
+        }
+
+        if (! in_array($image, $this->removeImages, true)) {
+            $this->removeImages[] = $image;
+        }
+
+        $this->removeImages = array_values(
+            array_unique($this->removeImages)
+        );
     }
-
-    if (! in_array($image, $this->removeImages, true)) {
-        $this->removeImages[] = $image;
-    }
-
-    $this->removeImages = array_values(
-        array_unique($this->removeImages)
-    );
-}
-
-    
 
     /*
     |--------------------------------------------------------------------------
@@ -740,30 +723,29 @@ class Index extends Component
 
         if ($totalBytes > $maxBytes) {
             throw ValidationException::withMessages([
-                'images' =>
-                    'The combined size of uploaded images may not exceed 50 MB.',
+                'images' => 'The combined size of uploaded images may not exceed 50 MB.',
             ]);
         }
     }
 
-    private function validateUploadedImages(): void 
+    private function validateUploadedImages(): void
     {
         $this->validate([
-         'images' => [
-            'nullable',
-            'array',
-            'max:' . self::MAX_IMAGES,
-        ],
+            'images' => [
+                'nullable',
+                'array',
+                'max:'.self::MAX_IMAGES,
+            ],
 
-        'images.*' => [
-            'nullable',
-            'file',
-            'image',
-            'mimes:jpg,jpeg,png,webp,gif',
-            'max:' . self::MAX_IMAGE_SIZE_KB,
-        ],
-    ]);
-    $this->validateTotalImageSize();
+            'images.*' => [
+                'nullable',
+                'file',
+                'image',
+                'mimes:jpg,jpeg,png,webp,gif',
+                'max:'.self::MAX_IMAGE_SIZE_KB,
+            ],
+        ]);
+        $this->validateTotalImageSize();
     }
 
     /*
@@ -841,18 +823,16 @@ class Index extends Component
         $this->sortAfterId = null;
     }
 
-    private function removeUploadedImage(int $index): void 
+    private function removeUploadedImage(int $index): void
     {
-        if (!array_key_exists($index, $this->images)) {
-            return; 
+        if (! array_key_exists($index, $this->images)) {
+            return;
         }
 
         unset($this->images[$index]);
         $this->images = array_values($this->images);
         $this->validateUploadedImages();
     }
-
-   
 
     /*
     |--------------------------------------------------------------------------
@@ -875,8 +855,7 @@ class Index extends Component
 
         $orderOptions = $works
             ->reject(
-                fn (Work $work): bool =>
-                    $this->editingId !== null
+                fn (Work $work): bool => $this->editingId !== null
                     && (int) $work->id === (int) $this->editingId,
             )
             ->values();

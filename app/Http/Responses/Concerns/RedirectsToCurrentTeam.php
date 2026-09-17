@@ -3,7 +3,6 @@
 namespace App\Http\Responses\Concerns;
 
 use Illuminate\Http\Request;
-use Laravel\Fortify\Fortify;
 
 trait RedirectsToCurrentTeam
 {

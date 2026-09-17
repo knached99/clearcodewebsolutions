@@ -93,12 +93,12 @@ class Index extends Component
             'status' => [
                 'required',
                 'string',
-                'in:all,' . implode(',', self::STATUSES),
+                'in:all,'.implode(',', self::STATUSES),
             ],
             'priority' => [
                 'required',
                 'string',
-                'in:all,' . implode(',', self::PRIORITIES),
+                'in:all,'.implode(',', self::PRIORITIES),
             ],
             'sort' => [
                 'required',
@@ -108,7 +108,7 @@ class Index extends Component
             'search' => [
                 'nullable',
                 'string',
-                'max:' . self::MAX_SEARCH_LENGTH,
+                'max:'.self::MAX_SEARCH_LENGTH,
             ],
         ]);
     }
@@ -312,7 +312,7 @@ class Index extends Component
                      * table becomes large, move this to full-text/search
                      * indexes rather than adding more LIKE queries.
                      */
-                    $search = '%' . $search . '%';
+                    $search = '%'.$search.'%';
 
                     $query->where(function ($query) use ($search): void {
                         $query
@@ -374,7 +374,7 @@ class Index extends Component
                         $case .= "WHEN ? THEN {$index} ";
                     }
 
-                    $case .= 'ELSE ' . count($priorityOrder) . ' END';
+                    $case .= 'ELSE '.count($priorityOrder).' END';
 
                     $bindings = $priorityOrder;
 

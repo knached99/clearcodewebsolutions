@@ -7,7 +7,6 @@ use App\Models\TeamInvitation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
-use Laravel\Fortify\Fortify;
 use Symfony\Component\HttpFoundation\Response;
 
 class LoginResponse implements LoginResponseContract

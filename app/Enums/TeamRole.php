@@ -24,29 +24,33 @@ enum TeamRole: string
     public function permissions(): array
     {
         return match ($this) {
-             self::Owner => TeamPermission::cases(),
+            self::Owner => TeamPermission::cases(),
 
-        self::Admin => [
-            TeamPermission::UpdateTeam,
+            self::Admin => [
+                TeamPermission::UpdateTeam,
 
-            TeamPermission::AddMember,
-            TeamPermission::UpdateMember,
-            TeamPermission::RemoveMember,
+                TeamPermission::AddMember,
+                TeamPermission::UpdateMember,
+                TeamPermission::RemoveMember,
 
-            TeamPermission::CreateInvitation,
-            TeamPermission::CancelInvitation,
+                TeamPermission::CreateInvitation,
+                TeamPermission::CancelInvitation,
 
-            TeamPermission::ViewProjects,
-            TeamPermission::CreateProject,
-            TeamPermission::UpdateProject,
-            TeamPermission::DeleteProject,
+                TeamPermission::ViewProjects,
+                TeamPermission::CreateProject,
+                TeamPermission::UpdateProject,
+                TeamPermission::DeleteProject,
 
-            TeamPermission::ViewTestimonials,
-            TeamPermission::ApproveTestimonial,
-            TeamPermission::DenyTestimonial,
-            TeamPermission::DeleteTestimonial,
-        ],
-            self::Member => [],
+                TeamPermission::ViewTestimonials,
+                TeamPermission::ApproveTestimonial,
+                TeamPermission::DenyTestimonial,
+                TeamPermission::DeleteTestimonial,
+
+                TeamPermission::ChargeCustomer,
+            ],
+            self::Member => [
+                TeamPermission::ChargeCustomer,
+            ],
         };
     }
 

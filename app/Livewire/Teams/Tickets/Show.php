@@ -7,6 +7,8 @@ use App\Models\TicketMessageAttachment;
 use App\Notifications\NewTicketReplyNotification;
 use App\Notifications\TicketPriorityChangedNotification;
 use App\Notifications\TicketStatusChangedNotification;
+use App\Notifications\PaymentLinkNotification;
+use App\Services\StripeService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
@@ -16,6 +18,7 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
+use Illuminate\Support\Facades\Log;
 
 class Show extends Component
 {
@@ -333,13 +336,13 @@ class Show extends Component
                 'required',
                 'string',
                 'min:1',
-                'max:' . self::MAX_MESSAGE_LENGTH,
+                'max:'.self::MAX_MESSAGE_LENGTH,
             ],
 
             'attachments' => [
                 'nullable',
                 'array',
-                'max:' . self::MAX_ATTACHMENTS,
+                'max:'.self::MAX_ATTACHMENTS,
             ],
 
             'attachments.*' => [
@@ -347,7 +350,7 @@ class Show extends Component
                 'file',
                 'image',
                 'mimes:jpg,jpeg,png,webp,gif',
-                'max:' . self::MAX_ATTACHMENT_SIZE_KB,
+                'max:'.self::MAX_ATTACHMENT_SIZE_KB,
             ],
         ], [
             'newMessage.required' => 'Please enter a message.',
@@ -407,8 +410,8 @@ class Show extends Component
             $this->addError(
                 'newMessage',
                 'Too many messages have been sent. Please try again in '
-                . $this->formatRateLimitTime($seconds)
-                . '.',
+                .$this->formatRateLimitTime($seconds)
+                .'.',
             );
 
             return;
@@ -570,6 +573,123 @@ class Show extends Component
 
     /*
     |--------------------------------------------------------------------------
+    | Send Payment Link
+    |--------------------------------------------------------------------------
+    */
+
+   public function sendPaymentLink(StripeService $stripe, int $amountInCents = 10000): void
+    {
+        Log::info('[PaymentLink] Process started.', [
+            'ticket_id' => $this->ticket->id ?? null,
+            'recipient_email' => $this->ticket->email ?? null,
+            'amount_in_cents' => $amountInCents,
+            'triggered_by_user_id' => auth()->id(),
+        ]);
+
+        $this->authorize('update', $this->ticket);
+
+        try {
+            // 1. Resolve Stripe Customer
+            Log::info('[PaymentLink] Resolving Stripe customer...', [
+                'email' => $this->ticket->email,
+                'name' => $this->ticket->name ?? 'Customer',
+            ]);
+
+            $customer = $stripe->resolveCustomer(
+                $this->ticket->email,
+                $this->ticket->name ?? 'Customer'
+            );
+
+            Log::info('[PaymentLink] Stripe customer resolved.', [
+                'customer_id' => $customer->id ?? null,
+            ]);
+
+            // 2. Create Stripe Product
+            Log::info('[PaymentLink] Creating Stripe product...');
+
+            $product = $stripe->createProduct(
+                'Service Payment - Ticket #' . $this->ticket->id,
+                'Payment request generated from support ticket.'
+            );
+
+            Log::info('[PaymentLink] Stripe product created.', [
+                'product_id' => $product->id ?? null,
+            ]);
+
+            // 3. Create Stripe Price
+            Log::info('[PaymentLink] Creating Stripe price...', [
+                'product_id' => $product->id ?? null,
+                'amount_in_cents' => $amountInCents,
+            ]);
+
+            $price = $stripe->createPrice($product->id, $amountInCents);
+
+            Log::info('[PaymentLink] Stripe price created.', [
+                'price_id' => $price->id ?? null,
+            ]);
+
+            // 4. Generate Checkout Link
+            Log::info('[PaymentLink] Generating Stripe checkout session...');
+
+            $session = $stripe->createCheckoutLink($customer->id, $price->id);
+
+            Log::info('[PaymentLink] Stripe checkout link generated successfully.', [
+                'checkout_url' => $session->url ?? null,
+            ]);
+
+            // 5. Send Mail Notification
+            Log::info('[PaymentLink] Attempting to dispatch email notification...', [
+                'recipient' => $this->ticket->email,
+                'checkout_url' => $session->url ?? null,
+            ]);
+
+            Notification::route('mail', $this->ticket->email)
+                ->notify(new PaymentLinkNotification($session->url));
+
+            Log::info('[PaymentLink] Notification::notify() executed without raising an exception.');
+
+            // 6. Add System Note to Ticket
+            $this->ticket->messages()->create([
+                'author_type' => 'system',
+                'author_name' => 'Billing System',
+                'message' => 'A secure payment link for $' . number_format($amountInCents / 100, 2) . ' was sent to the customer.',
+            ]);
+
+            Log::info('[PaymentLink] System message logged to ticket.');
+
+            // 7. Reload State & UI
+            $this->loadTicket();
+
+            session()->flash(
+                'ticket-success',
+                'Payment link successfully generated and emailed to the customer.'
+            );
+
+            $this->dispatch('payment-link-sent');
+
+            Log::info('[PaymentLink] Process completed successfully.');
+
+        } catch (Throwable $exception) {
+            Log::error('[PaymentLink] Execution failed with an exception.', [
+                'ticket_id' => $this->ticket->id ?? null,
+                'exception_message' => $exception->getMessage(),
+                'exception_code' => $exception->getCode(),
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+                'trace' => $exception->getTraceAsString(),
+            ]);
+
+            report($exception);
+
+            $this->addError(
+                'stripeError',
+                'There was an issue generating the payment link: ' . $exception->getMessage()
+            );
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | Upload Validation
     |--------------------------------------------------------------------------
     */
@@ -580,7 +700,7 @@ class Show extends Component
             'attachments' => [
                 'nullable',
                 'array',
-                'max:' . self::MAX_ATTACHMENTS,
+                'max:'.self::MAX_ATTACHMENTS,
             ],
 
             'attachments.*' => [
@@ -588,7 +708,7 @@ class Show extends Component
                 'file',
                 'image',
                 'mimes:jpg,jpeg,png,webp,gif',
-                'max:' . self::MAX_ATTACHMENT_SIZE_KB,
+                'max:'.self::MAX_ATTACHMENT_SIZE_KB,
             ],
         ]);
 
@@ -622,8 +742,7 @@ class Show extends Component
 
         if ($totalBytes > $maxBytes) {
             throw ValidationException::withMessages([
-                'attachments' =>
-                    'The combined size of your attachments may not exceed 50 MB.',
+                'attachments' => 'The combined size of your attachments may not exceed 50 MB.',
             ]);
         }
     }
@@ -653,8 +772,7 @@ class Show extends Component
             true,
         )) {
             throw ValidationException::withMessages([
-                'attachments' =>
-                    'One of the uploaded files has an invalid file type.',
+                'attachments' => 'One of the uploaded files has an invalid file type.',
             ]);
         }
 
@@ -664,7 +782,7 @@ class Show extends Component
          * The client's filename is never used as the filesystem name.
          */
         $path = $attachment->store(
-            'tickets/' . $ticketId,
+            'tickets/'.$ticketId,
             'public',
         );
 
@@ -857,18 +975,16 @@ class Show extends Component
                  * to blindly inserting a customer-provided filename
                  * into a header.
                  */
-                'Content-Disposition' =>
-                    'inline; filename="' .
+                'Content-Disposition' => 'inline; filename="'.
                     addcslashes(
                         $filename,
-                        "\\\"",
-                    ) .
+                        '\\"',
+                    ).
                     '"',
 
                 'X-Content-Type-Options' => 'nosniff',
 
-                'Cache-Control' =>
-                    'private, no-store, max-age=0',
+                'Cache-Control' => 'private, no-store, max-age=0',
 
                 'Pragma' => 'no-cache',
             ],
@@ -904,8 +1020,7 @@ class Show extends Component
             [
                 'X-Content-Type-Options' => 'nosniff',
 
-                'Cache-Control' =>
-                    'private, no-store, max-age=0',
+                'Cache-Control' => 'private, no-store, max-age=0',
 
                 'Pragma' => 'no-cache',
             ],
@@ -982,14 +1097,14 @@ class Show extends Component
         int $seconds,
     ): string {
         if ($seconds < 60) {
-            return $seconds . ' seconds';
+            return $seconds.' seconds';
         }
 
         $minutes = (int) ceil($seconds / 60);
 
         return $minutes
-            . ' minute'
-            . ($minutes === 1 ? '' : 's');
+            .' minute'
+            .($minutes === 1 ? '' : 's');
     }
 
     /*

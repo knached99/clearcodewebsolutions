@@ -170,8 +170,8 @@ trait HasTeams
             ) ?? false,
 
             canViewTestimonials: $role?->hasPermission(
-            TeamPermission::ViewTestimonials
-        ) ?? false,
+                TeamPermission::ViewTestimonials
+            ) ?? false,
 
             canApproveTestimonial: $role?->hasPermission(
                 TeamPermission::ApproveTestimonial
@@ -183,7 +183,7 @@ trait HasTeams
 
             canDeleteTestimonial: $role?->hasPermission(
                 TeamPermission::DeleteTestimonial
-    ) ?? false,
+            ) ?? false,
         );
     }
 

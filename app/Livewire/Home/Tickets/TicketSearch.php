@@ -18,15 +18,19 @@ class TicketSearch extends Component
     private const RECAPTCHA_MAX_LENGTH = 4096;
 
     private const SEND_EMAIL_MAX_ATTEMPTS = 3;
+
     private const SEND_EMAIL_DECAY_SECONDS = 900;
 
     private const SEND_IP_MAX_ATTEMPTS = 10;
+
     private const SEND_IP_DECAY_SECONDS = 900;
 
     private const VERIFY_EMAIL_MAX_ATTEMPTS = 5;
+
     private const VERIFY_EMAIL_DECAY_SECONDS = 900;
 
     private const VERIFY_IP_MAX_ATTEMPTS = 15;
+
     private const VERIFY_IP_DECAY_SECONDS = 900;
 
     private const VERIFIED_TICKETS_SESSION_KEY =
@@ -55,7 +59,7 @@ class TicketSearch extends Component
 
     public function mount(): void
     {
-        $this->extraFields = new HoneypotData();
+        $this->extraFields = new HoneypotData;
 
         $this->restoreVerifiedTicketState();
     }
@@ -104,7 +108,7 @@ class TicketSearch extends Component
             'bail',
             'required',
             'string',
-            'max:' . self::RECAPTCHA_MAX_LENGTH,
+            'max:'.self::RECAPTCHA_MAX_LENGTH,
         ];
     }
 
@@ -119,8 +123,7 @@ class TicketSearch extends Component
                 'recaptchaToken' => $this->recaptchaRules(),
             ],
             [
-                'recaptchaToken.required' =>
-                    'Please wait a moment and try again.',
+                'recaptchaToken.required' => 'Please wait a moment and try again.',
             ],
         )->validate();
     }
@@ -194,12 +197,11 @@ class TicketSearch extends Component
         );
     }
 
-
-    public function resetEmailVerification(): void 
-    {   
+    public function resetEmailVerification(): void
+    {
         $this->email = '';
         $this->verificationCode = '';
-        $this->emailVerificationSent = false; 
+        $this->emailVerificationSent = false;
         $this->resetValidation();
     }
     /*
@@ -511,8 +513,7 @@ class TicketSearch extends Component
         $ticketIds = collect($tickets)
             ->pluck('id')
             ->filter(
-                fn ($id): bool =>
-                    is_int($id)
+                fn ($id): bool => is_int($id)
                     || (
                         is_string($id)
                         && ctype_digit($id)
@@ -674,7 +675,7 @@ class TicketSearch extends Component
 
         $this->resetErrorBag();
 
-        $this->extraFields = new HoneypotData();
+        $this->extraFields = new HoneypotData;
     }
 
     /*
@@ -706,8 +707,7 @@ class TicketSearch extends Component
 
         $ticketIds = collect($ticketIds)
             ->filter(
-                fn ($id): bool =>
-                    is_int($id)
+                fn ($id): bool => is_int($id)
                     || (
                         is_string($id)
                         && ctype_digit($id)
@@ -751,8 +751,7 @@ class TicketSearch extends Component
 
         return collect($ticketIds)
             ->filter(
-                fn ($id): bool =>
-                    is_int($id)
+                fn ($id): bool => is_int($id)
                     || (
                         is_string($id)
                         && ctype_digit($id)
@@ -819,7 +818,7 @@ class TicketSearch extends Component
 
         $this->showTicketSelection = false;
 
-        $this->extraFields = new HoneypotData();
+        $this->extraFields = new HoneypotData;
 
         $this->resetValidation();
     }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\InvoiceStatus;
 use App\Enums\PaymentType;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -99,5 +100,15 @@ class Invoice extends Model
     public function checkoutUrl(): string
     {
         return route('checkout.show', $this->checkout_token);
+    }
+
+    /**
+     * Generate the PDF binary content for this invoice.
+     */
+    public function generatePdf(): string
+    {
+        $pdf = Pdf::loadView('pdf.invoice', ['invoice' => $this]);
+
+        return $pdf->output();
     }
 }

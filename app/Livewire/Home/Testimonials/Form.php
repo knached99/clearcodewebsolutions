@@ -16,14 +16,21 @@ class Form extends Component
     use UsesSpamProtection;
 
     private const RATE_LIMIT_MAX_ATTEMPTS = 3;
+
     private const RATE_LIMIT_DECAY_SECONDS = 3600;
+
     private const RECAPTCHA_MAX_LENGTH = 4096;
 
     public string $name = '';
+
     public string $email = '';
+
     public string $company = '';
+
     public string $role = '';
+
     public string $message = '';
+
     public int $rating = 0;
 
     public HoneypotData $extraFields;
@@ -32,7 +39,7 @@ class Form extends Component
 
     public function mount(): void
     {
-        $this->extraFields = new HoneypotData();
+        $this->extraFields = new HoneypotData;
     }
 
     protected function rules(): array
@@ -367,12 +374,11 @@ class Form extends Component
                     'bail',
                     'required',
                     'string',
-                    'max:' . self::RECAPTCHA_MAX_LENGTH,
+                    'max:'.self::RECAPTCHA_MAX_LENGTH,
                 ],
             ],
             [
-                'recaptchaToken.required' =>
-                    'Please wait a moment and try submitting again.',
+                'recaptchaToken.required' => 'Please wait a moment and try submitting again.',
             ],
         )->validate();
     }
@@ -381,7 +387,7 @@ class Form extends Component
     {
         $ip = request()->ip() ?? 'unknown';
 
-        return 'testimonial-submission:' . hash(
+        return 'testimonial-submission:'.hash(
             'sha256',
             $ip,
         );
@@ -399,7 +405,7 @@ class Form extends Component
 
         $this->rating = 0;
 
-        $this->extraFields = new HoneypotData();
+        $this->extraFields = new HoneypotData;
 
         $this->resetValidation();
     }

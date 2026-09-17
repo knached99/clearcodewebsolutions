@@ -139,7 +139,7 @@ class RecaptchaService
             report(
                 new RuntimeException(
                     'Google reCAPTCHA verification request failed with HTTP status '
-                    . $response->status(),
+                    .$response->status(),
                 ),
             );
 

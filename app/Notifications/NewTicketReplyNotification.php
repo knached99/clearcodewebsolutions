@@ -11,7 +11,6 @@ use Illuminate\Support\Str;
 
 class NewTicketReplyNotification extends Notification
 {
-
     public function __construct(
         public Ticket $ticket,
         public TicketMessage $ticketMessage,

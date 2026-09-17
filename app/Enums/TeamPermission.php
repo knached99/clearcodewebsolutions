@@ -23,4 +23,5 @@ enum TeamPermission: string
     case DenyTestimonial = 'testimonial:deny';
     case DeleteTestimonial = 'testimonial:delete';
 
+    case ChargeCustomer = 'customer:charge';
 }

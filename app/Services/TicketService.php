@@ -109,14 +109,14 @@ class TicketService
         int $minutes = 60,
     ): void {
         session()->put(
-            'guest_ticket_access.' . $ticket->id,
+            'guest_ticket_access.'.$ticket->id,
             now()->addMinutes($minutes)->timestamp,
         );
     }
 
     public function hasGuestTicketAccess(Ticket $ticket): bool
     {
-        $key = 'guest_ticket_access.' . $ticket->id;
+        $key = 'guest_ticket_access.'.$ticket->id;
 
         $expiresAt = session($key);
 
@@ -153,7 +153,7 @@ class TicketService
     public function revokeGuestTicketAccess(Ticket $ticket): void
     {
         session()->forget(
-            'guest_ticket_access.' . $ticket->id,
+            'guest_ticket_access.'.$ticket->id,
         );
     }
 
@@ -176,12 +176,12 @@ class TicketService
             return false;
         }
 
-        $emailKey = 'guest-ticket-email:' . hash(
+        $emailKey = 'guest-ticket-email:'.hash(
             'sha256',
             $email,
         );
 
-        $ipKey = 'guest-ticket-email-ip:' . $ipAddress;
+        $ipKey = 'guest-ticket-email-ip:'.$ipAddress;
 
         /*
          * Rate-limit before performing database work or sending mail.
@@ -268,12 +268,12 @@ class TicketService
             return null;
         }
 
-        $emailKey = 'guest-ticket-code:' . hash(
+        $emailKey = 'guest-ticket-code:'.hash(
             'sha256',
             $email,
         );
 
-        $ipKey = 'guest-ticket-code-ip:' . $ipAddress;
+        $ipKey = 'guest-ticket-code-ip:'.$ipAddress;
 
         /*
          * Rate-limit verification attempts.
@@ -431,10 +431,10 @@ class TicketService
         }
 
         return rtrim(config('app.url'), '/')
-            . '/tickets/'
-            . $ticket->ticket_number
-            . '/'
-            . $token;
+            .'/tickets/'
+            .$ticket->ticket_number
+            .'/'
+            .$token;
     }
 
     /*
@@ -466,7 +466,7 @@ class TicketService
     protected function generateTicketNumber(): string
     {
         do {
-            $ticketNumber = 'TCKT-' . Str::upper(
+            $ticketNumber = 'TCKT-'.Str::upper(
                 Str::random(8),
             );
         } while (

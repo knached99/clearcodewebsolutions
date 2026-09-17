@@ -2,10 +2,9 @@
 
 namespace App\Models;
 
-use App\Models\Team; 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany; 
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 
 class Work extends Model
@@ -35,7 +34,7 @@ class Work extends Model
         return $this->belongsTo(Team::class);
     }
 
-    public function works(): HasMany 
+    public function works(): HasMany
     {
         return $this->hasMany(Work::class);
     }

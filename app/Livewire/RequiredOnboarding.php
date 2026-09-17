@@ -103,29 +103,29 @@ class RequiredOnboarding extends Component
 
     #[Computed]
     public function pendingInvitations()
-{
-    $user = Auth::user();
+    {
+        $user = Auth::user();
 
-    if (! $user) {
-        return collect();
+        if (! $user) {
+            return collect();
+        }
+
+        $email = strtolower(trim((string) $user->email));
+
+        return TeamInvitation::query()
+            ->with([
+                'inviter',
+                'team',
+            ])
+            ->whereRaw('LOWER(email) = ?', [$email])
+            ->whereNull('accepted_at')
+            ->where(function ($query) {
+                $query
+                    ->whereNull('expires_at')
+                    ->orWhere('expires_at', '>=', now());
+            })
+            ->get();
     }
-
-    $email = strtolower(trim((string) $user->email));
-
-    return TeamInvitation::query()
-        ->with([
-            'inviter',
-            'team',
-        ])
-        ->whereRaw('LOWER(email) = ?', [$email])
-        ->whereNull('accepted_at')
-        ->where(function ($query) {
-            $query
-                ->whereNull('expires_at')
-                ->orWhere('expires_at', '>=', now());
-        })
-        ->get();
-}
 
     public function acceptInvitation(string $code): void
     {
@@ -205,17 +205,18 @@ class RequiredOnboarding extends Component
         );
 
         // if no pwd change is required (only for existing users with a password)
-        // then on accepted invitation, will redirect to curr team's dashboard 
-        if (!$this->showChangePasswordModal) {
+        // then on accepted invitation, will redirect to curr team's dashboard
+        if (! $this->showChangePasswordModal) {
             $user->refresh();
 
             if ($user->currentTeam) {
                 $this->redirect(route('dashboard', ['current_team' => $user->currentTeam->slug]), navigate: true);
             }
-            return; 
+
+            return;
         }
 
-        $this->redirect(route('onboarding'), navigate:true);
+        $this->redirect(route('onboarding'), navigate: true);
     }
 
     public function declineInvitation(string $code): void

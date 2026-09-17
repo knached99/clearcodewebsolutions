@@ -13,7 +13,7 @@ class WorkService
     private const IMAGE_DIRECTORY = 'works';
 
     public function create(
-        int $teamId, 
+        int $teamId,
         array $data,
         array $images = []
     ): Work {
@@ -91,18 +91,17 @@ class WorkService
         );
     }
 
-    protected function workData(array $data,int $teamId): array 
+    protected function workData(array $data, int $teamId): array
     {
-    return [
-        'team_id' => $teamId,
-        'title' => $data['title'],
-        'description' => $data['description'] ?? null,
-        'category' => $data['category'] ?? 'WEB DEVELOPMENT',
-        'url' => $data['url'] ?? null,
-        'images' => $data['images'] ?? [],
-        'is_published' => $data['is_published'] ?? true,
-        'sort_order' => $data['sort_order'] ?? 0,
-    ];
+        return [
+            'team_id' => $teamId,
+            'title' => $data['title'],
+            'description' => $data['description'] ?? null,
+            'category' => $data['category'] ?? 'WEB DEVELOPMENT',
+            'url' => $data['url'] ?? null,
+            'images' => $data['images'] ?? [],
+            'is_published' => $data['is_published'] ?? true,
+            'sort_order' => $data['sort_order'] ?? 0,
+        ];
     }
-
 }

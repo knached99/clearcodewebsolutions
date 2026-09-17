@@ -1,15 +1,17 @@
 <?php
 
 use App\Http\Controllers\GuestTicketAttachmentController;
+use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\Teams\TicketAttachmentController;
 use App\Http\Controllers\Teams\TicketController as TeamTicketController;
 use App\Http\Controllers\TicketController as GuestTicketController;
 use App\Http\Controllers\WorkController;
+use App\Livewire\Checkout\StripeCheckout;
+use App\Livewire\Home\Projects\Index as ProjectsIndex;
 use App\Livewire\Home\Tickets\TicketSearch;
+use App\Livewire\RequiredOnboarding;
 use App\Livewire\Teams\Projects\Index as AdminWorksIndex;
 use App\Livewire\Teams\Testimonials\Index as AdminTestimonialsIndex;
-use App\Livewire\Home\Projects\Index as ProjectsIndex; 
-use App\Livewire\RequiredOnboarding;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -37,7 +39,6 @@ Route::get('/onboarding', RequiredOnboarding::class)
         'verified',
     ])
     ->name('onboarding');
-
 
 /*
 |--------------------------------------------------------------------------
@@ -93,6 +94,18 @@ Route::get('/projects/{work}', [
     WorkController::class,
     'show',
 ])->name('work.show');
+
+/*
+|--------------------------------------------------------------------------
+| Checkout
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/checkout/{token}', StripeCheckout::class)
+    ->name('checkout.show');
+
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle'])
+    ->name('stripe.webhook');
 
 /*
 |--------------------------------------------------------------------------

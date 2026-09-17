@@ -11,8 +11,7 @@ class TeamInvitation extends Notification
     public function __construct(
         public int $invitationId,
         public ?string $temporaryPassword = null,
-    ) {
-    }
+    ) {}
 
     public function via(object $notifiable): array
     {
@@ -28,7 +27,7 @@ class TeamInvitation extends Notification
             ])
             ->findOrFail($this->invitationId);
 
-        $mail = new MailMessage();
+        $mail = new MailMessage;
 
         $mail
             ->subject(

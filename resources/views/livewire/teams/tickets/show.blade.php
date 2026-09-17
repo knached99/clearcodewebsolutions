@@ -1341,8 +1341,45 @@
                     </div>
                 </div>
 
+                {{-- ====================================================
+                    CHARGE ACTIONS
+                ===================================================== --}}
+                @if($status === 'resolved' && (auth()->user()->currentTeam->hasAdmin() || auth()->user()->currentTeam->owner()->id === auth()->id() || auth()->user()->currentTeam->hasMember(auth()->user())))
+                    @php
+                        // Simplified permission check: Owner/Admin/Member have ChargeCustomer in our recent enum update
+                        $canCharge = auth()->user()->currentTeam->roleFor(auth()->user())?->hasPermission(\App\Enums\TeamPermission::ChargeCustomer);
+                        // Fallback check if Owner (owner has all permissions)
+                        if (auth()->user()->currentTeam->owner()?->id === auth()->id()) {
+                            $canCharge = true;
+                        }
+                    @endphp
+
+                    @if($canCharge)
+                        <div class="rounded-[26px] border border-indigo-200 bg-indigo-50/50 p-5 shadow-sm dark:border-indigo-500/20 dark:bg-indigo-500/10">
+                            <h3 class="mb-2 text-base font-semibold text-indigo-900 dark:text-indigo-200">
+                                Ticket Resolved
+                            </h3>
+                            <p class="mb-4 text-sm text-indigo-700 dark:text-indigo-300">
+                                This ticket is resolved. You can now securely bill the customer for the work done.
+                            </p>
+                            
+                            <button
+                                type="button"
+                                x-on:click="$dispatch('open-charge-modal', { ticketId: {{ $ticket->id }} })"
+                                class="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                            >
+                                <flux:icon.credit-card class="size-4" />
+                                Charge Customer
+                            </button>
+                        </div>
+                    @endif
+                @endif
+
             </aside>
 
         </div>
     </main>
+
+    <!-- Modal Component -->
+    <livewire:teams.tickets.charge-customer-modal />
 </div>

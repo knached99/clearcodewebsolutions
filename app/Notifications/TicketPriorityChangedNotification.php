@@ -9,7 +9,6 @@ use Illuminate\Notifications\Notification;
 
 class TicketPriorityChangedNotification extends Notification
 {
-
     public function __construct(
         public Ticket $ticket,
         public string $oldPriority,
@@ -30,7 +29,7 @@ class TicketPriorityChangedNotification extends Notification
             ticket: $this->ticket,
             minutes: 60 * 24 * 30,
         );
-   
+
         $url = $ticketService->createGuestTicketUrl(
             ticket: $this->ticket,
             token: $token,

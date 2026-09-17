@@ -92,13 +92,13 @@ class GuestTicket extends Component
                 'required',
                 'string',
                 'min:1',
-                'max:' . self::MAX_MESSAGE_LENGTH,
+                'max:'.self::MAX_MESSAGE_LENGTH,
             ],
 
             'attachments' => [
                 'nullable',
                 'array',
-                'max:' . self::MAX_ATTACHMENTS,
+                'max:'.self::MAX_ATTACHMENTS,
             ],
 
             'attachments.*' => [
@@ -106,7 +106,7 @@ class GuestTicket extends Component
                 'file',
                 'image',
                 'mimes:jpg,jpeg,png,webp,gif',
-                'max:' . self::MAX_ATTACHMENT_SIZE_KB,
+                'max:'.self::MAX_ATTACHMENT_SIZE_KB,
             ],
         ];
     }
@@ -236,8 +236,8 @@ class GuestTicket extends Component
             $this->addError(
                 'message',
                 'Too many replies. Please try again in '
-                . $this->formatRateLimitTime($seconds)
-                . '.',
+                .$this->formatRateLimitTime($seconds)
+                .'.',
             );
 
             return;
@@ -486,7 +486,7 @@ class GuestTicket extends Component
         }
 
         $path = $attachment->store(
-            'tickets/' . $ticketId,
+            'tickets/'.$ticketId,
             'public',
         );
 
@@ -663,14 +663,14 @@ class GuestTicket extends Component
         int $seconds,
     ): string {
         if ($seconds < 60) {
-            return $seconds . ' seconds';
+            return $seconds.' seconds';
         }
 
         $minutes = (int) ceil($seconds / 60);
 
         return $minutes
-            . ' minute'
-            . ($minutes === 1 ? '' : 's');
+            .' minute'
+            .($minutes === 1 ? '' : 's');
     }
 
     /*

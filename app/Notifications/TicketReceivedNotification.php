@@ -8,7 +8,6 @@ use Illuminate\Notifications\Notification;
 
 class TicketReceivedNotification extends Notification
 {
-
     public function __construct(
         public Ticket $ticket,
         public string $token,

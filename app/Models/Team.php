@@ -13,7 +13,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
-use App\Models\Work;
 
 /**
  * @property int $id
@@ -117,8 +116,8 @@ class Team extends Model
         return $this->hasMany(Ticket::class);
     }
 
-    // gets all the projects belonging to this team 
-    public function works(): HasMany 
+    // gets all the projects belonging to this team
+    public function works(): HasMany
     {
         return $this->hasMany(Work::class);
     }

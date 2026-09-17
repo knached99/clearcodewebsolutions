@@ -10,8 +10,7 @@ class TestimonialSubmittedNotification extends Notification
 {
     public function __construct(
         public Testimonials $testimonial,
-    ) {
-    }
+    ) {}
 
     public function via(object $notifiable): array
     {
@@ -25,7 +24,7 @@ class TestimonialSubmittedNotification extends Notification
                 'Thanks for sharing your experience with Clear Code'
             )
             ->greeting(
-                'Thanks, ' . $this->testimonial->name . '!'
+                'Thanks, '.$this->testimonial->name.'!'
             )
             ->line(
                 'We really appreciate you taking the time to share your experience with Clear Code Web Solutions.'

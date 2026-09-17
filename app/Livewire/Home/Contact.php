@@ -20,12 +20,17 @@ class Contact extends Component
     use UsesSpamProtection;
 
     private const RATE_LIMIT_MAX_ATTEMPTS = 3;
+
     private const RATE_LIMIT_DECAY_SECONDS = 60;
+
     private const RECAPTCHA_MAX_LENGTH = 4096;
 
     public string $name = '';
+
     public string $email = '';
+
     public string $subject = '';
+
     public string $message = '';
 
     public HoneypotData $extraFields;
@@ -36,7 +41,7 @@ class Contact extends Component
 
     public function mount(): void
     {
-        $this->extraFields = new HoneypotData();
+        $this->extraFields = new HoneypotData;
     }
 
     protected function subjects(): array
@@ -360,12 +365,11 @@ class Contact extends Component
                     'bail',
                     'required',
                     'string',
-                    'max:' . self::RECAPTCHA_MAX_LENGTH,
+                    'max:'.self::RECAPTCHA_MAX_LENGTH,
                 ],
             ],
             [
-                'recaptchaToken.required' =>
-                    'Please wait a moment and try submitting again.',
+                'recaptchaToken.required' => 'Please wait a moment and try submitting again.',
             ],
         )->validate();
     }
@@ -374,7 +378,7 @@ class Contact extends Component
     {
         $ip = request()->ip() ?? 'unknown';
 
-        return 'contact-form:' . hash(
+        return 'contact-form:'.hash(
             'sha256',
             $ip,
         );
@@ -407,7 +411,7 @@ class Contact extends Component
 
         $this->ticketNumber = null;
 
-        $this->extraFields = new HoneypotData();
+        $this->extraFields = new HoneypotData;
 
         $this->resetValidation();
     }

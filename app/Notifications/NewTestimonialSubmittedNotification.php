@@ -9,7 +9,6 @@ use Illuminate\Notifications\Notification;
 
 class NewTestimonialSubmittedNotification extends Notification
 {
-
     public function __construct(
         public Testimonials $testimonial,
     ) {}
