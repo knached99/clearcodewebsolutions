@@ -1,8 +1,9 @@
+/* Card Container 3D Perspective */
 .card-container {
-    perspective: 1000px;
+    perspective: 1200px;
     width: 100%;
-    max-width: 380px;
-    height: 240px;
+    max-width: 440px;
+    aspect-ratio: 1.586 / 1;
     margin: 0 auto;
 }
 
@@ -10,7 +11,7 @@
     width: 100%;
     height: 100%;
     position: relative;
-    transition: transform 0.6s;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     transform-style: preserve-3d;
 }
 
@@ -18,7 +19,9 @@
     transform: rotateY(180deg);
 }
 
-.card-front, .card-back {
+/* Card Faces */
+.card-front,
+.card-back {
     width: 100%;
     height: 100%;
     position: absolute;
@@ -26,9 +29,11 @@
     left: 0;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
-    border-radius: 1rem;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
-    background: linear-gradient(135deg, #4f46e5 0%, #312e81 100%);
+    border-radius: 1.5rem;
+    box-shadow:
+        0 30px 45px -12px rgba(0, 0, 0, 0.6),
+        0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+    background: linear-gradient(135deg, #4f46e5 0%, #312e81 60%, #1e1b4b 100%);
     color: white;
     overflow: hidden;
 }
@@ -37,31 +42,63 @@
     transform: rotateY(180deg);
 }
 
-.card-front::before, .card-back::before {
-    content: '';
+/* Glass & Reflection Overlay */
+.card-gloss-overlay {
     position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
-    transform: rotate(30deg);
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        115deg,
+        rgba(255, 255, 255, 0.25) 0%,
+        rgba(255, 255, 255, 0.05) 40%,
+        rgba(0, 0, 0, 0) 65%
+    );
     pointer-events: none;
 }
 
+/* Dark-Glass Input Field Containers */
 .stripe-element-container {
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 0.5rem;
-    padding: 0.75rem 1rem;
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    background-color: rgba(3, 7, 18, 0.85);
+    border: 1px solid rgba(51, 65, 85, 0.9);
+    border-radius: 1rem;
+    padding: 1rem 1.25rem;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.3);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.stripe-element-container.StripeElement--focus {
+.stripe-element-container:hover {
+    border-color: rgba(99, 102, 241, 0.6);
+}
+
+.stripe-element-container.StripeElement--focus,
+.stripe-element-container:focus-within {
     border-color: #6366f1;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    background-color: rgba(3, 7, 18, 0.95);
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.25);
 }
 
 .stripe-element-container.StripeElement--invalid {
-    border-color: #ef4444;
+    border-color: #f87171;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.25);
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.4);
+    border-radius: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(99, 102, 241, 0.6);
 }

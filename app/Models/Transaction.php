@@ -18,6 +18,8 @@ class Transaction extends Model
         'amount',
         'status',
         'payment_method_type',
+        'brand',
+        'last4',
         'error_message',
     ];
 

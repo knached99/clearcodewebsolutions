@@ -1,29 +1,32 @@
-document.addEventListener('DOMContentLoaded', function () {
+function setupStripeCheckout() {
     const paymentForm = document.getElementById('payment-form');
     
-    if (!paymentForm) return;
+    if (!paymentForm || paymentForm.dataset.initialized === 'true') return;
+    paymentForm.dataset.initialized = 'true';
 
     const stripeKey = paymentForm.dataset.key;
     const clientSecret = paymentForm.dataset.secret;
+
+    if (!stripeKey || !clientSecret) return;
+
     const stripe = Stripe(stripeKey);
     const elements = stripe.elements();
 
     const style = {
         base: {
-            color: '#374151',
-            fontFamily: '"Instrument Sans", sans-serif',
+            color: '#ffffff',
+            fontFamily: '"Instrument Sans", ui-sans-serif, system-ui, sans-serif',
             fontSmoothing: 'antialiased',
-            fontSize: '16px',
-            '::placeholder': { color: '#9ca3af' }
+            fontSize: '18px',
+            '::placeholder': { color: '#64748b' }
         },
         invalid: {
-            color: '#ef4444',
-            iconColor: '#ef4444'
+            color: '#f87171',
+            iconColor: '#f87171'
         }
     };
 
-    // Create split elements
-    const cardNumber = elements.create('cardNumber', { style: style, showIcon: true });
+    const cardNumber = elements.create('cardNumber', { style: style, showIcon: false });
     const cardExpiry = elements.create('cardExpiry', { style: style });
     const cardCvc = elements.create('cardCvc', { style: style });
 
@@ -31,12 +34,13 @@ document.addEventListener('DOMContentLoaded', function () {
     cardExpiry.mount('#cardExpiry-element');
     cardCvc.mount('#cardCvc-element');
 
-    // DOM Elements for Visual Card
+    // DOM Elements
     const visualCard = document.getElementById('visual-card');
     const displayNum = document.getElementById('display-number');
     const displayName = document.getElementById('display-name');
     const displayExp = document.getElementById('display-expiry');
     const displayCvv = document.getElementById('display-cvv');
+    const brandLogo = document.getElementById('card-brand-logo');
     const nameInput = document.getElementById('card-name');
     
     const errDiv = document.getElementById('card-errors');
@@ -44,12 +48,29 @@ document.addEventListener('DOMContentLoaded', function () {
     const btnText = document.getElementById('button-text');
     const btnSpinner = document.getElementById('button-spinner');
 
-    // Name syncing
-    nameInput.addEventListener('input', (e) => {
-        displayName.textContent = e.target.value.toUpperCase() || 'YOUR NAME';
-    });
+    // Reset spinner and ensure button is enabled initially
+    if (btnSpinner) btnSpinner.style.display = 'none';
+    if (submitBtn) submitBtn.disabled = false;
 
-    // Real-time syncing from Stripe Elements to Visual Card
+    // Brand icon mapper
+    const brandLogos = {
+        visa: '<i class="fa-brands fa-cc-visa text-blue-400"></i>',
+        mastercard: '<i class="fa-brands fa-cc-mastercard text-orange-400"></i>',
+        amex: '<i class="fa-brands fa-cc-amex text-blue-300"></i>',
+        discover: '<i class="fa-brands fa-cc-discover text-orange-500"></i>',
+        jcb: '<i class="fa-brands fa-cc-jcb text-green-400"></i>',
+        diners: '<i class="fa-brands fa-cc-diners-club text-slate-300"></i>',
+        unknown: '<i class="fa-brands fa-cc-stripe text-white/90"></i>'
+    };
+
+    // Live Name Sync
+    if (nameInput && displayName) {
+        nameInput.addEventListener('input', (e) => {
+            displayName.textContent = e.target.value.trim().toUpperCase() || 'YOUR NAME';
+        });
+    }
+
+    // Card Number Listener (Brand Detection & Completion)
     cardNumber.on('change', (event) => {
         if (event.error) {
             errDiv.textContent = event.error.message;
@@ -57,65 +78,82 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             errDiv.classList.add('hidden');
         }
-        
-        // Unfortunately, Stripe doesn't expose the full typed card number for security.
-        // We can only get the brand and last4. We'll simulate typing by listening, but 
-        // fallback to displaying just last 4 if full string isn't available.
-        // Actually, Stripe doesn't provide the raw string at all on 'change', only empty status or complete status + brand + last4.
-        // To make it look interactive, we can just show dots until complete, then show last4.
+
+        // Update Card Brand Icon dynamically
+        if (event.brand && brandLogos[event.brand]) {
+            brandLogo.innerHTML = brandLogos[event.brand];
+        } else {
+            brandLogo.innerHTML = brandLogos.unknown;
+        }
+
+        // Mask update on progress
         if (event.complete) {
-            displayNum.textContent = `•••• •••• •••• ${event.value ? event.value.last4 : '••••'}`;
-        } else if (event.empty) {
             displayNum.textContent = '•••• •••• •••• ••••';
+            displayNum.classList.add('text-indigo-200');
+        } else {
+            displayNum.textContent = '•••• •••• •••• ••••';
+            displayNum.classList.remove('text-indigo-200');
         }
     });
 
+    // Expiry Listener
     cardExpiry.on('change', (event) => {
         if (event.complete) {
-            // Once complete, we can't extract the exact MM/YY string easily from event,
-            // we'll just indicate it's valid.
-            displayExp.textContent = '**/**';
-        } else if (event.empty) {
+            displayExp.textContent = 'VALID';
+            displayExp.classList.add('text-emerald-400');
+        } else {
             displayExp.textContent = 'MM/YY';
+            displayExp.classList.remove('text-emerald-400');
         }
     });
 
+    // CVC Focus & Flip Listener
     cardCvc.on('change', (event) => {
-        if (event.complete) displayCvv.textContent = '***';
-        else if (event.empty) displayCvv.textContent = '•••';
+        if (event.complete) {
+            displayCvv.textContent = '•••';
+        }
     });
 
-    // FLIP ANIMATION ON CVC FOCUS
-    cardCvc.on('focus', () => visualCard.classList.add('flipped'));
-    cardCvc.on('blur', () => visualCard.classList.remove('flipped'));
+    cardCvc.on('focus', () => {
+        if (visualCard) visualCard.classList.add('flipped');
+    });
 
-    // Handle form submission
+    cardCvc.on('blur', () => {
+        if (visualCard) visualCard.classList.remove('flipped');
+    });
+
+    // Form Submit Handler
     paymentForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        btnText.textContent = 'Processing...';
-        btnSpinner.classList.remove('hidden');
+        // Show Spinner & Disable Button during submission
+        btnText.textContent = 'Processing Payment...';
+        btnSpinner.style.display = 'inline-block';
         submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
 
-        // PaymentIntent or SetupIntent (Subscriptions create invoices that generate payment intents)
         const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
             payment_method: {
                 card: cardNumber,
                 billing_details: {
-                    name: nameInput.value,
+                    name: nameInput ? nameInput.value : '',
                 }
             }
         });
 
         if (error) {
+            // Re-enable button and hide spinner on error
             errDiv.textContent = error.message;
             errDiv.classList.remove('hidden');
-            btnText.textContent = 'Pay';
-            btnSpinner.classList.add('hidden');
+            btnText.textContent = 'Pay Now';
+            btnSpinner.style.display = 'none';
             submitBtn.disabled = false;
-        } else {
-            // Success
-            window.location.reload(); // Reloading will hit the 'Paid' state in Livewire
+            submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+        } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+            window.location.reload();
         }
     });
-});
+}
+
+document.addEventListener('DOMContentLoaded', setupStripeCheckout);
+document.addEventListener('livewire:navigated', setupStripeCheckout);

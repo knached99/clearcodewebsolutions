@@ -22,15 +22,6 @@ class InvoiceItem extends Model
         'is_subscription' => 'boolean',
     ];
 
-    protected static function boot(): void
-    {
-        parent::boot();
-
-        // Keep the parent invoice's total_amount in sync automatically.
-        static::saved(fn (InvoiceItem $item) => $item->invoice?->recalculateTotal());
-        static::deleted(fn (InvoiceItem $item) => $item->invoice?->recalculateTotal());
-    }
-
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class);

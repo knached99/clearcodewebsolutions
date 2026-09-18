@@ -67,7 +67,7 @@
                 <td>
                     {{ $item->description }}
                     @if($item->is_subscription)
-                        <br><span style="color: #6b7280; font-size: 12px;">(Monthly Subscription)</span>
+                        <br><span style="color: #6b7280; font-size: 12px;">(Monthly Subscription - 12 month minimum)</span>
                     @endif
                 </td>
                 <td class="amount">${{ number_format($item->amountInDollars(), 2) }}</td>

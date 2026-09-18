@@ -49,6 +49,8 @@ return new class extends Migration
             $table->string('description');
             $table->integer('amount')->default(0); // in cents
             $table->boolean('is_subscription')->default(false);
+            table->string('stripe_price_id')->nullable()->after('amount');
+        
             $table->timestamps();
         });
 

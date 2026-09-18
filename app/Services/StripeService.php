@@ -34,10 +34,14 @@ class StripeService
             return $customers->data[0];
         }
 
-        return $this->stripe->customers->create([
-            'email' => $email,
-            'name' => $name,
-        ]);
+        $params = ['email' => $email];
+
+        $cleanName = trim($name);
+        if ($cleanName !== '') {
+            $params['name'] = $cleanName;
+        }
+
+        return $this->stripe->customers->create($params);
     }
 
     /**
@@ -45,10 +49,18 @@ class StripeService
      */
     public function createProduct(string $name, ?string $description = null): Product
     {
-        return $this->stripe->products->create([
-            'name' => $name,
-            'description' => $description,
-        ]);
+        $cleanName = trim($name);
+
+        $params = [
+            'name' => $cleanName !== '' ? $cleanName : 'Service Item',
+        ];
+
+        $cleanDescription = trim((string) $description);
+        if ($cleanDescription !== '') {
+            $params['description'] = $cleanDescription;
+        }
+
+        return $this->stripe->products->create($params);
     }
 
     /**
@@ -76,61 +88,213 @@ class StripeService
      */
     public function createPaymentIntent(int $amountInCents, string $customerId, array $metadata = []): PaymentIntent
     {
-        return $this->stripe->paymentIntents->create([
+        $params = [
             'amount' => $amountInCents,
             'currency' => 'usd',
             'customer' => $customerId,
-            'metadata' => $metadata,
-            'setup_future_usage' => 'off_session', // to save card if requested later
-        ]);
+            'setup_future_usage' => 'off_session',
+        ];
+
+        if (isset($metadata['description'])) {
+            $cleanDesc = trim((string) $metadata['description']);
+            if ($cleanDesc !== '') {
+                $params['description'] = $cleanDesc;
+            }
+            unset($metadata['description']);
+        }
+
+        if (! empty($metadata)) {
+            $params['metadata'] = $metadata;
+        }
+
+        return $this->stripe->paymentIntents->create($params);
     }
 
     /**
-     * Create a subscription. Requires payment method to be set up first,
-     * or use `incomplete` status and a SetupIntent / PaymentIntent approach.
-     * We'll create it incomplete so we can pay the first invoice on the frontend.
+     * Retrieve an existing Payment Intent.
      */
-    public function createSubscription(string $customerId, array $priceIds, array $metadata = []): Subscription
+    public function getPaymentIntent(string $paymentIntentId): PaymentIntent
     {
-        $items = array_map(fn ($priceId) => ['price' => $priceId], $priceIds);
-
-        return $this->stripe->subscriptions->create([
-            'customer' => $customerId,
-            'items' => $items,
-            'payment_behavior' => 'default_incomplete',
-            'payment_settings' => ['save_default_payment_method' => 'on_subscription'],
-            'expand' => ['latest_invoice.payment_intent'],
-            'metadata' => $metadata,
-        ]);
+        return $this->stripe->paymentIntents->retrieve($paymentIntentId);
     }
 
     /**
-     * OPTION 1: Create and send a Stripe-hosted Invoice.
-     * Stripe will automatically email the customer a link to pay.
+ * Create a subscription, supporting both recurring prices and one-time initial invoice items.
+ */
+public function createSubscription(string $customerId, array $priceIds, array $metadata = [], array $oneTimeItems = []): Subscription
+{
+    $items = array_map(fn ($priceId) => ['price' => $priceId], $priceIds);
+
+    $params = [
+        'customer' => $customerId,
+        'items' => $items,
+        'payment_behavior' => 'default_incomplete',
+        'payment_settings' => ['save_default_payment_method' => 'on_subscription'],
+        'expand' => ['latest_invoice.payment_intent', 'pending_setup_intent'],
+    ];
+
+    // Attach one-time line items (e.g. Upfront Base Fee) directly to the first invoice
+    if (! empty($oneTimeItems)) {
+        $params['add_invoice_items'] = array_map(function ($item) {
+            return [
+                'amount' => $item['amount'], // in cents
+                'currency' => 'usd',
+                'description' => $item['description'],
+            ];
+        }, $oneTimeItems);
+    }
+
+    if (isset($metadata['description'])) {
+        $cleanDesc = trim((string) $metadata['description']);
+        if ($cleanDesc !== '') {
+            $params['description'] = $cleanDesc;
+        }
+        unset($metadata['description']);
+    }
+
+    if (! empty($metadata)) {
+        $params['metadata'] = $metadata;
+    }
+
+    return $this->stripe->subscriptions->create($params);
+}
+
+    /**
+     * Retrieve an existing Subscription with expanded objects.
      */
+    public function getSubscription(string $subscriptionId): Subscription
+    {
+        return $this->stripe->subscriptions->retrieve($subscriptionId, [
+            'expand' => ['latest_invoice.payment_intent', 'pending_setup_intent'],
+        ]);
+    }
+
+
+
+/**
+ * Dynamically fetch unique active recurring add-on prices from Stripe.
+ */
+public function getActiveAddons(): array
+{
+    $prices = $this->stripe->prices->all([
+        'active' => true,
+        'type' => 'recurring',
+        'expand' => ['data.product'],
+        'limit' => 100,
+    ]);
+
+    $addons = [];
+    $seenNames = [];
+
+    foreach ($prices->data as $price) {
+        if ($price->recurring && $price->recurring->interval === 'month') {
+            $product = $price->product;
+
+            if (is_object($product) && $product->active) {
+                // Filter 1: Check metadata OR match official add-on names
+                $isAddon = ($product->metadata->type ?? null) === 'addon' 
+                    || in_array($product->name, [
+                        'Website Maintenance',
+                        'SEO Optimization',
+                        'Performance Monitoring',
+                        'Security Patching',
+                        'Content Updates',
+                    ]);
+
+                // Filter 2: Exclude custom base items and deduplicate
+                if ($isAddon && ! in_array($product->name, $seenNames)) {
+                    $seenNames[] = $product->name;
+                    
+                    $addons[$price->id] = [
+                        'id' => $price->id,
+                        'name' => $product->name,
+                        'price' => $price->unit_amount / 100,
+                        'price_in_cents' => $price->unit_amount,
+                    ];
+                }
+            }
+        }
+    }
+
+    return $addons;
+}
+    /**
+     * Safely resolve client_secret across all subscription edge cases.
+     */
+    public function getSubscriptionClientSecret(Subscription|string $subscription): string
+    {
+        if (is_string($subscription)) {
+            $subscription = $this->getSubscription($subscription);
+        }
+
+        // Edge Case 1: Subscription uses a Pending Setup Intent
+        if (! empty($subscription->pending_setup_intent)) {
+            $setupIntent = $subscription->pending_setup_intent;
+            if (is_string($setupIntent)) {
+                $setupIntent = $this->stripe->setupIntents->retrieve($setupIntent);
+            }
+            if (is_object($setupIntent) && ! empty($setupIntent->client_secret)) {
+                return $setupIntent->client_secret;
+            }
+        }
+
+        // Edge Case 2: Resolve latest invoice
+        $latestInvoice = $subscription->latest_invoice ?? null;
+
+        if (is_string($latestInvoice)) {
+            $latestInvoice = $this->stripe->invoices->retrieve($latestInvoice, [
+                'expand' => ['payment_intent'],
+            ]);
+        }
+
+        if (is_object($latestInvoice)) {
+            $paymentIntent = $latestInvoice->payment_intent ?? null;
+
+            if (is_string($paymentIntent)) {
+                $paymentIntent = $this->stripe->paymentIntents->retrieve($paymentIntent);
+            }
+
+            if (is_object($paymentIntent) && ! empty($paymentIntent->client_secret)) {
+                return $paymentIntent->client_secret;
+            }
+
+            // Edge Case 3: Invoice exists with amount due, but no payment intent was attached
+            if (isset($latestInvoice->amount_due) && $latestInvoice->amount_due > 0) {
+                $fallbackIntent = $this->stripe->paymentIntents->create([
+                    'amount' => $latestInvoice->amount_due,
+                    'currency' => $latestInvoice->currency ?? 'usd',
+                    'customer' => is_string($subscription->customer) ? $subscription->customer : $subscription->customer->id,
+                    'metadata' => [
+                        'subscription_id' => $subscription->id,
+                        'invoice_id' => $latestInvoice->id,
+                    ],
+                ]);
+
+                if (! empty($fallbackIntent->client_secret)) {
+                    return $fallbackIntent->client_secret;
+                }
+            }
+        }
+
+        throw new \Exception('Unable to resolve client_secret. Please ensure invoice items have an amount greater than 0.');
+    }
+
     public function sendInvoiceEmail(string $customerId, string $priceId): Invoice
     {
-        // 1. Attach the price to the customer as an invoice item
         $this->stripe->invoiceItems->create([
             'customer' => $customerId,
             'price' => $priceId,
         ]);
 
-        // 2. Draft the invoice
         $invoice = $this->stripe->invoices->create([
             'customer' => $customerId,
             'collection_method' => 'send_invoice',
-            'days_until_due' => 7, // Required when sending invoices
+            'days_until_due' => 7,
         ]);
 
-        // 3. Trigger Stripe to send the email
         return $this->stripe->invoices->sendInvoice($invoice->id);
     }
 
-    /**
-     * OPTION 2: Generate a Checkout Session URL.
-     * You will need to email the returned $session->url using Laravel Mail.
-     */
     public function createCheckoutLink(string $customerId, string $priceId): Session
     {
         return $this->stripe->checkout->sessions->create([
@@ -141,8 +305,8 @@ class StripeService
                 'quantity' => 1,
             ]],
             'mode' => 'payment',
-            'success_url' => url('/payment-success'), // Update with your frontend route
-            'cancel_url' => url('/payment-cancelled'), // Update with your frontend route
+            'success_url' => url('/payment-success'),
+            'cancel_url' => url('/payment-cancelled'),
         ]);
     }
 }

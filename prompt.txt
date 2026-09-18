@@ -14,7 +14,8 @@
        - Create a PaymentIntent (for one-time charges).                                                                                                                                                              
        - Create a Subscription (min 12 months logic enforced).                                                                                                                                                       
                                                                                                                                                                                                                      
-    ## Phase 2: Charge Customer Modal                                                                                                                                                                                
+    ## 
+    Phase 2: Charge Customer Modal                                                                                                                                                                                
     1. Create a Livewire component `App\Livewire\Teams\Tickets\ChargeCustomerModal`.                                                                                                                                 
        - It should take a `Ticket` model as a parameter.                                                                                                                                                             
        - It must allow the user to input a custom base amount.                                                                                                                                                       

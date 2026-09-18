@@ -45,6 +45,11 @@ class Ticket extends Model
         return $this->hasMany(TicketAccessToken::class);
     }
 
+    public function invoice()
+    {
+        return $this->hasOne(Invoice::class)->latestOfMany();
+    }
+
     /**
      * Get the current guest access token.
      */

@@ -1,167 +1,163 @@
-<div
-    x-data="{
-        lightbox: false,
-        lightboxSrc: '',
-        lightboxName: '',
+<div x-data="{
+    lightbox: false,
+    lightboxSrc: '',
+    lightboxName: '',
 
-        highlightMessageId: @js(request()->integer('message') ?: null),
+    highlightMessageId: @js(request()->integer('message') ?: null),
 
-        openLightbox(src, name = '') {
-            this.lightboxSrc = src
-            this.lightboxName = name
-            this.lightbox = true
-            document.body.classList.add('overflow-hidden')
-        },
+    openLightbox(src, name = '') {
+        this.lightboxSrc = src
+        this.lightboxName = name
+        this.lightbox = true
+        document.body.classList.add('overflow-hidden')
+    },
 
-        closeLightbox() {
-            this.lightbox = false
-            this.lightboxSrc = ''
-            this.lightboxName = ''
-            document.body.classList.remove('overflow-hidden')
-        },
+    closeLightbox() {
+        this.lightbox = false
+        this.lightboxSrc = ''
+        this.lightboxName = ''
+        document.body.classList.remove('overflow-hidden')
+    },
 
-        getScrollableParents(element) {
-            const parents = []
+    getScrollableParents(element) {
+        const parents = []
 
-            let parent = element?.parentElement
+        let parent = element?.parentElement
 
-            while (parent) {
-                const style = window.getComputedStyle(parent)
+        while (parent) {
+            const style = window.getComputedStyle(parent)
 
-                const overflowY = style.overflowY
+            const overflowY = style.overflowY
 
-                const isScrollable =
-                    (
-                        overflowY === 'auto' ||
-                        overflowY === 'scroll' ||
-                        overflowY === 'overlay'
-                    ) &&
-                    parent.scrollHeight > parent.clientHeight
+            const isScrollable =
+                (
+                    overflowY === 'auto' ||
+                    overflowY === 'scroll' ||
+                    overflowY === 'overlay'
+                ) &&
+                parent.scrollHeight > parent.clientHeight
 
-                if (isScrollable) {
-                    parents.push(parent)
-                }
-
-                parent = parent.parentElement
+            if (isScrollable) {
+                parents.push(parent)
             }
 
-            return parents
-        },
+            parent = parent.parentElement
+        }
 
-        scrollContainerToBottom(container) {
-            container.scrollTo({
-                top: container.scrollHeight,
-                behavior: 'smooth',
-            })
-        },
+        return parents
+    },
 
-        scrollToBottom() {
-            // Find the deepest/actual scroll container.
-            const containers = this.getScrollableParents(this.$root)
+    scrollContainerToBottom(container) {
+        container.scrollTo({
+            top: container.scrollHeight,
+            behavior: 'smooth',
+        })
+    },
 
-            if (containers.length) {
-                // The closest scroll container is normally the one
-                // used by the desktop application shell.
-                const container = containers[0]
+    scrollToBottom() {
+        // Find the deepest/actual scroll container.
+        const containers = this.getScrollableParents(this.$root)
 
-                this.scrollContainerToBottom(container)
+        if (containers.length) {
+            // The closest scroll container is normally the one
+            // used by the desktop application shell.
+            const container = containers[0]
 
-                // Run again after layout settles.
-                requestAnimationFrame(() => {
-                    this.scrollContainerToBottom(container)
-                })
+            this.scrollContainerToBottom(container)
 
-                setTimeout(() => {
-                    this.scrollContainerToBottom(container)
-                }, 300)
-
-                return
-            }
-
-            // Mobile / normal document scrolling.
-            const scrollingElement =
-                document.scrollingElement || document.documentElement
-
-            const scrollToDocumentBottom = () => {
-                scrollingElement.scrollTo({
-                    top: scrollingElement.scrollHeight,
-                    behavior: 'smooth',
-                })
-            }
-
-            scrollToDocumentBottom()
-
+            // Run again after layout settles.
             requestAnimationFrame(() => {
-                scrollToDocumentBottom()
+                this.scrollContainerToBottom(container)
             })
 
             setTimeout(() => {
-                scrollToDocumentBottom()
+                this.scrollContainerToBottom(container)
             }, 300)
-        },
 
-        scrollToMessage(element) {
-            if (!element) {
-                return
-            }
+            return
+        }
 
-            element.scrollIntoView({
+        // Mobile / normal document scrolling.
+        const scrollingElement =
+            document.scrollingElement || document.documentElement
+
+        const scrollToDocumentBottom = () => {
+            scrollingElement.scrollTo({
+                top: scrollingElement.scrollHeight,
                 behavior: 'smooth',
-                block: 'center',
-                inline: 'nearest',
             })
+        }
 
+        scrollToDocumentBottom()
+
+        requestAnimationFrame(() => {
+            scrollToDocumentBottom()
+        })
+
+        setTimeout(() => {
+            scrollToDocumentBottom()
+        }, 300)
+    },
+
+    scrollToMessage(element) {
+        if (!element) {
+            return
+        }
+
+        element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+            inline: 'nearest',
+        })
+
+        element.classList.remove('message-highlight')
+
+        // Force the animation to restart.
+        void element.offsetWidth
+
+        element.classList.add('message-highlight')
+
+        setTimeout(() => {
             element.classList.remove('message-highlight')
+        }, 5000)
+    },
 
-            // Force the animation to restart.
-            void element.offsetWidth
-
-            element.classList.add('message-highlight')
-
-            setTimeout(() => {
-                element.classList.remove('message-highlight')
-            }, 5000)
-        },
-
-        navigateToMessage() {
-            this.$nextTick(() => {
+    navigateToMessage() {
+        this.$nextTick(() => {
+            requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
-                        setTimeout(() => {
+                    setTimeout(() => {
 
-                            // =================================================
-                            // ?message=15
-                            // =================================================
-                            if (this.highlightMessageId) {
-                                const element = document.getElementById(
-                                    `ticket-message-${this.highlightMessageId}`
-                                )
+                        // =================================================
+                        // ?message=15
+                        // =================================================
+                        if (this.highlightMessageId) {
+                            const element = document.getElementById(
+                                `ticket-message-${this.highlightMessageId}`
+                            )
 
-                                if (!element) {
-                                    return
-                                }
-
-                                this.scrollToMessage(element)
-
+                            if (!element) {
                                 return
                             }
 
-                            // =================================================
-                            // No ?message=
-                            // Always go to the newest/bottom of conversation.
-                            // =================================================
-                            this.scrollToBottom()
+                            this.scrollToMessage(element)
 
-                        }, 150)
-                    })
+                            return
+                        }
+
+                        // =================================================
+                        // No ?message=
+                        // Always go to the newest/bottom of conversation.
+                        // =================================================
+                        this.scrollToBottom()
+
+                    }, 150)
                 })
             })
-        },
-    }"
-    x-init="navigateToMessage()"
-    x-on:keydown.escape.window="closeLightbox()"
-    class="min-h-screen bg-[#faf9fc] text-[#27232f] antialiased dark:bg-[#0d0b11] dark:text-white"
->
+        })
+    },
+}" x-init="navigateToMessage()" x-on:keydown.escape.window="closeLightbox()"
+    class="min-h-screen bg-[#faf9fc] text-[#27232f] antialiased dark:bg-[#0d0b11] dark:text-white">
     <style>
         @keyframes ticket-message-highlight {
             0% {
@@ -214,41 +210,22 @@
         LIGHTBOX
     ================================================================= --}}
     <template x-teleport="body">
-        <div
-            x-show="lightbox"
-            x-cloak
-            x-transition.opacity
-            class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4 backdrop-blur-xl"
-        >
-            <button
-                type="button"
-                x-on:click="closeLightbox()"
-                class="absolute right-4 top-4 z-30 flex size-12 items-center justify-center rounded-2xl border border-white/10 bg-white/10 text-white backdrop-blur-xl transition hover:bg-white/20"
-            >
+        <div x-show="lightbox" x-cloak x-transition.opacity
+            class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4 backdrop-blur-xl">
+            <button type="button" x-on:click="closeLightbox()"
+                class="absolute right-4 top-4 z-30 flex size-12 items-center justify-center rounded-2xl border border-white/10 bg-white/10 text-white backdrop-blur-xl transition hover:bg-white/20">
                 <flux:icon.x-mark class="size-5" />
             </button>
 
-            <button
-                type="button"
-                x-on:click="closeLightbox()"
-                class="absolute inset-0 cursor-default"
-                aria-label="Close image"
-            ></button>
+            <button type="button" x-on:click="closeLightbox()" class="absolute inset-0 cursor-default"
+                aria-label="Close image"></button>
 
-            <img
-                :src="lightboxSrc"
-                :alt="lightboxName"
-                x-on:click.stop
-                class="relative z-10 max-h-[90vh] max-w-[94vw] rounded-3xl object-contain shadow-2xl"
-            />
+            <img :src="lightboxSrc" :alt="lightboxName" x-on:click.stop
+                class="relative z-10 max-h-[90vh] max-w-[94vw] rounded-3xl object-contain shadow-2xl" />
 
             <div
-                class="absolute bottom-5 left-1/2 z-30 max-w-[90vw] -translate-x-1/2 rounded-full bg-white/10 px-4 py-2 backdrop-blur-xl"
-            >
-                <span
-                    x-text="lightboxName"
-                    class="block truncate text-sm font-medium text-white/80"
-                ></span>
+                class="absolute bottom-5 left-1/2 z-30 max-w-[90vw] -translate-x-1/2 rounded-full bg-white/10 px-4 py-2 backdrop-blur-xl">
+                <span x-text="lightboxName" class="block truncate text-sm font-medium text-white/80"></span>
             </div>
         </div>
     </template>
@@ -258,20 +235,15 @@
         HEADER
     ================================================================= --}}
     <header
-        class="sticky top-0 z-50 border-b border-[#eae6f0]/80 bg-[#faf9fc]/90 backdrop-blur-2xl dark:border-white/5 dark:bg-[#0d0b11]/90"
-    >
-        <div
-            class="mx-auto flex min-h-[76px] max-w-[1580px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8"
-        >
+        class="sticky top-0 z-50 border-b border-[#eae6f0]/80 bg-[#faf9fc]/90 backdrop-blur-2xl dark:border-white/5 dark:bg-[#0d0b11]/90">
+        <div class="mx-auto flex min-h-[76px] max-w-[1580px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
             <div class="flex min-w-0 items-center gap-3">
 
-                <a
-                    href="{{ auth()->check() && auth()->user()->currentTeam
+                <a href="{{ auth()->check() && auth()->user()->currentTeam
                     ? route('dashboard', ['current_team' => auth()->user()->currentTeam])
                     : route('onboarding') }}"
                     wire:navigate
-                    class="group flex size-11 shrink-0 items-center justify-center rounded-2xl border border-[#e5e0eb] bg-white text-[#706a79] shadow-[0_3px_12px_rgba(40,30,60,.04)] transition hover:border-[#cfc4e5] hover:bg-[#f7f3ff] hover:text-[#7865b5] dark:border-white/10 dark:bg-white/5 dark:text-white/50"
-                >
+                    class="group flex size-11 shrink-0 items-center justify-center rounded-2xl border border-[#e5e0eb] bg-white text-[#706a79] shadow-[0_3px_12px_rgba(40,30,60,.04)] transition hover:border-[#cfc4e5] hover:bg-[#f7f3ff] hover:text-[#7865b5] dark:border-white/10 dark:bg-white/5 dark:text-white/50">
                     <flux:icon.arrow-left class="size-4 transition group-hover:-translate-x-0.5" />
                 </a>
 
@@ -280,14 +252,12 @@
                 <div class="min-w-0">
                     <div class="flex min-w-0 items-center gap-2">
                         <h1
-                            class="truncate text-base font-semibold tracking-[-0.02em] text-[#24202b] sm:text-lg dark:text-white"
-                        >
+                            class="truncate text-base font-semibold tracking-[-0.02em] text-[#24202b] sm:text-lg dark:text-white">
                             {{ $ticket->subject }}
                         </h1>
 
                         <span
-                            class="hidden rounded-lg bg-[#f1edfa] px-2.5 py-1 font-mono text-[10px] font-semibold text-[#7969a1] md:inline"
-                        >
+                            class="hidden rounded-lg bg-[#f1edfa] px-2.5 py-1 font-mono text-[10px] font-semibold text-[#7969a1] md:inline">
                             {{ $ticket->ticket_number }}
                         </span>
                     </div>
@@ -302,18 +272,16 @@
             {{-- Header status --}}
             <div class="hidden items-center gap-3 sm:flex">
                 <div
-                    class="flex items-center gap-2 rounded-full border border-[#e8e1f4] bg-white px-3.5 py-2 text-sm font-semibold shadow-sm dark:border-white/10 dark:bg-white/5"
-                >
+                    class="flex items-center gap-2 rounded-full border border-[#e8e1f4] bg-white px-3.5 py-2 text-sm font-semibold shadow-sm dark:border-white/10 dark:bg-white/5">
                     <span
                         class="size-2 rounded-full
-                            {{ match($ticket->status) {
+                            {{ match ($ticket->status) {
                                 'open' => 'bg-emerald-500',
                                 'pending' => 'bg-amber-500',
                                 'resolved' => 'bg-blue-500',
                                 'closed' => 'bg-zinc-400',
                                 default => 'bg-zinc-400',
-                            } }}"
-                    ></span>
+                            } }}"></span>
 
                     <span class="text-[#625b6c] dark:text-white/70">
                         {{ ucfirst($ticket->status) }}
@@ -327,9 +295,7 @@
     {{-- ================================================================
         PAGE
     ================================================================= --}}
-    <main
-        class="mx-auto w-full max-w-[1580px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8"
-    >
+    <main class="mx-auto w-full max-w-[1580px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         <div class="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_350px]">
 
 
@@ -339,27 +305,20 @@
             <section class="min-w-0">
 
                 {{-- Conversation heading --}}
-                <div
-                    class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
-                >
+                <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                     <div>
                         <div class="mb-2 flex items-center gap-2.5">
                             <span
-                                class="flex size-8 items-center justify-center rounded-xl bg-[#eee9f8] text-[#8875b6]"
-                            >
+                                class="flex size-8 items-center justify-center rounded-xl bg-[#eee9f8] text-[#8875b6]">
                                 <flux:icon.chat-bubble-left class="size-4" />
                             </span>
 
-                            <span
-                                class="text-[11px] font-bold uppercase tracking-[0.16em] text-[#8875b6]"
-                            >
+                            <span class="text-[11px] font-bold uppercase tracking-[0.16em] text-[#8875b6]">
                                 Conversation
                             </span>
                         </div>
 
-                        <h2
-                            class="text-3xl font-bold tracking-[-0.045em] text-[#26222d] sm:text-4xl dark:text-white"
-                        >
+                        <h2 class="text-3xl font-bold tracking-[-0.045em] text-[#26222d] sm:text-4xl dark:text-white">
                             {{ $ticket->messages->count() }}
 
                             <span class="font-normal text-[#aaa5b0]">
@@ -369,15 +328,11 @@
                     </div>
 
                     <div class="sm:text-right">
-                        <div
-                            class="text-[10px] font-bold uppercase tracking-[0.14em] text-[#aaa5b0]"
-                        >
+                        <div class="text-[10px] font-bold uppercase tracking-[0.14em] text-[#aaa5b0]">
                             Last activity
                         </div>
 
-                        <div
-                            class="mt-1 text-sm font-medium text-[#625c69] dark:text-white/60"
-                        >
+                        <div class="mt-1 text-sm font-medium text-[#625c69] dark:text-white/60">
                             {{ $ticket->last_activity_at?->diffForHumans() ?? '—' }}
                         </div>
                     </div>
@@ -388,43 +343,27 @@
                     CONVERSATION CARD
                 ===================================================== --}}
                 <div
-                    class="overflow-hidden rounded-[28px] border border-[#e9e4ef] bg-white shadow-[0_20px_60px_-40px_rgba(55,40,80,.30)] dark:border-white/10 dark:bg-[#151219]"
-                >
-                    <div
-                        class="divide-y divide-[#f0edf3] dark:divide-white/5"
-                    >
+                    class="overflow-hidden rounded-[28px] border border-[#e9e4ef] bg-white shadow-[0_20px_60px_-40px_rgba(55,40,80,.30)] dark:border-white/10 dark:bg-[#151219]">
+                    <div class="divide-y divide-[#f0edf3] dark:divide-white/5">
 
                         @forelse($ticket->messages as $message)
 
                             @php
-                                $isCustomer = in_array(
-                                    $message->author_type,
-                                    ['guest', 'customer'],
-                                    true
-                                );
+                                $isCustomer = in_array($message->author_type, ['guest', 'customer'], true);
 
-                                $initial = strtoupper(
-                                    substr($message->author_name, 0, 1)
-                                );
+                                $initial = strtoupper(substr($message->author_name, 0, 1));
 
-                                $isHighlighted =
-                                    request()->integer('message') === (int) $message->id;
+                                $isHighlighted = request()->integer('message') === (int) $message->id;
                             @endphp
 
 
                             {{-- Date divider --}}
-                            @if(
-                                $loop->first ||
-                                !$message->created_at->isSameDay(
-                                    $ticket->messages[$loop->index - 1]->created_at
-                                )
-                            )
+                            @if ($loop->first || !$message->created_at->isSameDay($ticket->messages[$loop->index - 1]->created_at))
                                 <div class="flex items-center gap-4 px-5 py-6 sm:px-8">
                                     <div class="h-px flex-1 bg-[#eeeaf1] dark:bg-white/5"></div>
 
                                     <span
-                                        class="rounded-full border border-[#e7e0f2] bg-[#faf8fd] px-3 py-1.5 text-[10px] font-semibold text-[#9186a3] dark:border-white/10 dark:bg-white/5"
-                                    >
+                                        class="rounded-full border border-[#e7e0f2] bg-[#faf8fd] px-3 py-1.5 text-[10px] font-semibold text-[#9186a3] dark:border-white/10 dark:bg-white/5">
                                         {{ $message->created_at->format('M j, Y') }}
                                     </span>
 
@@ -436,34 +375,26 @@
                             {{-- =================================================
                                 MESSAGE
                             ================================================== --}}
-                            <div
-                                class="px-5 py-6 sm:px-8 sm:py-7"
-                            >
-                                <div
-                                    class="flex gap-4 {{ $isCustomer ? '' : 'flex-row-reverse' }}"
-                                >
+                            <div class="px-5 py-6 sm:px-8 sm:py-7">
+                                <div class="flex gap-4 {{ $isCustomer ? '' : 'flex-row-reverse' }}">
 
                                     {{-- Avatar --}}
                                     <div
                                         class="relative flex size-11 shrink-0 items-center justify-center rounded-2xl text-sm font-bold
                                         {{ $isCustomer
                                             ? 'bg-[#eeeaf7] text-[#756694] dark:bg-[#2a2235] dark:text-[#c8b8e7]'
-                                            : 'bg-[#8875b6] text-white shadow-[0_8px_20px_-8px_rgba(136,117,182,.8)]'
-                                        }}"
-                                    >
+                                            : 'bg-[#8875b6] text-white shadow-[0_8px_20px_-8px_rgba(136,117,182,.8)]' }}">
                                         {{ $initial }}
 
-                                        @if(!$isCustomer)
+                                        @if (!$isCustomer)
                                             <span
-                                                class="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-white bg-emerald-500 dark:border-[#151219]"
-                                            ></span>
+                                                class="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-white bg-emerald-500 dark:border-[#151219]"></span>
                                         @endif
                                     </div>
 
 
                                     {{-- Message body --}}
-                                    <div
-                                        id="ticket-message-{{ $message->id }}"
+                                    <div id="ticket-message-{{ $message->id }}"
                                         wire:key="ticket-message-{{ $message->id }}"
                                         class="
                                             min-w-0
@@ -471,22 +402,17 @@
                                             scroll-mt-28
                                             sm:max-w-[78%]
                                             {{ $isHighlighted ? 'message-highlight' : '' }}
-                                        "
-                                    >
+                                        ">
 
                                         <div
-                                            class="mb-2.5 flex flex-wrap items-center gap-2 {{ $isCustomer ? '' : 'justify-end' }}"
-                                        >
-                                            <span
-                                                class="text-sm font-semibold text-[#403b47] dark:text-white/90"
-                                            >
+                                            class="mb-2.5 flex flex-wrap items-center gap-2 {{ $isCustomer ? '' : 'justify-end' }}">
+                                            <span class="text-sm font-semibold text-[#403b47] dark:text-white/90">
                                                 {{ $message->author_name }}
                                             </span>
 
-                                            @if(!$isCustomer)
+                                            @if (!$isCustomer)
                                                 <span
-                                                    class="rounded-full bg-[#f0ebf8] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#806ea7]"
-                                                >
+                                                    class="rounded-full bg-[#f0ebf8] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#806ea7]">
                                                     Team
                                                 </span>
                                             @endif
@@ -498,7 +424,7 @@
 
 
                                         {{-- Message text --}}
-                                        @if(filled($message->message))
+                                        @if (filled($message->message))
                                             <div
                                                 class="
                                                     w-fit
@@ -507,151 +433,116 @@
                                                     rounded-2xl
                                                     {{ $isCustomer
                                                         ? 'rounded-tl-md border border-[#e7e3e9] bg-[#faf9fb] text-[#47424d] dark:border-white/10 dark:bg-white/5 dark:text-white/80'
-                                                        : 'rounded-tr-md bg-[#8b78b9] text-white shadow-[0_12px_30px_-18px_rgba(105,84,155,.8)]'
-                                                    }}
+                                                        : 'rounded-tr-md bg-[#8b78b9] text-white shadow-[0_12px_30px_-18px_rgba(105,84,155,.8)]' }}
                                                     px-5
                                                     py-4
                                                     text-left
                                                     text-[15px]
                                                     leading-7
                                                     sm:text-base
-                                                "
-                                            ><div class="w-full whitespace-pre-wrap break-words !text-left">{{ $message->message }}</div></div>
+                                                ">
+                                                <div class="w-full whitespace-pre-wrap break-words !text-left">
+                                                    {{ $message->message }}</div>
+                                            </div>
                                         @endif
 
 
                                         {{-- Attachments --}}
-                                        @if($message->attachments->isNotEmpty())
+                                        @if ($message->attachments->isNotEmpty())
                                             <div class="mt-3 space-y-3">
 
-                                                @foreach($message->attachments as $attachment)
-
+                                                @foreach ($message->attachments as $attachment)
                                                     @php
-                                                        $mime = strtolower(
-                                                            $attachment->mime_type ?? ''
-                                                        );
+                                                        $mime = strtolower($attachment->mime_type ?? '');
 
-                                                        $isImage = str_starts_with(
-                                                            $mime,
-                                                            'image/'
-                                                        );
+                                                        $isImage = str_starts_with($mime, 'image/');
 
-                                                        $isPdf =
-                                                            $mime === 'application/pdf';
+                                                        $isPdf = $mime === 'application/pdf';
 
-                                                        $previewUrl = route(
-                                                            'ticket.attachments.preview',
-                                                            [
-                                                                'current_team' => request()->route('current_team'),
-                                                                'attachment' => $attachment->id,
-                                                            ]
-                                                        );
+                                                        $previewUrl = route('ticket.attachments.preview', [
+                                                            'current_team' => request()->route('current_team'),
+                                                            'attachment' => $attachment->id,
+                                                        ]);
 
-                                                        $downloadUrl = route(
-                                                            'ticket.attachments.download',
-                                                            [
-                                                                'current_team' => request()->route('current_team'),
-                                                                'attachment' => $attachment->id,
-                                                            ]
-                                                        );
+                                                        $downloadUrl = route('ticket.attachments.download', [
+                                                            'current_team' => request()->route('current_team'),
+                                                            'attachment' => $attachment->id,
+                                                        ]);
                                                     @endphp
 
 
-                                                    @if($isImage)
-
+                                                    @if ($isImage)
                                                         <div
-                                                            class="group/image max-w-[720px] overflow-hidden rounded-2xl border border-[#e7e3eb] bg-[#f7f5f9] dark:border-white/10 dark:bg-white/5"
-                                                        >
-                                                            <button
-                                                                type="button"
+                                                            class="group/image max-w-[720px] overflow-hidden rounded-2xl border border-[#e7e3eb] bg-[#f7f5f9] dark:border-white/10 dark:bg-white/5">
+                                                            <button type="button"
                                                                 x-on:click="openLightbox(
                                                                     @js($previewUrl),
                                                                     @js($attachment->original_name)
                                                                 )"
-                                                                class="relative block w-full cursor-zoom-in"
-                                                            >
-                                                                <img
-                                                                    src="{{ $previewUrl }}"
+                                                                class="relative block w-full cursor-zoom-in">
+                                                                <img src="{{ $previewUrl }}"
                                                                     alt="{{ $attachment->original_name }}"
                                                                     loading="lazy"
-                                                                    class="block max-h-[620px] w-full object-cover transition duration-500 group-hover/image:scale-[1.015]"
-                                                                />
+                                                                    class="block max-h-[620px] w-full object-cover transition duration-500 group-hover/image:scale-[1.015]" />
 
                                                                 <div
-                                                                    class="pointer-events-none absolute inset-0 flex items-center justify-center bg-[#4d3e68]/0 transition group-hover/image:bg-[#4d3e68]/20"
-                                                                >
+                                                                    class="pointer-events-none absolute inset-0 flex items-center justify-center bg-[#4d3e68]/0 transition group-hover/image:bg-[#4d3e68]/20">
                                                                     <span
-                                                                        class="flex size-12 scale-90 items-center justify-center rounded-2xl bg-white text-[#77659d] opacity-0 shadow-2xl transition group-hover/image:scale-100 group-hover/image:opacity-100"
-                                                                    >
+                                                                        class="flex size-12 scale-90 items-center justify-center rounded-2xl bg-white text-[#77659d] opacity-0 shadow-2xl transition group-hover/image:scale-100 group-hover/image:opacity-100">
                                                                         <flux:icon.arrows-pointing-out class="size-5" />
                                                                     </span>
                                                                 </div>
                                                             </button>
 
                                                             <div
-                                                                class="flex items-center justify-between border-t border-[#e8e3eb] bg-white px-4 py-3 dark:border-white/5 dark:bg-[#18151d]"
-                                                            >
-                                                                <div
-                                                                    class="flex min-w-0 items-center gap-3"
-                                                                >
+                                                                class="flex items-center justify-between border-t border-[#e8e3eb] bg-white px-4 py-3 dark:border-white/5 dark:bg-[#18151d]">
+                                                                <div class="flex min-w-0 items-center gap-3">
                                                                     <div
-                                                                        class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#f0ebf8] text-[#8875b6]"
-                                                                    >
+                                                                        class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#f0ebf8] text-[#8875b6]">
                                                                         <flux:icon.photo class="size-4" />
                                                                     </div>
 
                                                                     <div class="min-w-0">
                                                                         <div
-                                                                            class="max-w-[300px] truncate text-xs font-semibold text-[#514c57] dark:text-white/80"
-                                                                        >
+                                                                            class="max-w-[300px] truncate text-xs font-semibold text-[#514c57] dark:text-white/80">
                                                                             {{ $attachment->original_name }}
                                                                         </div>
 
-                                                                        <div
-                                                                            class="mt-0.5 text-[10px] text-[#aaa5b0]"
-                                                                        >
+                                                                        <div class="mt-0.5 text-[10px] text-[#aaa5b0]">
                                                                             {{ number_format($attachment->size / 1024, 1) }}
                                                                             KB
                                                                         </div>
                                                                     </div>
                                                                 </div>
 
-                                                                <a
-                                                                    href="{{ $downloadUrl }}"
+                                                                <a href="{{ $downloadUrl }}"
                                                                     class="flex size-9 items-center justify-center rounded-xl text-[#aaa5b0] transition hover:bg-[#f2eef8] hover:text-[#806da8]"
-                                                                    title="Download"
-                                                                >
+                                                                    title="Download">
                                                                     <flux:icon.arrow-down-tray class="size-4" />
                                                                 </a>
                                                             </div>
                                                         </div>
-
                                                     @else
-
-                                                        <a
-                                                            href="{{ $downloadUrl }}"
-                                                            class="group/file flex max-w-xl items-center gap-3 rounded-2xl border border-[#e7e3eb] bg-[#faf9fb] p-3.5 transition hover:-translate-y-0.5 hover:border-[#d8cdea] hover:bg-white hover:shadow-lg dark:border-white/10 dark:bg-white/5"
-                                                        >
+                                                        <a href="{{ $downloadUrl }}"
+                                                            class="group/file flex max-w-xl items-center gap-3 rounded-2xl border border-[#e7e3eb] bg-[#faf9fb] p-3.5 transition hover:-translate-y-0.5 hover:border-[#d8cdea] hover:bg-white hover:shadow-lg dark:border-white/10 dark:bg-white/5">
                                                             <div
-                                                                class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm dark:bg-white/10"
-                                                            >
-                                                                @if($isPdf)
-                                                                    <flux:icon.document-text class="size-5 text-red-500" />
+                                                                class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm dark:bg-white/10">
+                                                                @if ($isPdf)
+                                                                    <flux:icon.document-text
+                                                                        class="size-5 text-red-500" />
                                                                 @else
-                                                                    <flux:icon.paper-clip class="size-5 text-[#8875b6]" />
+                                                                    <flux:icon.paper-clip
+                                                                        class="size-5 text-[#8875b6]" />
                                                                 @endif
                                                             </div>
 
                                                             <div class="min-w-0 flex-1">
                                                                 <div
-                                                                    class="truncate text-sm font-semibold text-[#46414c] dark:text-white/80"
-                                                                >
+                                                                    class="truncate text-sm font-semibold text-[#46414c] dark:text-white/80">
                                                                     {{ $attachment->original_name }}
                                                                 </div>
 
-                                                                <div
-                                                                    class="mt-1 text-xs text-[#aaa5b0]"
-                                                                >
+                                                                <div class="mt-1 text-xs text-[#aaa5b0]">
                                                                     {{ number_format($attachment->size / 1024, 1) }}
                                                                     KB
 
@@ -662,14 +553,11 @@
                                                             </div>
 
                                                             <div
-                                                                class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#eee9f7] text-[#806da8] transition group-hover/file:bg-[#8875b6] group-hover/file:text-white"
-                                                            >
+                                                                class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#eee9f7] text-[#806da8] transition group-hover/file:bg-[#8875b6] group-hover/file:text-white">
                                                                 <flux:icon.arrow-down-tray class="size-4" />
                                                             </div>
                                                         </a>
-
                                                     @endif
-
                                                 @endforeach
 
                                             </div>
@@ -677,8 +565,7 @@
 
 
                                         <div
-                                            class="mt-2 text-xs text-[#aaa5b0] {{ $isCustomer ? '' : 'text-right' }}"
-                                        >
+                                            class="mt-2 text-xs text-[#aaa5b0] {{ $isCustomer ? '' : 'text-right' }}">
                                             {{ $message->created_at->diffForHumans() }}
                                         </div>
 
@@ -690,20 +577,15 @@
 
                             <div class="px-6 py-24 text-center">
                                 <div
-                                    class="mx-auto mb-5 flex size-16 items-center justify-center rounded-3xl bg-[#f0ebf8] text-[#8875b6]"
-                                >
+                                    class="mx-auto mb-5 flex size-16 items-center justify-center rounded-3xl bg-[#f0ebf8] text-[#8875b6]">
                                     <flux:icon.chat-bubble-left-right class="size-7" />
                                 </div>
 
-                                <h3
-                                    class="text-lg font-semibold text-[#36313d] dark:text-white"
-                                >
+                                <h3 class="text-lg font-semibold text-[#36313d] dark:text-white">
                                     Nothing here yet
                                 </h3>
 
-                                <p
-                                    class="mx-auto mt-2 max-w-sm text-sm leading-6 text-[#938e99]"
-                                >
+                                <p class="mx-auto mt-2 max-w-sm text-sm leading-6 text-[#938e99]">
                                     Send a reply below to start the conversation.
                                 </p>
                             </div>
@@ -717,27 +599,17 @@
                         COMPOSER
                     =================================================== --}}
                     <div
-                        class="border-t border-[#ebe7ef] bg-[#fbfafc] p-3 sm:p-5 dark:border-white/5 dark:bg-[#111016]"
-                    >
+                        class="border-t border-[#ebe7ef] bg-[#fbfafc] p-3 sm:p-5 dark:border-white/5 dark:bg-[#111016]">
                         <div
-                            class="overflow-hidden rounded-[24px] border border-[#e5e0e9] bg-white shadow-[0_12px_40px_-25px_rgba(50,40,65,.35)] focus-within:border-[#cfc1e5] focus-within:ring-4 focus-within:ring-[#eee9f7] dark:border-white/10 dark:bg-[#18151d] dark:focus-within:ring-[#261e30]"
-                        >
-                            <textarea
-                                wire:model="newMessage"
-                                rows="4"
-                                placeholder="Write a reply to {{ $ticket->name }}..."
-                                class="block min-h-[130px] w-full resize-none border-0 bg-transparent px-5 py-5 text-[15px] leading-7 text-[#332e39] outline-none placeholder:text-[#aaa5af] focus:border-0 focus:ring-0 sm:text-base dark:text-white"
-                            ></textarea>
+                            class="overflow-hidden rounded-[24px] border border-[#e5e0e9] bg-white shadow-[0_12px_40px_-25px_rgba(50,40,65,.35)] focus-within:border-[#cfc1e5] focus-within:ring-4 focus-within:ring-[#eee9f7] dark:border-white/10 dark:bg-[#18151d] dark:focus-within:ring-[#261e30]">
+                            <textarea wire:model="newMessage" rows="4" placeholder="Write a reply to {{ $ticket->name }}..."
+                                class="block min-h-[130px] w-full resize-none border-0 bg-transparent px-5 py-5 text-[15px] leading-7 text-[#332e39] outline-none placeholder:text-[#aaa5af] focus:border-0 focus:ring-0 sm:text-base dark:text-white"></textarea>
 
 
-                            @if(count($attachments))
-                                <div
-                                    class="border-t border-[#eeeaf1] px-4 py-4 dark:border-white/5"
-                                >
+                            @if (count($attachments))
+                                <div class="border-t border-[#eeeaf1] px-4 py-4 dark:border-white/5">
                                     <div class="mb-3 flex items-center justify-between">
-                                        <span
-                                            class="text-[10px] font-bold uppercase tracking-[0.14em] text-[#8875b6]"
-                                        >
+                                        <span class="text-[10px] font-bold uppercase tracking-[0.14em] text-[#8875b6]">
                                             Ready to send
                                         </span>
 
@@ -749,78 +621,58 @@
 
                                     <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
 
-                                        @foreach($attachments as $index => $attachment)
-
-                                            @if($attachment)
-
+                                        @foreach ($attachments as $index => $attachment)
+                                            @if ($attachment)
                                                 @php
-                                                    $uploadMime = strtolower(
-                                                        $attachment->getMimeType()
-                                                    );
+                                                    $uploadMime = strtolower($attachment->getMimeType());
 
-                                                    $uploadIsImage = str_starts_with(
-                                                        $uploadMime,
-                                                        'image/'
-                                                    );
+                                                    $uploadIsImage = str_starts_with($uploadMime, 'image/');
                                                 @endphp
 
                                                 <div
-                                                    class="group relative overflow-hidden rounded-2xl border border-[#e8e2ef] bg-[#faf8fc] dark:border-white/10 dark:bg-white/5"
-                                                >
+                                                    class="group relative overflow-hidden rounded-2xl border border-[#e8e2ef] bg-[#faf8fc] dark:border-white/10 dark:bg-white/5">
 
-                                                    @if($uploadIsImage)
-
+                                                    @if ($uploadIsImage)
                                                         <div class="aspect-[16/10] overflow-hidden">
-                                                            <img
-                                                                src="{{ $attachment->temporaryUrl() }}"
+                                                            <img src="{{ $attachment->temporaryUrl() }}"
                                                                 alt="{{ $attachment->getClientOriginalName() }}"
-                                                                class="h-full w-full object-cover"
-                                                            />
+                                                                class="h-full w-full object-cover" />
                                                         </div>
-
                                                     @else
-
                                                         <div class="flex h-20 items-center gap-3 px-3">
                                                             <div
-                                                                class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white dark:bg-white/10"
-                                                            >
-                                                                @if($uploadMime === 'application/pdf')
-                                                                    <flux:icon.document-text class="size-5 text-red-500" />
+                                                                class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white dark:bg-white/10">
+                                                                @if ($uploadMime === 'application/pdf')
+                                                                    <flux:icon.document-text
+                                                                        class="size-5 text-red-500" />
                                                                 @else
-                                                                    <flux:icon.paper-clip class="size-5 text-[#8875b6]" />
+                                                                    <flux:icon.paper-clip
+                                                                        class="size-5 text-[#8875b6]" />
                                                                 @endif
                                                             </div>
 
                                                             <div class="min-w-0">
                                                                 <div
-                                                                    class="truncate text-xs font-semibold text-[#57515e] dark:text-white/70"
-                                                                >
+                                                                    class="truncate text-xs font-semibold text-[#57515e] dark:text-white/70">
                                                                     {{ $attachment->getClientOriginalName() }}
                                                                 </div>
 
-                                                                <div
-                                                                    class="mt-1 text-[10px] text-[#aaa5b0]"
-                                                                >
+                                                                <div class="mt-1 text-[10px] text-[#aaa5b0]">
                                                                     {{ number_format($attachment->getSize() / 1024, 1) }}
                                                                     KB
                                                                 </div>
                                                             </div>
                                                         </div>
-
                                                     @endif
 
-                                                    <button
-                                                        type="button"
+                                                    <button type="button"
                                                         wire:click="removeAttachment({{ $index }})"
-                                                        class="absolute right-2 top-2 flex size-8 items-center justify-center rounded-xl bg-black/70 text-white opacity-0 shadow-lg transition group-hover:opacity-100 hover:bg-red-500"
-                                                    >
+                                                        class="absolute right-2 top-2 flex size-8 items-center justify-center rounded-xl bg-black/70 text-white opacity-0 shadow-lg transition group-hover:opacity-100 hover:bg-red-500">
                                                         <flux:icon.x-mark class="size-3.5" />
                                                     </button>
 
                                                 </div>
-
                                             @endif
-
                                         @endforeach
 
                                     </div>
@@ -829,14 +681,9 @@
 
 
                             {{-- Uploading --}}
-                            <div
-                                wire:loading
-                                wire:target="attachments"
-                                class="border-t border-[#eeeaf1] px-5 py-3 dark:border-white/5"
-                            >
-                                <div
-                                    class="flex items-center gap-2 text-xs font-medium text-[#8875b6]"
-                                >
+                            <div wire:loading wire:target="attachments"
+                                class="border-t border-[#eeeaf1] px-5 py-3 dark:border-white/5">
+                                <div class="flex items-center gap-2 text-xs font-medium text-[#8875b6]">
                                     <flux:icon.arrow-path class="size-4 animate-spin" />
                                     Uploading attachments…
                                 </div>
@@ -845,69 +692,41 @@
 
                             {{-- Composer footer --}}
                             <div
-                                class="flex flex-col gap-3 border-t border-[#eeeaf1] px-3 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-white/5"
-                            >
-                                <div
-                                    class="flex items-center justify-between gap-2 sm:justify-start"
-                                >
+                                class="flex flex-col gap-3 border-t border-[#eeeaf1] px-3 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-white/5">
+                                <div class="flex items-center justify-between gap-2 sm:justify-start">
                                     <label
-                                        class="group flex cursor-pointer items-center gap-2 rounded-xl px-2 py-2 text-sm font-semibold text-[#716b78] transition hover:bg-[#f4f0f8] hover:text-[#806da8]"
-                                    >
+                                        class="group flex cursor-pointer items-center gap-2 rounded-xl px-2 py-2 text-sm font-semibold text-[#716b78] transition hover:bg-[#f4f0f8] hover:text-[#806da8]">
                                         <span
-                                            class="flex size-9 items-center justify-center rounded-xl bg-[#f1ecf8] text-[#8875b6]"
-                                        >
+                                            class="flex size-9 items-center justify-center rounded-xl bg-[#f1ecf8] text-[#8875b6]">
                                             <flux:icon.paper-clip class="size-4" />
                                         </span>
 
                                         Attach
 
-                                        <input
-                                            type="file"
-                                            wire:model="attachments"
-                                            multiple
-                                            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip"
-                                            class="hidden"
-                                        />
+                                        <input type="file" wire:model="attachments" multiple
+                                            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip" class="hidden" />
                                     </label>
 
-                                    <span
-                                        class="hidden text-xs text-[#aaa5b0] sm:inline"
-                                    >
+                                    <span class="hidden text-xs text-[#aaa5b0] sm:inline">
                                         Images & files · 10 MB max
                                     </span>
                                 </div>
 
 
-                                <flux:button
-                                    wire:click="sendMessage"
-                                    wire:loading.attr="disabled"
-                                    wire:target="sendMessage"
-                                    variant="primary"
-                                    class="min-h-11 cursor-pointer rounded-xl bg-purple-300 bg-[#8875b6] px-5 text-sm font-semibold shadow-[0_10px_25px_-12px_rgba(120,100,165,.8)] transition-colors duration-200 hover:bg-purple-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
-                                >
-                                    <flux:icon.paper-airplane
-                                        wire:loading.remove
-                                        wire:target="sendMessage"
-                                        class="size-4"
-                                    />
+                                <flux:button wire:click="sendMessage" wire:loading.attr="disabled"
+                                    wire:target="sendMessage" variant="primary"
+                                    class="min-h-11 cursor-pointer rounded-xl bg-purple-300 bg-[#8875b6] px-5 text-sm font-semibold shadow-[0_10px_25px_-12px_rgba(120,100,165,.8)] transition-colors duration-200 hover:bg-purple-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60">
+                                    <flux:icon.paper-airplane wire:loading.remove wire:target="sendMessage"
+                                        class="size-4" />
 
-                                    <flux:icon.arrow-path
-                                        wire:loading
-                                        wire:target="sendMessage"
-                                        class="size-4 animate-spin"
-                                    />
+                                    <flux:icon.arrow-path wire:loading wire:target="sendMessage"
+                                        class="size-4 animate-spin" />
 
-                                    <span
-                                        wire:loading.remove
-                                        wire:target="sendMessage"
-                                    >
+                                    <span wire:loading.remove wire:target="sendMessage">
                                         Send reply
                                     </span>
 
-                                    <span
-                                        wire:loading
-                                        wire:target="sendMessage"
-                                    >
+                                    <span wire:loading wire:target="sendMessage">
                                         Sending…
                                     </span>
                                 </flux:button>
@@ -943,49 +762,31 @@
                     CUSTOMER
                 ===================================================== --}}
                 <div
-                    class="overflow-hidden rounded-[26px] border border-[#e8e3ed] bg-white shadow-[0_12px_40px_-30px_rgba(50,40,65,.3)] dark:border-white/10 dark:bg-[#151219]"
-                >
-                    <div
-                        class="border-b border-[#eeeaf1] p-5 dark:border-white/5"
-                    >
-                        <div
-                            class="mb-5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#9a91a5]"
-                        >
+                    class="overflow-hidden rounded-[26px] border border-[#e8e3ed] bg-white shadow-[0_12px_40px_-30px_rgba(50,40,65,.3)] dark:border-white/10 dark:bg-[#151219]">
+                    <div class="border-b border-[#eeeaf1] p-5 dark:border-white/5">
+                        <div class="mb-5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#9a91a5]">
                             Customer
                         </div>
 
                         <div class="flex items-center gap-3">
                             <div
-                                class="flex size-13 shrink-0 items-center justify-center rounded-2xl bg-[#eee9f7] text-lg font-bold text-[#806da8]"
-                            >
+                                class="flex size-13 shrink-0 items-center justify-center rounded-2xl bg-[#eee9f7] text-lg font-bold text-[#806da8]">
                                 {{ strtoupper(substr($ticket->name, 0, 1)) }}
                             </div>
 
                             <div class="min-w-0">
-                                <div
-                                    class="truncate text-base font-semibold text-[#35303b] dark:text-white"
-                                >
+                                <div class="truncate text-base font-semibold text-[#35303b] dark:text-white">
                                     {{ $ticket->name }}
                                 </div>
 
-                                <div
-                                    class="mt-1 truncate text-sm text-[#9a949f]"
-                                >
+                                <div class="mt-1 truncate text-sm text-[#9a949f]">
                                     {{ $ticket->email }}
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="p-4">
-                        <a
-                            href="mailto:{{ $ticket->email }}"
-                            class="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#f2edf9] text-sm font-semibold text-[#75629e] transition hover:bg-purple-500 hover:text-white"
-                        >
-                            <flux:icon.envelope class="size-4" />
-                            Email customer
-                        </a>
-                    </div>
+
                 </div>
 
 
@@ -993,13 +794,10 @@
                     TICKET DETAILS
                 ===================================================== --}}
                 <div
-                    class="rounded-[26px] border border-[#e8e3ed] bg-white p-5 shadow-[0_12px_40px_-30px_rgba(50,40,65,.3)] dark:border-white/10 dark:bg-[#151219]"
-                >
+                    class="rounded-[26px] border border-[#e8e3ed] bg-white p-5 shadow-[0_12px_40px_-30px_rgba(50,40,65,.3)] dark:border-white/10 dark:bg-[#151219]">
                     <div class="mb-6 flex items-center justify-between">
                         <div>
-                            <div
-                                class="text-base font-semibold text-[#35303b] dark:text-white"
-                            >
+                            <div class="text-base font-semibold text-[#35303b] dark:text-white">
                                 Ticket details
                             </div>
 
@@ -1008,9 +806,7 @@
                             </div>
                         </div>
 
-                        <div
-                            class="flex size-10 items-center justify-center rounded-xl bg-[#f1ecf8] text-[#8875b6]"
-                        >
+                        <div class="flex size-10 items-center justify-center rounded-xl bg-[#f1ecf8] text-[#8875b6]">
                             <flux:icon.ticket class="size-5" />
                         </div>
                     </div>
@@ -1026,79 +822,58 @@
                                 Status
                             </div>
 
-                            <div
-                                x-data="{ open: false }"
-                                x-on:click.outside="open = false"
-                                class="relative"
-                            >
-                                <button
-                                    type="button"
-                                    x-on:click="open = !open"
-                                    class="flex min-h-12 w-full items-center justify-between rounded-2xl border border-[#e4dfea] bg-[#fcfbfd] px-4 text-sm font-semibold text-[#48424f] transition hover:border-[#cfc2e2] hover:bg-gray-700 hover:cursor-pointer focus:outline-none focus:ring-4 focus:ring-[#f0ebf8] dark:border-white/10 dark:bg-white/5 dark:text-white"
-                                >
+                            <div x-data="{ open: false }" x-on:click.outside="open = false" class="relative">
+                                <button type="button" x-on:click="open = !open"
+                                    class="flex min-h-12 w-full items-center justify-between rounded-2xl border border-[#e4dfea] bg-[#fcfbfd] px-4 text-sm font-semibold text-[#48424f] transition hover:border-[#cfc2e2] hover:bg-gray-700 hover:cursor-pointer focus:outline-none focus:ring-4 focus:ring-[#f0ebf8] dark:border-white/10 dark:bg-white/5 dark:text-white">
                                     <span class="flex items-center gap-3">
                                         <span
                                             class="size-2.5 rounded-full
-                                            {{ match($status) {
+                                            {{ match ($status) {
                                                 'open' => 'bg-emerald-500',
                                                 'pending' => 'bg-amber-500',
                                                 'resolved' => 'bg-blue-500',
                                                 'closed' => 'bg-zinc-400',
                                                 default => 'bg-zinc-400',
-                                            } }}"
-                                        ></span>
+                                            } }}"></span>
 
                                         {{ ucfirst($status) }}
                                     </span>
 
-                                    <flux:icon.chevron-down
-                                        class="size-4 text-[#9d96a5] transition"
-                                        x-bind:class="open && 'rotate-180'"
-                                    />
+                                    <flux:icon.chevron-down class="size-4 text-[#9d96a5] transition"
+                                        x-bind:class="open && 'rotate-180'" />
                                 </button>
 
 
-                                <div
-                                    x-show="open"
-                                    x-cloak
-                                    x-transition.origin.top
-                                    class="absolute left-0 right-0 z-50 mt-2 overflow-hidden rounded-2xl border border-[#e4dfea] bg-white p-1.5 shadow-[0_20px_50px_-20px_rgba(40,30,55,.3)] dark:border-white/10 dark:bg-[#1d1922]"
-                                >
+                                <div x-show="open" x-cloak x-transition.origin.top
+                                    class="absolute left-0 right-0 z-50 mt-2 overflow-hidden rounded-2xl border border-[#e4dfea] bg-white p-1.5 shadow-[0_20px_50px_-20px_rgba(40,30,55,.3)] dark:border-white/10 dark:bg-[#1d1922]">
 
-                                    @foreach([
-                                        'open' => 'Open',
-                                        'pending' => 'Pending',
-                                        'resolved' => 'Resolved',
-                                        'closed' => 'Closed',
-                                    ] as $value => $label)
-
-                                        <button
-                                            type="button"
-                                            wire:click="updateStatus('{{ $value }}')"
-                                            x-on:click="open = false"
-                                            wire:loading.attr="disabled"
+                                    @foreach ([
+        'open' => 'Open',
+        'pending' => 'Pending',
+        'resolved' => 'Resolved',
+        'closed' => 'Closed',
+    ] as $value => $label)
+                                        <button type="button" wire:click="updateStatus('{{ $value }}')"
+                                            x-on:click="open = false" wire:loading.attr="disabled"
                                             wire:target="updateStatus('{{ $value }}')"
-                                            class="flex w-full items-center justify-between rounded-xl px-3.5 py-3 text-left text-sm font-medium transition hover:bg-[#f5f1f9] dark:hover:bg-white/5"
-                                        >
+                                            class="flex w-full items-center justify-between rounded-xl px-3.5 py-3 text-left text-sm font-medium transition hover:bg-[#f5f1f9] dark:hover:bg-white/5">
                                             <span class="flex items-center gap-3">
                                                 <span
                                                     class="size-2.5 rounded-full
-                                                    {{ match($value) {
+                                                    {{ match ($value) {
                                                         'open' => 'bg-emerald-500',
                                                         'pending' => 'bg-amber-500',
                                                         'resolved' => 'bg-blue-500',
                                                         'closed' => 'bg-zinc-400',
-                                                    } }}"
-                                                ></span>
+                                                    } }}"></span>
 
                                                 {{ $label }}
                                             </span>
 
-                                            @if($status === $value)
+                                            @if ($status === $value)
                                                 <flux:icon.check class="size-4 text-[#8875b6]" />
                                             @endif
                                         </button>
-
                                     @endforeach
 
                                 </div>
@@ -1109,37 +884,27 @@
                         {{-- =================================================
                             PRIORITY DROPDOWN
                         ================================================== --}}
-                        <div
-                            class="border-t border-[#eeeaf1] pt-5 dark:border-white/5"
-                        >
+                        <div class="border-t border-[#eeeaf1] pt-5 dark:border-white/5">
                             <div class="mb-2 text-xs font-medium text-[#9b95a0]">
                                 Priority
                             </div>
 
-                            <div
-                                x-data="{ open: false }"
-                                x-on:click.outside="open = false"
-                                class="relative"
-                            >
+                            <div x-data="{ open: false }" x-on:click.outside="open = false" class="relative">
 
                                 {{-- Current priority --}}
-                                <button
-                                    type="button"
-                                    x-on:click="open = !open"
-                                    class="flex min-h-12 w-full items-center justify-between rounded-2xl border border-[#e4dfea] bg-[#fcfbfd] px-4 text-sm font-semibold text-[#48424f] transition hover:border-[#cfc2e2] hover:bg-gray-700 hover:cursor-pointer focus:outline-none focus:ring-4 focus:ring-[#f0ebf8] dark:border-white/10 dark:bg-white/5 dark:text-white"
-                                >
+                                <button type="button" x-on:click="open = !open"
+                                    class="flex min-h-12 w-full items-center justify-between rounded-2xl border border-[#e4dfea] bg-[#fcfbfd] px-4 text-sm font-semibold text-[#48424f] transition hover:border-[#cfc2e2] hover:bg-gray-700 hover:cursor-pointer focus:outline-none focus:ring-4 focus:ring-[#f0ebf8] dark:border-white/10 dark:bg-white/5 dark:text-white">
                                     <span class="flex items-center gap-3">
                                         <span
                                             class="flex size-8 items-center justify-center rounded-xl
-                                            {{ match($priority ?: 'normal') {
+                                            {{ match ($priority ?: 'normal') {
                                                 'low' => 'bg-slate-100 text-slate-500 ring-1 ring-inset ring-slate-200',
                                                 'normal' => 'bg-violet-50 text-violet-600 ring-1 ring-inset ring-violet-100',
                                                 'high' => 'bg-orange-50 text-orange-600 ring-1 ring-inset ring-orange-100',
                                                 'urgent' => 'bg-red-50 text-red-600 ring-1 ring-inset ring-red-100',
                                                 default => 'bg-violet-50 text-violet-600 ring-1 ring-inset ring-violet-100',
-                                            } }}"
-                                        >
-                                            @if(($priority ?: 'normal') === 'low')
+                                            } }}">
+                                            @if (($priority ?: 'normal') === 'low')
                                                 <flux:icon.arrow-down class="size-4" />
                                             @elseif(($priority ?: 'normal') === 'normal')
                                                 <flux:icon.minus class="size-4" />
@@ -1155,62 +920,50 @@
                                         </span>
                                     </span>
 
-                                    <flux:icon.chevron-down
-                                        class="size-4 text-[#9d96a5] transition"
-                                        x-bind:class="open && 'rotate-180'"
-                                    />
+                                    <flux:icon.chevron-down class="size-4 text-[#9d96a5] transition"
+                                        x-bind:class="open && 'rotate-180'" />
                                 </button>
 
 
                                 {{-- Dropdown --}}
-                                <div
-                                    x-show="open"
-                                    x-cloak
-                                    x-transition.origin.top
-                                    class="absolute left-0 right-0 z-50 mt-2 overflow-hidden rounded-2xl border border-[#e4dfea] bg-white p-1.5 shadow-[0_20px_50px_-20px_rgba(40,30,55,.3)] dark:border-white/10 dark:bg-[#1d1922]"
-                                >
+                                <div x-show="open" x-cloak x-transition.origin.top
+                                    class="absolute left-0 right-0 z-50 mt-2 overflow-hidden rounded-2xl border border-[#e4dfea] bg-white p-1.5 shadow-[0_20px_50px_-20px_rgba(40,30,55,.3)] dark:border-white/10 dark:bg-[#1d1922]">
 
-                                    @foreach([
-                                        'low' => [
-                                            'label' => 'Low',
-                                            'description' => 'Can wait',
-                                            'icon' => 'arrow-down',
-                                            'class' => 'bg-slate-100 text-slate-500 ring-1 ring-inset ring-slate-200',
-                                        ],
-                                        'normal' => [
-                                            'label' => 'Normal',
-                                            'description' => 'Standard request',
-                                            'icon' => 'minus',
-                                            'class' => 'bg-violet-50 text-violet-600 ring-1 ring-inset ring-violet-100',
-                                        ],
-                                        'high' => [
-                                            'label' => 'High',
-                                            'description' => 'Needs attention',
-                                            'icon' => 'arrow-up',
-                                            'class' => 'bg-orange-50 text-orange-600 ring-1 ring-inset ring-orange-100',
-                                        ],
-                                        'urgent' => [
-                                            'label' => 'Urgent',
-                                            'description' => 'Needs immediate action',
-                                            'icon' => 'exclamation-triangle',
-                                            'class' => 'bg-red-50 text-red-600 ring-1 ring-inset ring-red-100',
-                                        ],
-                                    ] as $value => $option)
-
-                                        <button
-                                            type="button"
-                                            wire:click="updatePriority('{{ $value }}')"
-                                            x-on:click="open = false"
-                                            wire:loading.attr="disabled"
+                                    @foreach ([
+        'low' => [
+            'label' => 'Low',
+            'description' => 'Can wait',
+            'icon' => 'arrow-down',
+            'class' => 'bg-slate-100 text-slate-500 ring-1 ring-inset ring-slate-200',
+        ],
+        'normal' => [
+            'label' => 'Normal',
+            'description' => 'Standard request',
+            'icon' => 'minus',
+            'class' => 'bg-violet-50 text-violet-600 ring-1 ring-inset ring-violet-100',
+        ],
+        'high' => [
+            'label' => 'High',
+            'description' => 'Needs attention',
+            'icon' => 'arrow-up',
+            'class' => 'bg-orange-50 text-orange-600 ring-1 ring-inset ring-orange-100',
+        ],
+        'urgent' => [
+            'label' => 'Urgent',
+            'description' => 'Needs immediate action',
+            'icon' => 'exclamation-triangle',
+            'class' => 'bg-red-50 text-red-600 ring-1 ring-inset ring-red-100',
+        ],
+    ] as $value => $option)
+                                        <button type="button" wire:click="updatePriority('{{ $value }}')"
+                                            x-on:click="open = false" wire:loading.attr="disabled"
                                             wire:target="updatePriority('{{ $value }}')"
-                                            class="group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-[#f7f4fa] dark:hover:bg-white/5"
-                                        >
+                                            class="group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-[#f7f4fa] dark:hover:bg-white/5">
 
                                             {{-- Priority icon --}}
                                             <span
-                                                class="flex size-9 shrink-0 items-center justify-center rounded-xl transition group-hover:scale-105 {{ $option['class'] }}"
-                                            >
-                                                @if($value === 'low')
+                                                class="flex size-9 shrink-0 items-center justify-center rounded-xl transition group-hover:scale-105 {{ $option['class'] }}">
+                                                @if ($value === 'low')
                                                     <flux:icon.arrow-down class="size-4" />
                                                 @elseif($value === 'normal')
                                                     <flux:icon.minus class="size-4" />
@@ -1225,8 +978,7 @@
                                             {{-- Text --}}
                                             <span class="min-w-0 flex-1">
                                                 <span
-                                                    class="block text-sm font-semibold text-[#49434f] dark:text-white/90"
-                                                >
+                                                    class="block text-sm font-semibold text-[#49434f] dark:text-white/90">
                                                     {{ $option['label'] }}
                                                 </span>
 
@@ -1237,16 +989,14 @@
 
 
                                             {{-- Selected --}}
-                                            @if(($priority ?: 'normal') === $value)
+                                            @if (($priority ?: 'normal') === $value)
                                                 <span
-                                                    class="flex size-7 items-center justify-center rounded-lg bg-[#f0ebf8] text-[#8875b6]"
-                                                >
+                                                    class="flex size-7 items-center justify-center rounded-lg bg-[#f0ebf8] text-[#8875b6]">
                                                     <flux:icon.check class="size-3.5" />
                                                 </span>
                                             @endif
 
                                         </button>
-
                                     @endforeach
 
                                 </div>
@@ -1255,32 +1005,24 @@
 
 
                         {{-- Ticket number --}}
-                        <div
-                            class="border-t border-[#eeeaf1] pt-5 dark:border-white/5"
-                        >
+                        <div class="border-t border-[#eeeaf1] pt-5 dark:border-white/5">
                             <div class="text-xs font-medium text-[#9b95a0]">
                                 Ticket number
                             </div>
 
-                            <div
-                                class="mt-2 font-mono text-sm font-semibold text-[#4a4451] dark:text-white/80"
-                            >
+                            <div class="mt-2 font-mono text-sm font-semibold text-[#4a4451] dark:text-white/80">
                                 {{ $ticket->ticket_number }}
                             </div>
                         </div>
 
 
                         {{-- Created --}}
-                        <div
-                            class="border-t border-[#eeeaf1] pt-5 dark:border-white/5"
-                        >
+                        <div class="border-t border-[#eeeaf1] pt-5 dark:border-white/5">
                             <div class="text-xs font-medium text-[#9b95a0]">
                                 Created
                             </div>
 
-                            <div
-                                class="mt-2 text-sm font-semibold text-[#4a4451] dark:text-white/80"
-                            >
+                            <div class="mt-2 text-sm font-semibold text-[#4a4451] dark:text-white/80">
                                 {{ $ticket->created_at->format('M j, Y · g:i A') }}
                             </div>
                         </div>
@@ -1292,9 +1034,7 @@
                                 Last activity
                             </div>
 
-                            <div
-                                class="mt-2 text-sm font-semibold text-[#4a4451] dark:text-white/80"
-                            >
+                            <div class="mt-2 text-sm font-semibold text-[#4a4451] dark:text-white/80">
                                 {{ $ticket->last_activity_at?->diffForHumans() ?? '—' }}
                             </div>
                         </div>
@@ -1307,30 +1047,21 @@
                     ACTIVITY CARD
                 ===================================================== --}}
                 <div
-                    class="relative overflow-hidden rounded-[26px] bg-[#62547d] p-6 text-white shadow-[0_20px_50px_-30px_rgba(80,60,110,.7)]"
-                >
-                    <div
-                        class="absolute -right-20 -top-20 size-48 rounded-full bg-white/[0.07] blur-3xl"
-                    ></div>
+                    class="relative overflow-hidden rounded-[26px] bg-[#62547d] p-6 text-white shadow-[0_20px_50px_-30px_rgba(80,60,110,.7)]">
+                    <div class="absolute -right-20 -top-20 size-48 rounded-full bg-white/[0.07] blur-3xl"></div>
 
                     <div class="relative">
                         <div class="mb-7 flex items-center justify-between">
-                            <span
-                                class="text-[10px] font-bold uppercase tracking-[0.16em] text-white/60"
-                            >
+                            <span class="text-[10px] font-bold uppercase tracking-[0.16em] text-white/60">
                                 Activity
                             </span>
 
-                            <div
-                                class="flex size-9 items-center justify-center rounded-xl bg-white/10"
-                            >
+                            <div class="flex size-9 items-center justify-center rounded-xl bg-white/10">
                                 <flux:icon.bolt class="size-4" />
                             </div>
                         </div>
 
-                        <div
-                            class="text-5xl font-bold tracking-[-0.04em]"
-                        >
+                        <div class="text-5xl font-bold tracking-[-0.04em]">
                             {{ $ticket->messages->count() }}
                         </div>
 
@@ -1344,34 +1075,88 @@
                 {{-- ====================================================
                     CHARGE ACTIONS
                 ===================================================== --}}
-                @if($status === 'resolved' && (auth()->user()->currentTeam->hasAdmin() || auth()->user()->currentTeam->owner()->id === auth()->id() || auth()->user()->currentTeam->hasMember(auth()->user())))
+                @if (
+                    $status === 'resolved' &&
+                        (auth()->user()->currentTeam->hasAdmin() ||
+                            auth()->user()->currentTeam->owner()->id === auth()->id() ||
+                            auth()->user()->currentTeam->hasMember(auth()->user())))
                     @php
                         // Simplified permission check: Owner/Admin/Member have ChargeCustomer in our recent enum update
-                        $canCharge = auth()->user()->currentTeam->roleFor(auth()->user())?->hasPermission(\App\Enums\TeamPermission::ChargeCustomer);
+                        $canCharge = auth()
+                            ->user()
+                            ->currentTeam->roleFor(auth()->user())
+                            ?->hasPermission(\App\Enums\TeamPermission::ChargeCustomer);
                         // Fallback check if Owner (owner has all permissions)
                         if (auth()->user()->currentTeam->owner()?->id === auth()->id()) {
                             $canCharge = true;
                         }
                     @endphp
 
-                    @if($canCharge)
-                        <div class="rounded-[26px] border border-indigo-200 bg-indigo-50/50 p-5 shadow-sm dark:border-indigo-500/20 dark:bg-indigo-500/10">
-                            <h3 class="mb-2 text-base font-semibold text-indigo-900 dark:text-indigo-200">
-                                Ticket Resolved
-                            </h3>
-                            <p class="mb-4 text-sm text-indigo-700 dark:text-indigo-300">
-                                This ticket is resolved. You can now securely bill the customer for the work done.
-                            </p>
-                            
-                            <button
-                                type="button"
-                                x-on:click="$dispatch('open-charge-modal', { ticketId: {{ $ticket->id }} })"
-                                class="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-                            >
-                                <flux:icon.credit-card class="size-4" />
-                                Charge Customer
-                            </button>
-                        </div>
+                    @if ($canCharge)
+                        @if ($ticket->invoice && $ticket->invoice->isPaid())
+                            <div
+                                class="rounded-[26px] border border-green-200 bg-green-50/50 p-5 shadow-sm dark:border-green-500/20 dark:bg-green-500/10">
+                                <h3 class="mb-2 text-base font-semibold text-green-900 dark:text-green-200">
+                                    Ticket Done
+                                </h3>
+                                <p class="mb-4 text-sm text-green-700 dark:text-green-300">
+                                    This ticket has been billed and paid successfully.
+                                </p>
+
+                                <div class="space-y-3 mt-4">
+                                    <div
+                                        class="text-xs font-semibold text-green-800 dark:text-green-300 uppercase tracking-wider">
+                                        Services Billed:</div>
+                                    <ul class="space-y-2 text-sm text-green-800 dark:text-green-200">
+                                        @foreach ($ticket->invoice->items as $item)
+                                            <li class="flex justify-between">
+                                                <span>{{ $item->description }}</span>
+                                                <span
+                                                    class="font-medium">${{ number_format($item->amount / 100, 2) }}</span>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                    <div
+                                        class="border-t border-green-200 dark:border-green-800 pt-2 flex justify-between font-bold text-green-900 dark:text-green-100">
+                                        <span>Total Paid</span>
+                                        <span>${{ number_format($ticket->invoice->total_amount / 100, 2) }}</span>
+                                    </div>
+
+                                    @php
+                                        $transaction = $ticket->invoice->transactions
+                                            ->where('status', \App\Enums\TransactionStatus::Succeeded)
+                                            ->first();
+                                    @endphp
+                                    @if ($transaction)
+                                        <div
+                                            class="mt-4 pt-3 border-t border-green-200 dark:border-green-800 text-xs text-green-700 dark:text-green-300">
+                                            Paid via
+                                            {{ ucfirst($transaction->brand ?? $transaction->payment_method_type) }}
+                                            @if ($transaction->last4)
+                                                ending in •••• {{ $transaction->last4 }}
+                                            @endif
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @else
+                            <div
+                                class="rounded-[26px] border border-indigo-200 bg-indigo-50/50 p-5 shadow-sm dark:border-indigo-500/20 dark:bg-indigo-500/10">
+                                <h3 class="mb-2 text-base font-semibold text-indigo-900 dark:text-indigo-200">
+                                    Ticket Resolved
+                                </h3>
+                                <p class="mb-4 text-sm text-indigo-700 dark:text-indigo-300">
+                                    This ticket is resolved. You can now securely bill the customer for the work done.
+                                </p>
+
+                                <button type="button"
+                                    x-on:click="$dispatch('open-charge-modal', { ticketId: {{ $ticket->id }} })"
+                                    class="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                                    <flux:icon.credit-card class="size-4" />
+                                    Charge Customer
+                                </button>
+                            </div>
+                        @endif
                     @endif
                 @endif
 

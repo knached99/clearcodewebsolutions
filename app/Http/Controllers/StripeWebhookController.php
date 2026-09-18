@@ -50,6 +50,21 @@ class StripeWebhookController extends Controller
                     // Mark as paid
                     $invoice->update(['status' => InvoiceStatus::Paid]);
 
+                    $brand = null;
+                    $last4 = null;
+                    if (isset($paymentIntent->latest_charge)) {
+                        try {
+                            $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
+                            $charge = $stripe->charges->retrieve($paymentIntent->latest_charge);
+                            if ($charge && isset($charge->payment_method_details->card)) {
+                                $brand = $charge->payment_method_details->card->brand;
+                                $last4 = $charge->payment_method_details->card->last4;
+                            }
+                        } catch (\Exception $e) {
+                            //
+                        }
+                    }
+
                     // Generate local transaction record
                     Transaction::create([
                         'invoice_id' => $invoice->id,
@@ -58,6 +73,8 @@ class StripeWebhookController extends Controller
                         'amount' => $paymentIntent->amount_received,
                         'status' => TransactionStatus::Succeeded,
                         'payment_method_type' => 'card',
+                        'brand' => $brand,
+                        'last4' => $last4,
                     ]);
 
                     // Send receipt with PDF attachment

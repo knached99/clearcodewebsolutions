@@ -12,6 +12,7 @@ use App\Livewire\Home\Tickets\TicketSearch;
 use App\Livewire\RequiredOnboarding;
 use App\Livewire\Teams\Projects\Index as AdminWorksIndex;
 use App\Livewire\Teams\Testimonials\Index as AdminTestimonialsIndex;
+use App\Livewire\Teams\Invoices\InvoiceShow;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -176,6 +177,8 @@ Route::prefix('{current_team}')
             'testimonials/{testimonial}',
             AdminTestimonialsIndex::class
         )->name('testimonials.show');
+
+        Route::get('/invoices/{invoice}', InvoiceShow::class)->name('invoices.show');
     });
 
 require __DIR__.'/settings.php';
