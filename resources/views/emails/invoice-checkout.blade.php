@@ -1,44 +1,50 @@
 <x-mail::message>
-    # Secure Checkout Request
 
-    Hi {{ $invoice->customer->name }},
+# Payment Request
 
-    A payment has been requested for the work done on **Ticket #{{ $invoice->ticket->ticket_number ?? 'N/A' }}**.
+Hi {{ $invoice->customer->name }},
 
-    @if ($invoice->isSubscription())
-        **Amount Due Today:** ${{ number_format($invoice->totalAmountInDollars(), 2) }}
+A payment is due for the work completed on **Ticket #{{ $invoice->ticket->ticket_number ?? 'N/A' }}**.
 
-        **Then:** ${{ number_format($invoice->monthlyRecurringAmountInDollars(), 2) }}/month
+<x-mail::panel>
 
-        **Subscription Term:** 12 month minimum
-    @else
-        **Amount Due Today:** ${{ number_format($invoice->totalAmountInDollars(), 2) }}
+### Payment Summary
 
-        **Then:** ${{ number_format($invoice->monthlyRecurringAmountInDollars(), 2) }}/month
-    @endif
+**Amount Due Today:** ${{ number_format($invoice->totalAmountInDollars(), 2) }}
 
-    <x-mail::panel>
-        ### Invoice Summary
+@if ($invoice->isSubscription())
+**Monthly Recurring:** ${{ number_format($invoice->monthlyRecurringAmountInDollars(), 2) }}/month
 
-        @foreach ($invoice->items as $item)
-            * **{{ $item->description }}**: ${{ number_format($item->amountInDollars(), 2) }}@if ($item->is_subscription)
-                / month
-            @endif
-        @endforeach
+**Subscription Term:** 12-month minimum
+@endif
 
-        ---
+</x-mail::panel>
 
-        **Due Today:** ${{ number_format($invoice->totalAmountInDollars(), 2) }}
+### Invoice Details
 
-        **Monthly Recurring:** ${{ number_format($invoice->monthlyRecurringAmountInDollars(), 2) }}
-    </x-mail::panel>
+@foreach ($invoice->items as $item)
+- **{{ $item->description }}** — ${{ number_format($item->amountInDollars(), 2) }}@if ($item->is_subscription)/month@endif
+@endforeach
 
-    Please click the button below to complete your payment via our secure checkout.
+<x-mail::panel>
 
-    <x-mail::button :url="route('checkout.show', $invoice->checkout_token)" color="primary">
-        Complete Payment
-    </x-mail::button>
+**Due Today:** ${{ number_format($invoice->totalAmountInDollars(), 2) }}
 
-    Thanks,<br>
-    {{ config('app.name') }}
+@if ($invoice->isSubscription())
+**Recurring Monthly:** ${{ number_format($invoice->monthlyRecurringAmountInDollars(), 2) }}
+@endif
+
+</x-mail::panel>
+
+When you're ready, click the button below to securely complete your payment.
+
+<x-mail::button :url="route('checkout.show', $invoice->checkout_token)" color="primary">
+Complete Secure Payment
+</x-mail::button>
+
+If you have any questions about this invoice, please don't hesitate to contact us.
+
+Thanks,<br>
+{{ config('app.name') }}
+
 </x-mail::message>

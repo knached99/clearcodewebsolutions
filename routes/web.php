@@ -14,6 +14,8 @@ use App\Livewire\Teams\Projects\Index as AdminWorksIndex;
 use App\Livewire\Teams\Testimonials\Index as AdminTestimonialsIndex;
 use App\Livewire\Teams\Invoices\InvoiceShow;
 use Illuminate\Support\Facades\Route;
+use App\Models\Invoice;
+use App\Enums\InvoiceStatus;
 
 /*
 |--------------------------------------------------------------------------
@@ -104,6 +106,19 @@ Route::get('/projects/{work}', [
 
 Route::get('/checkout/{token}', StripeCheckout::class)
     ->name('checkout.show');
+
+
+    
+Route::get('/checkout/{token}/complete', function (string $token) {
+    $invoice = Invoice::query()
+        ->where('checkout_token', $token)
+        ->with(['items', 'customer'])
+        ->firstOrFail();
+
+    return view('checkout.payment-success', [
+        'invoice' => $invoice,
+    ]);
+})->name('checkout.complete');
 
 Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle'])
     ->name('stripe.webhook');

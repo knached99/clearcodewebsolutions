@@ -8,6 +8,7 @@ use App\Mail\InvoiceCheckoutMail;
 use App\Models\Invoice;
 use App\Models\Ticket;
 use App\Services\StripeService;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -28,7 +29,6 @@ class ChargeCustomerModal extends Component
 
     public bool $isSubscription = false;
 
-    // Selected Stripe Price IDs
     public array $selectedAddonPriceIds = [];
 
     #[Computed]
@@ -44,12 +44,15 @@ class ChargeCustomerModal extends Component
     #[Computed]
     public function availableAddons(): array
     {
-        try {
-            return app(StripeService::class)->getActiveAddons();
-        } catch (\Exception $e) {
-            Log::error('Failed to fetch Stripe add-ons: ' . $e->getMessage());
-            return [];
-        }
+        // Cache for 1 hour to eliminate repeated Stripe API network calls on re-renders
+        return Cache::remember('stripe_active_addons', 3600, function () {
+            try {
+                return app(StripeService::class)->getActiveAddons();
+            } catch (\Exception $e) {
+                Log::error('Failed to fetch Stripe add-ons: ' . $e->getMessage());
+                return [];
+            }
+        });
     }
 
     #[Computed]
@@ -118,15 +121,6 @@ class ChargeCustomerModal extends Component
         $this->resetErrorBag();
     }
 
-    public function toggleAddon(string $priceId)
-    {
-        if (in_array($priceId, $this->selectedAddonPriceIds)) {
-            $this->selectedAddonPriceIds = array_values(array_diff($this->selectedAddonPriceIds, [$priceId]));
-        } else {
-            $this->selectedAddonPriceIds[] = $priceId;
-        }
-    }
-
     public function submit(StripeService $stripe)
     {
         $this->authorize('update', $this->ticket);
@@ -174,14 +168,12 @@ class ChargeCustomerModal extends Component
                     ? trim($this->description)
                     : 'Development Services';
 
-                // 1. Save Base Item
                 $invoice->items()->create([
                     'description' => $cleanBaseDescription . ($this->isSubscription ? ' (Monthly - 12 Mo. Minimum)' : ''),
                     'amount' => $baseItemAmount,
                     'is_subscription' => $this->isSubscription,
                 ]);
 
-                // 2. Save Selected Add-ons with pre-existing Stripe Price ID attached
                 foreach ($this->selectedAddonPriceIds as $priceId) {
                     if (isset($addons[$priceId])) {
                         $invoice->items()->create([
@@ -203,10 +195,9 @@ class ChargeCustomerModal extends Component
 
             Mail::to($customer->email)->send(new InvoiceCheckoutMail($invoice));
 
-            session()->flash('ticket-success', 'Invoice generated and emailed successfully.');
+            session()->flash('success', 'Invoice generated and emailed successfully.');
 
-            unset($this->existingInvoice);
-            $this->closeModal();
+            return $this->redirect(route('invoices.show', $invoice), navigate: true);
 
         } catch (\Exception $e) {
             Log::error('Invoice generation error: ' . $e->getMessage());

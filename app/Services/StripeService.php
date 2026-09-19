@@ -2,14 +2,14 @@
 
 namespace App\Services;
 
+use Stripe\Checkout\Session;
 use Stripe\Customer;
+use Stripe\Invoice;
 use Stripe\PaymentIntent;
 use Stripe\Price;
 use Stripe\Product;
 use Stripe\StripeClient;
 use Stripe\Subscription;
-use Stripe\Invoice;
-use Stripe\Checkout\Session;
 
 class StripeService
 {
@@ -17,14 +17,18 @@ class StripeService
 
     public function __construct()
     {
-        $this->stripe = new StripeClient(config('services.stripe.secret') ?: 'sk_test_placeholder');
+        $this->stripe = new StripeClient(
+            config('services.stripe.secret') ?: 'sk_test_placeholder'
+        );
     }
 
     /**
      * Get or create a Stripe Customer by email.
      */
-    public function resolveCustomer(string $email, string $name): Customer
-    {
+    public function resolveCustomer(
+        string $email,
+        string $name
+    ): Customer {
         $customers = $this->stripe->customers->search([
             'query' => "email:'{$email}'",
             'limit' => 1,
@@ -34,9 +38,12 @@ class StripeService
             return $customers->data[0];
         }
 
-        $params = ['email' => $email];
+        $params = [
+            'email' => $email,
+        ];
 
         $cleanName = trim($name);
+
         if ($cleanName !== '') {
             $params['name'] = $cleanName;
         }
@@ -47,15 +54,20 @@ class StripeService
     /**
      * Create a new product in Stripe.
      */
-    public function createProduct(string $name, ?string $description = null): Product
-    {
+    public function createProduct(
+        string $name,
+        ?string $description = null
+    ): Product {
         $cleanName = trim($name);
 
         $params = [
-            'name' => $cleanName !== '' ? $cleanName : 'Service Item',
+            'name' => $cleanName !== ''
+                ? $cleanName
+                : 'Service Item',
         ];
 
         $cleanDescription = trim((string) $description);
+
         if ($cleanDescription !== '') {
             $params['description'] = $cleanDescription;
         }
@@ -64,10 +76,15 @@ class StripeService
     }
 
     /**
-     * Create a price for a product. Amount is in cents.
+     * Create a price for a product.
+     *
+     * Amount is in cents.
      */
-    public function createPrice(string $productId, int $amountInCents, bool $isRecurring = false): Price
-    {
+    public function createPrice(
+        string $productId,
+        int $amountInCents,
+        bool $isRecurring = false
+    ): Price {
         $priceData = [
             'product' => $productId,
             'unit_amount' => $amountInCents,
@@ -84,203 +101,360 @@ class StripeService
     }
 
     /**
-     * Create a payment intent for a one-time charge.
+     * Create a PaymentIntent for a one-time charge.
+     *
+     * Payment details are collected by Stripe Elements.
+     * Raw card information never passes through Livewire/Laravel.
      */
-    public function createPaymentIntent(int $amountInCents, string $customerId, array $metadata = []): PaymentIntent
-    {
-        $params = [
-            'amount' => $amountInCents,
-            'currency' => 'usd',
-            'customer' => $customerId,
-            'setup_future_usage' => 'off_session',
-        ];
-
-        if (isset($metadata['description'])) {
-            $cleanDesc = trim((string) $metadata['description']);
-            if ($cleanDesc !== '') {
-                $params['description'] = $cleanDesc;
-            }
-            unset($metadata['description']);
-        }
-
-        if (! empty($metadata)) {
-            $params['metadata'] = $metadata;
-        }
-
-        return $this->stripe->paymentIntents->create($params);
-    }
-
-    /**
-     * Retrieve an existing Payment Intent.
-     */
-    public function getPaymentIntent(string $paymentIntentId): PaymentIntent
-    {
-        return $this->stripe->paymentIntents->retrieve($paymentIntentId);
-    }
-
-    /**
- * Create a subscription, supporting both recurring prices and one-time initial invoice items.
- */
-public function createSubscription(string $customerId, array $priceIds, array $metadata = [], array $oneTimeItems = []): Subscription
-{
-    $items = array_map(fn ($priceId) => ['price' => $priceId], $priceIds);
-
+   public function createPaymentIntent(
+    int $amountInCents,
+    string $customerId,
+    array $metadata = []
+): PaymentIntent {
     $params = [
+        'amount' => $amountInCents,
+        'currency' => 'usd',
         'customer' => $customerId,
-        'items' => $items,
-        'payment_behavior' => 'default_incomplete',
-        'payment_settings' => ['save_default_payment_method' => 'on_subscription'],
-        'expand' => ['latest_invoice.payment_intent', 'pending_setup_intent'],
+
+        'automatic_payment_methods' => [
+            'enabled' => true,
+        ],
     ];
 
-    // Attach one-time line items (e.g. Upfront Base Fee) directly to the first invoice
-    if (! empty($oneTimeItems)) {
-        $params['add_invoice_items'] = array_map(function ($item) {
-            return [
-                'amount' => $item['amount'], // in cents
-                'currency' => 'usd',
-                'description' => $item['description'],
-            ];
-        }, $oneTimeItems);
-    }
-
     if (isset($metadata['description'])) {
-        $cleanDesc = trim((string) $metadata['description']);
+        $cleanDesc = trim(
+            (string) $metadata['description']
+        );
+
         if ($cleanDesc !== '') {
             $params['description'] = $cleanDesc;
         }
+
         unset($metadata['description']);
     }
 
-    if (! empty($metadata)) {
+    if (!empty($metadata)) {
         $params['metadata'] = $metadata;
     }
 
-    return $this->stripe->subscriptions->create($params);
+    return $this->stripe
+        ->paymentIntents
+        ->create($params);
 }
+
+    /**
+     * Retrieve an existing PaymentIntent.
+     */
+    public function getPaymentIntent(
+        string $paymentIntentId
+    ): PaymentIntent {
+        return $this->stripe
+            ->paymentIntents
+            ->retrieve($paymentIntentId);
+    }
+
+    /**
+     * Create a subscription, supporting both recurring
+     * prices and one-time initial invoice items.
+     */
+    public function createSubscription(
+        string $customerId,
+        array $priceIds,
+        array $metadata = [],
+        array $oneTimeItems = []
+    ): Subscription {
+        $items = array_map(
+            fn ($priceId) => [
+                'price' => $priceId,
+            ],
+            $priceIds
+        );
+
+        $params = [
+            'customer' => $customerId,
+
+            'items' => $items,
+
+            'payment_behavior' => 'default_incomplete',
+
+            'payment_settings' => [
+                'save_default_payment_method' => 'on_subscription',
+            ],
+
+            'expand' => [
+                'latest_invoice.payment_intent',
+                'pending_setup_intent',
+            ],
+        ];
+
+        /*
+         * Attach one-time line items to the first invoice.
+         */
+        if (!empty($oneTimeItems)) {
+            $params['add_invoice_items'] = array_map(
+                function ($item) {
+                    return [
+                        'amount' => $item['amount'],
+                        'currency' => 'usd',
+                        'description' => $item['description'],
+                    ];
+                },
+                $oneTimeItems
+            );
+        }
+
+        /*
+         * Description is a top-level Stripe property.
+         */
+        if (isset($metadata['description'])) {
+            $cleanDesc = trim(
+                (string) $metadata['description']
+            );
+
+            if ($cleanDesc !== '') {
+                $params['description'] = $cleanDesc;
+            }
+
+            unset($metadata['description']);
+        }
+
+        if (!empty($metadata)) {
+            $params['metadata'] = $metadata;
+        }
+
+        return $this->stripe
+            ->subscriptions
+            ->create($params);
+    }
 
     /**
      * Retrieve an existing Subscription with expanded objects.
      */
-    public function getSubscription(string $subscriptionId): Subscription
-    {
-        return $this->stripe->subscriptions->retrieve($subscriptionId, [
-            'expand' => ['latest_invoice.payment_intent', 'pending_setup_intent'],
-        ]);
+    public function getSubscription(
+        string $subscriptionId
+    ): Subscription {
+        return $this->stripe
+            ->subscriptions
+            ->retrieve(
+                $subscriptionId,
+                [
+                    'expand' => [
+                        'latest_invoice.payment_intent',
+                        'pending_setup_intent',
+                    ],
+                ]
+            );
     }
 
+    /**
+     * Dynamically fetch unique active recurring add-on prices.
+     */
+    public function getActiveAddons(): array
+    {
+        $prices = $this->stripe->prices->all([
+            'active' => true,
+            'type' => 'recurring',
+            'expand' => [
+                'data.product',
+            ],
+            'limit' => 100,
+        ]);
 
+        $addons = [];
+        $seenNames = [];
 
-/**
- * Dynamically fetch unique active recurring add-on prices from Stripe.
- */
-public function getActiveAddons(): array
-{
-    $prices = $this->stripe->prices->all([
-        'active' => true,
-        'type' => 'recurring',
-        'expand' => ['data.product'],
-        'limit' => 100,
-    ]);
+        foreach ($prices->data as $price) {
 
-    $addons = [];
-    $seenNames = [];
+            if (
+                !$price->recurring ||
+                $price->recurring->interval !== 'month'
+            ) {
+                continue;
+            }
 
-    foreach ($prices->data as $price) {
-        if ($price->recurring && $price->recurring->interval === 'month') {
             $product = $price->product;
 
-            if (is_object($product) && $product->active) {
-                // Filter 1: Check metadata OR match official add-on names
-                $isAddon = ($product->metadata->type ?? null) === 'addon' 
-                    || in_array($product->name, [
+            if (
+                !is_object($product) ||
+                !$product->active
+            ) {
+                continue;
+            }
+
+            $isAddon =
+                ($product->metadata->type ?? null) === 'addon'
+                ||
+                in_array(
+                    $product->name,
+                    [
                         'Website Maintenance',
                         'SEO Optimization',
                         'Performance Monitoring',
                         'Security Patching',
                         'Content Updates',
-                    ]);
+                    ],
+                    true
+                );
 
-                // Filter 2: Exclude custom base items and deduplicate
-                if ($isAddon && ! in_array($product->name, $seenNames)) {
-                    $seenNames[] = $product->name;
-                    
-                    $addons[$price->id] = [
-                        'id' => $price->id,
-                        'name' => $product->name,
-                        'price' => $price->unit_amount / 100,
-                        'price_in_cents' => $price->unit_amount,
-                    ];
-                }
+            if (
+                $isAddon &&
+                !in_array(
+                    $product->name,
+                    $seenNames,
+                    true
+                )
+            ) {
+                $seenNames[] = $product->name;
+
+                $addons[$price->id] = [
+                    'id' => $price->id,
+                    'name' => $product->name,
+                    'price' => $price->unit_amount / 100,
+                    'price_in_cents' => $price->unit_amount,
+                ];
             }
         }
+
+        return $addons;
     }
 
-    return $addons;
-}
     /**
-     * Safely resolve client_secret across all subscription edge cases.
+     * Safely resolve client_secret across subscription edge cases.
      */
-    public function getSubscriptionClientSecret(Subscription|string $subscription): string
-    {
+    public function getSubscriptionClientSecret(
+        Subscription|string $subscription
+    ): string {
         if (is_string($subscription)) {
-            $subscription = $this->getSubscription($subscription);
+            $subscription = $this->getSubscription(
+                $subscription
+            );
         }
 
-        // Edge Case 1: Subscription uses a Pending Setup Intent
-        if (! empty($subscription->pending_setup_intent)) {
-            $setupIntent = $subscription->pending_setup_intent;
+        /*
+         * Edge Case 1:
+         * Subscription uses a pending SetupIntent.
+         */
+        if (!empty($subscription->pending_setup_intent)) {
+
+            $setupIntent =
+                $subscription->pending_setup_intent;
+
             if (is_string($setupIntent)) {
-                $setupIntent = $this->stripe->setupIntents->retrieve($setupIntent);
+                $setupIntent =
+                    $this->stripe
+                        ->setupIntents
+                        ->retrieve($setupIntent);
             }
-            if (is_object($setupIntent) && ! empty($setupIntent->client_secret)) {
+
+            if (
+                is_object($setupIntent) &&
+                !empty($setupIntent->client_secret)
+            ) {
                 return $setupIntent->client_secret;
             }
         }
 
-        // Edge Case 2: Resolve latest invoice
-        $latestInvoice = $subscription->latest_invoice ?? null;
+        /*
+         * Edge Case 2:
+         * Resolve latest invoice.
+         */
+        $latestInvoice =
+            $subscription->latest_invoice ?? null;
 
         if (is_string($latestInvoice)) {
-            $latestInvoice = $this->stripe->invoices->retrieve($latestInvoice, [
-                'expand' => ['payment_intent'],
-            ]);
+            $latestInvoice =
+                $this->stripe
+                    ->invoices
+                    ->retrieve(
+                        $latestInvoice,
+                        [
+                            'expand' => [
+                                'payment_intent',
+                            ],
+                        ]
+                    );
         }
 
         if (is_object($latestInvoice)) {
-            $paymentIntent = $latestInvoice->payment_intent ?? null;
+
+            $paymentIntent =
+                $latestInvoice->payment_intent ?? null;
 
             if (is_string($paymentIntent)) {
-                $paymentIntent = $this->stripe->paymentIntents->retrieve($paymentIntent);
+                $paymentIntent =
+                    $this->stripe
+                        ->paymentIntents
+                        ->retrieve($paymentIntent);
             }
 
-            if (is_object($paymentIntent) && ! empty($paymentIntent->client_secret)) {
+            if (
+                is_object($paymentIntent) &&
+                !empty($paymentIntent->client_secret)
+            ) {
                 return $paymentIntent->client_secret;
             }
 
-            // Edge Case 3: Invoice exists with amount due, but no payment intent was attached
-            if (isset($latestInvoice->amount_due) && $latestInvoice->amount_due > 0) {
-                $fallbackIntent = $this->stripe->paymentIntents->create([
-                    'amount' => $latestInvoice->amount_due,
-                    'currency' => $latestInvoice->currency ?? 'usd',
-                    'customer' => is_string($subscription->customer) ? $subscription->customer : $subscription->customer->id,
-                    'metadata' => [
-                        'subscription_id' => $subscription->id,
-                        'invoice_id' => $latestInvoice->id,
-                    ],
-                ]);
+            /*
+             * Edge Case 3:
+             *
+             * Invoice exists with amount due but doesn't
+             * have a PaymentIntent attached.
+             */
+            if (
+                isset($latestInvoice->amount_due) &&
+                $latestInvoice->amount_due > 0
+            ) {
+                $customerId =
+                    is_string($subscription->customer)
+                        ? $subscription->customer
+                        : $subscription->customer->id;
 
-                if (! empty($fallbackIntent->client_secret)) {
+                $fallbackIntent =
+                    $this->stripe
+                        ->paymentIntents
+                        ->create([
+                            'amount' =>
+                                $latestInvoice->amount_due,
+
+                            'currency' =>
+                                $latestInvoice->currency
+                                    ?? 'usd',
+
+                            'customer' =>
+                                $customerId,
+
+                            'metadata' => [
+                                'subscription_id' =>
+                                    $subscription->id,
+
+                                'invoice_id' =>
+                                    $latestInvoice->id,
+                            ],
+                        ]);
+
+                if (
+                    !empty(
+                        $fallbackIntent->client_secret
+                    )
+                ) {
                     return $fallbackIntent->client_secret;
                 }
             }
         }
 
-        throw new \Exception('Unable to resolve client_secret. Please ensure invoice items have an amount greater than 0.');
+        throw new \Exception(
+            'Unable to resolve client_secret. ' .
+            'Please ensure invoice items have an amount greater than 0.'
+        );
     }
 
-    public function sendInvoiceEmail(string $customerId, string $priceId): Invoice
-    {
+    /**
+     * Send an invoice email.
+     */
+    public function sendInvoiceEmail(
+        string $customerId,
+        string $priceId
+    ): Invoice {
         $this->stripe->invoiceItems->create([
             'customer' => $customerId,
             'price' => $priceId,
@@ -292,21 +466,42 @@ public function getActiveAddons(): array
             'days_until_due' => 7,
         ]);
 
-        return $this->stripe->invoices->sendInvoice($invoice->id);
+        return $this->stripe
+            ->invoices
+            ->sendInvoice($invoice->id);
     }
 
-    public function createCheckoutLink(string $customerId, string $priceId): Session
-    {
-        return $this->stripe->checkout->sessions->create([
-            'customer' => $customerId,
-            'payment_method_types' => ['card'],
-            'line_items' => [[
-                'price' => $priceId,
-                'quantity' => 1,
-            ]],
-            'mode' => 'payment',
-            'success_url' => url('/payment-success'),
-            'cancel_url' => url('/payment-cancelled'),
-        ]);
+    /**
+     * Create a Stripe Checkout link.
+     */
+    public function createCheckoutLink(
+        string $customerId,
+        string $priceId
+    ): Session {
+        return $this->stripe
+            ->checkout
+            ->sessions
+            ->create([
+                'customer' => $customerId,
+
+                'payment_method_types' => [
+                    'card',
+                ],
+
+                'line_items' => [
+                    [
+                        'price' => $priceId,
+                        'quantity' => 1,
+                    ],
+                ],
+
+                'mode' => 'payment',
+
+                'success_url' =>
+                    url('/payment-success'),
+
+                'cancel_url' =>
+                    url('/payment-cancelled'),
+            ]);
     }
 }
