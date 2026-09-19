@@ -132,12 +132,10 @@
 
         .cc-project-summary {
             margin-top: 28px;
-
             max-width: 680px;
-
-            color: rgba(255, 255, 255, .43);
-
-            font-size: 15px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 20px;
+            font-weight: 600;
             line-height: 1.85;
         }
 
