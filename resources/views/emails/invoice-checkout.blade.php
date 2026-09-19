@@ -2,20 +2,23 @@
 
 # Payment Request
 
-Hi {{ $invoice->customer->name }},
+Hi {{ $invoice->customer?->name ?? 'there' }},
 
-A payment is due for the work completed on **Ticket #{{ $invoice->ticket->ticket_number ?? 'N/A' }}**.
+A payment is due for the work completed on **Ticket #{{ $invoice->ticket?->ticket_number ?? 'N/A' }}**.
 
 <x-mail::panel>
 
 ### Payment Summary
 
-**Amount Due Today:** ${{ number_format($invoice->totalAmountInDollars(), 2) }}
+**Amount Due Today:**  
+${{ number_format($invoice->totalAmountInDollars(), 2) }}
 
 @if ($invoice->isSubscription())
-**Monthly Recurring:** ${{ number_format($invoice->monthlyRecurringAmountInDollars(), 2) }}/month
+**Monthly Recurring:**  
+${{ number_format($invoice->monthlyRecurringAmountInDollars(), 2) }}/month
 
-**Subscription Term:** 12-month minimum
+**Subscription Term:**  
+12-month minimum
 @endif
 
 </x-mail::panel>
@@ -23,15 +26,27 @@ A payment is due for the work completed on **Ticket #{{ $invoice->ticket->ticket
 ### Invoice Details
 
 @foreach ($invoice->items as $item)
-- **{{ $item->description }}** — ${{ number_format($item->amountInDollars(), 2) }}@if ($item->is_subscription)/month@endif
+**{{ $item->description ?? $item->name ?? 'Item' }}**  
+${{ number_format($item->amountInDollars(), 2) }}
+
+@if ($item->is_subscription)
+Recurring monthly
+@endif
+
+@if (!$loop->last)
+---
+@endif
+
 @endforeach
 
 <x-mail::panel>
 
-**Due Today:** ${{ number_format($invoice->totalAmountInDollars(), 2) }}
+**Due Today:**  
+${{ number_format($invoice->totalAmountInDollars(), 2) }}
 
 @if ($invoice->isSubscription())
-**Recurring Monthly:** ${{ number_format($invoice->monthlyRecurringAmountInDollars(), 2) }}
+**Recurring Monthly:**  
+${{ number_format($invoice->monthlyRecurringAmountInDollars(), 2) }}
 @endif
 
 </x-mail::panel>
@@ -45,6 +60,10 @@ Complete Secure Payment
 If you have any questions about this invoice, please don't hesitate to contact us.
 
 Thanks,<br>
-{{ config('app.name') }}
+**{{ config('app.name') }}**
+
+<x-mail::subcopy>
+This is an automated payment request for Invoice #{{ $invoice->id }}.
+</x-mail::subcopy>
 
 </x-mail::message>
