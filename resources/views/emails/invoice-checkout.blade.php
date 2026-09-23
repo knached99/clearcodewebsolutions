@@ -2,58 +2,63 @@
 
 # Payment Request
 
-Hi {{ $invoice->customer?->name ?? 'there' }},
+Hi {{ $ticket->customer?->name ?? 'there' }},
 
-A payment is due for the work completed on **Ticket #{{ $invoice->ticket?->ticket_number ?? 'N/A' }}**.
+A payment is due for the work completed on **Ticket #{{ $ticket->ticket_number ?? 'N/A' }}**.
 
 <x-mail::panel>
 
 ### Payment Summary
 
 **Amount Due Today:**  
-${{ number_format($invoice->totalAmountInDollars(), 2) }}
+${{ number_format($totalAmountInCents / 100, 2) }}
 
-@if ($invoice->isSubscription())
+@if ($monthlyRecurringAmountInCents > 0)
 **Monthly Recurring:**  
-${{ number_format($invoice->monthlyRecurringAmountInDollars(), 2) }}/month
+${{ number_format($monthlyRecurringAmountInCents / 100, 2) }}/month
 
+@if ($isSubscription)
 **Subscription Term:**  
 12-month minimum
+@endif
 @endif
 
 </x-mail::panel>
 
 ### Invoice Details
 
-@foreach ($invoice->items as $item)
-**{{ $item->description ?? $item->name ?? 'Item' }}**  
-${{ number_format($item->amountInDollars(), 2) }}
-
-@if ($item->is_subscription)
-Recurring monthly
+**{{ $description }}**  
+${{ number_format($baseAmount, 2) }}  
+@if ($isSubscription)
+<span style="font-size: 12px; color: #6b7280;">Recurring Monthly</span>
+@else
+<span style="font-size: 12px; color: #6b7280;">One-time charge</span>
 @endif
 
-@if (!$loop->last)
+@if (!empty($selectedAddons))
+@foreach ($selectedAddons as $addon)
 ---
-@endif
-
+**{{ $addon['name'] }}**  
+${{ number_format($addon['price'], 2) }}  
+<span style="font-size: 12px; color: #6b7280;">Recurring monthly add-on</span>
 @endforeach
+@endif
 
 <x-mail::panel>
 
 **Due Today:**  
-${{ number_format($invoice->totalAmountInDollars(), 2) }}
+${{ number_format($totalAmountInCents / 100, 2) }}
 
-@if ($invoice->isSubscription())
+@if ($monthlyRecurringAmountInCents > 0)
 **Recurring Monthly:**  
-${{ number_format($invoice->monthlyRecurringAmountInDollars(), 2) }}
+${{ number_format($monthlyRecurringAmountInCents / 100, 2) }}
 @endif
 
 </x-mail::panel>
 
 When you're ready, click the button below to securely complete your payment.
 
-<x-mail::button :url="route('checkout.show', $invoice->checkout_token)" color="primary">
+<x-mail::button :url="$checkoutUrl" color="primary">
 Complete Secure Payment
 </x-mail::button>
 
@@ -63,7 +68,7 @@ Thanks,<br>
 **{{ config('app.name') }}**
 
 <x-mail::subcopy>
-This is an automated payment request for Invoice #{{ $invoice->id }}.
+This is an automated payment request for Ticket #{{ $ticket->ticket_number ?? 'N/A' }}.
 </x-mail::subcopy>
 
 </x-mail::message>

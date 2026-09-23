@@ -1,4 +1,4 @@
-<div class="cc-checkout">
+﻿<div class="cc-checkout">
     @assets
         <script src="https://js.stripe.com/v3/" defer></script>
     @endassets
@@ -387,747 +387,746 @@
     }
 
     .cc-checkout__success {
-    position: relative;
-    overflow: hidden;
-    width: 100%;
-    max-width: 720px;
-    margin: 40px auto 0;
-    padding: 56px 42px 48px;
-    background:
-        radial-gradient(
-            circle at 50% 0%,
-            rgba(178, 71, 178, 0.14),
-            transparent 42%
-        ),
-        #17121c;
-    border: 1px solid #2f2637;
-    border-radius: 24px;
-    box-shadow:
-        0 24px 60px rgba(0, 0, 0, 0.35),
-        inset 0 1px 0 rgba(255, 255, 255, 0.03);
-    text-align: center;
-}
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        max-width: 720px;
+        margin: 40px auto 0;
+        padding: 56px 42px 48px;
+        background:
+            radial-gradient(
+                circle at 50% 0%,
+                rgba(178, 71, 178, 0.14),
+                transparent 42%
+            ),
+            #17121c;
+        border: 1px solid #2f2637;
+        border-radius: 24px;
+        box-shadow:
+            0 24px 60px rgba(0, 0, 0, 0.35),
+            inset 0 1px 0 rgba(255, 255, 255, 0.03);
+        text-align: center;
+    }
 
-.cc-checkout__success::before {
-    content: "";
-    position: absolute;
-    top: -90px;
-    left: 50%;
-    width: 260px;
-    height: 260px;
-    transform: translateX(-50%);
-    background: rgba(178, 71, 178, 0.08);
-    filter: blur(60px);
-    pointer-events: none;
-}
-
-.cc-checkout__success-icon {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 76px;
-    height: 76px;
-    margin: 0 auto 26px;
-    border: 1px solid rgba(178, 71, 178, 0.35);
-    border-radius: 50%;
-    background:
-        linear-gradient(
-            145deg,
-            rgba(178, 71, 178, 0.18),
-            rgba(178, 71, 178, 0.06)
-        );
-    color: #d477d4;
-    box-shadow:
-        0 0 0 8px rgba(178, 71, 178, 0.05),
-        0 12px 30px rgba(178, 71, 178, 0.12);
-}
-
-.cc-checkout__success-icon svg {
-    width: 38px;
-    height: 38px;
-}
-
-.cc-checkout__success-content {
-    position: relative;
-    z-index: 1;
-}
-
-.cc-checkout__success-eyebrow {
-    display: inline-block;
-    margin-bottom: 10px;
-    color: #c88cc9;
-    font-size: 11px;
-    font-weight: 700;
-    line-height: 1.4;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-}
-
-.cc-checkout__success-title {
-    margin: 0;
-    color: #f8f1fa;
-    font-size: 34px;
-    line-height: 1.15;
-    font-weight: 750;
-    letter-spacing: -0.03em;
-}
-
-.cc-checkout__success-message {
-    max-width: 560px;
-    margin: 16px auto 0;
-    color: #b7aabc;
-    font-size: 15px;
-    line-height: 1.7;
-}
-
-.cc-checkout__success-message strong {
-    color: #f5eef8;
-    font-weight: 700;
-}
-
-.cc-checkout__success-email {
-    display: flex;
-    align-items: center;
-    gap: 13px;
-    max-width: 500px;
-    margin: 28px auto 0;
-    padding: 15px 17px;
-    border: 1px solid #34293a;
-    border-radius: 15px;
-    background: rgba(13, 10, 17, 0.55);
-    text-align: left;
-}
-
-.cc-checkout__success-email > svg {
-    flex: 0 0 auto;
-    width: 22px;
-    height: 22px;
-    color: #c88cc9;
-}
-
-.cc-checkout__success-email > div {
-    min-width: 0;
-}
-
-.cc-checkout__success-email-label {
-    display: block;
-    margin-bottom: 3px;
-    color: #827587;
-    font-size: 11px;
-    font-weight: 600;
-    line-height: 1.4;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-}
-
-.cc-checkout__success-email strong {
-    display: block;
-    overflow: hidden;
-    color: #eee5f0;
-    font-size: 14px;
-    font-weight: 600;
-    line-height: 1.45;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.cc-checkout__success-note {
-    max-width: 520px;
-    margin: 20px auto 0;
-    color: #8f8294;
-    font-size: 12px;
-    line-height: 1.65;
-}
-
-@media (max-width: 620px) {
-    .cc-checkout__success {
-        margin-top: 24px;
-        padding: 42px 22px 34px;
-        border-radius: 20px;
+    .cc-checkout__success::before {
+        content: "";
+        position: absolute;
+        top: -90px;
+        left: 50%;
+        width: 260px;
+        height: 260px;
+        transform: translateX(-50%);
+        background: rgba(178, 71, 178, 0.08);
+        filter: blur(60px);
+        pointer-events: none;
     }
 
     .cc-checkout__success-icon {
-        width: 68px;
-        height: 68px;
-        margin-bottom: 22px;
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 76px;
+        height: 76px;
+        margin: 0 auto 26px;
+        border: 1px solid rgba(178, 71, 178, 0.35);
+        border-radius: 50%;
+        background:
+            linear-gradient(
+                145deg,
+                rgba(178, 71, 178, 0.18),
+                rgba(178, 71, 178, 0.06)
+            );
+        color: #d477d4;
+        box-shadow:
+            0 0 0 8px rgba(178, 71, 178, 0.05),
+            0 12px 30px rgba(178, 71, 178, 0.12);
     }
 
     .cc-checkout__success-icon svg {
-        width: 34px;
-        height: 34px;
+        width: 38px;
+        height: 38px;
+    }
+
+    .cc-checkout__success-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .cc-checkout__success-eyebrow {
+        display: inline-block;
+        margin-bottom: 10px;
+        color: #c88cc9;
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1.4;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
     }
 
     .cc-checkout__success-title {
-        font-size: 28px;
+        margin: 0;
+        color: #f8f1fa;
+        font-size: 34px;
+        line-height: 1.15;
+        font-weight: 750;
+        letter-spacing: -0.03em;
     }
 
     .cc-checkout__success-message {
-        font-size: 14px;
+        max-width: 560px;
+        margin: 16px auto 0;
+        color: #b7aabc;
+        font-size: 15px;
+        line-height: 1.7;
+    }
+
+    .cc-checkout__success-message strong {
+        color: #f5eef8;
+        font-weight: 700;
     }
 
     .cc-checkout__success-email {
-        padding: 14px;
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        max-width: 500px;
+        margin: 28px auto 0;
+        padding: 15px 17px;
+        border: 1px solid #34293a;
+        border-radius: 15px;
+        background: rgba(13, 10, 17, 0.55);
+        text-align: left;
     }
-}
-</style>
 
+    .cc-checkout__success-email > svg {
+        flex: 0 0 auto;
+        width: 22px;
+        height: 22px;
+        color: #c88cc9;
+    }
 
-@if ($checkoutSuccessful)
-    <div class="cc-checkout__success">
-        <div class="cc-checkout__success-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none">
-                <path
-                    d="M5 12.5L9.2 16.5L19 7.5"
-                    stroke="currentColor"
-                    stroke-width="2.4"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                />
-            </svg>
-        </div>
+    .cc-checkout__success-email > div {
+        min-width: 0;
+    }
 
-        <div class="cc-checkout__success-content">
-            <span class="cc-checkout__success-eyebrow">
-                Payment confirmed
-            </span>
+    .cc-checkout__success-email-label {
+        display: block;
+        margin-bottom: 3px;
+        color: #827587;
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 1.4;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
 
-            <h2 class="cc-checkout__success-title">
-                Checkout successful
-            </h2>
+    .cc-checkout__success-email strong {
+        display: block;
+        overflow: hidden;
+        color: #eee5f0;
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 1.45;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 
-            <p class="cc-checkout__success-message">
-                Thank you! Your payment of
-                <strong>${{ $formattedTotal }}</strong>
-                has been received successfully.
-            </p>
+    .cc-checkout__success-note {
+        max-width: 520px;
+        margin: 20px auto 0;
+        color: #8f8294;
+        font-size: 12px;
+        line-height: 1.65;
+    }
 
-            <div class="cc-checkout__success-email">
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    @media (max-width: 620px) {
+        .cc-checkout__success {
+            margin-top: 24px;
+            padding: 42px 22px 34px;
+            border-radius: 20px;
+        }
+
+        .cc-checkout__success-icon {
+            width: 68px;
+            height: 68px;
+            margin-bottom: 22px;
+        }
+
+        .cc-checkout__success-icon svg {
+            width: 34px;
+            height: 34px;
+        }
+
+        .cc-checkout__success-title {
+            font-size: 28px;
+        }
+
+        .cc-checkout__success-message {
+            font-size: 14px;
+        }
+
+        .cc-checkout__success-email {
+            padding: 14px;
+        }
+    }
+    </style>
+
+    @if ($checkoutSuccessful)
+        <div class="cc-checkout__success">
+            <div class="cc-checkout__success-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
                     <path
-                        d="M4 6.5h16v11H4z"
+                        d="M5 12.5L9.2 16.5L19 7.5"
                         stroke="currentColor"
-                        stroke-width="1.8"
-                        stroke-linejoin="round"
-                    />
-                    <path
-                        d="m5 8 7 5 7-5"
-                        stroke="currentColor"
-                        stroke-width="1.8"
+                        stroke-width="2.4"
                         stroke-linecap="round"
                         stroke-linejoin="round"
                     />
                 </svg>
-
-                <div>
-                    <span class="cc-checkout__success-email-label">
-                        Invoice sent to
-                    </span>
-
-                    <strong>
-                        {{ $billingEmail }}
-                    </strong>
-                </div>
             </div>
 
-            <p class="cc-checkout__success-note">
-                Please check your inbox for your invoice and payment
-                confirmation. If you don't see it within a few minutes,
-                check your spam or junk folder.
+            <div class="cc-checkout__success-content">
+                <span class="cc-checkout__success-eyebrow">
+                    Payment confirmed
+                </span>
+
+                <h2 class="cc-checkout__success-title">
+                    Checkout successful
+                </h2>
+
+                <p class="cc-checkout__success-message">
+                    Thank you! Your payment of
+                    <strong>${{ $formattedTotal }}</strong>
+                    has been received successfully.
+                </p>
+
+                <div class="cc-checkout__success-email">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path
+                            d="M4 6.5h16v11H4z"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linejoin="round"
+                        />
+                        <path
+                            d="m5 8 7 5 7-5"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                    </svg>
+
+                    <div>
+                        <span class="cc-checkout__success-email-label">
+                            Invoice sent to
+                        </span>
+
+                        <strong>
+                            {{ $billingEmail }}
+                        </strong>
+                    </div>
+                </div>
+
+                <p class="cc-checkout__success-note">
+                    Please check your inbox for your invoice and payment
+                    confirmation. If you don't see it within a few minutes,
+                    check your spam or junk folder.
+                </p>
+            </div>
+        </div>
+    @else
+        <div class="cc-checkout__header">
+            <h1 class="cc-checkout__title">Secure Checkout</h1>
+            <p class="cc-checkout__subtitle">
+                Choose how you want to pay. Your payment details are securely processed by Stripe.
             </p>
         </div>
-    </div>
-@else
 
-    <div class="cc-checkout__header">
-        <h1 class="cc-checkout__title">Secure Checkout</h1>
-        <p class="cc-checkout__subtitle">
-            Choose how you want to pay. Your payment details are securely processed by Stripe.
-        </p>
-    </div>
+        <div class="cc-checkout__layout">
+            <div class="cc-checkout__card">
+                <div class="cc-checkout__section">
+                    <h2 class="cc-checkout__section-title">Billing Information</h2>
 
-    <div class="cc-checkout__layout">
-        {{-- PAYMENT COLUMN --}}
-        <div class="cc-checkout__card">
-            {{-- BILLING --}}
-            <div class="cc-checkout__section">
-                <h2 class="cc-checkout__section-title">Billing Information</h2>
-
-                <div class="cc-checkout__billing-grid">
-                    <div class="cc-checkout__field">
-                        <label for="billing-name" class="cc-checkout__label">
-                            Billing Name
-                        </label>
-                        <input
-                            id="billing-name"
-                            type="text"
-                            wire:model="billingName"
-                            autocomplete="name"
-                            placeholder="John Smith"
-                            class="cc-checkout__input"
-                        >
-                        @error('billingName')
-                            <div class="cc-checkout__error">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="cc-checkout__field">
-                        <label for="billing-email" class="cc-checkout__label">
-                            Email Address
-                        </label>
-                        <input
-                            id="billing-email"
-                            type="email"
-                            wire:model="billingEmail"
-                            autocomplete="email"
-                            placeholder="you@example.com"
-                            class="cc-checkout__input"
-                        >
-                        @error('billingEmail')
-                            <div class="cc-checkout__error">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
-            </div>
-
-            {{-- PAYMENT --}}
-            <div class="cc-checkout__section">
-                <div class="cc-checkout__payment-heading">
-                    <div>
-                        <h2 class="cc-checkout__section-title">Payment Method</h2>
-                        <p class="cc-checkout__payment-hint">Choose a method, then enter your payment details.</p>
-                    </div>
-                    <span class="cc-checkout__payment-badge">Secure</span>
-                </div>
-
-                <div
-                    data-stripe-status
-                    class="cc-checkout__status @if($checkoutError) cc-checkout__status--error @elseif($paymentStatus === 'succeeded') cc-checkout__status--success @elseif($paymentStatus === 'processing') cc-checkout__status--pending @endif"
-                >
-                    @if ($checkoutError)
-                        {{ $checkoutError }}
-                    @elseif ($paymentStatus === 'succeeded')
-                        Payment completed successfully.
-                    @elseif ($paymentStatus === 'processing')
-                        Your payment is being processed. You do not need to submit the payment again.
-                    @elseif ($clientSecret)
-                        Select a payment method below.
-                    @else
-                        Starting secure payment form...
-                    @endif
-                </div>
-
-                @if ($clientSecret && $paymentStatus !== 'succeeded' && $paymentStatus !== 'processing')
-                    <div class="cc-checkout__stripe-box">
-                        <div class="cc-checkout__stripe-loading" data-stripe-loading>
-                            Loading secure payment form...
+                    <div class="cc-checkout__billing-grid">
+                        <div class="cc-checkout__field">
+                            <label for="billing-name" class="cc-checkout__label">
+                                Billing Name
+                            </label>
+                            <input
+                                id="billing-name"
+                                type="text"
+                                wire:model="billingName"
+                                autocomplete="name"
+                                placeholder="John Smith"
+                                class="cc-checkout__input"
+                            >
+                            @error('billingName')
+                                <div class="cc-checkout__error">{{ $message }}</div>
+                            @enderror
                         </div>
 
-                        <div
-                            class="cc-checkout__stripe-form"
-                            data-stripe-payment-element
-                            wire:ignore
-                            hidden
-                        >
-                            <div id="payment-element"></div>
+                        <div class="cc-checkout__field">
+                            <label for="billing-email" class="cc-checkout__label">
+                                Email Address
+                            </label>
+                            <input
+                                id="billing-email"
+                                type="email"
+                                wire:model="billingEmail"
+                                autocomplete="email"
+                                placeholder="you@example.com"
+                                class="cc-checkout__input"
+                            >
+                            @error('billingEmail')
+                                <div class="cc-checkout__error">{{ $message }}</div>
+                            @enderror
                         </div>
                     </div>
+                </div>
 
-                    <button
-                        type="button"
-                        class="cc-checkout__pay"
-                        data-stripe-pay
-                        disabled
+                <div class="cc-checkout__section">
+                    <div class="cc-checkout__payment-heading">
+                        <div>
+                            <h2 class="cc-checkout__section-title">Payment Method</h2>
+                            <p class="cc-checkout__payment-hint">Choose a method, then enter your payment details.</p>
+                        </div>
+                        <span class="cc-checkout__payment-badge">Secure</span>
+                    </div>
+
+                    <div
+                        data-stripe-status
+                        class="cc-checkout__status @if($checkoutError) cc-checkout__status--error @elseif($paymentStatus === 'succeeded') cc-checkout__status--success @elseif($paymentStatus === 'processing') cc-checkout__status--pending @endif"
                     >
-                        <span class="cc-checkout__pay-label" data-stripe-pay-label>
-                            Pay ${{ $formattedTotal }}
-                        </span>
-                        <span class="cc-checkout__pay-loading" data-stripe-pay-loading hidden>
-                            Processing...
-                        </span>
-                    </button>
-
-                    <div class="cc-checkout__secure">
-                        Your card or bank details are entered directly into Stripe's secure payment form.
+                        @if ($checkoutError)
+                            {{ $checkoutError }}
+                        @elseif ($paymentStatus === 'succeeded')
+                            Payment completed successfully.
+                        @elseif ($paymentStatus === 'processing')
+                            Your payment is being processed. You do not need to submit the payment again.
+                        @elseif ($clientSecret)
+                            Select a payment method below.
+                        @else
+                            Starting secure payment form...
+                        @endif
                     </div>
-                @endif
 
-            </div>
-        </div>
-
-        {{-- ORDER SUMMARY --}}
-        <div class="cc-checkout__card cc-checkout__order-card">
-            <div class="cc-checkout__section">
-                <h2 class="cc-checkout__section-title">Order Summary</h2>
-
-               <ul class="cc-checkout__items">
-                @forelse($invoice->items as $item)
-                    <li class="cc-checkout__item">
-                        <div class="cc-checkout__item-name">
-                            <div class="cc-checkout__item-title">
-                                {{ $item->name ?? $item->description ?? 'Item' }}
-
-                                @if($item->is_addon)
-                                    <span class="cc-checkout__addon-badge">
-                                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                            <path
-                                                d="M17 7.5A5 5 0 1 0 18.5 17"
-                                                stroke="currentColor"
-                                                stroke-width="1.8"
-                                                stroke-linecap="round"
-                                            />
-                                            <path
-                                                d="M18.5 13v4h-4"
-                                                stroke="currentColor"
-                                                stroke-width="1.8"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                            />
-                                        </svg>
-
-                                        <span>Recurring</span>
-                                    </span>
-
-                                    <span class="cc-checkout__addon-minimum">
-                                        x12 minimum
-                                    </span>
-                                @endif
+                    @if ($clientSecret && $paymentStatus !== 'succeeded' && $paymentStatus !== 'processing')
+                        <div class="cc-checkout__stripe-box">
+                            <div class="cc-checkout__stripe-loading" data-stripe-loading>
+                                Loading secure payment form...
                             </div>
 
-                            @if(isset($item->quantity))
-                                <div class="cc-checkout__item-quantity">
-                                    Qty: {{ $item->quantity }}
+                            <div
+                                class="cc-checkout__stripe-form"
+                                data-stripe-payment-element
+                                wire:ignore
+                                hidden
+                            >
+                                <div id="payment-element"></div>
+                            </div>
+                        </div>
+
+                        <button
+                            type="button"
+                            class="cc-checkout__pay"
+                            data-stripe-pay
+                            disabled
+                        >
+                            <span class="cc-checkout__pay-label" data-stripe-pay-label>
+                                Pay ${{ $formattedTotal }}
+                            </span>
+                            <span class="cc-checkout__pay-loading" data-stripe-pay-loading hidden>
+                                Processing...
+                            </span>
+                        </button>
+
+                        <div class="cc-checkout__secure">
+                            Your card or bank details are entered directly into Stripe's secure payment form.
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <div class="cc-checkout__card cc-checkout__order-card">
+                <div class="cc-checkout__section">
+                    <h2 class="cc-checkout__section-title">Order Summary</h2>
+
+                    <ul class="cc-checkout__items">
+                        @forelse($invoice->items as $item)
+                            <li class="cc-checkout__item">
+                                <div class="cc-checkout__item-name">
+                                    <div class="cc-checkout__item-title">
+                                        {{ $item->name ?? $item->description ?? 'Item' }}
+
+                                        @if(($item->is_subscription ?? false) && ! empty($item->stripe_price_id))
+                                            <span class="cc-checkout__addon-badge">
+                                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                    <path
+                                                        d="M17 7.5A5 5 0 1 0 18.5 17"
+                                                        stroke="currentColor"
+                                                        stroke-width="1.8"
+                                                        stroke-linecap="round"
+                                                    />
+                                                    <path
+                                                        d="M18.5 13v4h-4"
+                                                        stroke="currentColor"
+                                                        stroke-width="1.8"
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                    />
+                                                </svg>
+
+                                                <span>Recurring</span>
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                    @if(isset($item->quantity))
+                                        <div class="cc-checkout__item-quantity">
+                                            Qty: {{ $item->quantity }}
+                                        </div>
+                                    @endif
                                 </div>
-                            @endif
-                        </div>
 
-                        <div class="cc-checkout__item-price">
-                            ${{ $this->formatItemAmount($item) }}
-                        </div>
-                    </li>
-                @empty
-                    <li class="cc-checkout__item">
-                        <div class="cc-checkout__item-name">
-                            No invoice items found.
-                        </div>
-                    </li>
-                @endforelse
-            </ul>
+                                <div class="cc-checkout__item-price">
+                                    ${{ $this->formatItemAmount($item) }}
+                                </div>
+                            </li>
+                        @empty
+                            <li class="cc-checkout__item">
+                                <div class="cc-checkout__item-name">
+                                    No invoice items found.
+                                </div>
+                            </li>
+                        @endforelse
+                    </ul>
 
-                <div class="cc-checkout__total">
-                    <span>Total</span>
-                    <span>${{ $formattedTotal }}</span>
+                    <div class="cc-checkout__total">
+                        <span>Total</span>
+                        <span>${{ $formattedTotal }}</span>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    @if ($clientSecret && $paymentStatus !== 'succeeded' && $paymentStatus !== 'processing')
-        @script
-            <script>
-                (() => {
-                    const root = $wire.$el;
-                    const publishableKey = @js(config('services.stripe.key'));
-                    const clientSecret = @js($clientSecret);
-                    const invoiceTotal = @js($totalInCents);
-                    const initialPaymentIntentId = @js($paymentIntentId);
-                    const initialPaymentStatus = @js($paymentStatus);
+        @if ($clientSecret && $paymentStatus !== 'succeeded' && $paymentStatus !== 'processing')
+            @script
+                <script>
+                    (() => {
+                        const root = $wire.$el;
+                        const publishableKey = @js(config('services.stripe.key'));
+                        const clientSecret = @js($clientSecret);
+                        const invoiceTotal = @js($totalInCents);
+                        const initialPaymentIntentId = @js($paymentIntentId);
+                        const initialPaymentStatus = @js($paymentStatus);
 
-                    const paymentElementContainer = root.querySelector('[data-stripe-payment-element]');
-                    const paymentElementMount = root.querySelector('#payment-element');
-                    const loadingEl = root.querySelector('[data-stripe-loading]');
-                    const statusEl = root.querySelector('[data-stripe-status]');
-                    const payButton = root.querySelector('[data-stripe-pay]');
-                    const payLabel = root.querySelector('[data-stripe-pay-label]');
-                    const payLoading = root.querySelector('[data-stripe-pay-loading]');
-                    const billingNameInput = root.querySelector('#billing-name');
-                    const billingEmailInput = root.querySelector('#billing-email');
+                        const paymentElementContainer = root.querySelector('[data-stripe-payment-element]');
+                        const paymentElementMount = root.querySelector('#payment-element');
+                        const loadingEl = root.querySelector('[data-stripe-loading]');
+                        const statusEl = root.querySelector('[data-stripe-status]');
+                        const payButton = root.querySelector('[data-stripe-pay]');
+                        const payLabel = root.querySelector('[data-stripe-pay-label]');
+                        const payLoading = root.querySelector('[data-stripe-pay-loading]');
+                        const billingNameInput = root.querySelector('#billing-name');
+                        const billingEmailInput = root.querySelector('#billing-email');
 
-                    let stripe = null;
-                    let elements = null;
-                    let paymentElement = null;
-                    let ready = false;
-                    let loading = false;
+                        let stripe = null;
+                        let elements = null;
+                        let paymentElement = null;
+                        let ready = false;
+                        let loading = false;
 
-                    const setStatus = (message, type = 'normal') => {
-                        if (!statusEl) {
-                            return;
-                        }
+                        const setStatus = (message, type = 'normal') => {
+                            if (!statusEl) {
+                                return;
+                            }
 
-                        statusEl.textContent = message;
-                        statusEl.classList.remove(
-                            'cc-checkout__status--error',
-                            'cc-checkout__status--success',
-                            'cc-checkout__status--pending'
-                        );
+                            statusEl.textContent = message;
+                            statusEl.classList.remove(
+                                'cc-checkout__status--error',
+                                'cc-checkout__status--success',
+                                'cc-checkout__status--pending'
+                            );
 
-                        if (type === 'error') {
-                            statusEl.classList.add('cc-checkout__status--error');
-                        } else if (type === 'success') {
-                            statusEl.classList.add('cc-checkout__status--success');
-                        } else if (type === 'pending') {
-                            statusEl.classList.add('cc-checkout__status--pending');
-                        }
-                    };
-
-                    const setButtonLoading = (isLoading) => {
-                        loading = isLoading;
-
-                        if (!payButton || !payLabel || !payLoading) {
-                            return;
-                        }
-
-                        payButton.disabled = isLoading || !ready;
-                        payLabel.hidden = isLoading;
-                        payLoading.hidden = !isLoading;
-                    };
-
-                    const setReady = (isReady) => {
-                        ready = isReady;
-
-                        if (payButton) {
-                            payButton.disabled = loading || !ready;
-                        }
-
+                            if (type === 'error') {
+                                statusEl.classList.add('cc-checkout__status--error');
+                            } else if (type === 'success') {
+                                statusEl.classList.add('cc-checkout__status--success');
+                            } else if (type === 'pending') {
+                                statusEl.classList.add('cc-checkout__status--pending');
+                            }
                         };
 
-                    const fail = (message) => {
-                        setReady(false);
-                        setStatus(message, 'error');
-                            if (loadingEl) {
-                            loadingEl.hidden = false;
-                            loadingEl.textContent = message;
-                        }
+                        const setButtonLoading = (isLoading) => {
+                            loading = isLoading;
 
-                        if (paymentElementContainer) {
-                            paymentElementContainer.hidden = true;
-                        }
-                    };
-
-                    const initializeStripe = async () => {
-                        if (!clientSecret) {
-                            fail('Stripe client secret is missing.');
-                            return;
-                        }
-
-                        if (!publishableKey) {
-                            fail('Stripe publishable key is missing.');
-                            return;
-                        }
-
-                        if (!paymentElementContainer || !paymentElementMount || !payButton) {
-                            fail('The Stripe payment form could not be initialized because its mount elements are missing.');
-                            return;
-                        }
-
-                        try {
-                            if (typeof window.Stripe !== 'function') {
-                                throw new Error('Stripe.js did not load. Check your browser console, CSP, or network settings.');
+                            if (!payButton || !payLabel || !payLoading) {
+                                return;
                             }
+
+                            payButton.disabled = isLoading || !ready;
+                            payLabel.hidden = isLoading;
+                            payLoading.hidden = !isLoading;
+                        };
+
+                        const setReady = (isReady) => {
+                            ready = isReady;
+
+                            if (payButton) {
+                                payButton.disabled = loading || !ready;
+                            }
+                        };
+
+                        const fail = (message) => {
+                            setReady(false);
+                            setStatus(message, 'error');
+
+                            if (loadingEl) {
+                                loadingEl.hidden = false;
+                                loadingEl.textContent = message;
+                            }
+
+                            if (paymentElementContainer) {
+                                paymentElementContainer.hidden = true;
+                            }
+                        };
+
+                        const initializeStripe = async () => {
+                            if (!clientSecret) {
+                                fail('Stripe client secret is missing.');
+                                return;
+                            }
+
+                            if (!publishableKey) {
+                                fail('Stripe publishable key is missing.');
+                                return;
+                            }
+
+                            if (!paymentElementContainer || !paymentElementMount || !payButton) {
+                                fail('The Stripe payment form could not be initialized because its mount elements are missing.');
+                                return;
+                            }
+
+                            try {
+                                if (typeof window.Stripe !== 'function') {
+                                    throw new Error('Stripe.js did not load. Check your browser console, CSP, or network settings.');
+                                }
 
                                 setStatus('Creating secure payment form...');
 
-                            stripe = window.Stripe(publishableKey);
+                                stripe = window.Stripe(publishableKey);
 
-                            elements = stripe.elements({
-                                clientSecret,
-                                appearance: {
-                                    theme: 'night',
-                                    variables: {
-                                        colorPrimary: '#c05cc4',
-                                        colorBackground: '#17121c',
-                                        colorText: '#f5eef8',
-                                        colorTextSecondary: '#a99bad',
-                                        colorTextPlaceholder: '#7f7384',
-                                        colorDanger: '#ff8b8b',
-                                        borderRadius: '12px',
-                                        fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                                elements = stripe.elements({
+                                    clientSecret,
+                                    appearance: {
+                                        theme: 'night',
+                                        variables: {
+                                            colorPrimary: '#c05cc4',
+                                            colorBackground: '#17121c',
+                                            colorText: '#f5eef8',
+                                            colorTextSecondary: '#a99bad',
+                                            colorTextPlaceholder: '#7f7384',
+                                            colorDanger: '#ff8b8b',
+                                            borderRadius: '12px',
+                                            fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                                        },
                                     },
-                                },
-                            });
+                                });
 
-                            paymentElement = elements.create('payment', {
-                                layout: {
-                                    type: 'tabs',
-                                },
-                                paymentMethodOrder: [
-                                    'card',
-                                    'us_bank_account',
-                                    'afterpay_clearpay',
-                                    'klarna',
-                                ],
-                                defaultValues: {
-                                    billingDetails: {
-                                        name: billingNameInput?.value?.trim() || '',
-                                        email: billingEmailInput?.value?.trim() || '',
+                                paymentElement = elements.create('payment', {
+                                    layout: {
+                                        type: 'tabs',
                                     },
-                                },
-                                fields: {
-                                    billingDetails: {
-                                        name: 'always',
-                                        email: 'auto',
-                                        address: 'if_required',
+                                    paymentMethodOrder: [
+                                        'card',
+                                        'us_bank_account',
+                                        'afterpay_clearpay',
+                                        'klarna',
+                                    ],
+                                    defaultValues: {
+                                        billingDetails: {
+                                            name: billingNameInput?.value?.trim() || '',
+                                            email: billingEmailInput?.value?.trim() || '',
+                                        },
                                     },
-                                },
-                                wallets: {
-                                    applePay: 'auto',
-                                    googlePay: 'auto',
-                                    link: 'auto',
-                                },
-                            });
+                                    fields: {
+                                        billingDetails: {
+                                            name: 'always',
+                                            email: 'auto',
+                                            address: 'if_required',
+                                        },
+                                    },
+                                    wallets: {
+                                        applePay: 'auto',
+                                        googlePay: 'auto',
+                                        link: 'auto',
+                                    },
+                                });
 
                                 paymentElement.on('loaderstart', () => {
-                                setStatus('Loading secure payment options...');
-                            });
+                                    setStatus('Loading secure payment options...');
+                                });
 
-                            paymentElement.on('ready', () => {
-                                setReady(true);
-                                setStatus('Select a payment method and complete the payment details.');
+                                paymentElement.on('ready', () => {
+                                    setReady(true);
+                                    setStatus('Select a payment method and complete the payment details.');
 
-                                if (loadingEl) {
-                                    loadingEl.hidden = true;
-                                }
+                                    if (loadingEl) {
+                                        loadingEl.hidden = true;
+                                    }
 
-                                paymentElementContainer.hidden = false;
-                            });
+                                    paymentElementContainer.hidden = false;
+                                });
 
-                            paymentElement.on('change', (event) => {
-                                if (event.error?.message) {
-                                    setStatus(event.error.message, 'error');
+                                paymentElement.on('change', (event) => {
+                                    if (event.error?.message) {
+                                        setStatus(event.error.message, 'error');
+                                        return;
+                                    }
+
+                                    if (ready && !loading) {
+                                        setStatus('Payment form ready.');
+                                    }
+                                });
+
+                                paymentElement.on('loaderror', (event) => {
+                                    const message = event?.error?.message || 'Stripe could not load the payment form.';
+                                    fail(message);
+                                });
+
+                                paymentElement.mount(paymentElementMount);
+                            } catch (error) {
+                                fail(error?.message || 'Stripe could not initialize the payment form.');
+                            }
+                        };
+
+                        const submitPayment = async () => {
+                            if (loading || !ready || !stripe || !elements || !paymentElement) {
                                 return;
+                            }
+
+                            const name = billingNameInput?.value?.trim() || '';
+                            const email = billingEmailInput?.value?.trim() || '';
+
+                            setButtonLoading(true);
+                            setStatus('Validating your billing information...');
+
+                            try {
+                                $wire.$set('billingName', name, false);
+                                $wire.$set('billingEmail', email, false);
+
+                                await $wire.validateBilling();
+
+                                setStatus('Confirming your payment with Stripe...');
+
+                                const returnUrl = window.location.href;
+                                const result = await stripe.confirmPayment({
+                                    elements,
+                                    confirmParams: {
+                                        return_url: returnUrl,
+                                    },
+                                    redirect: 'if_required',
+                                });
+
+                                if (result.error) {
+                                    throw new Error(
+                                        result.error.message || 'Your payment could not be completed.'
+                                    );
                                 }
 
-                                if (ready && !loading) {
-                                    setStatus('Payment form ready.');
+                                if (!result.paymentIntent) {
+                                    throw new Error('Stripe did not return a PaymentIntent after confirmation.');
                                 }
-                            });
 
-                            paymentElement.on('loaderror', (event) => {
-                                const message = event?.error?.message || 'Stripe could not load the payment form.';
-                                fail(message);
-                            });
+                                if (typeof invoiceTotal === 'number' && result.paymentIntent.amount !== invoiceTotal) {
+                                    throw new Error('The confirmed Stripe amount does not match the invoice total.');
+                                }
 
-                            paymentElement.mount(paymentElementMount);
+                                if (result.paymentIntent.id !== initialPaymentIntentId) {
+                                    throw new Error('The confirmed Stripe payment could not be matched to this checkout.');
+                                }
 
-                        } catch (error) {
-                            fail(error?.message || 'Stripe could not initialize the payment form.');
-                        }
-                    };
+                                const normalizedStatus = result.paymentIntent.status;
+                                const finalStatuses = ['succeeded', 'processing', 'requires_capture', 'requires_confirmation'];
 
-                    const submitPayment = async () => {
-                        if (loading || !ready || !stripe || !elements || !paymentElement) {
+                                if (normalizedStatus === 'requires_action') {
+                                    setButtonLoading(false);
+                                    setReady(false);
+                                    setStatus('Additional verification is required by your bank or card issuer before the subscription can be activated.', 'pending');
+                                    return;
+                                }
+
+                                if (!finalStatuses.includes(normalizedStatus)) {
+                                    throw new Error(
+                                        `Stripe returned an unexpected payment status: ${normalizedStatus}`
+                                    );
+                                }
+
+                                if (normalizedStatus === 'succeeded') {
+                                    const verifiedStatus = await $wire.paymentCompleted(result.paymentIntent.id);
+
+                                    if (verifiedStatus !== 'succeeded') {
+                                        throw new Error('Stripe reported a payment state that could not be verified.');
+                                    }
+
+                                    setButtonLoading(false);
+                                    setReady(false);
+                                    setStatus('Payment completed successfully.', 'success');
+
+                                    if (payButton) {
+                                        payButton.disabled = true;
+                                    }
+
+                                    if (paymentElementContainer) {
+                                        paymentElementContainer.hidden = true;
+                                    }
+
+                                    if (loadingEl) {
+                                        loadingEl.hidden = false;
+                                        loadingEl.textContent = 'Payment completed successfully.';
+                                    }
+
+                                    return;
+                                }
+
+                                if (normalizedStatus === 'processing' || normalizedStatus === 'requires_capture' || normalizedStatus === 'requires_confirmation') {
+                                    await $wire.paymentCompleted(result.paymentIntent.id);
+
+                                    setButtonLoading(false);
+                                    setReady(false);
+                                    setStatus(
+                                        'Your payment was submitted and is still processing. You do not need to submit it again.',
+                                        'pending'
+                                    );
+
+                                    if (payButton) {
+                                        payButton.disabled = true;
+                                    }
+
+                                    return;
+                                }
+                            } catch (error) {
+                                const message = error?.message || 'Your payment could not be completed.';
+                                setStatus(message, 'error');
+                                setButtonLoading(false);
+                                setReady(Boolean(paymentElement));
+                            }
+                        };
+
+                        payButton.addEventListener('click', submitPayment);
+
+                        if (initialPaymentStatus === 'succeeded') {
+                            setReady(false);
                             return;
                         }
 
-                        const name = billingNameInput?.value?.trim() || '';
-                        const email = billingEmailInput?.value?.trim() || '';
-
-                        setButtonLoading(true);
-                        setStatus('Validating your billing information...');
-                        try {
-                            $wire.$set('billingName', name, false);
-                            $wire.$set('billingEmail', email, false);
-
-                            await $wire.validateBilling();
-
-                            setStatus('Confirming your payment with Stripe...');
-
-                            const returnUrl = window.location.href;
-
-                            const result = await stripe.confirmPayment({
-                                elements,
-                                confirmParams: {
-                                    return_url: returnUrl,
-                                },
-                                redirect: 'if_required',
-                            });
-
-                            if (result.error) {
-                                throw new Error(
-                                    result.error.message || 'Your payment could not be completed.'
-                                );
-                            }
-
-                            if (!result.paymentIntent) {
-                                throw new Error('Stripe did not return a PaymentIntent after confirmation.');
-                            }
-
-                            if (result.paymentIntent.amount !== invoiceTotal) {
-                                throw new Error('The confirmed Stripe amount does not match the invoice total.');
-                            }
-
-                            if (result.paymentIntent.id !== initialPaymentIntentId) {
-                                throw new Error('The confirmed Stripe payment could not be matched to this checkout.');
-                            }
-
-                            if (result.paymentIntent.status === 'succeeded') {
-                                const verifiedStatus = await $wire.paymentCompleted(result.paymentIntent.id);
-
-                                if (verifiedStatus !== 'succeeded') {
-                                    throw new Error('Stripe reported a payment state that could not be verified.');
-                                }
-
-                                setButtonLoading(false);
-                                setReady(false);
-                                setStatus('Payment completed successfully.', 'success');
-
-                                if (payButton) {
-                                    payButton.disabled = true;
-                                }
-
-                                if (paymentElementContainer) {
-                                    paymentElementContainer.hidden = true;
-                                }
-
-                                if (loadingEl) {
-                                    loadingEl.hidden = false;
-                                    loadingEl.textContent = 'Payment completed successfully.';
-                                }
-
-                                return;
-                            }
-
-                            if (result.paymentIntent.status === 'processing') {
-                                await $wire.paymentCompleted(result.paymentIntent.id);
-
-                                setButtonLoading(false);
-                                setReady(false);
-                                setStatus(
-                                    'Your payment was submitted and is still processing. You do not need to submit it again.',
-                                    'pending'
-                                );
-
-                                if (payButton) {
-                                    payButton.disabled = true;
-                                }
-
-                                return;
-                            }
-
-                            throw new Error(
-                                `Stripe returned an unexpected payment status: ${result.paymentIntent.status}`
-                            );
-                        } catch (error) {
-
-                            const message = error?.message || 'Your payment could not be completed.';
-                            setStatus(message, 'error');
-                                setButtonLoading(false);
-                            setReady(Boolean(paymentElement));
-                        }
-                    };
-
-                    payButton.addEventListener('click', submitPayment);
-
-                    if (initialPaymentStatus === 'succeeded') {
-                        setReady(false);
-                        return;
-                    }
-
-                    initializeStripe();
-                })();
-            </script>
-        @endscript
-    @endif
+                        initializeStripe();
+                    })();
+                </script>
+            @endscript
+        @endif
     @endif
 </div>

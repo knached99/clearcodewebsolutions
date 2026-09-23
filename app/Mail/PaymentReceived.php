@@ -26,7 +26,7 @@ class PaymentReceived extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Payment Received - Invoice #' . $this->invoice->id,
+            subject: 'Payment Received - Invoice #'.$this->invoice->id,
         );
     }
 

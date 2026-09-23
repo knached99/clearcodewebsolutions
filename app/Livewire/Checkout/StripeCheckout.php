@@ -21,16 +21,21 @@ class StripeCheckout extends Component
     public Invoice $invoice;
 
     public string $billingName = '';
+
     public string $billingEmail = '';
 
     public ?string $clientSecret = null;
+
     public ?string $paymentIntentId = null;
+
     public ?string $paymentStatus = null;
+
     public ?string $checkoutError = null;
 
     public bool $checkoutSuccessful = false;
 
     public int $totalInCents = 0;
+
     public string $formattedTotal = '0.00';
 
     public function mount(string $token): void
@@ -59,9 +64,6 @@ class StripeCheckout extends Component
             2
         );
 
-        /*
-         * Stripe's minimum USD PaymentIntent amount is $0.50.
-         */
         if ($this->totalInCents < 50) {
             $this->checkoutError = $this->totalInCents > 0
                 ? 'This invoice amount must be at least $0.50 to accept a Stripe payment.'
@@ -76,10 +78,6 @@ class StripeCheckout extends Component
             return;
         }
 
-        /*
-         * If this invoice was already successfully completed in this
-         * browser session, don't recreate the payment form.
-         */
         if ($this->hasRememberedSuccessfulCheckout()) {
             $this->checkoutSuccessful = true;
             $this->paymentStatus = 'succeeded';
@@ -87,10 +85,6 @@ class StripeCheckout extends Component
             return;
         }
 
-        /*
-         * Stripe redirect-based payment methods may return the customer
-         * to this URL with the original PaymentIntent ID.
-         */
         $returnedPaymentIntentId = trim(
             (string) request()->query('payment_intent', '')
         );
@@ -103,11 +97,6 @@ class StripeCheckout extends Component
             return;
         }
 
-        /*
-         * Also check Stripe directly so that an invoice whose payment
-         * already succeeded remains completed even if the customer
-         * returns later without Stripe query parameters.
-         */
         $successfulPaymentIntent = $this->findSuccessfulPaymentIntent();
 
         if ($successfulPaymentIntent !== null) {
@@ -118,7 +107,7 @@ class StripeCheckout extends Component
             return;
         }
 
-        $this->createPaymentIntent();
+        $this->createStripeCheckoutIntent();
     }
 
     protected function itemAmountInCents($item): int
@@ -143,7 +132,7 @@ class StripeCheckout extends Component
             if (
                 isset($item->quantity)
                 && (int) $item->quantity > 1
-                && !isset($item->total)
+                && ! isset($item->total)
             ) {
                 $amount *= (int) $item->quantity;
             }
@@ -177,93 +166,37 @@ class StripeCheckout extends Component
         return new StripeClient($secret);
     }
 
+    protected function createStripeCheckoutIntent(): void
+    {
+        if ($this->invoice->items->contains(
+            fn ($item) => (bool) ($item->is_subscription ?? false)
+        )) {
+            $this->createSubscriptionCheckout();
+
+            return;
+        }
+
+        $this->createPaymentIntent();
+    }
+
     protected function createPaymentIntent(): void
     {
         try {
             $stripe = $this->stripe();
-
             $email = trim($this->billingEmail);
             $name = trim($this->billingName);
-
-            $customerId = null;
-
-            /*
-             * Re-use an existing Stripe customer when we have an email.
-             */
-            if ($email !== '') {
-                $searchEmail = str_replace(
-                    ['\\', "'"],
-                    ['\\\\', "\\'"],
-                    $email
-                );
-
-                $customers = $stripe->customers->search([
-                    'query' => "email:'{$searchEmail}'",
-                    'limit' => 1,
-                ]);
-
-                if (isset($customers->data[0])) {
-                    $customer = $customers->data[0];
-
-                    $update = [];
-
-                    if (
-                        $name !== ''
-                        && $customer->name !== $name
-                    ) {
-                        $update['name'] = $name;
-                    }
-
-                    if ($customer->email !== $email) {
-                        $update['email'] = $email;
-                    }
-
-                    if ($update !== []) {
-                        $customer = $stripe->customers->update(
-                            $customer->id,
-                            $update
-                        );
-                    }
-                } else {
-                    $customerData = [
-                        'email' => $email,
-                    ];
-
-                    if ($name !== '') {
-                        $customerData['name'] = $name;
-                    }
-
-                    $customer = $stripe->customers->create(
-                        $customerData
-                    );
-                }
-
-                $customerId = $customer->id;
-            } elseif ($name !== '') {
-                $customer = $stripe->customers->create([
-                    'name' => $name,
-                ]);
-
-                $customerId = $customer->id;
-            }
+            $customerId = $this->resolveStripeCustomerId($stripe);
 
             $paymentIntentData = [
                 'amount' => $this->totalInCents,
                 'currency' => 'usd',
-
                 'automatic_payment_methods' => [
                     'enabled' => true,
                 ],
-
-                'description' =>
-                    'Invoice #' . $this->invoice->id,
-
+                'description' => 'Invoice #'.$this->invoice->id,
                 'metadata' => [
-                    'invoice_id' =>
-                        (string) $this->invoice->id,
-
-                    'checkout_token' =>
-                        (string) $this->invoice->checkout_token,
+                    'invoice_id' => (string) $this->invoice->id,
+                    'checkout_token' => (string) $this->invoice->checkout_token,
                 ],
             ];
 
@@ -280,14 +213,11 @@ class StripeCheckout extends Component
             );
 
             $this->paymentIntentId = $paymentIntent->id;
-
             $this->clientSecret = $paymentIntent->client_secret;
-
             $this->paymentStatus = $paymentIntent->status;
-
             $this->checkoutError = null;
 
-            if (!$this->clientSecret) {
+            if (! $this->clientSecret) {
                 throw new \RuntimeException(
                     'Stripe did not return a PaymentIntent client secret.'
                 );
@@ -296,50 +226,236 @@ class StripeCheckout extends Component
             Log::info(
                 'Stripe PaymentIntent created.',
                 [
-                    'invoice_id' =>
-                        $this->invoice->id,
-
-                    'payment_intent_id' =>
-                        $paymentIntent->id,
-
-                    'customer_id' =>
-                        $customerId,
-
-                    'amount_in_cents' =>
-                        $this->totalInCents,
-
-                    'amount_display' =>
-                        $this->formattedTotal,
-
-                    'payment_method_types' =>
-                        $paymentIntent->payment_method_types,
+                    'invoice_id' => $this->invoice->id,
+                    'payment_intent_id' => $paymentIntent->id,
+                    'customer_id' => $customerId,
+                    'amount_in_cents' => $this->totalInCents,
+                    'amount_display' => $this->formattedTotal,
+                    'payment_method_types' => $paymentIntent->payment_method_types,
                 ]
             );
         } catch (Throwable $e) {
             $this->clientSecret = null;
             $this->paymentIntentId = null;
             $this->paymentStatus = null;
-
             $this->checkoutError =
                 'Stripe could not initialize this checkout. Please try again.';
 
             Log::error(
                 'Stripe PaymentIntent initialization failed.',
                 [
-                    'invoice_id' =>
-                        $this->invoice->id ?? null,
-
-                    'amount_in_cents' =>
-                        $this->totalInCents,
-
-                    'message' =>
-                        $e->getMessage(),
-
-                    'exception' =>
-                        get_class($e),
+                    'invoice_id' => $this->invoice->id ?? null,
+                    'amount_in_cents' => $this->totalInCents,
+                    'message' => $e->getMessage(),
+                    'exception' => get_class($e),
                 ]
             );
         }
+    }
+
+    protected function createSubscriptionCheckout(): void
+    {
+        try {
+            $stripe = $this->stripe();
+            $customerId = $this->resolveStripeCustomerId($stripe);
+
+            $subscriptionItems = [];
+            $oneTimeInvoiceItems = [];
+
+            foreach ($this->invoice->items as $item) {
+                $amount = $this->itemAmountInCents($item);
+
+                if ($amount <= 0) {
+                    continue;
+                }
+
+                $description = trim(
+                    (string) (
+                        $item->description
+                        ?? $item->name
+                        ?? 'Invoice item'
+                    )
+                );
+
+                $isSubscriptionItem = (bool) ($item->is_subscription ?? false);
+                $stripePriceId = trim((string) ($item->stripe_price_id ?? ''));
+
+                if ($isSubscriptionItem && $stripePriceId !== '') {
+                    $subscriptionItems[] = [
+                        'price' => $stripePriceId,
+                        'quantity' => max(1, (int) ($item->quantity ?? 1)),
+                    ];
+
+                    continue;
+                }
+
+                $oneTimeInvoiceItems[] = [
+                    'amount' => $amount,
+                    'currency' => 'usd',
+                    'description' => $description !== ''
+                        ? $description
+                        : 'Invoice item',
+                ];
+            }
+
+            if (empty($subscriptionItems)) {
+                $this->createPaymentIntent();
+
+                return;
+            }
+
+            $subscriptionData = [
+                'customer' => $customerId,
+                'items' => $subscriptionItems,
+                'payment_behavior' => 'default_incomplete',
+                'payment_settings' => [
+                    'save_default_payment_method' => 'on_subscription',
+                ],
+                'expand' => [
+                    'latest_invoice.payment_intent',
+                ],
+                'description' => 'Invoice #'.$this->invoice->id,
+                'metadata' => [
+                    'invoice_id' => (string) $this->invoice->id,
+                    'checkout_token' => (string) $this->invoice->checkout_token,
+                ],
+            ];
+
+            if (! empty($oneTimeInvoiceItems)) {
+                $subscriptionData['add_invoice_items'] = array_map(
+                    fn (array $item) => [
+                        'amount' => $item['amount'],
+                        'currency' => $item['currency'],
+                        'description' => $item['description'],
+                    ],
+                    $oneTimeInvoiceItems
+                );
+            }
+
+            $subscription = $stripe->subscriptions->create(
+                $subscriptionData
+            );
+
+            $this->invoice->update([
+                'stripe_id' => $subscription->id,
+                'status' => 'pending',
+            ]);
+
+            $paymentIntent = null;
+            $latestInvoice = $subscription->latest_invoice ?? null;
+
+            if (is_string($latestInvoice)) {
+                $latestInvoice = $stripe->invoices->retrieve(
+                    $latestInvoice,
+                    [
+                        'expand' => ['payment_intent'],
+                    ]
+                );
+            }
+
+            if (is_object($latestInvoice) && ! empty($latestInvoice->payment_intent)) {
+                $paymentIntent = $latestInvoice->payment_intent;
+            }
+
+            if (is_string($paymentIntent)) {
+                $paymentIntent = $stripe->paymentIntents->retrieve($paymentIntent);
+            }
+
+            if (! $paymentIntent && ! empty($subscription->pending_setup_intent)) {
+                $paymentIntent = $stripe->setupIntents->retrieve(
+                    $subscription->pending_setup_intent
+                );
+            }
+
+            if (! $paymentIntent || empty($paymentIntent->client_secret)) {
+                throw new \RuntimeException(
+                    'Stripe did not return a subscription client secret.'
+                );
+            }
+
+            $this->paymentIntentId = (string) $paymentIntent->id;
+            $this->clientSecret = (string) $paymentIntent->client_secret;
+            $this->paymentStatus = (string) ($paymentIntent->status ?? 'requires_payment_method');
+            $this->checkoutError = null;
+
+            Log::info('Stripe Subscription created.', [
+                'invoice_id' => $this->invoice->id,
+                'subscription_id' => $subscription->id,
+                'payment_intent_id' => $this->paymentIntentId,
+                'customer_id' => $customerId,
+            ]);
+        } catch (Throwable $e) {
+            $this->clientSecret = null;
+            $this->paymentIntentId = null;
+            $this->paymentStatus = null;
+            $this->checkoutError =
+                'Stripe could not initialize this subscription checkout. Please try again.';
+
+            Log::error('Stripe Subscription initialization failed.', [
+                'invoice_id' => $this->invoice->id ?? null,
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+            ]);
+        }
+    }
+
+    protected function resolveStripeCustomerId(StripeClient $stripe): ?string
+    {
+        $email = trim((string) $this->billingEmail);
+        $name = trim((string) $this->billingName);
+
+        if ($email === '' && $name === '') {
+            return null;
+        }
+
+        if ($email !== '') {
+            $searchEmail = str_replace(
+                ['\\', "'"],
+                ['\\\\', "\\'"],
+                $email
+            );
+
+            $customers = $stripe->customers->search([
+                'query' => "email:'{$searchEmail}'",
+                'limit' => 1,
+            ]);
+
+            if (isset($customers->data[0])) {
+                $customer = $customers->data[0];
+                $update = [];
+
+                if ($name !== '' && ($customer->name ?? null) !== $name) {
+                    $update['name'] = $name;
+                }
+
+                if (($customer->email ?? null) !== $email) {
+                    $update['email'] = $email;
+                }
+
+                if ($update !== []) {
+                    $customer = $stripe->customers->update(
+                        $customer->id,
+                        $update
+                    );
+                }
+
+                return $customer->id;
+            }
+
+            $customerData = ['email' => $email];
+
+            if ($name !== '') {
+                $customerData['name'] = $name;
+            }
+
+            return $stripe->customers->create($customerData)->id;
+        }
+
+        if ($name !== '') {
+            return $stripe->customers->create(['name' => $name])->id;
+        }
+
+        return null;
     }
 
     protected function restoreReturnedPaymentIntent(
@@ -347,24 +463,18 @@ class StripeCheckout extends Component
     ): void {
         try {
             $stripe = $this->stripe();
+            $paymentIntent = $stripe->paymentIntents->retrieve(
+                $paymentIntentId,
+                []
+            );
 
-            $paymentIntent =
-                $stripe->paymentIntents->retrieve(
-                    $paymentIntentId,
-                    []
-                );
-
-            $metadataInvoiceId =
-                (string) (
-                    $paymentIntent
-                        ->metadata
-                        ->invoice_id
-                    ?? ''
-                );
+            $metadataInvoiceId = (string) (
+                $paymentIntent->metadata->invoice_id ?? ''
+            );
 
             if (
-                $metadataInvoiceId
-                !== (string) $this->invoice->id
+                $metadataInvoiceId !== ''
+                && $metadataInvoiceId !== (string) $this->invoice->id
             ) {
                 throw new \RuntimeException(
                     'The returned Stripe payment does not belong to this invoice.'
@@ -372,8 +482,8 @@ class StripeCheckout extends Component
             }
 
             if (
-                (int) $paymentIntent->amount
-                !== $this->totalInCents
+                isset($paymentIntent->amount)
+                && (int) $paymentIntent->amount !== $this->totalInCents
             ) {
                 throw new \RuntimeException(
                     'The returned Stripe payment amount does not match this invoice.'
@@ -381,28 +491,20 @@ class StripeCheckout extends Component
             }
 
             if (
-                strtolower(
-                    (string) $paymentIntent->currency
-                )
-                !== 'usd'
+                isset($paymentIntent->currency)
+                && strtolower((string) $paymentIntent->currency) !== 'usd'
             ) {
                 throw new \RuntimeException(
                     'The returned Stripe payment currency does not match this invoice.'
                 );
             }
 
-            $this->paymentIntentId =
-                $paymentIntent->id;
-
-            $this->clientSecret =
-                $paymentIntent->client_secret;
-
-            $this->paymentStatus =
-                $paymentIntent->status;
-
+            $this->paymentIntentId = $paymentIntent->id;
+            $this->clientSecret = $paymentIntent->client_secret;
+            $this->paymentStatus = $paymentIntent->status;
             $this->checkoutError = null;
 
-            if (!$this->clientSecret) {
+            if (! $this->clientSecret) {
                 throw new \RuntimeException(
                     'Stripe did not return a client secret for the returned payment.'
                 );
@@ -419,38 +521,25 @@ class StripeCheckout extends Component
             Log::info(
                 'Returned Stripe PaymentIntent restored.',
                 [
-                    'invoice_id' =>
-                        $this->invoice->id,
-
-                    'payment_intent_id' =>
-                        $paymentIntent->id,
-
-                    'status' =>
-                        $paymentIntent->status,
+                    'invoice_id' => $this->invoice->id,
+                    'payment_intent_id' => $paymentIntent->id,
+                    'status' => $paymentIntent->status,
                 ]
             );
         } catch (Throwable $e) {
             $this->clientSecret = null;
             $this->paymentIntentId = null;
             $this->paymentStatus = null;
-
             $this->checkoutError =
                 'We could not verify the returned Stripe payment. Please start the payment again.';
 
             Log::error(
                 'Returned Stripe PaymentIntent verification failed.',
                 [
-                    'invoice_id' =>
-                        $this->invoice->id ?? null,
-
-                    'payment_intent_id' =>
-                        $paymentIntentId,
-
-                    'message' =>
-                        $e->getMessage(),
-
-                    'exception' =>
-                        get_class($e),
+                    'invoice_id' => $this->invoice->id ?? null,
+                    'payment_intent_id' => $paymentIntentId,
+                    'message' => $e->getMessage(),
+                    'exception' => get_class($e),
                 ]
             );
         }
@@ -466,11 +555,46 @@ class StripeCheckout extends Component
 
     protected function successfulCheckoutSessionKey(): string
     {
-        return 'checkout.success.' . $this->invoice->id;
+        return 'checkout.success.'.$this->invoice->id;
     }
 
     protected function findSuccessfulPaymentIntent(): mixed
     {
+        if ($this->invoice->stripe_id) {
+            try {
+                $subscription = $this->stripe()->subscriptions->retrieve(
+                    $this->invoice->stripe_id,
+                    [
+                        'expand' => [
+                            'latest_invoice.payment_intent',
+                        ],
+                    ]
+                );
+
+                $latestInvoice = $subscription->latest_invoice ?? null;
+
+                if (is_object($latestInvoice) && ! empty($latestInvoice->payment_intent)) {
+                    $paymentIntent = $latestInvoice->payment_intent;
+
+                    if (
+                        is_object($paymentIntent)
+                        && ($paymentIntent->status ?? null) === 'succeeded'
+                    ) {
+                        return $paymentIntent;
+                    }
+                }
+            } catch (Throwable $e) {
+                Log::warning(
+                    'Could not retrieve Stripe subscription payment intent for a previously successful checkout.',
+                    [
+                        'invoice_id' => $this->invoice->id ?? null,
+                        'subscription_id' => $this->invoice->stripe_id,
+                        'message' => $e->getMessage(),
+                    ]
+                );
+            }
+        }
+
         try {
             $invoiceId = str_replace(
                 "'",
@@ -479,9 +603,7 @@ class StripeCheckout extends Component
             );
 
             $results = $this->stripe()->paymentIntents->search([
-                'query' =>
-                    "metadata['invoice_id']:'{$invoiceId}' AND status:'succeeded'",
-
+                'query' => "metadata['invoice_id']:'{$invoiceId}' AND status:'succeeded'",
                 'limit' => 1,
             ]);
 
@@ -490,11 +612,8 @@ class StripeCheckout extends Component
             Log::warning(
                 'Could not search Stripe for a previously successful checkout.',
                 [
-                    'invoice_id' =>
-                        $this->invoice->id ?? null,
-
-                    'message' =>
-                        $e->getMessage(),
+                    'invoice_id' => $this->invoice->id ?? null,
+                    'message' => $e->getMessage(),
                 ]
             );
 
@@ -506,12 +625,8 @@ class StripeCheckout extends Component
         mixed $paymentIntent
     ): void {
         $this->paymentStatus = 'succeeded';
-
-        $this->paymentIntentId =
-            (string) $paymentIntent->id;
-
+        $this->paymentIntentId = (string) $paymentIntent->id;
         $this->checkoutSuccessful = true;
-
         $this->checkoutError = null;
 
         session()->put(
@@ -530,25 +645,13 @@ class StripeCheckout extends Component
             $this->billingEmail = $email;
         }
 
-        /*
-         * IMPORTANT:
-         *
-         * This remains here for compatibility with your existing
-         * checkout flow.
-         *
-         * For maximum reliability, move payment processing/email
-         * handling to a Stripe webhook as described below.
-         */
         $this->sendCompletionEmails($paymentIntent);
 
         Log::info(
             'Stripe checkout marked successful.',
             [
-                'invoice_id' =>
-                    $this->invoice->id,
-
-                'payment_intent_id' =>
-                    $paymentIntent->id,
+                'invoice_id' => $this->invoice->id,
+                'payment_intent_id' => $paymentIntent->id,
             ]
         );
     }
@@ -563,30 +666,22 @@ class StripeCheckout extends Component
             return;
         }
 
-        $paymentIntentId =
-            (string) $paymentIntent->id;
+        $paymentIntentId = (string) $paymentIntent->id;
 
-        /*
-         * Prevent duplicate email attempts caused by multiple
-         * Livewire requests hitting the same successful checkout.
-         */
         $lock = Cache::lock(
-            'checkout-email:' .
-            $this->invoice->id .
-            ':' .
+            'checkout-email:'.
+            $this->invoice->id.
+            ':'.
             $paymentIntentId,
             60
         );
 
-        if (!$lock->get()) {
+        if (! $lock->get()) {
             Log::info(
                 'Checkout email lock already held.',
                 [
-                    'invoice_id' =>
-                        $this->invoice->id,
-
-                    'payment_intent_id' =>
-                        $paymentIntentId,
+                    'invoice_id' => $this->invoice->id,
+                    'payment_intent_id' => $paymentIntentId,
                 ]
             );
 
@@ -601,9 +696,6 @@ class StripeCheckout extends Component
                 )
             );
 
-            /*
-             * CUSTOMER EMAIL
-             */
             if ($customerEmail !== '') {
                 try {
                     Mail::to($customerEmail)
@@ -616,34 +708,20 @@ class StripeCheckout extends Component
                     Log::info(
                         'Customer payment email sent.',
                         [
-                            'invoice_id' =>
-                                $this->invoice->id,
-
-                            'payment_intent_id' =>
-                                $paymentIntentId,
-
-                            'email' =>
-                                $customerEmail,
+                            'invoice_id' => $this->invoice->id,
+                            'payment_intent_id' => $paymentIntentId,
+                            'email' => $customerEmail,
                         ]
                     );
                 } catch (Throwable $e) {
                     Log::error(
                         'Customer payment email failed.',
                         [
-                            'invoice_id' =>
-                                $this->invoice->id,
-
-                            'payment_intent_id' =>
-                                $paymentIntentId,
-
-                            'email' =>
-                                $customerEmail,
-
-                            'message' =>
-                                $e->getMessage(),
-
-                            'exception' =>
-                                get_class($e),
+                            'invoice_id' => $this->invoice->id,
+                            'payment_intent_id' => $paymentIntentId,
+                            'email' => $customerEmail,
+                            'message' => $e->getMessage(),
+                            'exception' => get_class($e),
                         ]
                     );
                 }
@@ -651,35 +729,20 @@ class StripeCheckout extends Component
                 Log::warning(
                     'Customer payment email skipped because no email address was available.',
                     [
-                        'invoice_id' =>
-                            $this->invoice->id,
-
-                        'payment_intent_id' =>
-                            $paymentIntentId,
+                        'invoice_id' => $this->invoice->id,
+                        'payment_intent_id' => $paymentIntentId,
                     ]
                 );
             }
 
-            /*
-             * ADMIN EMAILS
-             *
-             * Each admin is handled independently so one failed
-             * recipient does not prevent the others from receiving.
-             */
-            $adminEmails =
-                $this->getCheckoutAdminEmails();
+            $adminEmails = $this->getCheckoutAdminEmails();
 
             Log::info(
                 'Checkout admin email recipients resolved.',
                 [
-                    'invoice_id' =>
-                        $this->invoice->id,
-
-                    'payment_intent_id' =>
-                        $paymentIntentId,
-
-                    'recipients' =>
-                        $adminEmails,
+                    'invoice_id' => $this->invoice->id,
+                    'payment_intent_id' => $paymentIntentId,
+                    'recipients' => $adminEmails,
                 ]
             );
 
@@ -703,34 +766,20 @@ class StripeCheckout extends Component
                     Log::info(
                         'Admin payment email sent.',
                         [
-                            'invoice_id' =>
-                                $this->invoice->id,
-
-                            'payment_intent_id' =>
-                                $paymentIntentId,
-
-                            'email' =>
-                                $adminEmail,
+                            'invoice_id' => $this->invoice->id,
+                            'payment_intent_id' => $paymentIntentId,
+                            'email' => $adminEmail,
                         ]
                     );
                 } catch (Throwable $e) {
                     Log::error(
                         'Admin payment email failed.',
                         [
-                            'invoice_id' =>
-                                $this->invoice->id,
-
-                            'payment_intent_id' =>
-                                $paymentIntentId,
-
-                            'email' =>
-                                $adminEmail,
-
-                            'message' =>
-                                $e->getMessage(),
-
-                            'exception' =>
-                                get_class($e),
+                            'invoice_id' => $this->invoice->id,
+                            'payment_intent_id' => $paymentIntentId,
+                            'email' => $adminEmail,
+                            'message' => $e->getMessage(),
+                            'exception' => get_class($e),
                         ]
                     );
                 }
@@ -739,17 +788,10 @@ class StripeCheckout extends Component
             Log::error(
                 'Checkout completion email processing failed.',
                 [
-                    'invoice_id' =>
-                        $this->invoice->id ?? null,
-
-                    'payment_intent_id' =>
-                        $paymentIntentId,
-
-                    'message' =>
-                        $e->getMessage(),
-
-                    'exception' =>
-                        get_class($e),
+                    'invoice_id' => $this->invoice->id ?? null,
+                    'payment_intent_id' => $paymentIntentId,
+                    'message' => $e->getMessage(),
+                    'exception' => get_class($e),
                 ]
             );
         } finally {
@@ -761,90 +803,7 @@ class StripeCheckout extends Component
     {
         $emails = [];
 
-        try {
-            if (Schema::hasColumn('users', 'role')) {
-                $emails = User::query()
-                    ->whereIn(
-                        'role',
-                        [
-                            'owner',
-                            'admin',
-                            'member',
-                        ]
-                    )
-                    ->whereNotNull('email')
-                    ->pluck('email')
-                    ->map(
-                        fn ($email) =>
-                            trim((string) $email)
-                    )
-                    ->filter()
-                    ->unique()
-                    ->values()
-                    ->all();
-            } elseif (
-                method_exists(
-                    User::class,
-                    'roles'
-                )
-            ) {
-                $emails = User::query()
-                    ->whereHas(
-                        'roles',
-                        function ($query) {
-                            $query->whereIn(
-                                'name',
-                                [
-                                    'owner',
-                                    'admin',
-                                    'member',
-                                ]
-                            );
-                        }
-                    )
-                    ->whereNotNull('email')
-                    ->pluck('email')
-                    ->map(
-                        fn ($email) =>
-                            trim((string) $email)
-                    )
-                    ->filter()
-                    ->unique()
-                    ->values()
-                    ->all();
-            }
-        } catch (Throwable $e) {
-            Log::warning(
-                'Could not determine checkout admin email recipients from users.',
-                [
-                    'invoice_id' =>
-                        $this->invoice->id ?? null,
-
-                    'message' =>
-                        $e->getMessage(),
-                ]
-            );
-        }
-
-        /*
-         * Optional fallback:
-         *
-         * config/mail.php:
-         *
-         * 'checkout_admin_emails' => env(
-         *     'CHECKOUT_ADMIN_EMAILS',
-         *     ''
-         * ),
-         *
-         * .env:
-         *
-         * CHECKOUT_ADMIN_EMAILS=admin@example.com
-         */
-        $configured =
-            config(
-                'mail.checkout_admin_emails',
-                []
-            );
+        $configured = config('mail.checkout_admin_emails', []);
 
         if (is_string($configured)) {
             $configured = preg_split(
@@ -855,17 +814,78 @@ class StripeCheckout extends Component
             );
         }
 
-        return collect(
-            array_merge(
-                $emails,
-                (array) $configured
-            )
-        )
-            ->map(
-                fn ($email) =>
-                    trim((string) $email)
-            )
-            ->filter()
+        foreach ((array) $configured as $email) {
+            $email = trim((string) $email);
+
+            if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $emails[] = $email;
+            }
+        }
+
+        try {
+            if (Schema::hasColumn('users', 'role')) {
+                $roleEmails = User::query()
+                    ->whereIn('role', [
+                        'owner',
+                        'admin',
+                    ])
+                    ->whereNotNull('email')
+                    ->pluck('email')
+                    ->map(fn ($email) => trim((string) $email))
+                    ->filter(fn ($email) => filter_var(
+                        $email,
+                        FILTER_VALIDATE_EMAIL
+                    ))
+                    ->all();
+
+                $emails = array_merge($emails, $roleEmails);
+            }
+        } catch (Throwable $e) {
+            Log::warning(
+                'Could not load checkout admin users by role column.',
+                [
+                    'invoice_id' => $this->invoice->id ?? null,
+                    'message' => $e->getMessage(),
+                ]
+            );
+        }
+
+        try {
+            if (method_exists(User::class, 'roles')) {
+                $roleEmails = User::query()
+                    ->whereHas('roles', function ($query) {
+                        $query->whereIn('name', [
+                            'owner',
+                            'admin',
+                        ]);
+                    })
+                    ->whereNotNull('email')
+                    ->pluck('email')
+                    ->map(fn ($email) => trim((string) $email))
+                    ->filter(fn ($email) => filter_var(
+                        $email,
+                        FILTER_VALIDATE_EMAIL
+                    ))
+                    ->all();
+
+                $emails = array_merge($emails, $roleEmails);
+            }
+        } catch (Throwable $e) {
+            Log::warning(
+                'Could not load checkout admin users by roles relationship.',
+                [
+                    'invoice_id' => $this->invoice->id ?? null,
+                    'message' => $e->getMessage(),
+                ]
+            );
+        }
+
+        return collect($emails)
+            ->map(fn ($email) => strtolower(trim((string) $email)))
+            ->filter(fn ($email) => filter_var(
+                $email,
+                FILTER_VALIDATE_EMAIL
+            ))
             ->unique()
             ->values()
             ->all();
@@ -879,7 +899,6 @@ class StripeCheckout extends Component
                 'string',
                 'max:255',
             ],
-
             'billingEmail' => [
                 'required',
                 'email',
@@ -893,13 +912,8 @@ class StripeCheckout extends Component
     public function paymentCompleted(
         string $paymentIntentId
     ): string {
-        $paymentIntentId =
-            trim($paymentIntentId);
+        $paymentIntentId = trim($paymentIntentId);
 
-        /*
-         * Never trust the browser to tell us which PaymentIntent
-         * was paid.
-         */
         if (
             $paymentIntentId === ''
             || $paymentIntentId !== $this->paymentIntentId
@@ -910,27 +924,15 @@ class StripeCheckout extends Component
         }
 
         $stripe = $this->stripe();
+        $paymentIntent = $stripe->paymentIntents->retrieve($paymentIntentId, []);
 
-        /*
-         * Retrieve the PaymentIntent directly from Stripe.
-         */
-        $paymentIntent =
-            $stripe->paymentIntents->retrieve(
-                $paymentIntentId,
-                []
-            );
-
-        $metadataInvoiceId =
-            (string) (
-                $paymentIntent
-                    ->metadata
-                    ->invoice_id
-                ?? ''
-            );
+        $metadataInvoiceId = (string) (
+            $paymentIntent->metadata->invoice_id ?? ''
+        );
 
         if (
-            $metadataInvoiceId
-            !== (string) $this->invoice->id
+            $metadataInvoiceId !== ''
+            && $metadataInvoiceId !== (string) $this->invoice->id
         ) {
             throw new \RuntimeException(
                 'The Stripe payment does not belong to this invoice.'
@@ -938,8 +940,8 @@ class StripeCheckout extends Component
         }
 
         if (
-            (int) $paymentIntent->amount
-            !== $this->totalInCents
+            isset($paymentIntent->amount)
+            && (int) $paymentIntent->amount !== $this->totalInCents
         ) {
             throw new \RuntimeException(
                 'The Stripe payment amount does not match this invoice.'
@@ -947,26 +949,18 @@ class StripeCheckout extends Component
         }
 
         if (
-            strtolower(
-                (string) $paymentIntent->currency
-            )
-            !== 'usd'
+            isset($paymentIntent->currency)
+            && strtolower((string) $paymentIntent->currency) !== 'usd'
         ) {
             throw new \RuntimeException(
                 'The Stripe payment currency does not match this invoice.'
             );
         }
 
-        $this->paymentStatus =
-            $paymentIntent->status;
+        $this->paymentStatus = $paymentIntent->status;
 
-        if (
-            (string) $paymentIntent->status
-            === 'succeeded'
-        ) {
-            $this->applySuccessfulPaymentIntent(
-                $paymentIntent
-            );
+        if ((string) $paymentIntent->status === 'succeeded') {
+            $this->applySuccessfulPaymentIntent($paymentIntent);
         } else {
             $this->checkoutSuccessful = false;
         }
@@ -974,17 +968,10 @@ class StripeCheckout extends Component
         Log::info(
             'Stripe checkout payment status verified.',
             [
-                'invoice_id' =>
-                    $this->invoice->id,
-
-                'payment_intent_id' =>
-                    $paymentIntent->id,
-
-                'status' =>
-                    $paymentIntent->status,
-
-                'amount_in_cents' =>
-                    $paymentIntent->amount,
+                'invoice_id' => $this->invoice->id,
+                'payment_intent_id' => $paymentIntent->id,
+                'status' => $paymentIntent->status,
+                'amount_in_cents' => $paymentIntent->amount,
             ]
         );
 

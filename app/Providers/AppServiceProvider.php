@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Cashier\Cashier;
 use Livewire\Livewire;
 
 class AppServiceProvider extends ServiceProvider
@@ -43,6 +44,8 @@ class AppServiceProvider extends ServiceProvider
             Testimonials::class,
             TestimonialPolicy::class
         );
+        
+        Cashier::useCustomerModel(Customer::class);
 
         /*
          * Livewire update route.

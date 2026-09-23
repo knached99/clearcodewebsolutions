@@ -106,41 +106,41 @@ class StripeService
      * Payment details are collected by Stripe Elements.
      * Raw card information never passes through Livewire/Laravel.
      */
-   public function createPaymentIntent(
-    int $amountInCents,
-    string $customerId,
-    array $metadata = []
-): PaymentIntent {
-    $params = [
-        'amount' => $amountInCents,
-        'currency' => 'usd',
-        'customer' => $customerId,
+    public function createPaymentIntent(
+        int $amountInCents,
+        string $customerId,
+        array $metadata = []
+    ): PaymentIntent {
+        $params = [
+            'amount' => $amountInCents,
+            'currency' => 'usd',
+            'customer' => $customerId,
 
-        'automatic_payment_methods' => [
-            'enabled' => true,
-        ],
-    ];
+            'automatic_payment_methods' => [
+                'enabled' => true,
+            ],
+        ];
 
-    if (isset($metadata['description'])) {
-        $cleanDesc = trim(
-            (string) $metadata['description']
-        );
+        if (isset($metadata['description'])) {
+            $cleanDesc = trim(
+                (string) $metadata['description']
+            );
 
-        if ($cleanDesc !== '') {
-            $params['description'] = $cleanDesc;
+            if ($cleanDesc !== '') {
+                $params['description'] = $cleanDesc;
+            }
+
+            unset($metadata['description']);
         }
 
-        unset($metadata['description']);
-    }
+        if (! empty($metadata)) {
+            $params['metadata'] = $metadata;
+        }
 
-    if (!empty($metadata)) {
-        $params['metadata'] = $metadata;
+        return $this->stripe
+            ->paymentIntents
+            ->create($params);
     }
-
-    return $this->stripe
-        ->paymentIntents
-        ->create($params);
-}
 
     /**
      * Retrieve an existing PaymentIntent.
@@ -190,7 +190,7 @@ class StripeService
         /*
          * Attach one-time line items to the first invoice.
          */
-        if (!empty($oneTimeItems)) {
+        if (! empty($oneTimeItems)) {
             $params['add_invoice_items'] = array_map(
                 function ($item) {
                     return [
@@ -218,7 +218,7 @@ class StripeService
             unset($metadata['description']);
         }
 
-        if (!empty($metadata)) {
+        if (! empty($metadata)) {
             $params['metadata'] = $metadata;
         }
 
@@ -266,7 +266,7 @@ class StripeService
         foreach ($prices->data as $price) {
 
             if (
-                !$price->recurring ||
+                ! $price->recurring ||
                 $price->recurring->interval !== 'month'
             ) {
                 continue;
@@ -275,8 +275,8 @@ class StripeService
             $product = $price->product;
 
             if (
-                !is_object($product) ||
-                !$product->active
+                ! is_object($product) ||
+                ! $product->active
             ) {
                 continue;
             }
@@ -287,18 +287,18 @@ class StripeService
                 in_array(
                     $product->name,
                     [
-                        'Website Maintenance',
+                        'Ongoing Maintenance',
                         'SEO Optimization',
                         'Performance Monitoring',
-                        'Security Patching',
-                        'Content Updates',
+                        'Security Updates',
+                        'Feature Updates',
                     ],
                     true
                 );
 
             if (
                 $isAddon &&
-                !in_array(
+                ! in_array(
                     $product->name,
                     $seenNames,
                     true
@@ -334,7 +334,7 @@ class StripeService
          * Edge Case 1:
          * Subscription uses a pending SetupIntent.
          */
-        if (!empty($subscription->pending_setup_intent)) {
+        if (! empty($subscription->pending_setup_intent)) {
 
             $setupIntent =
                 $subscription->pending_setup_intent;
@@ -348,7 +348,7 @@ class StripeService
 
             if (
                 is_object($setupIntent) &&
-                !empty($setupIntent->client_secret)
+                ! empty($setupIntent->client_secret)
             ) {
                 return $setupIntent->client_secret;
             }
@@ -389,7 +389,7 @@ class StripeService
 
             if (
                 is_object($paymentIntent) &&
-                !empty($paymentIntent->client_secret)
+                ! empty($paymentIntent->client_secret)
             ) {
                 return $paymentIntent->client_secret;
             }
@@ -413,27 +413,22 @@ class StripeService
                     $this->stripe
                         ->paymentIntents
                         ->create([
-                            'amount' =>
-                                $latestInvoice->amount_due,
+                            'amount' => $latestInvoice->amount_due,
 
-                            'currency' =>
-                                $latestInvoice->currency
+                            'currency' => $latestInvoice->currency
                                     ?? 'usd',
 
-                            'customer' =>
-                                $customerId,
+                            'customer' => $customerId,
 
                             'metadata' => [
-                                'subscription_id' =>
-                                    $subscription->id,
+                                'subscription_id' => $subscription->id,
 
-                                'invoice_id' =>
-                                    $latestInvoice->id,
+                                'invoice_id' => $latestInvoice->id,
                             ],
                         ]);
 
                 if (
-                    !empty(
+                    ! empty(
                         $fallbackIntent->client_secret
                     )
                 ) {
@@ -443,7 +438,7 @@ class StripeService
         }
 
         throw new \Exception(
-            'Unable to resolve client_secret. ' .
+            'Unable to resolve client_secret. '.
             'Please ensure invoice items have an amount greater than 0.'
         );
     }
@@ -497,11 +492,9 @@ class StripeService
 
                 'mode' => 'payment',
 
-                'success_url' =>
-                    url('/payment-success'),
+                'success_url' => url('/payment-success'),
 
-                'cancel_url' =>
-                    url('/payment-cancelled'),
+                'cancel_url' => url('/payment-cancelled'),
             ]);
     }
 }

@@ -82,6 +82,20 @@ class Invoice extends Model
         return $this->status === InvoiceStatus::Paid;
     }
 
+    public function hasCompletedTwelveMonthMinimum(): bool
+    {
+        return $this->payment_type === PaymentType::Subscription
+            && (int) ($this->subscription_months ?? 0) >= 12;
+    }
+
+    public function hasRecurringAddons(): bool
+    {
+        return $this->items()
+            ->where('is_subscription', true)
+            ->whereNotNull('stripe_price_id')
+            ->exists();
+    }
+
     /**
      * Get the total invoice amount in cents.
      *

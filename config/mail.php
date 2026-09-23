@@ -117,4 +117,9 @@ return [
 
     'admin_address' => env('MAIL_ADMIN_ADDRESS'),
 
+    'checkout_admin_emails' => env(
+        'CHECKOUT_ADMIN_EMAILS',
+        ''
+    ),
+
 ];

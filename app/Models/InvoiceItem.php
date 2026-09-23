@@ -14,6 +14,7 @@ class InvoiceItem extends Model
         'invoice_id',
         'description',
         'amount',
+        'stripe_price_id',
         'is_subscription',
     ];
 

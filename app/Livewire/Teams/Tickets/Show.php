@@ -5,11 +5,12 @@ namespace App\Livewire\Teams\Tickets;
 use App\Models\Ticket;
 use App\Models\TicketMessageAttachment;
 use App\Notifications\NewTicketReplyNotification;
+use App\Notifications\PaymentLinkNotification;
 use App\Notifications\TicketPriorityChangedNotification;
 use App\Notifications\TicketStatusChangedNotification;
-use App\Notifications\PaymentLinkNotification;
 use App\Services\StripeService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
@@ -18,7 +19,6 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
-use Illuminate\Support\Facades\Log;
 
 class Show extends Component
 {
@@ -577,7 +577,7 @@ class Show extends Component
     |--------------------------------------------------------------------------
     */
 
-   public function sendPaymentLink(StripeService $stripe, int $amountInCents = 10000): void
+    public function sendPaymentLink(StripeService $stripe, int $amountInCents = 10000): void
     {
         Log::info('[PaymentLink] Process started.', [
             'ticket_id' => $this->ticket->id ?? null,
@@ -608,7 +608,7 @@ class Show extends Component
             Log::info('[PaymentLink] Creating Stripe product...');
 
             $product = $stripe->createProduct(
-                'Service Payment - Ticket #' . $this->ticket->id,
+                'Service Payment - Ticket #'.$this->ticket->id,
                 'Payment request generated from support ticket.'
             );
 
@@ -652,7 +652,7 @@ class Show extends Component
             $this->ticket->messages()->create([
                 'author_type' => 'system',
                 'author_name' => 'Billing System',
-                'message' => 'A secure payment link for $' . number_format($amountInCents / 100, 2) . ' was sent to the customer.',
+                'message' => 'A secure payment link for $'.number_format($amountInCents / 100, 2).' was sent to the customer.',
             ]);
 
             Log::info('[PaymentLink] System message logged to ticket.');
@@ -683,7 +683,7 @@ class Show extends Component
 
             $this->addError(
                 'stripeError',
-                'There was an issue generating the payment link: ' . $exception->getMessage()
+                'There was an issue generating the payment link: '.$exception->getMessage()
             );
         }
     }

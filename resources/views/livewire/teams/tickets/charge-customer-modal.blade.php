@@ -21,8 +21,7 @@
             </div>
 
             @if ($errors->has('submit'))
-                <div
-                    class="mt-4 p-3 bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400 rounded-lg text-sm border border-red-200 dark:border-red-900">
+                <div class="mt-4 p-3 bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400 rounded-lg text-sm border border-red-200 dark:border-red-900">
                     {{ $errors->first('submit') }}
                 </div>
             @endif
@@ -148,7 +147,14 @@
                                 </strong>
                             </div>
                             <div class="text-xs text-zinc-500">
-                                Recurring: ${{ number_format($this->monthlyRecurringAmountInCents / 100, 2) }}/month
+                                @if($this->monthlyRecurringAmountInCents > 0)
+                                    Recurring: ${{ number_format($this->monthlyRecurringAmountInCents / 100, 2) }}/month
+                                    @if($this->isSubscription)
+                                        (12-month minimum commitment)
+                                    @endif
+                                @else
+                                    No recurring charges
+                                @endif
                             </div>
                         </div>
 
