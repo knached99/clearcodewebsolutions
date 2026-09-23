@@ -14,6 +14,7 @@ use App\Livewire\RequiredOnboarding;
 use App\Livewire\Teams\Invoices\InvoiceShow;
 use App\Livewire\Teams\Projects\Index as AdminWorksIndex;
 use App\Livewire\Teams\Testimonials\Index as AdminTestimonialsIndex;
+use App\Livewire\Teams\Tickets\Index as TeamTicketsIndex;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Team;
@@ -276,6 +277,11 @@ Route::prefix('{current_team}')
         | Team Tickets
         |--------------------------------------------------------------------------
         */
+
+        Route::get(
+            'tickets',
+            TeamTicketsIndex::class
+        )->name('teams.tickets.index');
 
         Route::get(
             'tickets/{ticket}',

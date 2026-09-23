@@ -817,6 +817,18 @@
                     @if ($currentTeam)
 
                         <flux:sidebar.item
+                            icon="clipboard-document-list"
+                            :href="route('teams.tickets.index', [
+                                'current_team' => $currentTeam->slug,
+                            ])"
+                            :current="request()->routeIs('teams.tickets.index', 'team.tickets.show')"
+                            wire:navigate
+                            class="cc-nav-item"
+                        >
+                            {{ __('Tickets') }}
+                        </flux:sidebar.item>
+
+                        <flux:sidebar.item
                             icon="folder"
                             :href="route('teams.projects.index', [
                                 'current_team' => $currentTeam->slug,
