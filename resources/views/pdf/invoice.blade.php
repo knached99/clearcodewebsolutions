@@ -67,12 +67,22 @@
                 <td>
                     {{ $item->description }}
                     @if($item->is_subscription)
-                        <br><span style="color: #6b7280; font-size: 12px;">(Monthly Subscription - 12 month minimum)</span>
+                        <br><span style="color: #6b7280; font-size: 12px;">(Monthly Subscription x{{ $invoice->subscription_months ?? 12 }})</span>
                     @endif
                 </td>
                 <td class="amount">${{ number_format($item->amountInDollars(), 2) }}</td>
             </tr>
             @endforeach
+            <tr>
+                <td colspan="2" style="padding-top: 18px; color: #374151;">
+                    @if($invoice->isSubscription() || $invoice->monthlyRecurringAmountInCents() > 0)
+                        <div><strong>Next payment:</strong> {{ $invoice->nextBillingDate()->format('F j, Y') }}</div>
+                        <div><strong>Renews on:</strong> {{ $invoice->renewalDate()->format('F j, Y') }}</div>
+                        <div><strong>Billing term:</strong> {{ $invoice->subscription_months ?? 12 }} months minimum</div>
+                        <div><strong>Recurring monthly:</strong> ${{ number_format($invoice->monthlyRecurringAmountInDollars(), 2) }}/month x{{ $invoice->subscription_months ?? 12 }}</div>
+                    @endif
+                </td>
+            </tr>
             <tr class="total-row">
                 <td style="text-align: right; padding-top: 16px;">Total Paid:</td>
                 <td class="amount total-amount" style="padding-top: 16px;">${{ number_format($invoice->totalAmountInDollars(), 2) }}</td>

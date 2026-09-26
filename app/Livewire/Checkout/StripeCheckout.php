@@ -6,6 +6,7 @@ use App\Mail\PaymentReceived;
 use App\Mail\PaymentReceivedAdmin;
 use App\Models\Invoice;
 use App\Models\User;
+use App\Services\Checkout\InvoiceSignatureService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -34,6 +35,12 @@ class StripeCheckout extends Component
 
     public bool $checkoutSuccessful = false;
 
+    public bool $signatureRequired = false;
+
+    public bool $hasSignedAgreement = false;
+
+    public string $signatureData = '';
+
     public int $totalInCents = 0;
 
     public string $formattedTotal = '0.00';
@@ -57,12 +64,18 @@ class StripeCheckout extends Component
             (string) ($this->invoice->customer?->email ?? '')
         );
 
+        $this->signatureRequired = app(InvoiceSignatureService::class)->requiresSignature($this->invoice);
+        $this->hasSignedAgreement = app(InvoiceSignatureService::class)->hasSignedAgreement($this->invoice);
         $this->totalInCents = $this->calculateTotalInCents();
 
         $this->formattedTotal = number_format(
             $this->totalInCents / 100,
             2
         );
+
+        if ($this->signatureRequired && ! $this->hasSignedAgreement) {
+            return;
+        }
 
         if ($this->totalInCents < 50) {
             $this->checkoutError = $this->totalInCents > 0
@@ -149,6 +162,24 @@ class StripeCheckout extends Component
             $this->itemAmountInCents($item) / 100,
             2
         );
+    }
+
+    public function saveSignature(string $signatureData): void
+    {
+        $this->signatureData = trim($signatureData);
+
+        if ($this->signatureData === '') {
+            $this->checkoutError = 'Please sign the agreement before continuing.';
+
+            return;
+        }
+
+        app(InvoiceSignatureService::class)->saveSignature($this->invoice, $this->signatureData);
+
+        $this->hasSignedAgreement = true;
+        $this->checkoutError = null;
+
+        $this->createStripeCheckoutIntent();
     }
 
     protected function stripe(): StripeClient

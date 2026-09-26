@@ -12,6 +12,11 @@ Thank you for your payment! Your payment for **Ticket #{{ $invoice->ticket->tick
 
 **Amount Paid:** ${{ number_format($invoice->totalAmountInDollars(), 2) }}
 
+@if ($invoice->isSubscription())
+**Monthly Recurring:** ${{ number_format($invoice->monthlyRecurringAmountInDollars(), 2) }}/month x{{ $invoice->subscription_months ?? 12 }}
+**Subscription Term:** {{ $invoice->subscription_months ?? 12 }} months minimum
+@endif
+
 **Ticket:** #{{ $invoice->ticket->ticket_number ?? 'N/A' }}
 
 **Status:** Paid ✓

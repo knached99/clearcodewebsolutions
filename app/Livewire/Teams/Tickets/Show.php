@@ -1084,6 +1084,8 @@ class Show extends Component
     {
         $this->ticket->load([
             'messages.attachments',
+            'invoice.items',
+            'invoice.transactions',
         ]);
     }
 

@@ -16,6 +16,8 @@ class Transaction extends Model
         'customer_id',
         'stripe_payment_intent_id',
         'amount',
+        'processing_fee',
+        'net_amount',
         'status',
         'payment_method_type',
         'brand',
@@ -26,6 +28,8 @@ class Transaction extends Model
     protected $casts = [
         'status' => TransactionStatus::class,
         'amount' => 'integer',
+        'processing_fee' => 'integer',
+        'net_amount' => 'integer',
     ];
 
     public function invoice(): BelongsTo

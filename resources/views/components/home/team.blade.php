@@ -48,7 +48,7 @@
                                 <div>
                                     <h3>Khaled</h3>
                                     <p>
-                                        Founder &amp; Lead Developer
+                                        Founder &amp; Principal Software Engineer
                                     </p>
                                 </div>
                                 <span class="clearcode-team__arrow">
@@ -59,11 +59,10 @@
                         <div class="clearcode-team__flip-back">
                             <div class="clearcode-team__back-content">
                                 <h3>Khaled</h3>
-                                <span class="back-role">Founder & Lead Developer</span>
-                                <p>With over a decade of experience architecting enterprise-grade applications, Khaled
-                                    leads the technical vision at ClearCode. A master of modern PHP, Laravel, and
-                                    JavaScript ecosystems, he ensures every project is built for scale, speed, and
-                                    bulletproof security.</p>
+                                <span class="back-role">Founder & Principal Software Engineer</span>
+                                <p>With over a decade of experience building heavy duty software in numerous industries, Khaled is the mastermind behind ClearCode’s technical vision.
+                                 He takes care of the complex engineering so you don’t 
+                                 have to, ensuring your platform is incredibly fast, built to grow with your business, and protected by ironclad security.</p>
                                 <div class="back-skills">
                                     <span class="back-skill">Web Development</span>
                                     <span class="back-skill">App Development</span>
@@ -96,7 +95,7 @@
                                 <div>
                                     <h3>Karam</h3>
                                     <p>
-                                        Cofounder &amp; Marketing Lead
+                                        Cofounder &amp; Head of Growth
                                     </p>
                                 </div>
                                 <span class="clearcode-team__arrow">
@@ -107,11 +106,11 @@
                         <div class="clearcode-team__flip-back">
                             <div class="clearcode-team__back-content">
                                 <h3>Karam</h3>
-                                <span class="back-role">Cofounder & Marketing Lead</span>
-                                <p>Karam brings razor-sharp analytical thinking and creative marketing strategy to every
-                                    project. His proven track record in digital growth, conversion optimization, and
-                                    brand positioning ensures our clients don't just get a beautiful website — they get
-                                    a powerful business engine.</p>
+                                <span class="back-role">Cofounder & Head of Growth</span>
+                                <p>Karam ensures your digital investment actually makes you money. 
+                                Combining sharp business analytics with creative marketing strategies, h
+                                e specializes in turning website traffic into paying customers. 
+                                Karam ensures you don't just get a beautiful website, you get a powerful machine that generates business</p>
                                 <div class="back-skills">
                                     <span class="back-skill">Growth Strategy</span>
                                     <span class="back-skill">SEO & SEM</span>

@@ -5,13 +5,16 @@ namespace App\Http\Controllers;
 use App\Enums\InvoiceStatus;
 use App\Enums\PaymentType;
 use App\Enums\TransactionStatus;
+use App\Mail\PaymentReceivedAdmin;
 use App\Mail\PaymentReceiptMail;
 use App\Mail\SubscriptionRenewalDecisionMail;
 use App\Models\Invoice;
 use App\Models\Transaction;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schema;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\StripeClient;
 use Stripe\Webhook;
@@ -59,6 +62,18 @@ class StripeWebhookController extends Controller
 
             case 'invoice.payment_succeeded':
                 $this->handleInvoicePaymentSucceeded($eventPayload);
+                break;
+
+            case 'invoice.payment_failed':
+                $this->handleInvoicePaymentFailed($eventPayload);
+                break;
+
+            case 'charge.failed':
+                $this->handleInvoicePaymentFailed($eventPayload);
+                break;
+
+            case 'payment_intent.payment_failed':
+                $this->handleInvoicePaymentFailed($eventPayload);
                 break;
         }
 
@@ -141,22 +156,57 @@ class StripeWebhookController extends Controller
         $invoiceId = $invoiceObject->metadata->invoice_id ?? null;
         $invoice = $invoiceId ? Invoice::find($invoiceId) : null;
 
+        if (! $invoice && ! empty($invoiceObject->customer ?? null)) {
+            $customer = \App\Models\Customer::query()
+                ->where('stripe_id', (string) $invoiceObject->customer)
+                ->first();
+
+            if ($customer) {
+                $invoice = Invoice::query()
+                    ->where('customer_id', $customer->id)
+                    ->latest('created_at')
+                    ->first();
+            }
+        }
+
+        if (! $invoice && ! empty($invoiceObject->customer_email ?? null)) {
+            $email = trim((string) $invoiceObject->customer_email);
+
+            if ($email !== '') {
+                $invoice = Invoice::query()
+                    ->whereHas('customer', fn ($query) => $query->where('email', $email))
+                    ->latest('created_at')
+                    ->first();
+            }
+        }
+
         if ($invoice) {
             $invoice->status = InvoiceStatus::Paid;
+            $invoice->stripe_id = $invoice->stripe_id ?: ($invoiceObject->subscription ?? $invoiceObject->id ?? $invoice->stripe_id);
             $invoice->save();
 
             $chargeId = $invoiceObject->charge ?? null;
             $brand = null;
             $last4 = null;
+            $processingFee = 0;
+            $netAmount = (int) ($invoiceObject->amount_paid ?? $invoiceObject->total ?? 0);
 
             if ($chargeId) {
                 try {
                     $stripe = new StripeClient(config('services.stripe.secret'));
-                    $charge = $stripe->charges->retrieve($chargeId);
+                    $charge = $stripe->charges->retrieve($chargeId, ['expand' => ['balance_transaction']]);
 
                     if (isset($charge->payment_method_details->card)) {
                         $brand = $charge->payment_method_details->card->brand;
                         $last4 = $charge->payment_method_details->card->last4;
+                    }
+
+                    if (isset($charge->balance_transaction)) {
+                        $balanceTransaction = $charge->balance_transaction;
+                        $processingFee = isset($balanceTransaction->fee)
+                            ? -(int) abs((int) $balanceTransaction->fee)
+                            : 0;
+                        $netAmount = (int) ($balanceTransaction->net ?? ($netAmount + $processingFee));
                     }
                 } catch (\Throwable $e) {
                     Log::warning('Could not retrieve Stripe charge for receipt metadata.', [
@@ -178,6 +228,8 @@ class StripeWebhookController extends Controller
                     'customer_id' => $invoice->customer_id,
                     'stripe_payment_intent_id' => $invoiceObject->payment_intent ?? null,
                     'amount' => (int) ($invoiceObject->amount_paid ?? $invoiceObject->total ?? 0),
+                    'processing_fee' => $processingFee,
+                    'net_amount' => $netAmount,
                     'status' => TransactionStatus::Succeeded,
                     'payment_method_type' => 'card',
                     'brand' => $brand,
@@ -204,10 +256,123 @@ class StripeWebhookController extends Controller
             );
         }
 
+        $this->sendAdminSuccessNotification($invoice);
+
         Log::info('Payment succeeded notification sent.', [
             'customer_email' => $customerEmail,
             'invoice_id' => $invoice?->id ?? $invoiceObject->id ?? null,
         ]);
+    }
+
+    protected function handleInvoicePaymentFailed(object $invoiceObject): void
+    {
+        $invoiceId = $invoiceObject->metadata->invoice_id ?? ($invoiceObject->invoice ?? null);
+        $invoice = $invoiceId ? Invoice::find($invoiceId) : null;
+
+        if (! $invoice && ! empty($invoiceObject->customer ?? null)) {
+            $customer = \App\Models\Customer::query()
+                ->where('stripe_id', (string) $invoiceObject->customer)
+                ->first();
+
+            if ($customer) {
+                $invoice = Invoice::query()->where('customer_id', $customer->id)->latest('created_at')->first();
+            }
+        }
+
+        $customerEmail = $this->resolveCustomerEmail($invoiceObject);
+
+        if ($customerEmail !== null) {
+            Mail::raw(
+                "Your payment attempt was unsuccessful. Please update your payment method to avoid interruption to your recurring services.\n\nWe will continue to retry automatically, but please update your billing details as soon as possible.",
+                function ($message) use ($customerEmail) {
+                    $message->to($customerEmail)
+                        ->subject('Payment failed - action required');
+                }
+            );
+        }
+
+        $adminEmails = $this->getCheckoutAdminEmails();
+
+        if ($adminEmails === []) {
+            $adminEmails = [config('mail.admin_address') ?: config('mail.from.address', 'support@clearcodewebsolutions.com')];
+        }
+
+        foreach ($adminEmails as $adminEmail) {
+            Mail::raw(
+                "A Stripe payment failed for invoice #".($invoice?->id ?? $invoiceId ?? 'unknown').". Please review the payment method and follow up with the customer.",
+                function ($message) use ($adminEmail) {
+                    $message->to($adminEmail)
+                        ->subject('Payment failed - action required');
+                }
+            );
+        }
+
+        Log::warning('Stripe payment failed notification sent.', [
+            'customer_email' => $customerEmail,
+            'invoice_id' => $invoice?->id ?? $invoiceId ?? null,
+            'stripe_event' => $invoiceObject->id ?? null,
+        ]);
+    }
+
+    protected function sendAdminSuccessNotification(?Invoice $invoice): void
+    {
+        if (! $invoice) {
+            return;
+        }
+
+        $adminEmails = $this->getCheckoutAdminEmails();
+
+        if ($adminEmails === []) {
+            $adminEmails = [config('mail.admin_address') ?: config('mail.from.address', 'support@clearcodewebsolutions.com')];
+        }
+
+        foreach ($adminEmails as $adminEmail) {
+            try {
+                Mail::to($adminEmail)->send(new PaymentReceivedAdmin($invoice));
+            } catch (\Throwable $e) {
+                Log::error('Admin success notification failed.', [
+                    'invoice_id' => $invoice->id,
+                    'email' => $adminEmail,
+                    'message' => $e->getMessage(),
+                ]);
+            }
+        }
+    }
+
+    protected function getCheckoutAdminEmails(): array
+    {
+        $emails = [];
+
+        $configured = config('mail.checkout_admin_emails', []);
+
+        if (is_string($configured)) {
+            $configured = preg_split('/\s*,\s*/', $configured, -1, PREG_SPLIT_NO_EMPTY);
+        }
+
+        foreach ((array) $configured as $email) {
+            $email = trim((string) $email);
+            if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $emails[] = $email;
+            }
+        }
+
+        if (Schema::hasColumn('users', 'role')) {
+            $roleEmails = User::query()
+                ->whereIn('role', ['owner', 'admin'])
+                ->whereNotNull('email')
+                ->pluck('email')
+                ->map(fn ($email) => trim((string) $email))
+                ->filter(fn ($email) => filter_var($email, FILTER_VALIDATE_EMAIL))
+                ->all();
+            $emails = array_merge($emails, $roleEmails);
+        }
+
+        return collect($emails)
+            ->map(fn ($email) => strtolower(trim((string) $email)))
+            ->filter(fn ($email) => filter_var($email, FILTER_VALIDATE_EMAIL))
+            ->unique()
+            ->values()
+            ->all();
     }
 
     protected function resolveCustomerEmail(object $invoiceObject): ?string

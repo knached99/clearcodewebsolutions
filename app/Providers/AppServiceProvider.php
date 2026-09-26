@@ -16,6 +16,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Laravel\Cashier\Cashier;
 use Livewire\Livewire;
+use Illuminate\Support\Facades\Log;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -71,6 +72,21 @@ class AppServiceProvider extends ServiceProvider
             app('router')->matched(function ($event) {
                 $route = $event->route;
             });
+        });
+
+        register_shutdown_function(function (): void {
+            $error = error_get_last();
+
+            if ($error === null) {
+                return;
+            }
+
+            Log::critical('PHP SHUTDOWN ERROR', [
+                'type' => $error['type'] ?? null,
+                'message' => $error['message'] ?? null,
+                'file' => $error['file'] ?? null,
+                'line' => $error['line'] ?? null,
+            ]);
         });
     }
 

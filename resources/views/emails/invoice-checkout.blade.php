@@ -15,11 +15,17 @@ ${{ number_format($totalAmountInCents / 100, 2) }}
 
 @if ($monthlyRecurringAmountInCents > 0)
 **Monthly Recurring:**  
-${{ number_format($monthlyRecurringAmountInCents / 100, 2) }}/month
+${{ number_format($monthlyRecurringAmountInCents / 100, 2) }}/month x{{ $subscriptionMonths ?? 12 }}
 
 @if ($isSubscription)
 **Subscription Term:**  
-12-month minimum
+{{ $subscriptionMonths ?? 12 }} months minimum
+
+**Next payment:**  
+{{ now()->addMonth()->format('F j, Y') }}
+
+**Renews on:**  
+{{ now()->addMonths($subscriptionMonths ?? 12)->format('F j, Y') }}
 @endif
 @endif
 
@@ -30,7 +36,7 @@ ${{ number_format($monthlyRecurringAmountInCents / 100, 2) }}/month
 **{{ $description }}**  
 ${{ number_format($baseAmount, 2) }}  
 @if ($isSubscription)
-<span style="font-size: 12px; color: #6b7280;">Recurring Monthly</span>
+<span style="font-size: 12px; color: #6b7280;">Recurring monthly • {{ $subscriptionMonths ?? 12 }} months minimum</span>
 @else
 <span style="font-size: 12px; color: #6b7280;">One-time charge</span>
 @endif
@@ -39,8 +45,8 @@ ${{ number_format($baseAmount, 2) }}
 @foreach ($selectedAddons as $addon)
 ---
 **{{ $addon['name'] }}**  
-${{ number_format($addon['price'], 2) }}  
-<span style="font-size: 12px; color: #6b7280;">Recurring monthly add-on</span>
+${{ number_format($addon['price'], 2) }}/month x{{ $subscriptionMonths ?? 12 }}  
+<span style="font-size: 12px; color: #6b7280;">Recurring monthly add-on for {{ $subscriptionMonths ?? 12 }} months • next payment {{ now()->addMonth()->format('F j, Y') }}</span>
 @endforeach
 @endif
 
@@ -51,7 +57,13 @@ ${{ number_format($totalAmountInCents / 100, 2) }}
 
 @if ($monthlyRecurringAmountInCents > 0)
 **Recurring Monthly:**  
-${{ number_format($monthlyRecurringAmountInCents / 100, 2) }}
+${{ number_format($monthlyRecurringAmountInCents / 100, 2) }}/month x{{ $subscriptionMonths ?? 12 }}
+
+**Next payment:**  
+{{ now()->addMonth()->format('F j, Y') }}
+
+**Renews on:**  
+{{ now()->addMonths($subscriptionMonths ?? 12)->format('F j, Y') }}
 @endif
 
 </x-mail::panel>

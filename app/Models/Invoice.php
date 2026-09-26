@@ -20,6 +20,9 @@ class Invoice extends Model
         'ticket_id',
         'stripe_id',
         'checkout_token',
+        'signature_data',
+        'signature_signed_at',
+        'agreement_version',
         'total_amount',
         'status',
         'payment_type',
@@ -31,6 +34,7 @@ class Invoice extends Model
         'payment_type' => PaymentType::class,
         'total_amount' => 'integer',
         'subscription_months' => 'integer',
+        'signature_signed_at' => 'datetime',
     ];
 
     protected static function boot(): void
@@ -77,9 +81,82 @@ class Invoice extends Model
         return $this->payment_type === PaymentType::Subscription;
     }
 
+    public function successfulTransaction(): ?\App\Models\Transaction
+    {
+        return $this->transactions()
+            ->where('status', \App\Enums\TransactionStatus::Succeeded)
+            ->orderByDesc('created_at')
+            ->first();
+    }
+
     public function isPaid(): bool
     {
         return $this->status === InvoiceStatus::Paid;
+    }
+
+    public function stripeProcessingFeeInCents(): int
+    {
+        $fee = (int) ($this->successfulTransaction()?->processing_fee ?? 0);
+
+        if ($fee === 0 && $this->total_amount > 0) {
+            // Estimate standard Stripe fee: 2.9% + 30 cents, represented as negative
+            $fee = -(int) round(($this->total_amount * 0.029) + 30);
+        }
+
+        return $fee;
+    }
+
+    public function netAmountInCents(): int
+    {
+        return max((int) $this->total_amount + (int) $this->stripeProcessingFeeInCents(), 0);
+    }
+
+    public function pabloCommissionInCents(): int
+    {
+        $gross = (int) $this->total_amount;
+        $rate = $gross < 200000 ? 0.10 : 0.15;
+
+        return (int) round($gross * $rate);
+    }
+
+    public function teamShareAfterPabloInCents(): int
+    {
+        return max($this->netAmountInCents() - $this->pabloCommissionInCents(), 0);
+    }
+
+    public function ownerShareInCents(): int
+    {
+        return (int) round($this->teamShareAfterPabloInCents() / 2);
+    }
+
+    public function partnerShareInCents(): int
+    {
+        return max($this->teamShareAfterPabloInCents() - $this->ownerShareInCents(), 0);
+    }
+
+    public function recurringDurationMonths(): int
+    {
+        return max(1, (int) ($this->subscription_months ?? ($this->hasRecurringAddons() ? 12 : 1)));
+    }
+
+    public function recurringChargeStartedAt(): \Illuminate\Support\Carbon
+    {
+        return \Illuminate\Support\Carbon::parse($this->created_at ?? now());
+    }
+
+    public function recurringChargeNextDueAt(): \Illuminate\Support\Carbon
+    {
+        return $this->recurringChargeStartedAt()->addMonth();
+    }
+
+    public function recurringChargeExpiresAt(): \Illuminate\Support\Carbon
+    {
+        return $this->recurringChargeStartedAt()->addMonths($this->recurringDurationMonths());
+    }
+
+    public function hasRecurringBilling(): bool
+    {
+        return $this->isSubscription() || $this->hasRecurringAddons();
     }
 
     public function hasCompletedTwelveMonthMinimum(): bool
@@ -94,6 +171,18 @@ class Invoice extends Model
             ->where('is_subscription', true)
             ->whereNotNull('stripe_price_id')
             ->exists();
+    }
+
+    public function requiresSignature(): bool
+    {
+        return $this->payment_type === PaymentType::Subscription
+            || $this->items()->where('is_subscription', true)->exists();
+    }
+
+    public function hasSignedAgreement(): bool
+    {
+        return ! empty($this->signature_data)
+            && ! empty($this->signature_signed_at);
     }
 
     /**
@@ -136,6 +225,58 @@ class Invoice extends Model
     public function monthlyRecurringAmountInDollars(): float
     {
         return $this->monthlyRecurringAmountInCents() / 100;
+    }
+
+    public function estimatedMonthlyStripeFeeInCents(): int
+    {
+        $amount = $this->monthlyRecurringAmountInCents();
+        if ($amount === 0) {
+            return 0;
+        }
+
+        // Standard Stripe fee: 2.9% + 30 cents. Represented as negative to match initial processing fee format.
+        $fee = ($amount * 0.029) + 30;
+        return -(int) round($fee);
+    }
+
+    public function monthlyNetAmountInCents(): int
+    {
+        return max($this->monthlyRecurringAmountInCents() + $this->estimatedMonthlyStripeFeeInCents(), 0);
+    }
+
+    public function monthlyPabloCommissionInCents(): int
+    {
+        $gross = $this->monthlyRecurringAmountInCents();
+        $rate = $gross < 200000 ? 0.10 : 0.15;
+
+        return (int) round($gross * $rate);
+    }
+
+    public function monthlyTeamShareAfterPabloInCents(): int
+    {
+        return max($this->monthlyNetAmountInCents() - $this->monthlyPabloCommissionInCents(), 0);
+    }
+
+    public function monthlyOwnerShareInCents(): int
+    {
+        return (int) round($this->monthlyTeamShareAfterPabloInCents() / 2);
+    }
+
+    public function monthlyPartnerShareInCents(): int
+    {
+        return max($this->monthlyTeamShareAfterPabloInCents() - $this->monthlyOwnerShareInCents(), 0);
+    }
+
+    public function nextBillingDate(): \Illuminate\Support\Carbon
+    {
+        return \Illuminate\Support\Carbon::parse($this->created_at ?? now())->addMonth();
+    }
+
+    public function renewalDate(): \Illuminate\Support\Carbon
+    {
+        $months = max(1, (int) ($this->subscription_months ?? 12));
+
+        return \Illuminate\Support\Carbon::parse($this->created_at ?? now())->addMonths($months);
     }
 
     /**

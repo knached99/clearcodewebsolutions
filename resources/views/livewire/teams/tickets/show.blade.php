@@ -1104,37 +1104,130 @@
                                 </p>
 
                                 <div class="space-y-3 mt-4">
-                                    <div
-                                        class="text-xs font-semibold text-green-800 dark:text-green-300 uppercase tracking-wider">
-                                        Services Billed:</div>
+                                    <div class="text-xs font-semibold text-green-800 dark:text-green-300 uppercase tracking-wider">
+                                        Services Billed
+                                    </div>
                                     <ul class="space-y-2 text-sm text-green-800 dark:text-green-200">
                                         @foreach ($ticket->invoice->items as $item)
-                                            <li class="flex justify-between">
-                                                <span>{{ $item->description }}</span>
-                                                <span
-                                                    class="font-medium">${{ number_format($item->amount / 100, 2) }}</span>
+                                            <li class="flex justify-between items-start gap-4">
+                                                <div class="flex flex-col">
+                                                    <span>{{ $item->description }}</span>
+                                                    @if ($item->is_subscription)
+                                                        <span class="text-[10px] font-bold text-green-700 bg-green-200/50 dark:text-green-300 dark:bg-green-800/50 px-1.5 py-0.5 rounded w-fit mt-1">Recurring Monthly</span>
+                                                    @endif
+                                                </div>
+                                                <span class="font-medium whitespace-nowrap">${{ number_format($item->amount / 100, 2) }}</span>
                                             </li>
                                         @endforeach
                                     </ul>
-                                    <div
-                                        class="border-t border-green-200 dark:border-green-800 pt-2 flex justify-between font-bold text-green-900 dark:text-green-100">
-                                        <span>Total Paid</span>
+                                    <div class="border-t border-green-200 dark:border-green-800 pt-2 flex justify-between font-bold text-green-900 dark:text-green-100">
+                                        <span>Total Billed Today</span>
                                         <span>${{ number_format($ticket->invoice->total_amount / 100, 2) }}</span>
                                     </div>
 
                                     @php
-                                        $transaction = $ticket->invoice->transactions
-                                            ->where('status', \App\Enums\TransactionStatus::Succeeded)
-                                            ->first();
+                                        $invoice = $ticket->invoice;
+                                        $transaction = $invoice->successfulTransaction();
                                     @endphp
+
+                                    <div class="mt-4 space-y-2 border-t border-green-200 dark:border-green-800 pt-3 text-xs text-green-700 dark:text-green-300">
+                                        <div class="font-semibold text-green-900 dark:text-green-100 mb-2">Initial Payment Breakdown</div>
+                                        <div class="flex justify-between gap-3">
+                                            <span>Gross</span>
+                                            <span>${{ number_format($invoice->total_amount / 100, 2) }}</span>
+                                        </div>
+                                        <div class="flex justify-between gap-3">
+                                            <span>Stripe fees</span>
+                                            <span>${{ number_format($invoice->stripeProcessingFeeInCents() / 100, 2) }}</span>
+                                        </div>
+                                        <div class="flex justify-between gap-3 font-semibold text-green-900 dark:text-green-100">
+                                            <span>Net profit</span>
+                                            <span>${{ number_format($invoice->netAmountInCents() / 100, 2) }}</span>
+                                        </div>
+                                        <div class="flex justify-between gap-3">
+                                            <span>Pablo commission - {{number_format($invoice->total_amount > 0 ? ($invoice->pabloCommissionInCents() / $invoice->total_amount) * 100 : 0, 0)}}%</span>
+                                            <span>
+                                             ${{number_format($invoice->pabloCommissionInCents() / 100, 2)}}
+                                            
+                                            </span>
+                                        </div>
+                                        <div class="flex justify-between gap-3">
+                                            <span>Owner share</span>
+                                            <span>${{ number_format($invoice->ownerShareInCents() / 100, 2) }}</span>
+                                        </div>
+                                        <div class="flex justify-between gap-3">
+                                            <span>Partner share</span>
+                                            <span>${{ number_format($invoice->partnerShareInCents() / 100, 2) }}</span>
+                                        </div>
+                                    </div>
+
+                                    @if ($invoice->hasRecurringBilling())
+                                        <div class="mt-4 space-y-2 border-t border-green-200 dark:border-green-800 pt-3 text-xs text-green-700 dark:text-green-300">
+                                            <div class="font-semibold text-green-900 dark:text-green-100 mb-2">Monthly Recurring Breakdown</div>
+                                            <div class="flex justify-between gap-3">
+                                                <span>Gross (Monthly)</span>
+                                                <span>${{ number_format($invoice->monthlyRecurringAmountInCents() / 100, 2) }}</span>
+                                            </div>
+                                            <div class="flex justify-between gap-3">
+                                                <span>Stripe fees (Est.)</span>
+                                                <span>${{ number_format($invoice->estimatedMonthlyStripeFeeInCents() / 100, 2) }}</span>
+                                            </div>
+                                            <div class="flex justify-between gap-3 font-semibold text-green-900 dark:text-green-100">
+                                                <span>Net profit</span>
+                                                <span>${{ number_format($invoice->monthlyNetAmountInCents() / 100, 2) }}</span>
+                                            </div>
+                                            <div class="flex justify-between gap-3">
+                                                <span>Pablo commission</span>
+                                                <span>${{ number_format($invoice->monthlyPabloCommissionInCents() / 100, 2) }}</span>
+                                            </div>
+                                            <div class="flex justify-between gap-3">
+                                                <span>Owner share</span>
+                                                <span>${{ number_format($invoice->monthlyOwnerShareInCents() / 100, 2) }}</span>
+                                            </div>
+                                            <div class="flex justify-between gap-3">
+                                                <span>Partner share</span>
+                                                <span>${{ number_format($invoice->monthlyPartnerShareInCents() / 100, 2) }}</span>
+                                            </div>
+                                            
+                                            <div class="mt-2 pt-2 border-t border-green-200/50 dark:border-green-800/50">
+                                                <div class="flex justify-between items-center gap-3 mt-1 mb-2 text-[10.5px] uppercase tracking-wider font-bold text-green-800 dark:text-green-300 bg-green-200/40 dark:bg-green-800/40 px-2 py-1 rounded">
+                                                    <span>Billing Status</span>
+                                                    <span class="flex items-center gap-1">
+                                                        <span class="size-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                                                        Active (Stripe Auto-Pay)
+                                                    </span>
+                                                </div>
+                                                <div class="flex justify-between gap-3 mt-1">
+                                                    <span>Recurring Term</span>
+                                                    <span>{{ $invoice->subscription_months ?? 12 }} months minimum</span>
+                                                </div>
+                                                <div class="flex justify-between gap-3 mt-1">
+                                                    <span>Next payment</span>
+                                                    <span>{{ $invoice->recurringChargeNextDueAt()->format('M j, Y') }}</span>
+                                                </div>
+                                                <div class="flex justify-between gap-3 mt-1">
+                                                    <span>Renews / expires</span>
+                                                    <span>{{ $invoice->recurringChargeExpiresAt()->format('M j, Y') }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+
                                     @if ($transaction)
-                                        <div
-                                            class="mt-4 pt-3 border-t border-green-200 dark:border-green-800 text-xs text-green-700 dark:text-green-300">
-                                            Paid via
-                                            {{ ucfirst($transaction->brand ?? $transaction->payment_method_type) }}
-                                            @if ($transaction->last4)
-                                                ending in •••• {{ $transaction->last4 }}
-                                            @endif
+                                        <div class="mt-4 pt-3 border-t border-green-200 dark:border-green-800 text-xs text-green-700 dark:text-green-300 space-y-1">
+                                            <div class="flex justify-between gap-3">
+                                                <span>Paid on</span>
+                                                <span>{{ $transaction->created_at?->format('M j, Y g:i A') ?? '—' }}</span>
+                                            </div>
+                                            <div class="flex justify-between gap-3">
+                                                <span>Payment method</span>
+                                                <span>
+                                                    {{ ucfirst($transaction->brand ?? $transaction->payment_method_type) }}
+                                                    @if ($transaction->last4)
+                                                        •••• {{ $transaction->last4 }}
+                                                    @endif
+                                                </span>
+                                            </div>
                                         </div>
                                     @endif
                                 </div>

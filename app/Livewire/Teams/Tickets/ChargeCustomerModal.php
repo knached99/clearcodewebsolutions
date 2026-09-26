@@ -83,6 +83,22 @@ class ChargeCustomerModal extends Component
         return $this->baseAmountInCents() + $this->addonsMonthlyAmountInCents();
     }
 
+    public function hasRecurringInvoiceItems(): bool
+    {
+        if ($this->isSubscription) {
+            return true;
+        }
+
+        return ! empty($this->selectedAddonPriceIds);
+    }
+
+    public function resolveInvoicePaymentType(): PaymentType
+    {
+        return $this->hasRecurringInvoiceItems()
+            ? PaymentType::Subscription
+            : PaymentType::OneTime;
+    }
+
     #[Computed]
     public function monthlyRecurringAmountInCents(): int
     {
@@ -134,22 +150,21 @@ class ChargeCustomerModal extends Component
                 return;
             }
 
+            $invoicePaymentType = $this->resolveInvoicePaymentType();
             $invoice = new Invoice();
             $invoice->ticket_id = $this->ticket->id;
             $invoice->customer_id = $customer->id ?? null;
             $invoice->checkout_token = \Illuminate\Support\Str::random(32);
             $invoice->total_amount = $this->totalAmountInCents;
-            $invoice->payment_type = $this->isSubscription
-                ? PaymentType::Subscription
-                : PaymentType::OneTime;
-            $invoice->subscription_months = $this->isSubscription ? 12 : null;
+            $invoice->payment_type = $invoicePaymentType;
+            $invoice->subscription_months = $invoicePaymentType === PaymentType::Subscription ? 12 : null;
             $invoice->save();
 
             $invoice->items()->create([
                 'description' => $this->description.
-                    ($this->isSubscription ? ' (Monthly - 12 Mo. Minimum)' : ''),
+                    ($invoicePaymentType === PaymentType::Subscription ? ' (Monthly - 12 Mo. Minimum)' : ''),
                 'amount' => $this->baseAmountInCents,
-                'is_subscription' => $this->isSubscription,
+                'is_subscription' => $invoicePaymentType === PaymentType::Subscription,
                 'stripe_price_id' => null,
             ]);
 
@@ -166,8 +181,8 @@ class ChargeCustomerModal extends Component
                 $invoice->items()->create([
                     'description' => $addons[$priceId]['name'],
                     'amount' => $addons[$priceId]['price_in_cents'],
-                    'is_subscription' => $this->isSubscription,
-                    'stripe_price_id' => $this->isSubscription ? $priceId : null,
+                    'is_subscription' => $invoicePaymentType === PaymentType::Subscription,
+                    'stripe_price_id' => $invoicePaymentType === PaymentType::Subscription ? $priceId : null,
                 ]);
             }
 
@@ -182,6 +197,7 @@ class ChargeCustomerModal extends Component
                 selectedAddons: $selectedAddonDetails,
                 totalAmountInCents: $this->totalAmountInCents,
                 monthlyRecurringAmountInCents: $this->monthlyRecurringAmountInCents,
+                subscriptionMonths: $this->isSubscription ? 12 : null,
             ));
 
             session()->flash('success', 'Checkout link generated and emailed successfully.');

@@ -23,7 +23,7 @@ Thank you for your payment. Your transaction has been successfully completed and
 
 @foreach ($invoice->items as $item)
 **{{ $item->description ?? $item->name ?? 'Item' }}**  
-${{ number_format($item->amountInDollars(), 2) }}@if ($item->is_subscription) / month @endif
+${{ number_format($item->amountInDollars(), 2) }}@if ($item->is_subscription) / month x{{ $invoice->subscription_months ?? 12 }} @endif
 
 @if (!$loop->last)
 
@@ -37,9 +37,13 @@ ${{ number_format($item->amountInDollars(), 2) }}@if ($item->is_subscription) / 
 
 ### Recurring Subscription
 
-**Monthly payment:** ${{ number_format($invoice->monthlyRecurringAmountInDollars(), 2) }} / month
+**Monthly payment:** ${{ number_format($invoice->monthlyRecurringAmountInDollars(), 2) }} / month x{{ $invoice->subscription_months ?? 12 }}
 
-**Minimum term:** 12 months
+**Next payment:** {{ $invoice->nextBillingDate()->format('F j, Y') }}
+
+**Renews on:** {{ $invoice->renewalDate()->format('F j, Y') }}
+
+**Minimum term:** {{ $invoice->subscription_months ?? 12 }} months
 
 Your recurring subscription will continue according to the terms of your agreement.
 

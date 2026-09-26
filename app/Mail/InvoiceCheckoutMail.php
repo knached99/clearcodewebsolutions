@@ -20,7 +20,8 @@ class InvoiceCheckoutMail extends Mailable
         public bool $isSubscription,
         public array $selectedAddons,
         public int $totalAmountInCents,
-        public int $monthlyRecurringAmountInCents
+        public int $monthlyRecurringAmountInCents,
+        public ?int $subscriptionMonths = null,
     ) {}
 
     public function envelope(): Envelope
