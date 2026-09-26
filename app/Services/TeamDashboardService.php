@@ -1393,124 +1393,109 @@ class TeamDashboardService
             return $result;
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Year To Date
-        |--------------------------------------------------------------------------
-        */
+        /**
+ * |--------------------------------------------------------------------------
+ * | Year To Date
+ * |--------------------------------------------------------------------------
+ */
+if ($filter === 'ytd') {
+    $start = now()->startOfYear();
+    $now = now();
 
-        if ($filter === 'ytd') {
-            $start = now()
-                ->copy()
-                ->startOfYear();
+    $months = collect();
 
-            $months = collect();
+    Log::debug('TeamDashboardService: monthlyRevenue YTD grouping', [
+        'start' => $start->toDateTimeString(),
+        'now' => $now->toDateTimeString(),
+        'transaction_count' => $successfulTransactions->count(),
+    ]);
 
-            Log::debug(
-                'TeamDashboardService: monthlyRevenue YTD grouping',
+    $stepStartedAt = microtime(true);
+
+    // Group successful transactions by year-month.
+    $grouped = $successfulTransactions->groupBy(function ($transaction) {
+        return $transaction->created_at
+            ?->format('Y-m');
+    });
+
+    $this->logComplete(
+        'monthlyRevenue YTD groupBy',
+        $stepStartedAt,
+        [
+            'group_count' => $grouped->count(),
+            'grouped_keys' => $grouped->keys()->values()->all(),
+        ]
+    );
+
+    /*
+     * Build one entry for every month from January
+     * through the current month.
+     *
+     * We create a new Carbon instance on every iteration
+     * so that the date cannot be accidentally reused/mutated.
+     */
+    $current = $start->copy()->startOfMonth();
+
+    $iteration = 0;
+
+    while ($current->lte($now)) {
+        $iteration++;
+
+        if ($iteration > 24) {
+            Log::critical(
+                'TeamDashboardService: monthlyRevenue YTD safety break triggered',
                 [
-                    'start' =>
-                        $start->toDateTimeString(),
-
-                    'now' =>
-                        now()->toDateTimeString(),
-
-                    'transaction_count' =>
-                        $successfulTransactions->count(),
+                    'current' => $current->toDateTimeString(),
+                    'now' => $now->toDateTimeString(),
+                    'iterations' => $iteration,
                 ]
             );
 
-            $stepStartedAt = microtime(true);
-
-            $grouped = $successfulTransactions
-                ->groupBy(
-                    function ($transaction) {
-                        return $transaction
-                            ->created_at
-                            ?->format('Y-m');
-                    }
-                );
-
-            $this->logComplete(
-                'monthlyRevenue YTD groupBy',
-                $stepStartedAt,
-                [
-                    'group_count' =>
-                        $grouped->count(),
-                ]
-            );
-
-            $current = $start
-                ->copy()
-                ->startOfMonth();
-
-            $now = now();
-
-            $iteration = 0;
-
-            while (
-                $current->lessThanOrEqualTo(
-                    $now
-                )
-            ) {
-                $iteration++;
-
-                if ($iteration > 24) {
-                    Log::critical(
-                        'TeamDashboardService: monthlyRevenue YTD safety break triggered',
-                        [
-                            'current' =>
-                                $current->toDateTimeString(),
-
-                            'now' =>
-                                $now->toDateTimeString(),
-
-                            'iterations' =>
-                                $iteration,
-                        ]
-                    );
-
-                    break;
-                }
-
-                Log::debug(
-                    'TeamDashboardService: monthlyRevenue YTD month',
-                    [
-                        'iteration' => $iteration,
-                        'month' =>
-                            $current->format('Y-m'),
-                    ]
-                );
-
-                $monthKey =
-                    $current->format('Y-m');
-
-                $amount = $grouped
-                    ->get($monthKey, collect())
-                    ->sum('amount');
-
-                $months->push([
-                    'month' =>
-                        $current->format('M'),
-
-                    'value' =>
-                        (int) $amount,
-                ]);
-
-                $current->addMonth();
-            }
-
-            $this->logComplete(
-                'monthlyRevenue YTD',
-                $startedAt,
-                [
-                    'result_count' =>
-                        $months->count(),
-                ]
-            );
-
-            return $months;
+            break;
         }
+
+        $monthKey = $current->format('Y-m');
+
+        Log::debug(
+            'TeamDashboardService: monthlyRevenue YTD month',
+            [
+                'iteration' => $iteration,
+                'month_key' => $monthKey,
+                'month_label' => $current->format('M'),
+            ]
+        );
+
+        $amount = $grouped
+            ->get($monthKey, collect())
+            ->sum('amount');
+
+        $months->push([
+            // Display label: Jan, Feb, Mar, etc.
+            'month' => $current->format('M'),
+
+            // Unique month identifier: 2026-01, 2026-02, etc.
+            'month_key' => $monthKey,
+
+            // Total revenue for that month.
+            'value' => (int) $amount,
+        ]);
+
+        // IMPORTANT:
+        // Use a fresh Carbon copy for the next iteration.
+        $current = $current->copy()->addMonth()->startOfMonth();
+    }
+
+    $this->logComplete(
+        'monthlyRevenue YTD',
+        $startedAt,
+        [
+            'result_count' => $months->count(),
+            'months' => $months->all(),
+        ]
+    );
+
+    return $months;
+}
 
         /*
         |--------------------------------------------------------------------------
