@@ -75,6 +75,10 @@ class StripeWebhookController extends Controller
             case 'payment_intent.payment_failed':
                 $this->handleInvoicePaymentFailed($eventPayload);
                 break;
+
+            case 'payment_intent.succeeded':
+            $this->handlePaymentIntentSucceeded($eventPayload);
+            break;
         }
 
         return response('Webhook handled', 200);
@@ -155,6 +159,16 @@ class StripeWebhookController extends Controller
     {
         $invoiceId = $invoiceObject->metadata->invoice_id ?? null;
         $invoice = $invoiceId ? Invoice::find($invoiceId) : null;
+
+         Log::info('Stripe invoice.payment_succeeded received.', [
+        'stripe_invoice_id' => $invoiceObject->id ?? null,
+        'metadata' => isset($invoiceObject->metadata)
+            ? (array) $invoiceObject->metadata
+            : [],
+        'customer' => $invoiceObject->customer ?? null,
+        'customer_email' => $invoiceObject->customer_email ?? null,
+        'payment_intent' => $invoiceObject->payment_intent ?? null,
+    ]);
 
         if (! $invoice && ! empty($invoiceObject->customer ?? null)) {
             $customer = \App\Models\Customer::query()
@@ -405,4 +419,40 @@ class StripeWebhookController extends Controller
             return null;
         }
     }
+
+    protected function handlePaymentIntentSucceeded(object $paymentIntent): void
+{
+    $invoiceId = data_get(
+        $paymentIntent,
+        'metadata.invoice_id'
+    );
+
+    if (! $invoiceId) {
+        Log::warning('Stripe PaymentIntent succeeded without invoice_id metadata.', [
+            'payment_intent_id' => $paymentIntent->id ?? null,
+        ]);
+
+        return;
+    }
+
+    $invoice = Invoice::find($invoiceId);
+
+    if (! $invoice) {
+        Log::warning('Local invoice not found for successful PaymentIntent.', [
+            'invoice_id' => $invoiceId,
+            'payment_intent_id' => $paymentIntent->id ?? null,
+        ]);
+
+        return;
+    }
+
+    $invoice->status = InvoiceStatus::Paid;
+
+    $invoice->save();
+
+    Log::info('Invoice marked paid from successful Stripe PaymentIntent.', [
+        'invoice_id' => $invoice->id,
+        'payment_intent_id' => $paymentIntent->id ?? null,
+    ]);
+}
 }

@@ -11,8 +11,6 @@ class TestSubscriptionBillingCommand extends Command
 {
     /**
      * The name and signature of the console command.
-     *
-     * @var string
      */
     protected $signature = 'app:test-subscription-billing
                             {--customer-email=customer@example.com : Customer email to use for the test invoice}
@@ -21,8 +19,6 @@ class TestSubscriptionBillingCommand extends Command
 
     /**
      * The console command description.
-     *
-     * @var string
      */
     protected $description = 'Create a sample subscription invoice and print the 12-month billing totals for validation.';
 
@@ -32,8 +28,15 @@ class TestSubscriptionBillingCommand extends Command
     public function handle(): int
     {
         $email = trim((string) $this->option('customer-email')) ?: 'customer@example.com';
-        $baseAmount = max(0, (int) $this->option('base-amount'));
-        $addonAmounts = $this->parseAddonAmounts($this->option('addon-amounts'));
+
+        $baseAmount = max(
+            0,
+            (int) $this->option('base-amount')
+        );
+
+        $addonAmounts = $this->parseAddonAmounts(
+            (string) $this->option('addon-amounts')
+        );
 
         $customer = Customer::firstOrCreate(
             ['email' => $email],
@@ -43,7 +46,7 @@ class TestSubscriptionBillingCommand extends Command
         $invoice = Invoice::create([
             'customer_id' => $customer->id,
             'ticket_id' => null,
-            'checkout_token' => 'test-'.bin2hex(random_bytes(10)),
+            'checkout_token' => 'test-' . bin2hex(random_bytes(10)),
             'total_amount' => $baseAmount + array_sum($addonAmounts),
             'status' => 'paid',
             'payment_type' => PaymentType::Subscription,
@@ -61,43 +64,99 @@ class TestSubscriptionBillingCommand extends Command
 
         foreach ($addonAmounts as $index => $addonAmount) {
             $invoice->items()->create([
-                'description' => "Addon {$index + 1}",
+                'description' => 'Addon ' . ($index + 1),
                 'amount' => $addonAmount,
                 'is_subscription' => true,
-                'stripe_price_id' => "price_addon_{$index + 1}_test",
+                'stripe_price_id' => 'price_addon_' . ($index + 1) . '_test',
             ]);
         }
+
+        $invoice->refresh();
 
         $monthlyRecurring = $invoice->monthlyRecurringAmountInCents();
         $twelveMonthMinimum = $invoice->estimated12MonthValueInCents();
         $hasAddons = $invoice->hasRecurringAddons();
+        $hasCompletedMinimum = $invoice->hasCompletedTwelveMonthMinimum();
+
+        $this->newLine();
+
+        $this->info('Subscription billing test created successfully.');
+
+        $this->newLine();
 
         $this->table(
             ['Metric', 'Value'],
             [
-                ['Monthly recurring', '$'.number_format($monthlyRecurring / 100, 2)],
-                ['12-month minimum total', '$'.number_format($twelveMonthMinimum / 100, 2)],
-                ['Has recurring addons', $hasAddons ? 'yes' : 'no'],
-                ['Has completed 12-month minimum', $invoice->hasCompletedTwelveMonthMinimum() ? 'yes' : 'no'],
+                [
+                    'Invoice ID',
+                    $invoice->id,
+                ],
+                [
+                    'Customer',
+                    $customer->email,
+                ],
+                [
+                    'Subscription items',
+                    (string) $invoice->items()->count(),
+                ],
+                [
+                    'Monthly recurring',
+                    '$' . number_format($monthlyRecurring / 100, 2),
+                ],
+                [
+                    '12-month minimum total',
+                    '$' . number_format($twelveMonthMinimum / 100, 2),
+                ],
+                [
+                    'Has recurring addons',
+                    $hasAddons ? 'yes' : 'no',
+                ],
+                [
+                    'Has completed 12-month minimum',
+                    $hasCompletedMinimum ? 'yes' : 'no',
+                ],
             ]
         );
 
-        $this->info('Invoice ID: '.$invoice->id);
-        $this->info('Customer: '.$customer->email);
-        $this->info('Subscription items: '.$invoice->items()->count());
+        $this->newLine();
+
+        if (!$hasCompletedMinimum) {
+            $this->error(
+                'The invoice does not meet the 12-month minimum requirement.'
+            );
+
+            return self::FAILURE;
+        }
+
+        $this->info(
+            '12-month minimum requirement: PASS'
+        );
 
         return self::SUCCESS;
     }
 
+    /**
+     * Parse comma-separated addon amounts.
+     */
     protected function parseAddonAmounts(string $input): array
     {
         if (trim($input) === '') {
             return [];
         }
 
-        return array_values(array_filter(
-            array_map(fn ($value) => max(0, (int) trim((string) $value)), explode(',', $input)),
-            fn ($value) => $value > 0
-        ));
+        $values = array_map(
+            fn ($value) => max(
+                0,
+                (int) trim((string) $value)
+            ),
+            explode(',', $input)
+        );
+
+        return array_values(
+            array_filter(
+                $values,
+                fn ($value) => $value > 0
+            )
+        );
     }
 }

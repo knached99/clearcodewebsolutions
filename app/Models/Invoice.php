@@ -114,7 +114,7 @@ class Invoice extends Model
     public function pabloCommissionInCents(): int
     {
         $gross = (int) $this->total_amount;
-        $rate = $gross < 200000 ? 0.10 : 0.15;
+        $rate = $gross < 200000 ? 0.10 : 0.20;
 
         return (int) round($gross * $rate);
     }
@@ -247,7 +247,7 @@ class Invoice extends Model
     public function monthlyPabloCommissionInCents(): int
     {
         $gross = $this->monthlyRecurringAmountInCents();
-        $rate = $gross < 200000 ? 0.10 : 0.15;
+        $rate = $gross < 200000 ? 0.10 : 0.20;
 
         return (int) round($gross * $rate);
     }

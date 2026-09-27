@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('invoices', function (Blueprint $table) {
-            $table->text('signature_data')->nullable()->after('checkout_token');
+            $table->longText('signature_data')->nullable()->after('checkout_token');
             $table->timestamp('signature_signed_at')->nullable()->after('signature_data');
             $table->string('agreement_version')->nullable()->after('signature_signed_at');
         });

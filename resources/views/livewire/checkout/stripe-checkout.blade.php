@@ -1,1469 +1,1440 @@
-﻿<div class="cc-checkout">
-    @assets
-        <script src="https://js.stripe.com/v3/" defer></script>
-    @endassets
+﻿@assets
+    <script src="https://js.stripe.com/v3/"></script>
+@endassets
 
+<div class="cc-checkout">
     <style>
-    html,
-    body {
-        margin: 0 !important;
-        padding: 0 !important;
-        width: 100%;
-        min-height: 100%;
-        background: #0d0a11 !important;
-        color: #f5eef8 !important;
-    }
-
-    body {
-        min-height: 100vh;
-    }
-
-    #root,
-    #__next,
-    main {
-        min-height: 100vh;
-        background: #0d0a11 !important;
-    }
-
-    .cc-checkout {
-        background: #0d0a11;
-        min-height: 100vh;
-        border-radius: 24px;
-        width: 100%;
-        max-width: 1100px;
-        margin: 0 auto;
-        padding: 76px 20px 56px;
-        color: #f5eef8;
-        font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        box-sizing: border-box;
-    }
-
-    .cc-checkout * {
-        box-sizing: border-box;
-    }
-
-    .cc-checkout__header {
-        margin-top: 0;
-        margin-bottom: 24px;
-        padding: 14px 2px 0;
-        border-top: 1px solid #2a2230;
-    }
-
-    .cc-checkout__title {
-        margin: 0 0 6px;
-        font-size: 29px;
-        line-height: 1.15;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-    }
-
-    .cc-checkout__subtitle {
-        margin: 0;
-        max-width: 620px;
-        color: #a99bad;
-        font-size: 14px;
-        line-height: 1.6;
-    }
-
-    .cc-checkout__layout {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
-        gap: 22px;
-        align-items: start;
-    }
-
-    .cc-checkout__card {
-        min-width: 0;
-        background: #17121c;
-        border: 1px solid #2b2332;
-        border-radius: 20px;
-        padding: 22px;
-        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.28);
-    }
-
-    .cc-checkout__section {
-        margin-bottom: 22px;
-    }
-
-    .cc-checkout__section:last-child {
-        margin-bottom: 0;
-    }
-
-    .cc-checkout__section-title {
-        margin: 0 0 13px;
-        font-size: 17px;
-        line-height: 1.3;
-        font-weight: 700;
-    }
-
-    .cc-checkout__payment-heading {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 14px;
-        margin-bottom: 12px;
-    }
-
-    .cc-checkout__payment-heading .cc-checkout__section-title {
-        margin-bottom: 3px;
-    }
-
-    .cc-checkout__payment-hint {
-        margin: 0;
-        color: #978b9c;
-        font-size: 12px;
-        line-height: 1.45;
-    }
-
-    .cc-checkout__payment-badge {
-        flex: 0 0 auto;
-        padding: 5px 9px;
-        border: 1px solid #382c3f;
-        border-radius: 999px;
-        background: #201826;
-        color: #c88cc9;
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: .02em;
-        text-transform: uppercase;
-    }
-
-    .cc-checkout__billing-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        gap: 14px;
-    }
-
-    .cc-checkout__field {
-        margin-bottom: 0;
-    }
-
-    .cc-checkout__field:last-child {
-        margin-bottom: 0;
-    }
-
-    .cc-checkout__agreement {
-        padding: 18px;
-        border: 1px solid #2e2437;
-        border-radius: 18px;
-        background: rgba(23, 18, 28, 0.9);
-    }
-
-    .cc-checkout__agreement h2 {
-        margin: 0 0 12px;
-        font-size: 20px;
-        line-height: 1.3;
-    }
-
-    .cc-checkout__agreement-copy {
-        margin: 0 0 16px;
-        color: #b7aabc;
-        font-size: 14px;
-        line-height: 1.7;
-    }
-
-    .cc-checkout__agreement-document {
-        margin-bottom: 16px;
-        padding: 16px;
-        border: 1px solid #352b39;
-        border-radius: 12px;
-        background: rgba(12, 9, 16, 0.6);
-        color: #e7dff1;
-        font-size: 14px;
-        line-height: 1.7;
-    }
-
-    .cc-checkout__signature-canvas-wrap {
-        position: relative;
-        margin-top: 12px;
-        border: 1px solid #3a3042;
-        border-radius: 12px;
-        background: #120e16;
-        overflow: hidden;
-    }
-
-    .cc-checkout__signature-canvas {
-        display: block;
-        width: 100%;
-        height: 180px;
-        cursor: crosshair;
-        background: #120e16;
-    }
-
-    .cc-checkout__signature-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        margin-top: 14px;
-    }
-
-    .cc-checkout__secondary-btn,
-    .cc-checkout__primary-btn {
-        min-height: 42px;
-        padding: 0 16px;
-        border-radius: 12px;
-        font-size: 14px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: opacity 0.15s ease, transform 0.15s ease;
-    }
-
-    .cc-checkout__secondary-btn {
-        border: 1px solid #3a3042;
-        background: transparent;
-        color: #f5eef8;
-    }
-
-    .cc-checkout__primary-btn {
-        border: 0;
-        background: linear-gradient(135deg, #b247b2, #7c3aed);
-        color: #fff;
-    }
-
-    .cc-checkout__primary-btn:hover,
-    .cc-checkout__secondary-btn:hover {
-        transform: translateY(-1px);
-    }
-
-    .cc-checkout__label {
-        display: block;
-        margin-bottom: 6px;
-        font-size: 14px;
-        font-weight: 600;
-        line-height: 1.4;
-    }
-
-    .cc-checkout__input {
-        display: block;
-        width: 100%;
-        min-height: 46px;
-        padding: 10px 13px;
-        border: 1px solid #3a3042;
-        border-radius: 12px;
-        background: #17121c;
-        color: #f5eef8;
-        font-size: 15px;
-        line-height: 1.4;
-        outline: none;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    }
-
-    .cc-checkout__input::placeholder {
-        color: #716575;
-    }
-
-    .cc-checkout__input:focus {
-        border-color: #b247b2;
-        box-shadow: 0 0 0 3px rgba(178, 71, 178, 0.20);
-    }
-
-    .cc-checkout__error {
-        margin-top: 7px;
-        color: #ff8b8b;
-        font-size: 13px;
-        line-height: 1.45;
-    }
-
-    .cc-checkout__status {
-        margin-bottom: 11px;
-        padding: 9px 11px;
-        border: 1px solid #332a3a;
-        border-radius: 12px;
-        background: #211a27;
-        color: #a99bad;
-        font-size: 13px;
-        line-height: 1.5;
-    }
-
-    .cc-checkout__status--error {
-        background: #211a27;
-        border-color: #332a3a;
-        color: #a99bad;
-    }
-
-    .cc-checkout__status--success {
-        background: #16261c;
-        border-color: #2e5a3b;
-        color: #8bd19b;
-    }
-
-    .cc-checkout__status--pending {
-        background: #2a2418;
-        border-color: #5a4a2b;
-        color: #e2c477;
-    }
-
-    .cc-checkout__stripe-box {
-        width: 100%;
-        padding: 12px;
-        background: #120e16;
-        border: 1px solid #302738;
-        border-radius: 16px;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
-    }
-
-    .cc-checkout__stripe-loading {
-        min-height: 150px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #a99bad;
-        font-size: 14px;
-        text-align: center;
-    }
-
-    .cc-checkout__stripe-form {
-        width: 100%;
-    }
-
-    #payment-element {
-        width: 100%;
-        min-height: 125px;
-    }
-
-    .cc-checkout__pay {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        width: 100%;
-        min-height: 50px;
-        margin-top: 14px;
-        padding: 13px 20px;
-        border: 0;
-        border-radius: 14px;
-        background: #b247b2;
-        color: #fff;
-        font-size: 16px;
-        font-weight: 700;
-        line-height: 1.2;
-        cursor: pointer;
-        transition: opacity 0.15s ease, transform 0.15s ease;
-    }
-
-    .cc-checkout__pay:hover:not(:disabled) {
-        transform: translateY(-1px);
-    }
-
-    .cc-checkout__pay:disabled {
-        opacity: 0.55;
-        cursor: not-allowed;
-        transform: none;
-    }
-
-    .cc-checkout__pay-label,
-    .cc-checkout__pay-loading {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .cc-checkout__secure {
-        margin-top: 10px;
-        color: #a99bad;
-        text-align: center;
-        font-size: 12px;
-        line-height: 1.5;
-    }
-
-    .cc-checkout__items {
-        margin: 0;
-        padding: 0;
-        list-style: none;
-    }
-
-    .cc-checkout__item {
-        display: flex;
-        justify-content: space-between;
-        gap: 16px;
-        padding: 11px 0;
-        border-bottom: 1px solid #2b2332;
-    }
-
-    .cc-checkout__item:first-child {
-        padding-top: 0;
-    }
-
-    .cc-checkout__item:last-child {
-        border-bottom: 0;
-    }
-
-    .cc-checkout__item-name {
-        min-width: 0;
-        font-size: 14px;
-        line-height: 1.5;
-    }
-
-    .cc-checkout__item-quantity {
-        margin-top: 3px;
-        color: #a99bad;
-        font-size: 12px;
-        line-height: 1.4;
-    }
-
-    .cc-checkout__item-price {
-        white-space: nowrap;
-        font-size: 14px;
-        font-weight: 600;
-    }
-
-    .cc-checkout__total {
-        display: flex;
-        justify-content: space-between;
-        gap: 20px;
-        margin-top: 14px;
-        padding-top: 14px;
-        border-top: 1px solid #2b2332;
-        font-size: 20px;
-        line-height: 1.3;
-        font-weight: 700;
-    }
-
-    [hidden] {
-        display: none !important;
-    }
-
-    .cc-checkout__order-card {
-        position: sticky;
-        top: 24px;
-    }
-
-    @media (max-width: 850px) {
         .cc-checkout {
-            padding: 64px 16px 44px;
+            width: 100%;
+            max-width: 980px;
+            margin: 0 auto;
+            color: #f5f2f7;
+            font-family:
+                Inter,
+                ui-sans-serif,
+                system-ui,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+        }
+
+        .cc-checkout__shell {
+            background: #120e14;
+            border: 1px solid #2a2230;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 18px 60px rgba(0, 0, 0, .28);
         }
 
         .cc-checkout__header {
-            margin-top: 30px;
-            margin-bottom: 18px;
+            padding: 28px 30px 24px;
+            border-bottom: 1px solid #2a2230;
+            background:
+                radial-gradient(circle at top right, rgba(208, 139, 212, .10), transparent 35%),
+                #151016;
         }
 
-        .cc-checkout__layout {
-            grid-template-columns: 1fr;
-        }
-
-        .cc-checkout__order-card {
-            position: static;
-        }
-
-        .cc-checkout__payment-heading {
-            align-items: center;
-        }
-    }
-
-    @media (max-width: 620px) {
-        .cc-checkout__billing-grid {
-            grid-template-columns: 1fr;
-            gap: 14px;
-        }
-
-        .cc-checkout__card {
-            padding: 18px;
+        .cc-checkout__eyebrow {
+            margin: 0 0 8px;
+            color: #b9adb9;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
         }
 
         .cc-checkout__title {
-            font-size: 26px;
-        }
-
-        .cc-checkout__stripe-box {
-            padding: 10px;
-        }
-    }
-
-    .cc-checkout__success {
-        position: relative;
-        overflow: hidden;
-        width: 100%;
-        max-width: 720px;
-        margin: 40px auto 0;
-        padding: 56px 42px 48px;
-        background:
-            radial-gradient(
-                circle at 50% 0%,
-                rgba(178, 71, 178, 0.14),
-                transparent 42%
-            ),
-            #17121c;
-        border: 1px solid #2f2637;
-        border-radius: 24px;
-        box-shadow:
-            0 24px 60px rgba(0, 0, 0, 0.35),
-            inset 0 1px 0 rgba(255, 255, 255, 0.03);
-        text-align: center;
-    }
-
-    .cc-checkout__success::before {
-        content: "";
-        position: absolute;
-        top: -90px;
-        left: 50%;
-        width: 260px;
-        height: 260px;
-        transform: translateX(-50%);
-        background: rgba(178, 71, 178, 0.08);
-        filter: blur(60px);
-        pointer-events: none;
-    }
-
-    .cc-checkout__success-icon {
-        position: relative;
-        z-index: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 76px;
-        height: 76px;
-        margin: 0 auto 26px;
-        border: 1px solid rgba(178, 71, 178, 0.35);
-        border-radius: 50%;
-        background:
-            linear-gradient(
-                145deg,
-                rgba(178, 71, 178, 0.18),
-                rgba(178, 71, 178, 0.06)
-            );
-        color: #d477d4;
-        box-shadow:
-            0 0 0 8px rgba(178, 71, 178, 0.05),
-            0 12px 30px rgba(178, 71, 178, 0.12);
-    }
-
-    .cc-checkout__success-icon svg {
-        width: 38px;
-        height: 38px;
-    }
-
-    .cc-checkout__success-content {
-        position: relative;
-        z-index: 1;
-    }
-
-    .cc-checkout__success-eyebrow {
-        display: inline-block;
-        margin-bottom: 10px;
-        color: #c88cc9;
-        font-size: 11px;
-        font-weight: 700;
-        line-height: 1.4;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-    }
-
-    .cc-checkout__success-title {
-        margin: 0;
-        color: #f8f1fa;
-        font-size: 34px;
-        line-height: 1.15;
-        font-weight: 750;
-        letter-spacing: -0.03em;
-    }
-
-    .cc-checkout__success-message {
-        max-width: 560px;
-        margin: 16px auto 0;
-        color: #b7aabc;
-        font-size: 15px;
-        line-height: 1.7;
-    }
-
-    .cc-checkout__success-message strong {
-        color: #f5eef8;
-        font-weight: 700;
-    }
-
-    .cc-checkout__success-email {
-        display: flex;
-        align-items: center;
-        gap: 13px;
-        max-width: 500px;
-        margin: 28px auto 0;
-        padding: 15px 17px;
-        border: 1px solid #34293a;
-        border-radius: 15px;
-        background: rgba(13, 10, 17, 0.55);
-        text-align: left;
-    }
-
-    .cc-checkout__success-email > svg {
-        flex: 0 0 auto;
-        width: 22px;
-        height: 22px;
-        color: #c88cc9;
-    }
-
-    .cc-checkout__success-email > div {
-        min-width: 0;
-    }
-
-    .cc-checkout__success-email-label {
-        display: block;
-        margin-bottom: 3px;
-        color: #827587;
-        font-size: 11px;
-        font-weight: 600;
-        line-height: 1.4;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-    }
-
-    .cc-checkout__success-email strong {
-        display: block;
-        overflow: hidden;
-        color: #eee5f0;
-        font-size: 14px;
-        font-weight: 600;
-        line-height: 1.45;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .cc-checkout__success-note {
-        max-width: 520px;
-        margin: 20px auto 0;
-        color: #8f8294;
-        font-size: 12px;
-        line-height: 1.65;
-    }
-
-    @media (max-width: 620px) {
-        .cc-checkout__success {
-            margin-top: 24px;
-            padding: 42px 22px 34px;
-            border-radius: 20px;
-        }
-
-        .cc-checkout__success-icon {
-            width: 68px;
-            height: 68px;
-            margin-bottom: 22px;
-        }
-
-        .cc-checkout__success-icon svg {
-            width: 34px;
-            height: 34px;
-        }
-
-        .cc-checkout__success-title {
+            margin: 0;
+            color: #ffffff;
             font-size: 28px;
+            line-height: 1.15;
+            font-weight: 800;
         }
 
-        .cc-checkout__success-message {
+        .cc-checkout__subtitle {
+            margin: 9px 0 0;
+            color: #aaa0ad;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .cc-checkout__body {
+            display: grid;
+            grid-template-columns: minmax(0, 1.35fr) minmax(320px, .85fr);
+            gap: 24px;
+            padding: 26px;
+        }
+
+        .cc-checkout__main,
+        .cc-checkout__sidebar {
+            min-width: 0;
+        }
+
+        .cc-checkout__section {
+            margin-bottom: 22px;
+            padding: 20px;
+            border: 1px solid #29222d;
+            border-radius: 14px;
+            background: #171219;
+        }
+
+        .cc-checkout__section:last-child {
+            margin-bottom: 0;
+        }
+
+        .cc-checkout__section-title {
+            margin: 0 0 5px;
+            color: #fff;
+            font-size: 17px;
+            line-height: 1.3;
+            font-weight: 800;
+        }
+
+        .cc-checkout__section-text {
+            margin: 0 0 18px;
+            color: #9f969f;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+
+        .cc-checkout__grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .cc-checkout__field {
+            min-width: 0;
+        }
+
+        .cc-checkout__field--full {
+            grid-column: 1 / -1;
+        }
+
+        .cc-checkout__label {
+            display: block;
+            margin-bottom: 7px;
+            color: #d8d0da;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .cc-checkout__input {
+            width: 100%;
+            height: 46px;
+            padding: 0 13px;
+            border: 1px solid #3b313f;
+            border-radius: 10px;
+            outline: none;
+            background: #0f0b11;
+            color: #fff;
+            font-size: 14px;
+            transition:
+                border-color .15s ease,
+                box-shadow .15s ease;
+        }
+
+        .cc-checkout__input:focus {
+            border-color: #9b5aa0;
+            box-shadow: 0 0 0 3px rgba(155, 90, 160, .12);
+        }
+
+        .cc-checkout__input::placeholder {
+            color: #6f6871;
+        }
+
+        .cc-checkout__items {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .cc-checkout__item {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 13px 14px;
+            border: 1px solid #2c2530;
+            border-radius: 11px;
+            background: #100c12;
+        }
+
+        .cc-checkout__item-info {
+            min-width: 0;
+        }
+
+        .cc-checkout__item-name {
+            margin: 0;
+            color: #f7f4f8;
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        .cc-checkout__item-meta {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .cc-checkout__item-description {
+            margin: 5px 0 0;
+            color: #8f8791;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        .cc-checkout__item-price {
+            flex: 0 0 auto;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .cc-checkout__addon-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 8px;
+            border: 1px solid #4a3150;
+            border-radius: 999px;
+            background: #25192a;
+            color: #d08bd4;
+            font-size: 10px;
+            font-weight: 700;
+            line-height: 1.2;
+            text-transform: uppercase;
+            letter-spacing: .03em;
+            white-space: nowrap;
+        }
+
+        .cc-checkout__addon-badge svg {
+            width: 13px;
+            height: 13px;
+            flex: 0 0 13px;
+        }
+
+        .cc-checkout__summary {
+            display: flex;
+            flex-direction: column;
+            gap: 11px;
+        }
+
+        .cc-checkout__summary-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            color: #aaa1ad;
+            font-size: 13px;
+        }
+
+        .cc-checkout__summary-row strong {
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .cc-checkout__summary-total {
+            margin-top: 6px;
+            padding-top: 15px;
+            border-top: 1px solid #302733;
+        }
+
+        .cc-checkout__summary-total span:first-child {
+            color: #fff;
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .cc-checkout__summary-total strong {
+            color: #fff;
+            font-size: 23px;
+            font-weight: 900;
+        }
+
+        .cc-checkout__agreement {
+            position: relative;
+        }
+
+        .cc-checkout__agreement-copy {
+            margin-bottom: 14px;
+            padding: 14px;
+            border: 1px solid #342937;
+            border-radius: 11px;
+            background: #100c12;
+            color: #aaa1ab;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .cc-checkout__signature {
+            overflow: hidden;
+            border: 1px solid #3b313f;
+            border-radius: 11px;
+            background: #fff;
+        }
+
+        .cc-checkout__signature canvas {
+            display: block;
+            width: 100%;
+            height: 180px;
+            touch-action: none;
+            cursor: crosshair;
+            background: #fff;
+        }
+
+        .cc-checkout__signature-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 9px 11px;
+            border-top: 1px solid #e3dce6;
+            background: #f8f6f9;
+        }
+
+        .cc-checkout__signature-hint {
+            color: #756d79;
+            font-size: 11px;
+        }
+
+        .cc-checkout__button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 44px;
+            padding: 0 15px;
+            border: 0;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            transition:
+                opacity .15s ease,
+                transform .15s ease,
+                background .15s ease;
+        }
+
+        .cc-checkout__button:hover:not(:disabled) {
+            transform: translateY(-1px);
+        }
+
+        .cc-checkout__button:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .cc-checkout__button--primary {
+            background: #b56ab9;
+            color: #fff;
+        }
+
+        .cc-checkout__button--primary:hover:not(:disabled) {
+            background: #c277c5;
+        }
+
+        .cc-checkout__button--secondary {
+            background: #2a222d;
+            color: #ddd4df;
+        }
+
+        .cc-checkout__button--secondary:hover:not(:disabled) {
+            background: #342a37;
+        }
+
+        .cc-checkout__button--pay {
+            width: 100%;
+            margin-top: 14px;
+            min-height: 52px;
             font-size: 14px;
         }
 
-        .cc-checkout__success-email {
-            padding: 14px;
+        .cc-checkout__stripe-box {
+            min-height: 120px;
         }
-    }
+
+        .cc-checkout__stripe-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 96px;
+            color: #8f8792;
+            font-size: 13px;
+        }
+
+        .cc-checkout__stripe-loading[hidden],
+        .cc-checkout__stripe-payment[hidden] {
+            display: none !important;
+        }
+
+        .cc-checkout__stripe-payment {
+            min-height: 100px;
+        }
+
+        #payment-element {
+            width: 100%;
+        }
+
+        .cc-checkout__error {
+            margin-top: 12px;
+            padding: 12px 13px;
+            border: 1px solid #5a3038;
+            border-radius: 10px;
+            background: #261316;
+            color: #f1aeb8;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .cc-checkout__success {
+            padding: 42px 26px;
+            text-align: center;
+        }
+
+        .cc-checkout__success-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 54px;
+            height: 54px;
+            margin-bottom: 15px;
+            border-radius: 50%;
+            background: #213321;
+            color: #8fd48f;
+        }
+
+        .cc-checkout__success h2 {
+            margin: 0;
+            color: #fff;
+            font-size: 25px;
+        }
+
+        .cc-checkout__success p {
+            max-width: 560px;
+            margin: 10px auto 0;
+            color: #a59da8;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .cc-checkout__status {
+            margin-top: 12px;
+            color: #918992;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        .cc-checkout__small {
+            color: #77707a;
+            font-size: 10px;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 820px) {
+            .cc-checkout__body {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .cc-checkout__header {
+                padding: 22px 18px 20px;
+            }
+
+            .cc-checkout__body {
+                padding: 16px;
+            }
+
+            .cc-checkout__section {
+                padding: 16px;
+            }
+
+            .cc-checkout__grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cc-checkout__field--full {
+                grid-column: auto;
+            }
+
+            .cc-checkout__title {
+                font-size: 23px;
+            }
+
+            .cc-checkout__item {
+                flex-direction: column;
+            }
+
+            .cc-checkout__item-price {
+                align-self: flex-end;
+            }
+        }
     </style>
 
-    @if ($checkoutSuccessful)
-        <div class="cc-checkout__success">
-            <div class="cc-checkout__success-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none">
-                    <path
-                        d="M5 12.5L9.2 16.5L19 7.5"
-                        stroke="currentColor"
-                        stroke-width="2.4"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    />
-                </svg>
-            </div>
-
-            <div class="cc-checkout__success-content">
-                <span class="cc-checkout__success-eyebrow">
-                    Payment confirmed
-                </span>
-
-                <h2 class="cc-checkout__success-title">
-                    Checkout successful
-                </h2>
-
-                <p class="cc-checkout__success-message">
-                    Thank you! Your payment of
-                    <strong>${{ $formattedTotal }}</strong>
-                    has been received successfully.
-                </p>
-
-                <div class="cc-checkout__success-email">
-                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <div class="cc-checkout__shell">
+        @if ($checkoutSuccessful)
+            <div class="cc-checkout__success">
+                <div class="cc-checkout__success-icon">
+                    <svg width="25" height="25" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                         <path
-                            d="M4 6.5h16v11H4z"
+                            d="m6 12 4 4 8-8"
                             stroke="currentColor"
-                            stroke-width="1.8"
-                            stroke-linejoin="round"
-                        />
-                        <path
-                            d="m5 8 7 5 7-5"
-                            stroke="currentColor"
-                            stroke-width="1.8"
+                            stroke-width="2"
                             stroke-linecap="round"
                             stroke-linejoin="round"
                         />
                     </svg>
-
-                    <div>
-                        <span class="cc-checkout__success-email-label">
-                            Invoice sent to
-                        </span>
-
-                        <strong>
-                            {{ $billingEmail }}
-                        </strong>
-                    </div>
                 </div>
 
-                <p class="cc-checkout__success-note">
-                    Please check your inbox for your invoice and payment
-                    confirmation. If you don't see it within a few minutes,
-                    check your spam or junk folder.
+                <h2>Payment successful</h2>
+
+                <p>
+                    Your payment for this invoice has been confirmed.
+                    Your subscription, when applicable, will continue according to the recurring items on the invoice.
                 </p>
             </div>
-        </div>
-    @else
-        <div class="cc-checkout__header">
-            <h1 class="cc-checkout__title">Secure Checkout</h1>
-            <p class="cc-checkout__subtitle">
-                Choose how you want to pay. Your payment details are securely processed by Stripe.
-            </p>
-        </div>
+        @else
+            <div class="cc-checkout__header">
+                <p class="cc-checkout__eyebrow">Secure checkout</p>
 
-        <div class="cc-checkout__layout">
-            <div class="cc-checkout__card">
-                <div class="cc-checkout__section">
-                    <h2 class="cc-checkout__section-title">Billing Information</h2>
+                <h1 class="cc-checkout__title">
+                    Complete your payment
+                </h1>
 
-                    <div class="cc-checkout__billing-grid">
-                        <div class="cc-checkout__field">
-                            <label for="billing-name" class="cc-checkout__label">
-                                Billing Name
-                            </label>
-                            <input
-                                id="billing-name"
-                                type="text"
-                                wire:model="billingName"
-                                autocomplete="name"
-                                placeholder="John Smith"
-                                class="cc-checkout__input"
-                            >
-                            @error('billingName')
-                                <div class="cc-checkout__error">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="cc-checkout__field">
-                            <label for="billing-email" class="cc-checkout__label">
-                                Email Address
-                            </label>
-                            <input
-                                id="billing-email"
-                                type="email"
-                                wire:model="billingEmail"
-                                autocomplete="email"
-                                placeholder="you@example.com"
-                                class="cc-checkout__input"
-                            >
-                            @error('billingEmail')
-                                <div class="cc-checkout__error">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-                </div>
-
-                @if ($signatureRequired && ! $hasSignedAgreement)
-                    <div class="cc-checkout__section">
-                        <div class="cc-checkout__agreement">
-                            <h2>Service agreement</h2>
-                            <p class="cc-checkout__agreement-copy">
-                                This recurring service agreement confirms the monthly billing terms and the customer’s acceptance of the recurring charges before payment is submitted.
-                            </p>
-
-                            <div class="cc-checkout__agreement-document">
-                                By signing below, the customer acknowledges the recurring monthly charges for the selected services and confirms their understanding that billing will continue automatically for the minimum term stated in the invoice.
-                            </div>
-
-                            <div class="cc-checkout__signature-canvas-wrap">
-                                <canvas id="agreement-signature-pad" class="cc-checkout__signature-canvas" width="760" height="180"></canvas>
-                            </div>
-
-                            <div class="cc-checkout__signature-actions">
-                                <button type="button" class="cc-checkout__secondary-btn" data-clear-signature>
-                                    Clear
-                                </button>
-                                <button type="button" class="cc-checkout__primary-btn" data-signature-submit>
-                                    Approve &amp; continue
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                @endif
-
-                <div class="cc-checkout__section">
-                    <div class="cc-checkout__payment-heading">
-                        <div>
-                            <h2 class="cc-checkout__section-title">Payment Method</h2>
-                            <p class="cc-checkout__payment-hint">Choose a method, then enter your payment details.</p>
-                        </div>
-                        <span class="cc-checkout__payment-badge">Secure</span>
-                    </div>
-
-                    <div
-                        data-stripe-status
-                        class="cc-checkout__status @if($checkoutError) cc-checkout__status--error @elseif($paymentStatus === 'succeeded') cc-checkout__status--success @elseif($paymentStatus === 'processing') cc-checkout__status--pending @endif"
-                    >
-                        @if ($checkoutError)
-                            {{ $checkoutError }}
-                        @elseif ($paymentStatus === 'succeeded')
-                            Payment completed successfully.
-                        @elseif ($paymentStatus === 'processing')
-                            Your payment is being processed. You do not need to submit the payment again.
-                        @elseif ($clientSecret)
-                            Select a payment method below.
-                        @else
-                            Starting secure payment form...
-                        @endif
-                    </div>
-
-                    @if ($clientSecret && $paymentStatus !== 'succeeded' && $paymentStatus !== 'processing')
-                        <div class="cc-checkout__stripe-box">
-                            <div class="cc-checkout__stripe-loading" data-stripe-loading>
-                                Loading secure payment form...
-                            </div>
-
-                            <div
-                                class="cc-checkout__stripe-form"
-                                data-stripe-payment-element
-                                wire:ignore
-                                hidden
-                            >
-                                <div id="payment-element"></div>
-                            </div>
-                        </div>
-
-                        <button
-                            type="button"
-                            class="cc-checkout__pay"
-                            data-stripe-pay
-                            disabled
-                        >
-                            <span class="cc-checkout__pay-label" data-stripe-pay-label>
-                                Pay ${{ $formattedTotal }}
-                            </span>
-                            <span class="cc-checkout__pay-loading" data-stripe-pay-loading hidden>
-                                Processing...
-                            </span>
-                        </button>
-
-                        <div class="cc-checkout__secure">
-                            Your card or bank details are entered directly into Stripe's secure payment form.
-                        </div>
-                    @endif
-                </div>
+                <p class="cc-checkout__subtitle">
+                    Invoice #{{ $invoice->id }}
+                </p>
             </div>
 
-            <div class="cc-checkout__card cc-checkout__order-card">
-                <div class="cc-checkout__section">
-                    <h2 class="cc-checkout__section-title">Order Summary</h2>
+            <div class="cc-checkout__body">
+                <main class="cc-checkout__main">
 
-                    <ul class="cc-checkout__items">
-                        @forelse($invoice->items as $item)
-                            <li class="cc-checkout__item">
-                                <div class="cc-checkout__item-name">
-                                    <div class="cc-checkout__item-title">
-                                        {{ $item->name ?? $item->description ?? 'Item' }}
+                    {{-- BILLING --}}
+                    <section class="cc-checkout__section">
+                        <h2 class="cc-checkout__section-title">Billing information</h2>
 
-                                        @if(($item->is_subscription ?? false) && ! empty($item->stripe_price_id))
-                                            <span class="cc-checkout__addon-badge">
-                                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                                    <path
-                                                        d="M17 7.5A5 5 0 1 0 18.5 17"
-                                                        stroke="currentColor"
-                                                        stroke-width="1.8"
-                                                        stroke-linecap="round"
-                                                    />
-                                                    <path
-                                                        d="M18.5 13v4h-4"
-                                                        stroke="currentColor"
-                                                        stroke-width="1.8"
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                    />
-                                                </svg>
+                        <p class="cc-checkout__section-text">
+                            Enter the billing details that should be associated with this payment.
+                        </p>
 
-                                                <span>Recurring</span>
-                                            </span>
+                        <div class="cc-checkout__grid">
+                            <div class="cc-checkout__field">
+                                <label class="cc-checkout__label" for="billing-name">
+                                    Full name
+                                </label>
+
+                                <input
+                                    id="billing-name"
+                                    type="text"
+                                    class="cc-checkout__input"
+                                    wire:model.live="billingName"
+                                    autocomplete="name"
+                                    placeholder="Your full name"
+                                >
+                            </div>
+
+                            <div class="cc-checkout__field">
+                                <label class="cc-checkout__label" for="billing-email">
+                                    Email address
+                                </label>
+
+                                <input
+                                    id="billing-email"
+                                    type="email"
+                                    class="cc-checkout__input"
+                                    wire:model.live="billingEmail"
+                                    autocomplete="email"
+                                    placeholder="you@example.com"
+                                >
+                            </div>
+                        </div>
+                    </section>
+
+                    {{-- AGREEMENT SIGNATURE --}}
+                    @if ($signatureRequired && !$hasSignedAgreement)
+                        <section class="cc-checkout__section cc-checkout__agreement" wire:ignore>
+                            <h2 class="cc-checkout__section-title">Agreement signature</h2>
+
+                            <p class="cc-checkout__section-text">
+                                This invoice includes recurring services. Please sign the agreement below before continuing to payment.
+                            </p>
+
+                            <div class="cc-checkout__agreement-copy">
+                                By signing below, you acknowledge the recurring services included in this invoice
+                                and authorize payment according to the displayed billing terms.
+                            </div>
+
+                            <div class="cc-checkout__signature">
+                                <canvas
+                                    id="agreement-signature-pad"
+                                    width="760"
+                                    height="180"
+                                    aria-label="Agreement signature pad"
+                                ></canvas>
+
+                                <div class="cc-checkout__signature-toolbar">
+                                    <span class="cc-checkout__signature-hint">
+                                        Draw your signature above.
+                                    </span>
+
+                                    <button
+                                        type="button"
+                                        class="cc-checkout__button cc-checkout__button--secondary"
+                                        data-clear-signature
+                                    >
+                                        Clear
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button
+                                type="button"
+                                class="cc-checkout__button cc-checkout__button--primary"
+                                data-signature-submit
+                                style="width:100%; margin-top:12px;"
+                            >
+                                Sign agreement and continue
+                            </button>
+                        </section>
+                    @endif
+
+                    {{-- PAYMENT --}}
+                    @if (!$signatureRequired || $hasSignedAgreement)
+                        @if ($clientSecret && $paymentStatus !== 'succeeded' && $paymentStatus !== 'processing')
+                            <section class="cc-checkout__section">
+                                <h2 class="cc-checkout__section-title">Payment</h2>
+
+                                <p class="cc-checkout__section-text">
+                                    Your payment is securely processed by Stripe.
+                                </p>
+
+                                <div class="cc-checkout__stripe-box">
+                                    <div
+                                        data-stripe-loading
+                                        class="cc-checkout__stripe-loading"
+                                    >
+                                        Loading secure payment form...
+                                    </div>
+
+                                    <div
+                                        data-stripe-payment-element
+                                        class="cc-checkout__stripe-payment"
+                                        wire:ignore
+                                        hidden
+                                    >
+                                        <div id="payment-element"></div>
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    class="cc-checkout__button cc-checkout__button--primary cc-checkout__button--pay"
+                                    data-stripe-pay
+                                    disabled
+                                >
+                                    Pay {{ $formattedTotal }}
+                                </button>
+
+                                <div
+                                    class="cc-checkout__error"
+                                    data-stripe-error
+                                    hidden
+                                ></div>
+
+                                <div class="cc-checkout__status" data-stripe-status>
+                                    Secure Stripe payment form is initializing...
+                                </div>
+                            </section>
+                        @elseif ($paymentStatus === 'processing')
+                            <section class="cc-checkout__section">
+                                <h2 class="cc-checkout__section-title">
+                                    Payment processing
+                                </h2>
+
+                                <p class="cc-checkout__section-text">
+                                    Stripe is processing your payment. You can safely keep this page open while the payment completes.
+                                </p>
+                            </section>
+                        @elseif ($paymentStatus !== 'succeeded')
+                            <section class="cc-checkout__section">
+                                <h2 class="cc-checkout__section-title">
+                                    Payment
+                                </h2>
+
+                                <p class="cc-checkout__section-text">
+                                    Your secure payment form is being prepared.
+                                </p>
+
+                                <div class="cc-checkout__stripe-loading">
+                                    Loading secure payment form...
+                                </div>
+                            </section>
+                        @endif
+                    @endif
+
+                    @if ($checkoutError)
+                        <div class="cc-checkout__error">
+                            {{ $checkoutError }}
+                        </div>
+                    @endif
+                </main>
+
+                {{-- ORDER SUMMARY --}}
+                <aside class="cc-checkout__sidebar">
+                    <section class="cc-checkout__section">
+                        <h2 class="cc-checkout__section-title">Order summary</h2>
+
+                        <p class="cc-checkout__section-text">
+                            Invoice items
+                        </p>
+
+                        <div class="cc-checkout__items">
+                            @foreach ($invoice->items as $item)
+                                @php
+                                    $itemDescription =
+                                        $item->description
+                                        ?? $item->name
+                                        ?? $item->title
+                                        ?? 'Invoice item';
+
+                                    $itemTotal =
+                                        $item->total
+                                        ?? $item->amount
+                                        ?? $item->unit_amount
+                                        ?? $item->price
+                                        ?? 0;
+
+                                    $quantity = max(1, (int) ($item->quantity ?? 1));
+
+                                    $displayTotal = $item->total !== null && $item->total !== ''
+                                        ? (float) $item->total
+                                        : ((float) $itemTotal * $quantity);
+
+                                    $displayTotalFormatted = number_format($displayTotal / 100, 2);
+                                @endphp
+
+                                <div
+                                    class="cc-checkout__item"
+                                    wire:key="checkout-item-{{ $item->id }}"
+                                >
+                                    <div class="cc-checkout__item-info">
+                                        <p class="cc-checkout__item-name">
+                                            {{ $itemDescription }}
+                                        </p>
+
+                                        <div class="cc-checkout__item-meta">
+                                            @if ($item->is_subscription)
+                                                <span class="cc-checkout__addon-badge">
+                                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                        <path
+                                                            d="M20 7h-9a5 5 0 0 0-5 5v1"
+                                                            stroke="currentColor"
+                                                            stroke-width="1.8"
+                                                            stroke-linecap="round"
+                                                            stroke-linejoin="round"
+                                                        />
+                                                        <path
+                                                            d="m7 10-3 3 3 3"
+                                                            stroke="currentColor"
+                                                            stroke-width="1.8"
+                                                            stroke-linecap="round"
+                                                            stroke-linejoin="round"
+                                                        />
+                                                        <path
+                                                            d="M4 17h9a5 5 0 0 0 5-5v-1"
+                                                            stroke="currentColor"
+                                                            stroke-width="1.8"
+                                                            stroke-linecap="round"
+                                                            stroke-linejoin="round"
+                                                        />
+                                                        <path
+                                                            d="m17 14 3-3-3-3"
+                                                            stroke="currentColor"
+                                                            stroke-width="1.8"
+                                                            stroke-linecap="round"
+                                                            stroke-linejoin="round"
+                                                        />
+                                                    </svg>
+
+                                                    <span>Recurring</span>
+                                                </span>
+                                            @else
+                                                <span class="cc-checkout__small">
+                                                    One-time
+                                                </span>
+                                            @endif
+
+                                            @if ($quantity > 1)
+                                                <span class="cc-checkout__small">
+                                                    Qty {{ $quantity }}
+                                                </span>
+                                            @endif
+                                        </div>
+
+                                        @if (!empty($item->description) && !empty($item->name))
+                                            <p class="cc-checkout__item-description">
+                                                {{ $item->description }}
+                                            </p>
                                         @endif
                                     </div>
 
-                                    @if(isset($item->quantity))
-                                        <div class="cc-checkout__item-quantity">
-                                            Qty: {{ $item->quantity }}
-                                        </div>
-                                    @endif
+                                    <div class="cc-checkout__item-price">
+                                        ${{ $displayTotalFormatted }}
+                                    </div>
                                 </div>
+                            @endforeach
+                        </div>
 
-                                <div class="cc-checkout__item-price">
-                                    ${{ $this->formatItemAmount($item) }}
-                                </div>
-                            </li>
-                        @empty
-                            <li class="cc-checkout__item">
-                                <div class="cc-checkout__item-name">
-                                    No invoice items found.
-                                </div>
-                            </li>
-                        @endforelse
-                    </ul>
-
-                    <div class="cc-checkout__total">
-                        <span>Total</span>
-                        <span>${{ $formattedTotal }}</span>
-                    </div>
-                </div>
+                        <div class="cc-checkout__summary" style="margin-top:18px;">
+                            <div class="cc-checkout__summary-row cc-checkout__summary-total">
+                                <span>Total</span>
+                                <strong>${{ $formattedTotal }}</strong>
+                            </div>
+                        </div>
+                    </section>
+                </aside>
             </div>
-        </div>
-
-        @if ($signatureRequired && ! $hasSignedAgreement)
-            <script>
-                document.addEventListener('DOMContentLoaded', function () {
-                    const canvas = document.getElementById('agreement-signature-pad');
-                    const clearButton = document.querySelector('[data-clear-signature]');
-                    const submitButton = document.querySelector('[data-signature-submit]');
-
-                    if (!canvas || !clearButton || !submitButton) {
-                        return;
-                    }
-
-                    const context = canvas.getContext('2d');
-                    let drawing = false;
-
-                    const resizeCanvas = () => {
-                        const ratio = window.devicePixelRatio || 1;
-                        const rect = canvas.getBoundingClientRect();
-                        canvas.width = rect.width * ratio;
-                        canvas.height = rect.height * ratio;
-                        context.setTransform(ratio, 0, 0, ratio, 0, 0);
-                        context.lineWidth = 2.5;
-                        context.lineCap = 'round';
-                        context.lineJoin = 'round';
-                        context.strokeStyle = '#f5eef8';
-                    };
-
-                    const clearCanvas = () => {
-                        context.clearRect(0, 0, canvas.width, canvas.height);
-                        context.fillStyle = '#120e16';
-                        context.fillRect(0, 0, canvas.width, canvas.height);
-                    };
-
-                    const startDrawing = (event) => {
-                        drawing = true;
-                        const rect = canvas.getBoundingClientRect();
-                        const x = (event.clientX - rect.left) * (canvas.width / rect.width);
-                        const y = (event.clientY - rect.top) * (canvas.height / rect.height);
-                        context.beginPath();
-                        context.moveTo(x, y);
-                    };
-
-                    const draw = (event) => {
-                        if (!drawing) {
-                            return;
-                        }
-
-                        const rect = canvas.getBoundingClientRect();
-                        const x = (event.clientX - rect.left) * (canvas.width / rect.width);
-                        const y = (event.clientY - rect.top) * (canvas.height / rect.height);
-                        context.lineTo(x, y);
-                        context.stroke();
-                    };
-
-                    const stopDrawing = () => {
-                        drawing = false;
-                    };
-
-                    resizeCanvas();
-                    clearCanvas();
-
-                    canvas.addEventListener('pointerdown', startDrawing);
-                    canvas.addEventListener('pointermove', draw);
-                    canvas.addEventListener('pointerup', stopDrawing);
-                    canvas.addEventListener('pointerleave', stopDrawing);
-                    clearButton.addEventListener('click', clearCanvas);
-
-                    submitButton.addEventListener('click', function () {
-                        const blank = context.getImageData(0, 0, canvas.width, canvas.height).data
-                            .every((pixel) => pixel === 0 || pixel === 255 || pixel === 18);
-
-                        if (blank) {
-                            window.alert('Please sign the agreement before continuing.');
-                            return;
-                        }
-
-                        const componentId = document.querySelector('[wire\\:id]')?.getAttribute('wire:id');
-                        const signatureData = canvas.toDataURL('image/png');
-
-                        if (!componentId) {
-                            window.alert('The checkout component is unavailable. Please refresh the page.');
-                            return;
-                        }
-
-                        window.Livewire.find(componentId).call('saveSignature', signatureData);
-                    });
-                });
-            </script>
         @endif
-
-        @if ($clientSecret && $paymentStatus !== 'succeeded' && $paymentStatus !== 'processing')
-            <script>
-                (() => {
-                    let wireRoot = document.querySelector('[wire\\:id]');
-                    const getRoot = () => document.querySelector('[wire\\:id]') || document.body;
-                    const root = getRoot();
-
-                    let paymentElementContainer = null;
-                    let paymentElementMount = null;
-                    let loadingEl = null;
-                    let statusEl = null;
-                    let payButton = null;
-                    let payLabel = null;
-                    let payLoading = null;
-                    let billingNameInput = null;
-                    let billingEmailInput = null;
-
-                    const refreshDomRefs = () => {
-                        wireRoot = document.querySelector('[wire\\:id]') || wireRoot || getRoot();
-
-                        paymentElementContainer = document.querySelector('[data-stripe-payment-element]');
-                        paymentElementMount = document.querySelector('#payment-element');
-                        loadingEl = document.querySelector('[data-stripe-loading]');
-                        statusEl = document.querySelector('[data-stripe-status]');
-                        payButton = document.querySelector('[data-stripe-pay]');
-                        payLabel = document.querySelector('[data-stripe-pay-label]');
-                        payLoading = document.querySelector('[data-stripe-pay-loading]');
-                        billingNameInput = document.querySelector('#billing-name');
-                        billingEmailInput = document.querySelector('#billing-email');
-                    };
-
-                    const waitForLivewire = async () => {
-                        const maxAttempts = 40;
-
-                        for (let attempt = 0; attempt < maxAttempts; attempt++) {
-                            if (typeof window.Livewire !== 'undefined' && typeof window.Livewire.find === 'function') {
-                                return true;
-                            }
-
-                            await new Promise((resolve) => setTimeout(resolve, 250));
-                        }
-
-                        return false;
-                    };
-
-                    const getComponent = () => {
-                        if (typeof window.Livewire === 'undefined' || typeof window.Livewire.find !== 'function') {
-                            return null;
-                        }
-
-                        const componentId = wireRoot?.getAttribute('wire:id');
-
-                        if (!componentId) {
-                            return null;
-                        }
-
-                        return window.Livewire.find(componentId);
-                    };
-
-                    const component = getComponent();
-                    const publishableKey = @js(config('services.stripe.key'));
-                    const clientSecret = @js($clientSecret);
-                    const invoiceTotal = @js($totalInCents);
-                    const initialPaymentIntentId = @js($paymentIntentId);
-                    const initialPaymentStatus = @js($paymentStatus);
-
-                    refreshDomRefs();
-
-                    let stripe = null;
-                    let elements = null;
-                    let paymentElement = null;
-                    let ready = false;
-                    let loading = false;
-                    const componentKey = `cc-checkout-${wireRoot ? wireRoot.getAttribute('wire:id') || 'global' : 'global'}`;
-                    const globalCheckoutState = window.__ccCheckoutState ??= {};
-                    const componentState = globalCheckoutState[componentKey] ??= {
-                        initialized: false,
-                        mountTarget: null,
-                        buttonBound: false,
-                    };
-
-                    const setComponentValue = (name, value) => {
-                        const liveComponent = getComponent();
-
-                        if (!liveComponent) {
-                            return;
-                        }
-
-                        if (typeof liveComponent.set === 'function') {
-                            liveComponent.set(name, value);
-                            return;
-                        }
-
-                        if (typeof liveComponent.$set === 'function') {
-                            liveComponent.$set(name, value);
-                        }
-                    };
-
-                    const callComponentMethod = async (method, ...args) => {
-                        const liveComponent = getComponent();
-
-                        if (!liveComponent) {
-                            throw new Error('Checkout component is unavailable.');
-                        }
-
-                        if (typeof liveComponent.call === 'function') {
-                            return await liveComponent.call(method, ...args);
-                        }
-
-                        if (typeof liveComponent[method] === 'function') {
-                            return await liveComponent[method](...args);
-                        }
-
-                        throw new Error('Checkout component method is unavailable.');
-                    };
-
-                    const setStatus = (message, type = 'normal') => {
-                        if (!statusEl) {
-                            return;
-                        }
-
-                        statusEl.textContent = message;
-                        statusEl.classList.remove(
-                            'cc-checkout__status--error',
-                            'cc-checkout__status--success',
-                            'cc-checkout__status--pending'
-                        );
-
-                        if (type === 'success') {
-                            statusEl.classList.add('cc-checkout__status--success');
-                        } else if (type === 'pending') {
-                            statusEl.classList.add('cc-checkout__status--pending');
-                        }
-                    };
-
-                    const setButtonLoading = (isLoading) => {
-                        loading = isLoading;
-
-                        if (!payButton || !payLabel || !payLoading) {
-                            return;
-                        }
-
-                        payButton.disabled = isLoading || !ready;
-                        payLabel.hidden = isLoading;
-                        payLoading.hidden = !isLoading;
-                    };
-
-                    const setReady = (isReady) => {
-                        ready = isReady;
-
-                        if (payButton) {
-                            payButton.disabled = loading || !ready;
-                        }
-                    };
-
-                    const fail = () => {
-                        const userMessage = 'The secure payment form is temporarily unavailable. Please refresh the page and try again.';
-
-                        setReady(false);
-                        setStatus(userMessage, 'error');
-
-                        if (loadingEl) {
-                            loadingEl.hidden = false;
-                            loadingEl.textContent = userMessage;
-                        }
-
-                        if (paymentElementContainer) {
-                            paymentElementContainer.hidden = true;
-                        }
-                    };
-
-                    const waitForStripe = async () => {
-                        const maxAttempts = 40;
-
-                        for (let attempt = 0; attempt < maxAttempts; attempt++) {
-                            if (typeof window.Stripe === 'function') {
-                                return true;
-                            }
-
-                            await new Promise((resolve) => setTimeout(resolve, 250));
-                        }
-
-                        return false;
-                    };
-
-                    const initializeStripe = async () => {
-                        if (!(await waitForLivewire())) {
-                            fail();
-                            return;
-                        }
-
-                        refreshDomRefs();
-
-                        if (!clientSecret) {
-                            fail();
-                            return;
-                        }
-
-                        if (!publishableKey) {
-                            fail();
-                            return;
-                        }
-
-                        if (!paymentElementContainer || !paymentElementMount || !payButton) {
-                            setTimeout(initializeStripe, 250);
-                            return;
-                        }
-
-                        if (componentState.initialized && componentState.mountTarget === paymentElementMount) {
-                            return;
-                        }
-
-                        try {
-                            if (!(await waitForStripe())) {
-                                fail();
-                                return;
-                            }
-
-                            setStatus('Creating secure payment form...');
-
-                            stripe = window.Stripe(publishableKey);
-
-                            elements = stripe.elements({
-                                clientSecret,
-                                appearance: {
-                                    theme: 'night',
-                                    variables: {
-                                        colorPrimary: '#c05cc4',
-                                        colorBackground: '#17121c',
-                                        colorText: '#f5eef8',
-                                        colorTextSecondary: '#a99bad',
-                                        colorTextPlaceholder: '#7f7384',
-                                        colorDanger: '#a99bad',
-                                        borderRadius: '12px',
-                                        fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-                                    },
-                                },
-                            });
-
-                            paymentElement = elements.create('payment', {
-                                layout: {
-                                    type: 'tabs',
-                                },
-                                paymentMethodOrder: [
-                                    'card',
-                                    'us_bank_account',
-                                    'afterpay_clearpay',
-                                    'klarna',
-                                ],
-                                defaultValues: {
-                                    billingDetails: {
-                                        name: billingNameInput?.value?.trim() || '',
-                                        email: billingEmailInput?.value?.trim() || '',
-                                    },
-                                },
-                                fields: {
-                                    billingDetails: {
-                                        name: 'always',
-                                        email: 'auto',
-                                        address: 'if_required',
-                                    },
-                                },
-                                wallets: {
-                                    applePay: 'auto',
-                                    googlePay: 'auto',
-                                    link: 'auto',
-                                },
-                            });
-
-                            paymentElement.on('loaderstart', () => {
-                                setStatus('Loading secure payment options...');
-                            });
-
-                            paymentElement.on('ready', () => {
-                                setReady(true);
-                                setStatus('Select a payment method and complete the payment details.');
-
-                                if (loadingEl) {
-                                    loadingEl.hidden = true;
-                                }
-
-                                paymentElementContainer.hidden = false;
-                            });
-
-                            paymentElement.on('change', (event) => {
-                                if (event.error?.message) {
-                                    setStatus(event.error.message, 'error');
-                                    return;
-                                }
-
-                                if (ready && !loading) {
-                                    setStatus('Payment form ready.');
-                                }
-                            });
-
-                            paymentElement.on('loaderror', () => {
-                                fail();
-                            });
-
-                            if (paymentElementMount.dataset.ccCheckoutMounted === 'true') {
-                                return;
-                            }
-
-                            paymentElement.mount(paymentElementMount);
-                            paymentElementMount.dataset.ccCheckoutMounted = 'true';
-                            componentState.initialized = true;
-                            componentState.mountTarget = paymentElementMount;
-                        } catch (error) {
-                            fail();
-                        }
-                    };
-
-                    const submitPayment = async () => {
-                        if (loading || !ready || !stripe || !elements || !paymentElement) {
-                            return;
-                        }
-
-                        const name = billingNameInput?.value?.trim() || '';
-                        const email = billingEmailInput?.value?.trim() || '';
-
-                        setButtonLoading(true);
-                        setStatus('Validating your billing information...');
-
-                        try {
-                            setComponentValue('billingName', name);
-                            setComponentValue('billingEmail', email);
-
-                            await callComponentMethod('validateBilling');
-
-                            setStatus('Confirming your payment with Stripe...');
-
-                            const returnUrl = window.location.href;
-                            const result = await stripe.confirmPayment({
-                                elements,
-                                confirmParams: {
-                                    return_url: returnUrl,
-                                },
-                                redirect: 'if_required',
-                            });
-
-                            if (result.error) {
-                                throw new Error(
-                                    result.error.message || 'Your payment could not be completed.'
-                                );
-                            }
-
-                            if (!result.paymentIntent) {
-                                throw new Error('Stripe did not return a PaymentIntent after confirmation.');
-                            }
-
-                            if (typeof invoiceTotal === 'number' && result.paymentIntent.amount !== invoiceTotal) {
-                                throw new Error('The confirmed Stripe amount does not match the invoice total.');
-                            }
-
-                            if (result.paymentIntent.id !== initialPaymentIntentId) {
-                                throw new Error('The confirmed Stripe payment could not be matched to this checkout.');
-                            }
-
-                            const normalizedStatus = result.paymentIntent.status;
-                            const finalStatuses = ['succeeded', 'processing', 'requires_capture', 'requires_confirmation'];
-
-                            if (normalizedStatus === 'requires_action') {
-                                setButtonLoading(false);
-                                setReady(false);
-                                setStatus('Additional verification is required by your bank or card issuer before the subscription can be activated.', 'pending');
-                                return;
-                            }
-
-                            if (!finalStatuses.includes(normalizedStatus)) {
-                                throw new Error(
-                                    `Stripe returned an unexpected payment status: ${normalizedStatus}`
-                                );
-                            }
-
-                            if (normalizedStatus === 'succeeded') {
-                                const verifiedStatus = await callComponentMethod('paymentCompleted', result.paymentIntent.id);
-
-                                if (verifiedStatus !== 'succeeded') {
-                                    throw new Error('Stripe reported a payment state that could not be verified.');
-                                }
-
-                                setButtonLoading(false);
-                                setReady(false);
-                                setStatus('Payment completed successfully.', 'success');
-
-                                if (payButton) {
-                                    payButton.disabled = true;
-                                }
-
-                                if (paymentElementContainer) {
-                                    paymentElementContainer.hidden = true;
-                                }
-
-                                if (loadingEl) {
-                                    loadingEl.hidden = false;
-                                    loadingEl.textContent = 'Payment completed successfully.';
-                                }
-
-                                return;
-                            }
-
-                            if (normalizedStatus === 'processing' || normalizedStatus === 'requires_capture' || normalizedStatus === 'requires_confirmation') {
-                                await callComponentMethod('paymentCompleted', result.paymentIntent.id);
-
-                                setButtonLoading(false);
-                                setReady(false);
-                                setStatus(
-                                    'Your payment was submitted and is still processing. You do not need to submit it again.',
-                                    'pending'
-                                );
-
-                                if (payButton) {
-                                    payButton.disabled = true;
-                                }
-
-                                return;
-                            }
-                        } catch (error) {
-                            const message = error?.message || 'Your payment could not be completed.';
-                            setStatus(message, 'error');
-                            setButtonLoading(false);
-                            setReady(Boolean(paymentElement));
-                        }
-                    };
-
-                    const attachPayButtonHandler = () => {
-                        refreshDomRefs();
-
-                        if (!payButton) {
-                            setTimeout(attachPayButtonHandler, 250);
-                            return;
-                        }
-
-                        if (payButton.dataset.ccCheckoutBound === 'true') {
-                            return;
-                        }
-
-                        payButton.addEventListener('click', submitPayment);
-                        payButton.dataset.ccCheckoutBound = 'true';
-                        componentState.buttonBound = true;
-                    };
-
-                    if (initialPaymentStatus === 'succeeded') {
-                        setReady(false);
-                        return;
-                    }
-
-                    attachPayButtonHandler();
-                    initializeStripe();
-                })();
-            </script>
-        @endif
-    @endif
+    </div>
 </div>
 
+@script
+<script>
+(() => {
+    'use strict';
+
+    const root = $wire.$el;
+
+    if (!root) {
+        return;
+    }
+
+    const publishableKey = @js(config('services.stripe.key'));
+
+    let stripe = null;
+    let elements = null;
+    let paymentElement = null;
+    let paymentElementReady = false;
+    let initializingStripe = false;
+    let stripePaymentId = @js($paymentIntentId);
+    let currentClientSecret = @js($clientSecret);
+
+    const initialPaymentStatus = @js($paymentStatus);
+
+    const waitForDom = () => {
+        return new Promise((resolve) => {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(resolve);
+            });
+        });
+    };
+
+    const billingNameInput = () => {
+        return root.querySelector('#billing-name');
+    };
+
+    const billingEmailInput = () => {
+        return root.querySelector('#billing-email');
+    };
+
+    const stripeLoading = () => {
+        return root.querySelector('[data-stripe-loading]');
+    };
+
+    const stripePaymentContainer = () => {
+        return root.querySelector('[data-stripe-payment-element]');
+    };
+
+    const payButton = () => {
+        return root.querySelector('[data-stripe-pay]');
+    };
+
+    const stripeError = () => {
+        return root.querySelector('[data-stripe-error]');
+    };
+
+    const stripeStatus = () => {
+        return root.querySelector('[data-stripe-status]');
+    };
+
+    const showStripeError = (message) => {
+        const el = stripeError();
+
+        if (!el) {
+            return;
+        }
+
+        el.textContent = message || 'Unable to initialize the payment form.';
+        el.hidden = false;
+    };
+
+    const clearStripeError = () => {
+        const el = stripeError();
+
+        if (!el) {
+            return;
+        }
+
+        el.textContent = '';
+        el.hidden = true;
+    };
+
+    const setStripeStatus = (message) => {
+        const el = stripeStatus();
+
+        if (el) {
+            el.textContent = message || '';
+        }
+    };
+
+    const setPaymentButtonState = (disabled, text = null) => {
+        const button = payButton();
+
+        if (!button) {
+            return;
+        }
+
+        button.disabled = disabled;
+
+        if (text !== null) {
+            button.textContent = text;
+        }
+    };
+
+    const destroyStripeElement = () => {
+        paymentElementReady = false;
+
+        if (paymentElement) {
+            try {
+                paymentElement.unmount();
+            } catch (e) {
+                // Ignore unmount errors during Livewire DOM transitions.
+            }
+
+            paymentElement = null;
+        }
+
+        elements = null;
+    };
+
+    const initializeStripe = async (clientSecret) => {
+        if (!clientSecret) {
+            return;
+        }
+
+        if (!publishableKey) {
+            showStripeError('Stripe publishable key is missing.');
+            setStripeStatus('Stripe configuration error.');
+            return;
+        }
+
+        if (
+            initializingStripe
+            && currentClientSecret === clientSecret
+            && paymentElement
+        ) {
+            return;
+        }
+
+        if (
+            currentClientSecret === clientSecret
+            && paymentElementReady
+            && paymentElement
+        ) {
+            return;
+        }
+
+        initializingStripe = true;
+        currentClientSecret = clientSecret;
+
+        clearStripeError();
+        setPaymentButtonState(true, 'Loading secure payment form...');
+        setStripeStatus('Loading secure payment form...');
+
+        try {
+            await waitForDom();
+
+            const paymentMount = root.querySelector('#payment-element');
+            const paymentContainer = stripePaymentContainer();
+            const loading = stripeLoading();
+
+            if (!paymentMount || !paymentContainer) {
+                throw new Error('Stripe payment container is not available in the DOM.');
+            }
+
+            if (!window.Stripe) {
+                throw new Error('Stripe.js failed to load.');
+            }
+
+            if (stripePaymentId) {
+                // Existing Stripe instance can be reused.
+            } else {
+                stripe = stripe || window.Stripe(publishableKey);
+            }
+
+            if (!stripe) {
+                stripe = window.Stripe(publishableKey);
+            }
+
+            destroyStripeElement();
+
+            const billingName = billingNameInput()?.value?.trim() || '';
+            const billingEmail = billingEmailInput()?.value?.trim() || '';
+
+            elements = stripe.elements({
+                clientSecret,
+                appearance: {
+                    theme: 'night',
+                    variables: {
+                        colorPrimary: '#b56ab9',
+                        colorBackground: '#100c12',
+                        colorText: '#f5f2f7',
+                        colorTextSecondary: '#a69da9',
+                        colorDanger: '#e58d9c',
+                        borderRadius: '10px',
+                        fontFamily:
+                            'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                    },
+                },
+            });
+
+            /*
+             * IMPORTANT:
+             * Stripe does NOT accept billingDetails.email = "always".
+             * Valid values for email here are "never" or "auto".
+             */
+            paymentElement = elements.create('payment', {
+                layout: {
+                    type: 'tabs',
+                },
+
+                defaultValues: {
+                    billingDetails: {
+                        name: billingName,
+                        email: billingEmail,
+                    },
+                },
+
+                fields: {
+                    billingDetails: {
+                        name: 'always',
+                        email: 'auto',
+                        address: 'if_required',
+                    },
+                },
+
+                wallets: {
+                    applePay: 'auto',
+                    googlePay: 'auto',
+                    link: 'auto',
+                },
+            });
+
+            paymentElement.on('loaderstart', () => {
+                setStripeStatus('Loading Stripe payment form...');
+            });
+
+            paymentElement.on('ready', () => {
+                paymentElementReady = true;
+
+                if (loading) {
+                    loading.hidden = true;
+                }
+
+                paymentContainer.hidden = false;
+
+                setPaymentButtonState(false, `Pay ${@js('$' . $formattedTotal)}`);
+                setStripeStatus('Your payment information is ready.');
+            });
+
+            paymentElement.on('change', (event) => {
+                if (event?.error?.message) {
+                    showStripeError(event.error.message);
+                } else {
+                    clearStripeError();
+                }
+            });
+
+            paymentElement.on('loaderror', (event) => {
+                const message =
+                    event?.error?.message
+                    || 'Stripe could not load the payment form.';
+
+                showStripeError(message);
+                setPaymentButtonState(true, 'Payment form unavailable');
+                setStripeStatus('Stripe payment form failed to load.');
+            });
+
+            paymentElement.mount(paymentMount);
+
+        } catch (error) {
+            console.error('Stripe initialization failed:', error);
+
+            paymentElementReady = false;
+            paymentElement = null;
+            elements = null;
+
+            showStripeError(
+                error?.message
+                || 'Unable to initialize Stripe payment form.'
+            );
+
+            setPaymentButtonState(true, 'Payment form unavailable');
+            setStripeStatus('Stripe initialization failed.');
+        } finally {
+            initializingStripe = false;
+        }
+    };
+
+    const submitPayment = async () => {
+        if (!stripe || !elements || !paymentElement || !paymentElementReady) {
+            showStripeError('The secure payment form is not ready yet.');
+            return;
+        }
+
+        const button = payButton();
+
+        if (button?.disabled) {
+            return;
+        }
+
+        clearStripeError();
+
+        setPaymentButtonState(true, 'Processing payment...');
+        setStripeStatus('Validating your payment details...');
+
+        try {
+            const billingName = billingNameInput()?.value?.trim() || '';
+            const billingEmail = billingEmailInput()?.value?.trim() || '';
+
+            $wire.billingName = billingName;
+            $wire.billingEmail = billingEmail;
+
+            /*
+             * This calls the Livewire backend validation method.
+             * No $wire.$nextTick() is used.
+             */
+            await $wire.validateBilling();
+
+            /*
+             * Stripe requires Elements submission before confirmation
+             * when using the Payment Element.
+             */
+            const submitResult = await elements.submit();
+
+            if (submitResult?.error) {
+                showStripeError(
+                    submitResult.error.message
+                    || 'Please correct the payment details and try again.'
+                );
+
+                setPaymentButtonState(false, `Pay ${@js('$' . $formattedTotal)}`);
+                setStripeStatus('Please review the payment details.');
+
+                return;
+            }
+
+            setStripeStatus('Confirming payment securely with Stripe...');
+
+            const result = await stripe.confirmPayment({
+                elements,
+
+                confirmParams: {
+                    return_url: window.location.href,
+                },
+
+                redirect: 'if_required',
+            });
+
+            if (result?.error) {
+                showStripeError(
+                    result.error.message
+                    || 'Stripe could not confirm this payment.'
+                );
+
+                setPaymentButtonState(false, `Pay ${@js('$' . $formattedTotal)}`);
+                setStripeStatus('Payment confirmation failed.');
+
+                return;
+            }
+
+            const paymentIntent = result?.paymentIntent;
+
+            if (!paymentIntent) {
+                throw new Error(
+                    'Stripe did not return a PaymentIntent after confirmation.'
+                );
+            }
+
+            stripePaymentId = paymentIntent.id;
+
+            const backendPaymentIntentId = @js($paymentIntentId);
+
+            if (
+                backendPaymentIntentId
+                && paymentIntent.id !== backendPaymentIntentId
+            ) {
+                throw new Error(
+                    'The confirmed payment does not match the invoice payment.'
+                );
+            }
+
+            const expectedAmount = Number(@js($totalInCents));
+
+            if (
+                Number.isFinite(expectedAmount)
+                && expectedAmount > 0
+                && Number(paymentIntent.amount) !== expectedAmount
+            ) {
+                throw new Error(
+                    'The confirmed payment amount does not match the invoice total.'
+                );
+            }
+
+            if (paymentIntent.currency !== 'usd') {
+                throw new Error(
+                    'The confirmed payment currency does not match the invoice.'
+                );
+            }
+
+            if (paymentIntent.status === 'succeeded') {
+                setStripeStatus('Payment confirmed.');
+
+                await $wire.paymentCompleted(paymentIntent.id);
+
+                setPaymentButtonState(true, 'Payment complete');
+                return;
+            }
+
+            if (paymentIntent.status === 'processing') {
+                setStripeStatus('Payment is processing.');
+
+                await $wire.paymentCompleted(paymentIntent.id);
+
+                setPaymentButtonState(true, 'Payment processing');
+                return;
+            }
+
+            if (paymentIntent.status === 'requires_action') {
+                setStripeStatus(
+                    'Additional authentication is required to complete the payment.'
+                );
+
+                setPaymentButtonState(false, `Pay ${@js('$' . $formattedTotal)}`);
+                return;
+            }
+
+            throw new Error(
+                `Stripe returned payment status: ${paymentIntent.status}`
+            );
+
+        } catch (error) {
+            console.error('Payment submission failed:', error);
+
+            const message =
+                error?.message
+                || 'Unable to complete the payment.';
+
+            showStripeError(message);
+
+            setPaymentButtonState(false, `Pay ${@js('$' . $formattedTotal)}`);
+            setStripeStatus('Payment could not be completed.');
+        }
+    };
+
+    /*
+     * Signature pad
+     */
+    const setupSignaturePad = () => {
+        const canvas = root.querySelector('#agreement-signature-pad');
+
+        if (!canvas || canvas.dataset.initialized === '1') {
+            return;
+        }
+
+        canvas.dataset.initialized = '1';
+
+        const ctx = canvas.getContext('2d');
+
+        if (!ctx) {
+            return;
+        }
+
+        ctx.lineWidth = 2.1;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = '#171219';
+
+        let drawing = false;
+        let hasInk = false;
+
+        const pointFromEvent = (event) => {
+            const rect = canvas.getBoundingClientRect();
+
+            return {
+                x: (event.clientX - rect.left) * (canvas.width / rect.width),
+                y: (event.clientY - rect.top) * (canvas.height / rect.height),
+            };
+        };
+
+        const start = (event) => {
+            event.preventDefault();
+
+            drawing = true;
+
+            try {
+                canvas.setPointerCapture(event.pointerId);
+            } catch (e) {
+                // Ignore unsupported pointer capture.
+            }
+
+            const point = pointFromEvent(event);
+
+            ctx.beginPath();
+            ctx.moveTo(point.x, point.y);
+            ctx.lineTo(point.x + 0.01, point.y + 0.01);
+            ctx.stroke();
+
+            hasInk = true;
+        };
+
+        const move = (event) => {
+            if (!drawing) {
+                return;
+            }
+
+            event.preventDefault();
+
+            const point = pointFromEvent(event);
+
+            ctx.lineTo(point.x, point.y);
+            ctx.stroke();
+
+            hasInk = true;
+        };
+
+        const stop = (event) => {
+            if (!drawing) {
+                return;
+            }
+
+            event.preventDefault();
+            drawing = false;
+
+            try {
+                canvas.releasePointerCapture(event.pointerId);
+            } catch (e) {
+                // Ignore unsupported pointer capture.
+            }
+        };
+
+        canvas.addEventListener('pointerdown', start, { passive: false });
+        canvas.addEventListener('pointermove', move, { passive: false });
+        canvas.addEventListener('pointerup', stop, { passive: false });
+        canvas.addEventListener('pointercancel', stop, { passive: false });
+        canvas.addEventListener('pointerleave', stop, { passive: false });
+
+        canvas.closest('.cc-checkout__agreement')
+            ?.querySelector('[data-clear-signature]')
+            ?.addEventListener('click', () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                hasInk = false;
+            });
+
+        canvas.closest('.cc-checkout__agreement')
+            ?.querySelector('[data-signature-submit]')
+            ?.addEventListener('click', async () => {
+                if (!hasInk) {
+                    alert('Please sign the agreement before continuing.');
+                    return;
+                }
+
+                const submitButton = root.querySelector('[data-signature-submit]');
+
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    submitButton.textContent = 'Saving signature...';
+                }
+
+                try {
+                    const signatureData = canvas.toDataURL('image/png');
+
+                    await $wire.saveSignature(signatureData);
+                } catch (error) {
+                    console.error('Signature submission failed:', error);
+
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                        submitButton.textContent = 'Sign agreement and continue';
+                    }
+
+                    alert(
+                        error?.message
+                        || 'The signature could not be saved.'
+                    );
+                }
+            });
+    };
+
+    /*
+     * Payment button event delegation.
+     * This survives Livewire DOM morphs.
+     */
+    root.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-stripe-pay]');
+
+        if (!button || !root.contains(button)) {
+            return;
+        }
+
+        event.preventDefault();
+
+        submitPayment();
+    });
+
+    /*
+     * Watch Livewire's clientSecret property.
+     * This replaces all fragile DOMContentLoaded / Livewire.find logic.
+     */
+    $wire.$watch('clientSecret', async (clientSecret) => {
+        if (!clientSecret) {
+            return;
+        }
+
+        await waitForDom();
+
+        await initializeStripe(clientSecret);
+    });
+
+    $wire.$watch('paymentIntentId', (paymentIntentId) => {
+        if (paymentIntentId) {
+            stripePaymentId = paymentIntentId;
+        }
+    });
+
+    /*
+     * Initial state.
+     */
+    (async () => {
+        await waitForDom();
+
+        setupSignaturePad();
+
+        if (
+            currentClientSecret
+            && initialPaymentStatus !== 'succeeded'
+            && initialPaymentStatus !== 'processing'
+        ) {
+            await initializeStripe(currentClientSecret);
+        }
+    })();
+})();
+</script>
+@endscript

@@ -370,10 +370,12 @@
                     ← Go back
                 </button>
 
-                <a href="{{ auth()->check() ? route('dashboard') : route('home') }}"
-                    class="error404-button error404-secondary">
-                    Return home
-                </a>
+                <a href="{{ auth()->check()
+                ? route('dashboard', ['current_team' => request()->route('current_team')])
+                : route('home') }}"
+                class="error404-button error404-secondary">
+                Return home
+            </a>
 
             </div>
 
