@@ -30,6 +30,7 @@ return new class extends Migration
                 ->index();
 
             $table->string('name');
+
             $table->string('email')->unique();
 
             $table->timestamps();
@@ -52,8 +53,8 @@ return new class extends Migration
 
             $table->string('type')
                 ->default('card');
-            // card, us_bank_account, cashapp, klarna
 
+            // card, us_bank_account, cashapp, klarna
             $table->string('brand')->nullable();
 
             $table->string('last4', 4)->nullable();
@@ -62,7 +63,8 @@ return new class extends Migration
 
             $table->string('exp_year', 4)->nullable();
 
-            $table->boolean('is_default')->default(false);
+            $table->boolean('is_default')
+                ->default(false);
 
             $table->timestamps();
         });
@@ -88,28 +90,28 @@ return new class extends Migration
             $table->string('stripe_id')
                 ->nullable()
                 ->index();
-            // Stripe Invoice ID or Subscription ID
 
+            // Stripe Invoice ID or Subscription ID
             $table->string('checkout_token', 64)
                 ->unique();
-            // Secure URL token for custom checkout
 
+            // Secure URL token for custom checkout
             $table->integer('total_amount')
                 ->default(0);
-            // Amount in cents
 
+            // Amount in cents
             $table->string('status')
                 ->default('pending');
-            // pending, paid, failed, void
 
+            // pending, paid, failed, void
             $table->string('payment_type')
                 ->default('one_time');
-            // one_time, subscription
 
+            // one_time, subscription
             $table->integer('subscription_months')
                 ->nullable();
-            // Minimum 12 if subscription
 
+            // Minimum 12 if subscription
             $table->timestamps();
         });
 
@@ -130,12 +132,19 @@ return new class extends Migration
 
             $table->integer('amount')
                 ->default(0);
-            // Amount in cents
 
+            // Amount in cents
             $table->string('stripe_price_id')
                 ->nullable();
 
             $table->boolean('is_subscription')
+                ->default(false);
+
+            /*
+             * false = base item
+             * true  = addon item
+             */
+            $table->boolean('is_addon')
                 ->default(false);
 
             $table->timestamps();
@@ -163,16 +172,16 @@ return new class extends Migration
                 ->index();
 
             $table->integer('amount');
-            // Amount in cents
 
+            // Amount in cents
             $table->string('status')
                 ->default('pending');
-            // pending, succeeded, failed
 
+            // pending, succeeded, failed
             $table->string('payment_method_type')
                 ->nullable();
-            // card, cashapp, etc.
 
+            // card, cashapp, etc.
             $table->text('error_message')
                 ->nullable();
 
@@ -186,13 +195,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('transactions');
-
         Schema::dropIfExists('invoice_items');
-
         Schema::dropIfExists('invoices');
-
         Schema::dropIfExists('payment_methods');
-
         Schema::dropIfExists('customers');
     }
 };

@@ -10,29 +10,26 @@ class InvoiceSignatureService
 {
     public function requiresSignature(Invoice $invoice): bool
     {
-        if ($invoice->payment_type === PaymentType::Subscription) {
-            return true;
-        }
-
-        if ($invoice->items()->where('is_subscription', true)->exists()) {
-            return true;
-        }
-
-        return false;
+        return $invoice->payment_type === PaymentType::Subscription
+            || $invoice->hasRecurringAddons();
     }
 
     public function hasSignedAgreement(Invoice $invoice): bool
     {
-        return ! empty($invoice->signature_data)
-            && ! empty($invoice->signature_signed_at);
+        return !empty($invoice->signature_data)
+            && !empty($invoice->signature_signed_at);
     }
 
-    public function saveSignature(Invoice $invoice, string $signatureData): void
-    {
+    public function saveSignature(
+        Invoice $invoice,
+        string $signatureData
+    ): void {
         $signature = trim($signatureData);
 
         if ($signature === '') {
-            throw new \InvalidArgumentException('A signature is required before payment can continue.');
+            throw new \InvalidArgumentException(
+                'A signature is required before payment can continue.'
+            );
         }
 
         $invoice->forceFill([

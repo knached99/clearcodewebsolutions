@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Mail;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
+use Illuminate\Support\Str;
 
 class ChargeCustomerModal extends Component
 {
@@ -52,17 +53,23 @@ class ChargeCustomerModal extends Component
     #[Computed]
     public function availableAddons(): array
     {
-        return Cache::remember('stripe_active_addons', 3600, function () {
-            try {
-                return app(StripeService::class)->getActiveAddons();
-            } catch (\Exception $e) {
-                Log::error(
-                    'Failed to fetch Stripe add-ons: '.$e->getMessage()
-                );
+        return Cache::remember(
+            'stripe_active_addons',
+            3600,
+            function () {
+                try {
+                    return app(StripeService::class)
+                        ->getActiveAddons();
+                } catch (\Exception $e) {
+                    Log::error(
+                        'Failed to fetch Stripe add-ons: '
+                        . $e->getMessage()
+                    );
 
-                return [];
+                    return [];
+                }
             }
-        });
+        );
     }
 
     #[Computed]
@@ -72,13 +79,16 @@ class ChargeCustomerModal extends Component
             return 0;
         }
 
-        return (int) round((float) $this->amount * 100);
+        return (int) round(
+            (float) $this->amount * 100
+        );
     }
 
     #[Computed]
     public function addonsMonthlyAmountInCents(): int
     {
         $total = 0;
+
         $addons = $this->availableAddons();
 
         foreach ($this->selectedAddonPriceIds as $priceId) {
@@ -107,9 +117,11 @@ class ChargeCustomerModal extends Component
     /**
      * Determines whether the invoice contains ANY recurring items.
      *
-     * An invoice is considered a subscription when:
-     * - the base charge is recurring OR
-     * - at least one monthly addon is selected
+     * This is separate from the invoice payment type.
+     *
+     * Recurring items can exist because:
+     * - the base charge is recurring
+     * - one or more monthly addons are selected
      */
     public function hasRecurringInvoiceItems(): bool
     {
@@ -118,15 +130,18 @@ class ChargeCustomerModal extends Component
     }
 
     /**
-     * Determines the overall invoice payment type.
+     * Determines the invoice payment type.
      *
      * IMPORTANT:
-     * This describes the invoice as a whole.
-     * It does NOT determine whether the base item itself is recurring.
+     * Only the BASE charge controls whether the invoice itself
+     * is classified as a subscription.
+     *
+     * Recurring addons do NOT turn a one-time base invoice
+     * into subscription revenue.
      */
     public function resolveInvoicePaymentType(): PaymentType
     {
-        return $this->hasRecurringInvoiceItems()
+        return $this->isSubscription
             ? PaymentType::Subscription
             : PaymentType::OneTime;
     }
@@ -155,7 +170,10 @@ class ChargeCustomerModal extends Component
     {
         $this->ticket = Ticket::findOrFail($ticketId);
 
-        $this->authorize('update', $this->ticket);
+        $this->authorize(
+            'update',
+            $this->ticket
+        );
 
         $this->resetForm();
 
@@ -173,8 +191,9 @@ class ChargeCustomerModal extends Component
     {
         $this->amount = '';
 
-        $this->description = 'Development Services - Ticket #'.
-            ($this->ticket?->ticket_number ?? 'N/A');
+        $this->description =
+            'Development Services - Ticket #'
+            . ($this->ticket?->ticket_number ?? 'N/A');
 
         $this->isSubscription = false;
 
@@ -185,11 +204,17 @@ class ChargeCustomerModal extends Component
 
     public function submit(StripeService $stripe)
     {
-        $this->authorize('update', $this->ticket);
+        $this->authorize(
+            'update',
+            $this->ticket
+        );
 
         $this->validate([
-            'amount' => 'required|numeric|min:1',
-            'description' => 'required|string|min:1|max:255',
+            'amount' =>
+                'required|numeric|min:1',
+
+            'description' =>
+                'required|string|min:1|max:255',
         ]);
 
         try {
@@ -205,46 +230,66 @@ class ChargeCustomerModal extends Component
             }
 
             /*
-             * The invoice can be a subscription even when the base
-             * charge itself is one-time.
-             *
-             * Example:
-             *
-             * Base:  $20,000 one-time
-             * Addon: $500/month
-             *
-             * Invoice payment type = Subscription
-             * Base item is_subscription = false
-             * Addon item is_subscription = true
-             */
-            $invoicePaymentType = $this->resolveInvoicePaymentType();
+            |--------------------------------------------------------------------------
+            | Invoice Payment Type
+            |--------------------------------------------------------------------------
+            |
+            | ONLY the base charge determines this.
+            |
+            | Base one-time + recurring addon:
+            |     payment_type = one_time
+            |
+            | Base recurring + recurring addon:
+            |     payment_type = subscription
+            |
+            */
+
+            $invoicePaymentType =
+                $this->resolveInvoicePaymentType();
 
             $invoice = new Invoice();
 
-            $invoice->ticket_id = $this->ticket->id;
-            $invoice->customer_id = $customer->id ?? null;
-            $invoice->checkout_token = \Illuminate\Support\Str::random(32);
+            $invoice->ticket_id =
+                $this->ticket->id;
+
+            $invoice->customer_id =
+                $customer->id ?? null;
+
+            $invoice->checkout_token =
+                Str::random(32);
 
             /*
-             * Amount due today:
-             *
-             * base amount
-             * +
-             * first month's recurring addon charges
-             */
-            $invoice->total_amount = $this->totalAmountInCents;
+            |--------------------------------------------------------------------------
+            | Amount Due Today
+            |--------------------------------------------------------------------------
+            |
+            | base amount
+            | +
+            | first month's recurring addon charges
+            |
+            */
+
+            $invoice->total_amount =
+                $this->totalAmountInCents;
 
             /*
-             * Overall invoice type.
-             *
-             * This is Subscription if ANY recurring item exists.
-             */
-            $invoice->payment_type = $invoicePaymentType;
+            |--------------------------------------------------------------------------
+            | Overall Invoice Type
+            |--------------------------------------------------------------------------
+            |
+            | This is based ONLY on the base charge.
+            |
+            */
+
+            $invoice->payment_type =
+                $invoicePaymentType;
 
             /*
-             * A recurring invoice has a 12-month minimum.
-             * One-time invoices do not.
-             */
+            |--------------------------------------------------------------------------
+            | Subscription Minimum
+            |--------------------------------------------------------------------------
+            */
+
             $invoice->subscription_months =
                 $invoicePaymentType === PaymentType::Subscription
                     ? 12
@@ -253,32 +298,37 @@ class ChargeCustomerModal extends Component
             $invoice->save();
 
             /*
-             * ============================================================
-             * BASE CHARGE
-             * ============================================================
-             *
-             * IMPORTANT:
-             * Use $this->isSubscription here.
-             *
-             * DO NOT use:
-             *
-             * $invoicePaymentType === PaymentType::Subscription
-             *
-             * because the invoice could be recurring solely because
-             * of monthly addons.
-             */
-            $invoice->items()->create([
-                'description' => $this->description.
-                    ($this->isSubscription
-                        ? ' (Monthly - 12 Mo. Minimum)'
-                        : ' (One-Time)'),
+            |--------------------------------------------------------------------------
+            | BASE CHARGE
+            |--------------------------------------------------------------------------
+            |
+            | IMPORTANT:
+            | The base item gets its own recurring state.
+            |
+            */
 
-                'amount' => $this->baseAmountInCents,
+            $baseItem = $invoice->items()->create([
+                'description' =>
+                    $this->description
+                    . (
+                        $this->isSubscription
+                            ? ' (Monthly - 12 Mo. Minimum)'
+                            : ' (One-Time)'
+                    ),
+
+                'amount' =>
+                    $this->baseAmountInCents,
 
                 /*
                  * Base charge's own billing type.
                  */
-                'is_subscription' => $this->isSubscription,
+                'is_subscription' =>
+                    $this->isSubscription,
+
+                /*
+                 * This is the BASE item, never an addon.
+                 */
+                'is_addon' => false,
 
                 /*
                  * Base custom amount does not use a Stripe recurring price.
@@ -287,12 +337,22 @@ class ChargeCustomerModal extends Component
             ]);
 
             /*
-             * ============================================================
-             * MONTHLY ADDONS
-             * ============================================================
-             *
-             * Every selected addon is recurring monthly.
+             * Ensure is_addon is saved even if InvoiceItem has
+             * guarded/mass-assignment restrictions.
              */
+            $baseItem->forceFill([
+                'is_addon' => false,
+            ])->save();
+
+            /*
+            |--------------------------------------------------------------------------
+            | MONTHLY ADDONS
+            |--------------------------------------------------------------------------
+            |
+            | Every selected addon is recurring monthly.
+            |
+            */
+
             $addons = $this->availableAddons();
 
             $selectedAddonDetails = [];
@@ -306,9 +366,12 @@ class ChargeCustomerModal extends Component
 
                 $selectedAddonDetails[] = $addon;
 
-                $invoice->items()->create([
-                    'description' => $addon['name'],
-                    'amount' => $addon['price_in_cents'],
+                $addonItem = $invoice->items()->create([
+                    'description' =>
+                        $addon['name'],
+
+                    'amount' =>
+                        $addon['price_in_cents'],
 
                     /*
                      * Addons are ALWAYS recurring.
@@ -316,37 +379,82 @@ class ChargeCustomerModal extends Component
                     'is_subscription' => true,
 
                     /*
+                     * This explicitly marks the item as an addon.
+                     */
+                    'is_addon' => true,
+
+                    /*
                      * Addons use their Stripe recurring Price ID.
                      */
                     'stripe_price_id' => $priceId,
                 ]);
+
+                /*
+                 * Ensure is_addon is saved even if InvoiceItem has
+                 * guarded/mass-assignment restrictions.
+                 */
+                $addonItem->forceFill([
+                    'is_addon' => true,
+                ])->save();
             }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Secure Checkout URL
+            |--------------------------------------------------------------------------
+            */
 
             $customCheckoutUrl = route(
                 'checkout.show',
-                ['token' => $invoice->checkout_token]
+                [
+                    'token' =>
+                        $invoice->checkout_token,
+                ]
             );
 
             /*
-             * Send checkout email.
-             *
-             * isSubscription describes the BASE charge specifically.
-             * monthlyRecurringAmountInCents contains the recurring
-             * base amount (when applicable) + recurring addons.
-             */
+            |--------------------------------------------------------------------------
+            | Send Checkout Email
+            |--------------------------------------------------------------------------
+            |
+            | isSubscription describes the BASE charge specifically.
+            |
+            | monthlyRecurringAmountInCents contains:
+            | - recurring base amount, when applicable
+            | - recurring addons
+            |
+            */
+
             Mail::to($customer->email)->send(
                 new InvoiceCheckoutMail(
-                    checkoutUrl: $customCheckoutUrl,
-                    ticket: $this->ticket,
-                    baseAmount: (float) $this->amount,
-                    description: $this->description,
-                    isSubscription: $this->isSubscription,
-                    selectedAddons: $selectedAddonDetails,
-                    totalAmountInCents: $this->totalAmountInCents,
-                    monthlyRecurringAmountInCents: $this->monthlyRecurringAmountInCents,
-                    subscriptionMonths: $invoicePaymentType === PaymentType::Subscription
-                        ? 12
-                        : null,
+                    checkoutUrl:
+                        $customCheckoutUrl,
+
+                    ticket:
+                        $this->ticket,
+
+                    baseAmount:
+                        (float) $this->amount,
+
+                    description:
+                        $this->description,
+
+                    isSubscription:
+                        $this->isSubscription,
+
+                    selectedAddons:
+                        $selectedAddonDetails,
+
+                    totalAmountInCents:
+                        $this->totalAmountInCents,
+
+                    monthlyRecurringAmountInCents:
+                        $this->monthlyRecurringAmountInCents,
+
+                    subscriptionMonths:
+                        $this->isSubscription
+                            ? 12
+                            : null,
                 )
             );
 
@@ -361,18 +469,27 @@ class ChargeCustomerModal extends Component
             );
         } catch (\Exception $e) {
             Log::error(
-                'Invoice generation error: '.$e->getMessage(),
+                'Invoice generation error: '
+                . $e->getMessage(),
                 [
-                    'ticket_id' => $this->ticket?->id,
-                    'amount' => $this->amount,
-                    'base_is_subscription' => $this->isSubscription,
-                    'selected_addons' => $this->selectedAddonPriceIds,
+                    'ticket_id' =>
+                        $this->ticket?->id,
+
+                    'amount' =>
+                        $this->amount,
+
+                    'base_is_subscription' =>
+                        $this->isSubscription,
+
+                    'selected_addons' =>
+                        $this->selectedAddonPriceIds,
                 ]
             );
 
             $this->addError(
                 'submit',
-                'An error occurred: '.$e->getMessage()
+                'An error occurred: '
+                . $e->getMessage()
             );
         }
     }
@@ -382,7 +499,8 @@ class ChargeCustomerModal extends Component
         return view(
             'livewire.teams.tickets.charge-customer-modal',
             [
-                'availableAddons' => $this->availableAddons(),
+                'availableAddons' =>
+                    $this->availableAddons(),
             ]
         );
     }

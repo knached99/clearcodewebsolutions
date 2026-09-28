@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\InvoiceStatus;
 use App\Enums\PaymentType;
+use App\Enums\TransactionStatus;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
@@ -84,7 +85,10 @@ class Invoice extends Model
     public function successfulTransaction(): ?\App\Models\Transaction
     {
         return $this->transactions()
-            ->where('status', \App\Enums\TransactionStatus::Succeeded)
+            ->where(
+                'status',
+                \App\Enums\TransactionStatus::Succeeded
+            )
             ->orderByDesc('created_at')
             ->first();
     }
@@ -96,11 +100,16 @@ class Invoice extends Model
 
     public function stripeProcessingFeeInCents(): int
     {
-        $fee = (int) ($this->successfulTransaction()?->processing_fee ?? 0);
+        $fee = (int) (
+            $this->successfulTransaction()?->processing_fee
+            ?? 0
+        );
 
         if ($fee === 0 && $this->total_amount > 0) {
-            // Estimate standard Stripe fee: 2.9% + 30 cents, represented as negative
-            $fee = -(int) round(($this->total_amount * 0.029) + 30);
+            // Estimate standard Stripe fee: 2.9% + 30 cents, represented as negative.
+            $fee = -(int) round(
+                ($this->total_amount * 0.029) + 30
+            );
         }
 
         return $fee;
@@ -108,7 +117,11 @@ class Invoice extends Model
 
     public function netAmountInCents(): int
     {
-        return max((int) $this->total_amount + (int) $this->stripeProcessingFeeInCents(), 0);
+        return max(
+            (int) $this->total_amount
+            + (int) $this->stripeProcessingFeeInCents(),
+            0
+        );
     }
 
     public function pabloCommissionInCents(): int
@@ -116,47 +129,91 @@ class Invoice extends Model
         $gross = (int) $this->total_amount;
         $rate = $gross < 200000 ? 0.10 : 0.20;
 
-        return (int) round($gross * $rate);
+        return (int) round(
+            $gross * $rate
+        );
     }
 
     public function teamShareAfterPabloInCents(): int
     {
-        return max($this->netAmountInCents() - $this->pabloCommissionInCents(), 0);
+        return max(
+            $this->netAmountInCents()
+            - $this->pabloCommissionInCents(),
+            0
+        );
     }
 
     public function ownerShareInCents(): int
     {
-        return (int) round($this->teamShareAfterPabloInCents() / 2);
+        return (int) round(
+            $this->teamShareAfterPabloInCents() / 2
+        );
     }
 
     public function partnerShareInCents(): int
     {
-        return max($this->teamShareAfterPabloInCents() - $this->ownerShareInCents(), 0);
+        return max(
+            $this->teamShareAfterPabloInCents()
+            - $this->ownerShareInCents(),
+            0
+        );
     }
 
     public function recurringDurationMonths(): int
     {
-        return max(1, (int) ($this->subscription_months ?? ($this->hasRecurringAddons() ? 12 : 1)));
+        return max(
+            1,
+            (int) (
+                $this->subscription_months
+                ?? (
+                    $this->hasRecurringBilling()
+                        ? 12
+                        : 1
+                )
+            )
+        );
     }
 
     public function recurringChargeStartedAt(): \Illuminate\Support\Carbon
     {
-        return \Illuminate\Support\Carbon::parse($this->created_at ?? now());
+        return \Illuminate\Support\Carbon::parse(
+            $this->created_at ?? now()
+        );
     }
 
     public function recurringChargeNextDueAt(): \Illuminate\Support\Carbon
     {
-        return $this->recurringChargeStartedAt()->addMonth();
+        return $this->recurringChargeStartedAt()
+            ->addMonth();
     }
 
     public function recurringChargeExpiresAt(): \Illuminate\Support\Carbon
     {
-        return $this->recurringChargeStartedAt()->addMonths($this->recurringDurationMonths());
+        return $this->recurringChargeStartedAt()
+            ->addMonths(
+                $this->recurringDurationMonths()
+            );
     }
 
-    public function hasRecurringBilling(): bool
+    /*
+    |--------------------------------------------------------------------------
+    | Recurring Base
+    |--------------------------------------------------------------------------
+    |
+    | ONLY the base item's is_subscription flag determines whether
+    | the base amount itself is recurring.
+    |
+    | The base item does not need a stripe_price_id because the base
+    | amount is a custom amount.
+    |
+    */
+
+    public function hasRecurringBaseAmount(): bool
     {
-        return $this->isSubscription() || $this->hasRecurringAddons();
+        return $this->items()
+            ->where('is_subscription', true)
+            ->where('is_addon', false)
+            ->exists();
     }
 
     public function hasCompletedTwelveMonthMinimum(): bool
@@ -165,24 +222,50 @@ class Invoice extends Model
             && (int) ($this->subscription_months ?? 0) >= 12;
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Recurring Addons
+    |--------------------------------------------------------------------------
+    |
+    | Addons are ALWAYS recurring and use a Stripe recurring Price ID.
+    |
+    */
+
     public function hasRecurringAddons(): bool
     {
         return $this->items()
             ->where('is_subscription', true)
+            ->where('is_addon', true)
             ->whereNotNull('stripe_price_id')
             ->exists();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Recurring Billing
+    |--------------------------------------------------------------------------
+    |
+    | This means the invoice has something that recurs.
+    | It does NOT mean the invoice itself is subscription revenue.
+    |
+    */
+
+    public function hasRecurringBilling(): bool
+    {
+        return $this->hasRecurringBaseAmount()
+            || $this->hasRecurringAddons();
     }
 
     public function requiresSignature(): bool
     {
         return $this->payment_type === PaymentType::Subscription
-            || $this->items()->where('is_subscription', true)->exists();
+            || $this->hasRecurringAddons();
     }
 
     public function hasSignedAgreement(): bool
     {
-        return ! empty($this->signature_data)
-            && ! empty($this->signature_signed_at);
+        return !empty($this->signature_data)
+            && !empty($this->signature_signed_at);
     }
 
     /**
@@ -230,18 +313,24 @@ class Invoice extends Model
     public function estimatedMonthlyStripeFeeInCents(): int
     {
         $amount = $this->monthlyRecurringAmountInCents();
+
         if ($amount === 0) {
             return 0;
         }
 
-        // Standard Stripe fee: 2.9% + 30 cents. Represented as negative to match initial processing fee format.
+        // Standard Stripe fee: 2.9% + 30 cents. Represented as negative.
         $fee = ($amount * 0.029) + 30;
+
         return -(int) round($fee);
     }
 
     public function monthlyNetAmountInCents(): int
     {
-        return max($this->monthlyRecurringAmountInCents() + $this->estimatedMonthlyStripeFeeInCents(), 0);
+        return max(
+            $this->monthlyRecurringAmountInCents()
+            + $this->estimatedMonthlyStripeFeeInCents(),
+            0
+        );
     }
 
     public function monthlyPabloCommissionInCents(): int
@@ -249,50 +338,63 @@ class Invoice extends Model
         $gross = $this->monthlyRecurringAmountInCents();
         $rate = $gross < 200000 ? 0.10 : 0.20;
 
-        return (int) round($gross * $rate);
+        return (int) round(
+            $gross * $rate
+        );
     }
 
     public function monthlyTeamShareAfterPabloInCents(): int
     {
-        return max($this->monthlyNetAmountInCents() - $this->monthlyPabloCommissionInCents(), 0);
+        return max(
+            $this->monthlyNetAmountInCents()
+            - $this->monthlyPabloCommissionInCents(),
+            0
+        );
     }
 
     public function monthlyOwnerShareInCents(): int
     {
-        return (int) round($this->monthlyTeamShareAfterPabloInCents() / 2);
+        return (int) round(
+            $this->monthlyTeamShareAfterPabloInCents() / 2
+        );
     }
 
     public function monthlyPartnerShareInCents(): int
     {
-        return max($this->monthlyTeamShareAfterPabloInCents() - $this->monthlyOwnerShareInCents(), 0);
+        return max(
+            $this->monthlyTeamShareAfterPabloInCents()
+            - $this->monthlyOwnerShareInCents(),
+            0
+        );
     }
 
     public function nextBillingDate(): \Illuminate\Support\Carbon
     {
-        return \Illuminate\Support\Carbon::parse($this->created_at ?? now())->addMonth();
+        return \Illuminate\Support\Carbon::parse(
+            $this->created_at ?? now()
+        )->addMonth();
     }
 
     public function renewalDate(): \Illuminate\Support\Carbon
     {
-        $months = max(1, (int) ($this->subscription_months ?? 12));
+        $months = max(
+            1,
+            (int) ($this->subscription_months ?? 12)
+        );
 
-        return \Illuminate\Support\Carbon::parse($this->created_at ?? now())->addMonths($months);
+        return \Illuminate\Support\Carbon::parse(
+            $this->created_at ?? now()
+        )->addMonths($months);
     }
 
     /**
      * Get the estimated total value over the 12-month minimum term.
      *
-     * Example:
-     * $10,000 one-time base charge
-     * + $505/month recurring
-     * = $16,060 estimated 12-month value
+     * One-time items are counted once.
+     * Recurring items are counted for 12 months.
      */
     public function estimated12MonthValueInCents(): int
     {
-        if (! $this->isSubscription()) {
-            return $this->totalAmountInCents();
-        }
-
         $oneTimeAmount = (int) $this->items
             ->where('is_subscription', false)
             ->sum('amount');
@@ -327,7 +429,10 @@ class Invoice extends Model
      */
     public function checkoutUrl(): string
     {
-        return route('checkout.show', $this->checkout_token);
+        return route(
+            'checkout.show',
+            $this->checkout_token
+        );
     }
 
     /**

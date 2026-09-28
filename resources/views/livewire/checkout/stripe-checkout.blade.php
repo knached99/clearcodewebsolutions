@@ -4,6 +4,10 @@
 
 <div class="cc-checkout">
     <style>
+        html,
+        body {
+            background: oklch(13% 0.028 261.692) !important;
+        }
         .cc-checkout {
             width: 100%;
             max-width: 980px;
@@ -20,19 +24,23 @@
         }
 
         .cc-checkout__shell {
-            background: #120e14;
-            border: 1px solid #2a2230;
+            background: #0b090d;
+            border: 1px solid #27212b;
             border-radius: 18px;
             overflow: hidden;
-            box-shadow: 0 18px 60px rgba(0, 0, 0, .28);
+            box-shadow: 0 18px 60px rgba(0, 0, 0, .45);
         }
 
         .cc-checkout__header {
             padding: 28px 30px 24px;
-            border-bottom: 1px solid #2a2230;
+            border-bottom: 1px solid #27212b;
             background:
-                radial-gradient(circle at top right, rgba(208, 139, 212, .10), transparent 35%),
-                #151016;
+                radial-gradient(
+                    circle at top right,
+                    rgba(208, 139, 212, .10),
+                    transparent 35%
+                ),
+                #100c12;
         }
 
         .cc-checkout__eyebrow {
@@ -64,6 +72,7 @@
             grid-template-columns: minmax(0, 1.35fr) minmax(320px, .85fr);
             gap: 24px;
             padding: 26px;
+            background: #0b090d;
         }
 
         .cc-checkout__main,
@@ -76,7 +85,7 @@
             padding: 20px;
             border: 1px solid #29222d;
             border-radius: 14px;
-            background: #171219;
+            background: #131017;
         }
 
         .cc-checkout__section:last-child {
@@ -127,7 +136,7 @@
             border: 1px solid #3b313f;
             border-radius: 10px;
             outline: none;
-            background: #0f0b11;
+            background: #0d0a0f;
             color: #fff;
             font-size: 14px;
             transition:
@@ -158,7 +167,7 @@
             padding: 13px 14px;
             border: 1px solid #2c2530;
             border-radius: 11px;
-            background: #100c12;
+            background: #0e0b10;
         }
 
         .cc-checkout__item-info {
@@ -203,7 +212,7 @@
             padding: 3px 8px;
             border: 1px solid #4a3150;
             border-radius: 999px;
-            background: #25192a;
+            background: #211629;
             color: #d08bd4;
             font-size: 10px;
             font-weight: 700;
@@ -266,7 +275,7 @@
             padding: 14px;
             border: 1px solid #342937;
             border-radius: 11px;
-            background: #100c12;
+            background: #0e0b10;
             color: #aaa1ab;
             font-size: 12px;
             line-height: 1.6;
@@ -276,7 +285,7 @@
             overflow: hidden;
             border: 1px solid #3b313f;
             border-radius: 11px;
-            background: #fff;
+            background: #0d0a0f;
         }
 
         .cc-checkout__signature canvas {
@@ -285,7 +294,7 @@
             height: 180px;
             touch-action: none;
             cursor: crosshair;
-            background: #fff;
+            background: #0d0a0f;
         }
 
         .cc-checkout__signature-toolbar {
@@ -294,8 +303,8 @@
             justify-content: space-between;
             gap: 12px;
             padding: 9px 11px;
-            border-top: 1px solid #e3dce6;
-            background: #f8f6f9;
+            border-top: 1px solid #2f2833;
+            background: #151116;
         }
 
         .cc-checkout__signature-hint {
@@ -387,7 +396,7 @@
             padding: 12px 13px;
             border: 1px solid #5a3038;
             border-radius: 10px;
-            background: #261316;
+            background: #241216;
             color: #f1aeb8;
             font-size: 12px;
             line-height: 1.5;
@@ -395,6 +404,7 @@
 
         .cc-checkout__success {
             padding: 42px 26px;
+            background: #0b090d;
             text-align: center;
         }
 
@@ -406,7 +416,7 @@
             height: 54px;
             margin-bottom: 15px;
             border-radius: 50%;
-            background: #213321;
+            background: #17251a;
             color: #8fd48f;
         }
 
@@ -515,10 +525,11 @@
 
             <div class="cc-checkout__body">
                 <main class="cc-checkout__main">
-
                     {{-- BILLING --}}
                     <section class="cc-checkout__section">
-                        <h2 class="cc-checkout__section-title">Billing information</h2>
+                        <h2 class="cc-checkout__section-title">
+                            Billing information
+                        </h2>
 
                         <p class="cc-checkout__section-text">
                             Enter the billing details that should be associated with this payment.
@@ -526,7 +537,10 @@
 
                         <div class="cc-checkout__grid">
                             <div class="cc-checkout__field">
-                                <label class="cc-checkout__label" for="billing-name">
+                                <label
+                                    class="cc-checkout__label"
+                                    for="billing-name"
+                                >
                                     Full name
                                 </label>
 
@@ -541,7 +555,10 @@
                             </div>
 
                             <div class="cc-checkout__field">
-                                <label class="cc-checkout__label" for="billing-email">
+                                <label
+                                    class="cc-checkout__label"
+                                    for="billing-email"
+                                >
                                     Email address
                                 </label>
 
@@ -559,8 +576,13 @@
 
                     {{-- AGREEMENT SIGNATURE --}}
                     @if ($signatureRequired && !$hasSignedAgreement)
-                        <section class="cc-checkout__section cc-checkout__agreement" wire:ignore>
-                            <h2 class="cc-checkout__section-title">Agreement signature</h2>
+                        <section
+                            class="cc-checkout__section cc-checkout__agreement"
+                            wire:ignore
+                        >
+                            <h2 class="cc-checkout__section-title">
+                                Agreement signature
+                            </h2>
 
                             <p class="cc-checkout__section-text">
                                 This invoice includes recurring services. Please sign the agreement below before continuing to payment.
@@ -609,7 +631,9 @@
                     @if (!$signatureRequired || $hasSignedAgreement)
                         @if ($clientSecret && $paymentStatus !== 'succeeded' && $paymentStatus !== 'processing')
                             <section class="cc-checkout__section">
-                                <h2 class="cc-checkout__section-title">Payment</h2>
+                                <h2 class="cc-checkout__section-title">
+                                    Payment
+                                </h2>
 
                                 <p class="cc-checkout__section-text">
                                     Your payment is securely processed by Stripe.
@@ -648,10 +672,14 @@
                                     hidden
                                 ></div>
 
-                                <div class="cc-checkout__status" data-stripe-status>
+                                <div
+                                    class="cc-checkout__status"
+                                    data-stripe-status
+                                >
                                     Secure Stripe payment form is initializing...
                                 </div>
                             </section>
+
                         @elseif ($paymentStatus === 'processing')
                             <section class="cc-checkout__section">
                                 <h2 class="cc-checkout__section-title">
@@ -662,6 +690,7 @@
                                     Stripe is processing your payment. You can safely keep this page open while the payment completes.
                                 </p>
                             </section>
+
                         @elseif ($paymentStatus !== 'succeeded')
                             <section class="cc-checkout__section">
                                 <h2 class="cc-checkout__section-title">
@@ -689,7 +718,9 @@
                 {{-- ORDER SUMMARY --}}
                 <aside class="cc-checkout__sidebar">
                     <section class="cc-checkout__section">
-                        <h2 class="cc-checkout__section-title">Order summary</h2>
+                        <h2 class="cc-checkout__section-title">
+                            Order summary
+                        </h2>
 
                         <p class="cc-checkout__section-text">
                             Invoice items
@@ -711,13 +742,22 @@
                                         ?? $item->price
                                         ?? 0;
 
-                                    $quantity = max(1, (int) ($item->quantity ?? 1));
+                                    $quantity = max(
+                                        1,
+                                        (int) ($item->quantity ?? 1)
+                                    );
 
-                                    $displayTotal = $item->total !== null && $item->total !== ''
-                                        ? (float) $item->total
-                                        : ((float) $itemTotal * $quantity);
+                                    $displayTotal =
+                                        $item->total !== null
+                                        && $item->total !== ''
+                                            ? (float) $item->total
+                                            : ((float) $itemTotal * $quantity);
 
-                                    $displayTotalFormatted = number_format($displayTotal / 100, 2);
+                                    $displayTotalFormatted =
+                                        number_format(
+                                            $displayTotal / 100,
+                                            2
+                                        );
                                 @endphp
 
                                 <div
@@ -732,7 +772,11 @@
                                         <div class="cc-checkout__item-meta">
                                             @if ($item->is_subscription)
                                                 <span class="cc-checkout__addon-badge">
-                                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                    <svg
+                                                        viewBox="0 0 24 24"
+                                                        fill="none"
+                                                        aria-hidden="true"
+                                                    >
                                                         <path
                                                             d="M20 7h-9a5 5 0 0 0-5 5v1"
                                                             stroke="currentColor"
@@ -740,6 +784,7 @@
                                                             stroke-linecap="round"
                                                             stroke-linejoin="round"
                                                         />
+
                                                         <path
                                                             d="m7 10-3 3 3 3"
                                                             stroke="currentColor"
@@ -747,6 +792,7 @@
                                                             stroke-linecap="round"
                                                             stroke-linejoin="round"
                                                         />
+
                                                         <path
                                                             d="M4 17h9a5 5 0 0 0 5-5v-1"
                                                             stroke="currentColor"
@@ -754,6 +800,7 @@
                                                             stroke-linecap="round"
                                                             stroke-linejoin="round"
                                                         />
+
                                                         <path
                                                             d="m17 14 3-3-3-3"
                                                             stroke="currentColor"
@@ -792,7 +839,10 @@
                             @endforeach
                         </div>
 
-                        <div class="cc-checkout__summary" style="margin-top:18px;">
+                        <div
+                            class="cc-checkout__summary"
+                            style="margin-top:18px;"
+                        >
                             <div class="cc-checkout__summary-row cc-checkout__summary-total">
                                 <span>Total</span>
                                 <strong>${{ $formattedTotal }}</strong>
@@ -871,7 +921,9 @@
             return;
         }
 
-        el.textContent = message || 'Unable to initialize the payment form.';
+        el.textContent =
+            message || 'Unable to initialize the payment form.';
+
         el.hidden = false;
     };
 
@@ -955,46 +1007,68 @@
         currentClientSecret = clientSecret;
 
         clearStripeError();
-        setPaymentButtonState(true, 'Loading secure payment form...');
-        setStripeStatus('Loading secure payment form...');
+        setPaymentButtonState(
+            true,
+            'Loading secure payment form...'
+        );
+        setStripeStatus(
+            'Loading secure payment form...'
+        );
 
         try {
             await waitForDom();
 
-            const paymentMount = root.querySelector('#payment-element');
-            const paymentContainer = stripePaymentContainer();
-            const loading = stripeLoading();
+            const paymentMount =
+                root.querySelector('#payment-element');
+
+            const paymentContainer =
+                stripePaymentContainer();
+
+            const loading =
+                stripeLoading();
 
             if (!paymentMount || !paymentContainer) {
-                throw new Error('Stripe payment container is not available in the DOM.');
+                throw new Error(
+                    'Stripe payment container is not available in the DOM.'
+                );
             }
 
             if (!window.Stripe) {
-                throw new Error('Stripe.js failed to load.');
+                throw new Error(
+                    'Stripe.js failed to load.'
+                );
             }
 
             if (stripePaymentId) {
                 // Existing Stripe instance can be reused.
             } else {
-                stripe = stripe || window.Stripe(publishableKey);
+                stripe = stripe || window.Stripe(
+                    publishableKey
+                );
             }
 
             if (!stripe) {
-                stripe = window.Stripe(publishableKey);
+                stripe = window.Stripe(
+                    publishableKey
+                );
             }
 
             destroyStripeElement();
 
-            const billingName = billingNameInput()?.value?.trim() || '';
-            const billingEmail = billingEmailInput()?.value?.trim() || '';
+            const billingName =
+                billingNameInput()?.value?.trim() || '';
+
+            const billingEmail =
+                billingEmailInput()?.value?.trim() || '';
 
             elements = stripe.elements({
                 clientSecret,
                 appearance: {
                     theme: 'night',
+
                     variables: {
                         colorPrimary: '#b56ab9',
-                        colorBackground: '#100c12',
+                        colorBackground: '#0d0a0f',
                         colorText: '#f5f2f7',
                         colorTextSecondary: '#a69da9',
                         colorDanger: '#e58d9c',
@@ -1010,72 +1084,106 @@
              * Stripe does NOT accept billingDetails.email = "always".
              * Valid values for email here are "never" or "auto".
              */
-            paymentElement = elements.create('payment', {
-                layout: {
-                    type: 'tabs',
-                },
-
-                defaultValues: {
-                    billingDetails: {
-                        name: billingName,
-                        email: billingEmail,
+            paymentElement = elements.create(
+                'payment',
+                {
+                    layout: {
+                        type: 'tabs',
                     },
-                },
 
-                fields: {
-                    billingDetails: {
-                        name: 'always',
-                        email: 'auto',
-                        address: 'if_required',
+                    defaultValues: {
+                        billingDetails: {
+                            name: billingName,
+                            email: billingEmail,
+                        },
                     },
-                },
 
-                wallets: {
-                    applePay: 'auto',
-                    googlePay: 'auto',
-                    link: 'auto',
-                },
-            });
+                    fields: {
+                        billingDetails: {
+                            name: 'always',
+                            email: 'auto',
+                            address: 'if_required',
+                        },
+                    },
 
-            paymentElement.on('loaderstart', () => {
-                setStripeStatus('Loading Stripe payment form...');
-            });
-
-            paymentElement.on('ready', () => {
-                paymentElementReady = true;
-
-                if (loading) {
-                    loading.hidden = true;
+                    wallets: {
+                        applePay: 'auto',
+                        googlePay: 'auto',
+                        link: 'auto',
+                    },
                 }
+            );
 
-                paymentContainer.hidden = false;
-
-                setPaymentButtonState(false, `Pay ${@js('$' . $formattedTotal)}`);
-                setStripeStatus('Your payment information is ready.');
-            });
-
-            paymentElement.on('change', (event) => {
-                if (event?.error?.message) {
-                    showStripeError(event.error.message);
-                } else {
-                    clearStripeError();
+            paymentElement.on(
+                'loaderstart',
+                () => {
+                    setStripeStatus(
+                        'Loading Stripe payment form...'
+                    );
                 }
-            });
+            );
 
-            paymentElement.on('loaderror', (event) => {
-                const message =
-                    event?.error?.message
-                    || 'Stripe could not load the payment form.';
+            paymentElement.on(
+                'ready',
+                () => {
+                    paymentElementReady = true;
 
-                showStripeError(message);
-                setPaymentButtonState(true, 'Payment form unavailable');
-                setStripeStatus('Stripe payment form failed to load.');
-            });
+                    if (loading) {
+                        loading.hidden = true;
+                    }
+
+                    paymentContainer.hidden = false;
+
+                    setPaymentButtonState(
+                        false,
+                        `Pay ${@js('$' . $formattedTotal)}`
+                    );
+
+                    setStripeStatus(
+                        'Your payment information is ready.'
+                    );
+                }
+            );
+
+            paymentElement.on(
+                'change',
+                (event) => {
+                    if (event?.error?.message) {
+                        showStripeError(
+                            event.error.message
+                        );
+                    } else {
+                        clearStripeError();
+                    }
+                }
+            );
+
+            paymentElement.on(
+                'loaderror',
+                (event) => {
+                    const message =
+                        event?.error?.message
+                        || 'Stripe could not load the payment form.';
+
+                    showStripeError(message);
+
+                    setPaymentButtonState(
+                        true,
+                        'Payment form unavailable'
+                    );
+
+                    setStripeStatus(
+                        'Stripe payment form failed to load.'
+                    );
+                }
+            );
 
             paymentElement.mount(paymentMount);
-
         } catch (error) {
-            console.error('Stripe initialization failed:', error);
+            console.error(
+                'Stripe initialization failed:',
+                error
+            );
 
             paymentElementReady = false;
             paymentElement = null;
@@ -1086,16 +1194,30 @@
                 || 'Unable to initialize Stripe payment form.'
             );
 
-            setPaymentButtonState(true, 'Payment form unavailable');
-            setStripeStatus('Stripe initialization failed.');
+            setPaymentButtonState(
+                true,
+                'Payment form unavailable'
+            );
+
+            setStripeStatus(
+                'Stripe initialization failed.'
+            );
         } finally {
             initializingStripe = false;
         }
     };
 
     const submitPayment = async () => {
-        if (!stripe || !elements || !paymentElement || !paymentElementReady) {
-            showStripeError('The secure payment form is not ready yet.');
+        if (
+            !stripe
+            || !elements
+            || !paymentElement
+            || !paymentElementReady
+        ) {
+            showStripeError(
+                'The secure payment form is not ready yet.'
+            );
+
             return;
         }
 
@@ -1107,12 +1229,21 @@
 
         clearStripeError();
 
-        setPaymentButtonState(true, 'Processing payment...');
-        setStripeStatus('Validating your payment details...');
+        setPaymentButtonState(
+            true,
+            'Processing payment...'
+        );
+
+        setStripeStatus(
+            'Validating your payment details...'
+        );
 
         try {
-            const billingName = billingNameInput()?.value?.trim() || '';
-            const billingEmail = billingEmailInput()?.value?.trim() || '';
+            const billingName =
+                billingNameInput()?.value?.trim() || '';
+
+            const billingEmail =
+                billingEmailInput()?.value?.trim() || '';
 
             $wire.billingName = billingName;
             $wire.billingEmail = billingEmail;
@@ -1127,7 +1258,8 @@
              * Stripe requires Elements submission before confirmation
              * when using the Payment Element.
              */
-            const submitResult = await elements.submit();
+            const submitResult =
+                await elements.submit();
 
             if (submitResult?.error) {
                 showStripeError(
@@ -1135,23 +1267,33 @@
                     || 'Please correct the payment details and try again.'
                 );
 
-                setPaymentButtonState(false, `Pay ${@js('$' . $formattedTotal)}`);
-                setStripeStatus('Please review the payment details.');
+                setPaymentButtonState(
+                    false,
+                    `Pay ${@js('$' . $formattedTotal)}`
+                );
+
+                setStripeStatus(
+                    'Please review the payment details.'
+                );
 
                 return;
             }
 
-            setStripeStatus('Confirming payment securely with Stripe...');
+            setStripeStatus(
+                'Confirming payment securely with Stripe...'
+            );
 
-            const result = await stripe.confirmPayment({
-                elements,
+            const result =
+                await stripe.confirmPayment({
+                    elements,
 
-                confirmParams: {
-                    return_url: window.location.href,
-                },
+                    confirmParams: {
+                        return_url:
+                            window.location.href,
+                    },
 
-                redirect: 'if_required',
-            });
+                    redirect: 'if_required',
+                });
 
             if (result?.error) {
                 showStripeError(
@@ -1159,13 +1301,20 @@
                     || 'Stripe could not confirm this payment.'
                 );
 
-                setPaymentButtonState(false, `Pay ${@js('$' . $formattedTotal)}`);
-                setStripeStatus('Payment confirmation failed.');
+                setPaymentButtonState(
+                    false,
+                    `Pay ${@js('$' . $formattedTotal)}`
+                );
+
+                setStripeStatus(
+                    'Payment confirmation failed.'
+                );
 
                 return;
             }
 
-            const paymentIntent = result?.paymentIntent;
+            const paymentIntent =
+                result?.paymentIntent;
 
             if (!paymentIntent) {
                 throw new Error(
@@ -1173,9 +1322,11 @@
                 );
             }
 
-            stripePaymentId = paymentIntent.id;
+            stripePaymentId =
+                paymentIntent.id;
 
-            const backendPaymentIntentId = @js($paymentIntentId);
+            const backendPaymentIntentId =
+                @js($paymentIntentId);
 
             if (
                 backendPaymentIntentId
@@ -1186,57 +1337,89 @@
                 );
             }
 
-            const expectedAmount = Number(@js($totalInCents));
+            const expectedAmount =
+                Number(@js($totalInCents));
 
             if (
                 Number.isFinite(expectedAmount)
                 && expectedAmount > 0
-                && Number(paymentIntent.amount) !== expectedAmount
+                && Number(paymentIntent.amount)
+                    !== expectedAmount
             ) {
                 throw new Error(
                     'The confirmed payment amount does not match the invoice total.'
                 );
             }
 
-            if (paymentIntent.currency !== 'usd') {
+            if (
+                paymentIntent.currency !== 'usd'
+            ) {
                 throw new Error(
                     'The confirmed payment currency does not match the invoice.'
                 );
             }
 
-            if (paymentIntent.status === 'succeeded') {
-                setStripeStatus('Payment confirmed.');
+            if (
+                paymentIntent.status === 'succeeded'
+            ) {
+                setStripeStatus(
+                    'Payment confirmed.'
+                );
 
-                await $wire.paymentCompleted(paymentIntent.id);
+                await $wire.paymentCompleted(
+                    paymentIntent.id
+                );
 
-                setPaymentButtonState(true, 'Payment complete');
+                setPaymentButtonState(
+                    true,
+                    'Payment complete'
+                );
+
                 return;
             }
 
-            if (paymentIntent.status === 'processing') {
-                setStripeStatus('Payment is processing.');
+            if (
+                paymentIntent.status === 'processing'
+            ) {
+                setStripeStatus(
+                    'Payment is processing.'
+                );
 
-                await $wire.paymentCompleted(paymentIntent.id);
+                await $wire.paymentCompleted(
+                    paymentIntent.id
+                );
 
-                setPaymentButtonState(true, 'Payment processing');
+                setPaymentButtonState(
+                    true,
+                    'Payment processing'
+                );
+
                 return;
             }
 
-            if (paymentIntent.status === 'requires_action') {
+            if (
+                paymentIntent.status === 'requires_action'
+            ) {
                 setStripeStatus(
                     'Additional authentication is required to complete the payment.'
                 );
 
-                setPaymentButtonState(false, `Pay ${@js('$' . $formattedTotal)}`);
+                setPaymentButtonState(
+                    false,
+                    `Pay ${@js('$' . $formattedTotal)}`
+                );
+
                 return;
             }
 
             throw new Error(
                 `Stripe returned payment status: ${paymentIntent.status}`
             );
-
         } catch (error) {
-            console.error('Payment submission failed:', error);
+            console.error(
+                'Payment submission failed:',
+                error
+            );
 
             const message =
                 error?.message
@@ -1244,8 +1427,14 @@
 
             showStripeError(message);
 
-            setPaymentButtonState(false, `Pay ${@js('$' . $formattedTotal)}`);
-            setStripeStatus('Payment could not be completed.');
+            setPaymentButtonState(
+                false,
+                `Pay ${@js('$' . $formattedTotal)}`
+            );
+
+            setStripeStatus(
+                'Payment could not be completed.'
+            );
         }
     };
 
@@ -1253,15 +1442,22 @@
      * Signature pad
      */
     const setupSignaturePad = () => {
-        const canvas = root.querySelector('#agreement-signature-pad');
+        const canvas =
+            root.querySelector(
+                '#agreement-signature-pad'
+            );
 
-        if (!canvas || canvas.dataset.initialized === '1') {
+        if (
+            !canvas
+            || canvas.dataset.initialized === '1'
+        ) {
             return;
         }
 
         canvas.dataset.initialized = '1';
 
-        const ctx = canvas.getContext('2d');
+        const ctx =
+            canvas.getContext('2d');
 
         if (!ctx) {
             return;
@@ -1270,17 +1466,28 @@
         ctx.lineWidth = 2.1;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-        ctx.strokeStyle = '#171219';
+
+        /*
+         * Dark-mode signature pad:
+         * light ink on a dark canvas.
+         */
+        ctx.strokeStyle = '#f5f2f7';
 
         let drawing = false;
         let hasInk = false;
 
         const pointFromEvent = (event) => {
-            const rect = canvas.getBoundingClientRect();
+            const rect =
+                canvas.getBoundingClientRect();
 
             return {
-                x: (event.clientX - rect.left) * (canvas.width / rect.width),
-                y: (event.clientY - rect.top) * (canvas.height / rect.height),
+                x:
+                    (event.clientX - rect.left)
+                    * (canvas.width / rect.width),
+
+                y:
+                    (event.clientY - rect.top)
+                    * (canvas.height / rect.height),
             };
         };
 
@@ -1290,16 +1497,28 @@
             drawing = true;
 
             try {
-                canvas.setPointerCapture(event.pointerId);
+                canvas.setPointerCapture(
+                    event.pointerId
+                );
             } catch (e) {
                 // Ignore unsupported pointer capture.
             }
 
-            const point = pointFromEvent(event);
+            const point =
+                pointFromEvent(event);
 
             ctx.beginPath();
-            ctx.moveTo(point.x, point.y);
-            ctx.lineTo(point.x + 0.01, point.y + 0.01);
+
+            ctx.moveTo(
+                point.x,
+                point.y
+            );
+
+            ctx.lineTo(
+                point.x + 0.01,
+                point.y + 0.01
+            );
+
             ctx.stroke();
 
             hasInk = true;
@@ -1312,9 +1531,14 @@
 
             event.preventDefault();
 
-            const point = pointFromEvent(event);
+            const point =
+                pointFromEvent(event);
 
-            ctx.lineTo(point.x, point.y);
+            ctx.lineTo(
+                point.x,
+                point.y
+            );
+
             ctx.stroke();
 
             hasInk = true;
@@ -1326,98 +1550,179 @@
             }
 
             event.preventDefault();
+
             drawing = false;
 
             try {
-                canvas.releasePointerCapture(event.pointerId);
+                canvas.releasePointerCapture(
+                    event.pointerId
+                );
             } catch (e) {
                 // Ignore unsupported pointer capture.
             }
         };
 
-        canvas.addEventListener('pointerdown', start, { passive: false });
-        canvas.addEventListener('pointermove', move, { passive: false });
-        canvas.addEventListener('pointerup', stop, { passive: false });
-        canvas.addEventListener('pointercancel', stop, { passive: false });
-        canvas.addEventListener('pointerleave', stop, { passive: false });
+        canvas.addEventListener(
+            'pointerdown',
+            start,
+            { passive: false }
+        );
 
-        canvas.closest('.cc-checkout__agreement')
-            ?.querySelector('[data-clear-signature]')
-            ?.addEventListener('click', () => {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                hasInk = false;
-            });
+        canvas.addEventListener(
+            'pointermove',
+            move,
+            { passive: false }
+        );
 
-        canvas.closest('.cc-checkout__agreement')
-            ?.querySelector('[data-signature-submit]')
-            ?.addEventListener('click', async () => {
-                if (!hasInk) {
-                    alert('Please sign the agreement before continuing.');
-                    return;
+        canvas.addEventListener(
+            'pointerup',
+            stop,
+            { passive: false }
+        );
+
+        canvas.addEventListener(
+            'pointercancel',
+            stop,
+            { passive: false }
+        );
+
+        canvas.addEventListener(
+            'pointerleave',
+            stop,
+            { passive: false }
+        );
+
+        canvas
+            .closest('.cc-checkout__agreement')
+            ?.querySelector(
+                '[data-clear-signature]'
+            )
+            ?.addEventListener(
+                'click',
+                () => {
+                    ctx.clearRect(
+                        0,
+                        0,
+                        canvas.width,
+                        canvas.height
+                    );
+
+                    hasInk = false;
                 }
+            );
 
-                const submitButton = root.querySelector('[data-signature-submit]');
+        canvas
+            .closest('.cc-checkout__agreement')
+            ?.querySelector(
+                '[data-signature-submit]'
+            )
+            ?.addEventListener(
+                'click',
+                async () => {
+                    if (!hasInk) {
+                        alert(
+                            'Please sign the agreement before continuing.'
+                        );
 
-                if (submitButton) {
-                    submitButton.disabled = true;
-                    submitButton.textContent = 'Saving signature...';
-                }
-
-                try {
-                    const signatureData = canvas.toDataURL('image/png');
-
-                    await $wire.saveSignature(signatureData);
-                } catch (error) {
-                    console.error('Signature submission failed:', error);
-
-                    if (submitButton) {
-                        submitButton.disabled = false;
-                        submitButton.textContent = 'Sign agreement and continue';
+                        return;
                     }
 
-                    alert(
-                        error?.message
-                        || 'The signature could not be saved.'
-                    );
+                    const submitButton =
+                        root.querySelector(
+                            '[data-signature-submit]'
+                        );
+
+                    if (submitButton) {
+                        submitButton.disabled = true;
+
+                        submitButton.textContent =
+                            'Saving signature...';
+                    }
+
+                    try {
+                        const signatureData =
+                            canvas.toDataURL(
+                                'image/png'
+                            );
+
+                        await $wire.saveSignature(
+                            signatureData
+                        );
+                    } catch (error) {
+                        console.error(
+                            'Signature submission failed:',
+                            error
+                        );
+
+                        if (submitButton) {
+                            submitButton.disabled = false;
+
+                            submitButton.textContent =
+                                'Sign agreement and continue';
+                        }
+
+                        alert(
+                            error?.message
+                            || 'The signature could not be saved.'
+                        );
+                    }
                 }
-            });
+            );
     };
 
     /*
      * Payment button event delegation.
      * This survives Livewire DOM morphs.
      */
-    root.addEventListener('click', (event) => {
-        const button = event.target.closest('[data-stripe-pay]');
+    root.addEventListener(
+        'click',
+        (event) => {
+            const button =
+                event.target.closest(
+                    '[data-stripe-pay]'
+                );
 
-        if (!button || !root.contains(button)) {
-            return;
+            if (
+                !button
+                || !root.contains(button)
+            ) {
+                return;
+            }
+
+            event.preventDefault();
+
+            submitPayment();
         }
-
-        event.preventDefault();
-
-        submitPayment();
-    });
+    );
 
     /*
      * Watch Livewire's clientSecret property.
      * This replaces all fragile DOMContentLoaded / Livewire.find logic.
      */
-    $wire.$watch('clientSecret', async (clientSecret) => {
-        if (!clientSecret) {
-            return;
+    $wire.$watch(
+        'clientSecret',
+        async (clientSecret) => {
+            if (!clientSecret) {
+                return;
+            }
+
+            await waitForDom();
+
+            await initializeStripe(
+                clientSecret
+            );
         }
+    );
 
-        await waitForDom();
-
-        await initializeStripe(clientSecret);
-    });
-
-    $wire.$watch('paymentIntentId', (paymentIntentId) => {
-        if (paymentIntentId) {
-            stripePaymentId = paymentIntentId;
+    $wire.$watch(
+        'paymentIntentId',
+        (paymentIntentId) => {
+            if (paymentIntentId) {
+                stripePaymentId =
+                    paymentIntentId;
+            }
         }
-    });
+    );
 
     /*
      * Initial state.
@@ -1432,7 +1737,9 @@
             && initialPaymentStatus !== 'succeeded'
             && initialPaymentStatus !== 'processing'
         ) {
-            await initializeStripe(currentClientSecret);
+            await initializeStripe(
+                currentClientSecret
+            );
         }
     })();
 })();

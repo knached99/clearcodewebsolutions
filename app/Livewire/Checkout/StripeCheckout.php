@@ -7,6 +7,8 @@ use App\Mail\PaymentReceivedAdmin;
 use App\Models\Invoice;
 use App\Models\InvoiceItems;
 use App\Models\User;
+use App\Enums\InvoiceStatus;
+use App\Enums\PaymentType;
 use App\Services\Checkout\InvoiceSignatureService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -301,22 +303,12 @@ class StripeCheckout extends Component
     /**
      * Decide whether this is a subscription or one-time checkout.
      */
-    protected function createStripeCheckoutIntent(): void
+    protected function createStripeCheckoutIntent(): void 
     {
-        if (
-            $this->invoice->items->contains(
-                fn ($item) =>
-                    (bool) (
-                        $item->is_subscription
-                        ?? false
-                    )
-            )
-        ) {
+        if ($this->invoice->payment_type === PaymentType::Subscription) {
             $this->createSubscriptionCheckout();
-
             return;
         }
-
         $this->createPaymentIntent();
     }
 
@@ -472,590 +464,401 @@ class StripeCheckout extends Component
      *   -> PaymentIntent client_secret
      *   -> Stripe Elements
      */
-    protected function createSubscriptionCheckout(): void
-    {
-        try {
-            $stripe = $this->stripe();
+protected function createSubscriptionCheckout(): void
+{
+    try {
+        $stripe = $this->stripe();
 
-            $customerId =
-                $this->resolveStripeCustomerId(
-                    $stripe
-                );
+        $customerId = $this->resolveStripeCustomerId($stripe);
 
-            if ($customerId === null) {
-                throw new \RuntimeException(
-                    'A Stripe customer could not be resolved for this subscription.'
-                );
+        if ($customerId === null) {
+            throw new \RuntimeException(
+                'A Stripe customer could not be resolved for this subscription.'
+            );
+        }
+
+        $subscriptionItems = [];
+
+        foreach ($this->invoice->items as $item) {
+            $amount = $this->itemAmountInCents($item);
+
+            if ($amount <= 0) {
+                continue;
             }
 
-            $subscriptionItems = [];
-
-            $oneTimeInvoiceItems = [];
-
-            foreach ($this->invoice->items as $item) {
-                $amount =
-                    $this->itemAmountInCents(
-                        $item
-                    );
-
-                if ($amount <= 0) {
-                    continue;
-                }
-
-                $description = trim(
-                    (string) (
-                        $item->description
-                        ?? $item->name
-                        ?? 'Invoice item'
-                    )
-                );
-
-                if ($description === '') {
-                    $description =
-                        'Invoice item';
-                }
-
-                $isSubscriptionItem =
-                    (bool) (
-                        $item->is_subscription
-                        ?? false
-                    );
-
-                $stripePriceId = trim(
-                    (string) (
-                        $item->stripe_price_id
-                        ?? ''
-                    )
-                );
-
-                /*
-                 * ------------------------------------------------------
-                 * Recurring item
-                 * ------------------------------------------------------
-                 */
-                if ($isSubscriptionItem) {
-                    if ($stripePriceId === '') {
-                        throw new \RuntimeException(
-                            'Subscription item "' .
-                            $description .
-                            '" is missing its Stripe price ID.'
-                        );
-                    }
-
-                    $stripePrice =
-                        $stripe->prices->retrieve(
-                            $stripePriceId,
-                            []
-                        );
-
-                    if (
-                        ($stripePrice->type ?? null)
-                        !== 'recurring'
-                    ) {
-                        throw new \RuntimeException(
-                            'Stripe price ' .
-                            $stripePriceId .
-                            ' is not a recurring price.'
-                        );
-                    }
-
-                    if (
-                        isset(
-                            $stripePrice->currency
-                        )
-                        && strtolower(
-                            (string) $stripePrice->currency
-                        ) !== 'usd'
-                    ) {
-                        throw new \RuntimeException(
-                            'Stripe price ' .
-                            $stripePriceId .
-                            ' is not configured in USD.'
-                        );
-                    }
-
-                    $subscriptionItems[] = [
-                        'price' =>
-                            $stripePriceId,
-
-                        'quantity' =>
-                            max(
-                                1,
-                                (int) (
-                                    $item->quantity
-                                    ?? 1
-                                )
-                            ),
-                    ];
-
-                    continue;
-                }
-
-                /*
-                 * ------------------------------------------------------
-                 * One-time item
-                 * ------------------------------------------------------
-                 *
-                 * add_invoice_items accepts a Price and quantity.
-                 */
-                $oneTimePriceId =
-                    $this->resolveOneTimeStripePriceId(
-                        $stripe,
-                        $item,
-                        $amount,
-                        $description
-                    );
-
-                $oneTimeInvoiceItems[] = [
-                    'price' =>
-                        $oneTimePriceId,
-
-                    'quantity' =>
-                        max(
-                            1,
-                            (int) (
-                                $item->quantity
-                                ?? 1
-                            )
-                        ),
-                ];
-            }
-
-            /*
-             * If there are no recurring items, this is a normal
-             * one-time payment.
-             */
-            if (empty($subscriptionItems)) {
-                $this->createPaymentIntent();
-
-                return;
-            }
-
-            if (count($subscriptionItems) > 20) {
-                throw new \RuntimeException(
-                    'An invoice can contain at most 20 recurring subscription items.'
-                );
-            }
-
-            if (count($oneTimeInvoiceItems) > 20) {
-                throw new \RuntimeException(
-                    'An invoice can contain at most 20 one-time subscription invoice items.'
-                );
-            }
-
-            /*
-             * ----------------------------------------------------------
-             * Stripe subscription
-             * ----------------------------------------------------------
-             */
-            $subscriptionData = [
-                'customer' =>
-                    $customerId,
-
-                'items' =>
-                    $subscriptionItems,
-
-                'collection_method' =>
-                    'charge_automatically',
-
-                /*
-                 * Critical:
-                 *
-                 * The subscription remains incomplete until the
-                 * initial invoice PaymentIntent is confirmed.
-                 */
-                'payment_behavior' =>
-                    'default_incomplete',
-
-                'payment_settings' => [
-                    'save_default_payment_method' =>
-                        'on_subscription',
-                ],
-
-                'metadata' => [
-                    'invoice_id' =>
-                        (string) $this->invoice->id,
-
-                    'checkout_token' =>
-                        (string) $this->invoice->checkout_token,
-                ],
-
-                /*
-                 * CRITICAL CURRENT STRIPE API PATH.
-                 */
-                'expand' => [
-                    'latest_invoice.confirmation_secret',
-                ],
-            ];
-
-            if (
-                ! empty(
-                    $oneTimeInvoiceItems
+            $description = trim(
+                (string) (
+                    $item->description
+                    ?? $item->name
+                    ?? 'Invoice item'
                 )
-            ) {
-                $subscriptionData[
-                    'add_invoice_items'
-                ] = $oneTimeInvoiceItems;
+            );
+
+            if ($description === '') {
+                $description = 'Invoice item';
+            }
+
+            $isSubscriptionItem = (bool) (
+                $item->is_subscription ?? false
+            );
+
+            $isAddon = (bool) (
+                $item->is_addon ?? false
+            );
+
+            $stripePriceId = trim(
+                (string) (
+                    $item->stripe_price_id ?? ''
+                )
+            );
+
+            /*
+             * ONLY existing recurring Stripe Prices are allowed
+             * into the Stripe Subscription.
+             */
+            if ($isSubscriptionItem) {
+                if ($stripePriceId === '') {
+                    throw new \RuntimeException(
+                        'Subscription item "' .
+                        $description .
+                        '" is missing its existing Stripe recurring Price ID.'
+                    );
+                }
+
+                $stripePrice = $stripe->prices->retrieve(
+                    $stripePriceId,
+                    []
+                );
+
+                if (
+                    ($stripePrice->type ?? null) !== 'recurring'
+                ) {
+                    throw new \RuntimeException(
+                        'Stripe price ' .
+                        $stripePriceId .
+                        ' is not a recurring price.'
+                    );
+                }
+
+                if (
+                    isset($stripePrice->currency)
+                    && strtolower(
+                        (string) $stripePrice->currency
+                    ) !== 'usd'
+                ) {
+                    throw new \RuntimeException(
+                        'Stripe price ' .
+                        $stripePriceId .
+                        ' is not configured in USD.'
+                    );
+                }
+
+                /*
+                 * Recurring addons use their existing Stripe Price.
+                 *
+                 * A recurring custom base has no Stripe Price in your
+                 * current data model, so it cannot be added to the
+                 * Stripe Subscription without creating a Product/Price.
+                 */
+                $subscriptionItems[] = [
+                    'price' => $stripePriceId,
+                    'quantity' => max(
+                        1,
+                        (int) ($item->quantity ?? 1)
+                    ),
+                ];
+
+                continue;
             }
 
             /*
-             * Deterministic creation key prevents duplicate
-             * subscriptions caused by repeated Livewire requests.
+             * NEVER convert a one-time/custom base item into a Stripe
+             * Price or Product here.
              */
-            $idempotencyKey =
-                'checkout-subscription-' .
-                (string) $this->invoice->id;
+            if (! $isAddon) {
+                continue;
+            }
+        }
 
-            $subscription =
-                $stripe->subscriptions->create(
-                    $subscriptionData,
+        /*
+         * There is nothing valid to put into a Stripe subscription.
+         */
+        if (empty($subscriptionItems)) {
+            throw new \RuntimeException(
+                'No existing recurring Stripe Prices are available for this subscription.'
+            );
+        }
+
+        if (count($subscriptionItems) > 20) {
+            throw new \RuntimeException(
+                'An invoice can contain at most 20 recurring subscription items.'
+            );
+        }
+
+        $subscriptionData = [
+            'customer' => $customerId,
+
+            'items' => $subscriptionItems,
+
+            'collection_method' => 'charge_automatically',
+
+            'payment_behavior' => 'default_incomplete',
+
+            'payment_settings' => [
+                'save_default_payment_method' =>
+                    'on_subscription',
+            ],
+
+            'metadata' => [
+                'invoice_id' =>
+                    (string) $this->invoice->id,
+
+                'checkout_token' =>
+                    (string) $this->invoice->checkout_token,
+            ],
+
+            'expand' => [
+                'latest_invoice.confirmation_secret',
+            ],
+        ];
+
+        $idempotencyKey =
+            'checkout-subscription-' .
+            (string) $this->invoice->id;
+
+        $subscription =
+            $stripe->subscriptions->create(
+                $subscriptionData,
+                [
+                    'idempotency_key' =>
+                        $idempotencyKey,
+                ]
+            );
+
+        $this->invoice->update([
+            'stripe_id' =>
+                $subscription->id,
+
+            'status' =>
+                'pending',
+        ]);
+
+        $latestInvoice =
+            $subscription->latest_invoice ?? null;
+
+        if (is_string($latestInvoice)) {
+            $latestInvoice =
+                $stripe->invoices->retrieve(
+                    $latestInvoice,
                     [
-                        'idempotency_key' =>
-                            $idempotencyKey,
+                        'expand' => [
+                            'confirmation_secret',
+                        ],
+                    ]
+                );
+        }
+
+        if (! is_object($latestInvoice)) {
+            throw new \RuntimeException(
+                'Stripe created the subscription but did not return its initial invoice.'
+            );
+        }
+
+        $confirmationSecret =
+            $this->getInvoiceConfirmationSecret(
+                $latestInvoice
+            );
+
+        if ($confirmationSecret === null) {
+            $latestInvoice =
+                $stripe->invoices->retrieve(
+                    $latestInvoice->id,
+                    [
+                        'expand' => [
+                            'confirmation_secret',
+                        ],
                     ]
                 );
 
-            /*
-             * Save the Stripe subscription locally.
-             */
-            $this->invoice->update([
-                'stripe_id' =>
-                    $subscription->id,
-
-                'status' =>
-                    'pending',
-            ]);
-
-            /*
-             * ----------------------------------------------------------
-             * Get initial invoice
-             * ----------------------------------------------------------
-             */
-            $latestInvoice =
-                $subscription->latest_invoice
-                ?? null;
-
-            if (
-                is_string(
-                    $latestInvoice
-                )
-            ) {
-                $latestInvoice =
-                    $stripe->invoices->retrieve(
-                        $latestInvoice,
-                        [
-                            'expand' => [
-                                'confirmation_secret',
-                            ],
-                        ]
-                    );
-            }
-
-            /*
-             * If Stripe didn't embed the invoice, retrieve it.
-             */
-            if (
-                ! is_object(
-                    $latestInvoice
-                )
-            ) {
-                throw new \RuntimeException(
-                    'Stripe created the subscription but did not return its initial invoice.'
-                );
-            }
-
-            /*
-             * Retrieve again with confirmation_secret when necessary.
-             *
-             * This is intentionally conservative and protects against
-             * responses where the nested expansion wasn't returned.
-             */
             $confirmationSecret =
                 $this->getInvoiceConfirmationSecret(
                     $latestInvoice
                 );
+        }
 
-            if (
-                $confirmationSecret === null
-            ) {
-                $latestInvoice =
-                    $stripe->invoices->retrieve(
-                        $latestInvoice->id,
-                        [
-                            'expand' => [
-                                'confirmation_secret',
-                            ],
-                        ]
-                    );
+        $paymentIntent = null;
 
-                $confirmationSecret =
-                    $this->getInvoiceConfirmationSecret(
-                        $latestInvoice
-                    );
-            }
+        if ($confirmationSecret !== null) {
+            $paymentIntent =
+                $this->paymentIntentFromClientSecret(
+                    $stripe,
+                    $confirmationSecret
+                );
+        }
 
-            /*
-             * If a very old API response still exposes a legacy
-             * payment_intent property, support it as a fallback.
-             */
-            $paymentIntent = null;
+        if (
+            $paymentIntent === null
+            && isset($latestInvoice->payment_intent)
+            && !empty($latestInvoice->payment_intent)
+        ) {
+            $legacyPaymentIntent =
+                $latestInvoice->payment_intent;
 
-            if (
-                $confirmationSecret !== null
-            ) {
+            if (is_string($legacyPaymentIntent)) {
                 $paymentIntent =
-                    $this->paymentIntentFromClientSecret(
-                        $stripe,
-                        $confirmationSecret
+                    $stripe->paymentIntents->retrieve(
+                        $legacyPaymentIntent
                     );
+            } elseif (is_object($legacyPaymentIntent)) {
+                $paymentIntent =
+                    $legacyPaymentIntent;
             }
+        }
 
-            /*
-             * Legacy fallback only when Stripe actually returned the
-             * property. We do NOT request it in expand because current
-             * Stripe API versions use confirmation_secret.
-             */
-            if (
-                $paymentIntent === null
-                && isset(
-                    $latestInvoice->payment_intent
-                )
-                && ! empty(
-                    $latestInvoice->payment_intent
-                )
-            ) {
-                $legacyPaymentIntent =
-                    $latestInvoice->payment_intent;
+        Log::info(
+            'Stripe subscription initial invoice inspected.',
+            [
+                'local_invoice_id' =>
+                    $this->invoice->id,
 
-                if (
-                    is_string(
-                        $legacyPaymentIntent
-                    )
-                ) {
-                    $paymentIntent =
-                        $stripe->paymentIntents->retrieve(
-                            $legacyPaymentIntent
-                        );
-                } elseif (
-                    is_object(
-                        $legacyPaymentIntent
-                    )
-                ) {
-                    $paymentIntent =
-                        $legacyPaymentIntent;
-                }
-            }
+                'stripe_subscription_id' =>
+                    $subscription->id,
 
-            /*
-             * Log exactly what Stripe gave us.
-             */
-            Log::info(
-                'Stripe subscription initial invoice inspected.',
-                [
-                    'local_invoice_id' =>
-                        $this->invoice->id,
+                'stripe_invoice_id' =>
+                    $latestInvoice->id ?? null,
 
-                    'stripe_subscription_id' =>
-                        $subscription->id,
+                'stripe_invoice_status' =>
+                    $latestInvoice->status ?? null,
 
-                    'stripe_invoice_id' =>
-                        $latestInvoice->id
-                        ?? null,
+                'stripe_invoice_amount_due' =>
+                    $latestInvoice->amount_due ?? null,
 
-                    'stripe_invoice_status' =>
-                        $latestInvoice->status
-                        ?? null,
+                'confirmation_secret_present' =>
+                    $confirmationSecret !== null,
 
-                    'stripe_invoice_amount_due' =>
-                        $latestInvoice->amount_due
-                        ?? null,
+                'payment_intent_found' =>
+                    $paymentIntent !== null,
+            ]
+        );
 
-                    'stripe_invoice_amount_remaining' =>
-                        $latestInvoice->amount_remaining
-                        ?? null,
-
-                    'stripe_invoice_total' =>
-                        $latestInvoice->total
-                        ?? null,
-
-                    'confirmation_secret_present' =>
-                        $confirmationSecret !== null,
-
-                    'payment_intent_found' =>
-                        $paymentIntent !== null,
-                ]
+        $amountDue =
+            (int) (
+                $latestInvoice->amount_due ?? 0
             );
 
-            /*
-             * A zero-dollar initial invoice genuinely has no PaymentIntent.
-             */
-            $amountDue =
-                (int) (
-                    $latestInvoice->amount_due
-                    ?? 0
-                );
+        if ($amountDue === 0) {
+            $this->paymentIntentId = null;
 
-            if ($amountDue === 0) {
-                $this->paymentIntentId = null;
+            $this->clientSecret = null;
 
-                $this->clientSecret = null;
-
-                $this->paymentStatus =
-                    'succeeded';
-
-                $this->checkoutError = null;
-
-                /*
-                 * Stripe has no payment form to display.
-                 */
-                Log::info(
-                    'Stripe subscription initial invoice requires no payment.',
-                    [
-                        'local_invoice_id' =>
-                            $this->invoice->id,
-
-                        'stripe_subscription_id' =>
-                            $subscription->id,
-
-                        'stripe_invoice_id' =>
-                            $latestInvoice->id
-                            ?? null,
-                    ]
-                );
-
-                return;
-            }
-
-            /*
-             * Positive amount requires a PaymentIntent.
-             */
-            if (
-                $paymentIntent === null
-            ) {
-                throw new \RuntimeException(
-                    'Stripe created the subscription and initial invoice, but no initial PaymentIntent client secret was returned. Invoice: ' .
-                    ($latestInvoice->id ?? 'unknown') .
-                    ', amount_due: ' .
-                    $amountDue
-                );
-            }
-
-            /*
-             * PaymentIntent must have a client secret.
-             */
-            if (
-                empty(
-                    $paymentIntent->client_secret
-                )
-            ) {
-                throw new \RuntimeException(
-                    'Stripe returned the subscription PaymentIntent without a client secret.'
-                );
-            }
-
-            /*
-             * Verify Stripe's PaymentIntent amount against the
-             * Stripe invoice amount.
-             */
-            if (
-                isset(
-                    $paymentIntent->amount
-                )
-                && isset(
-                    $latestInvoice->amount_due
-                )
-                && (int) $paymentIntent->amount
-                    !== (int) $latestInvoice->amount_due
-            ) {
-                throw new \RuntimeException(
-                    'Stripe PaymentIntent amount does not match the initial subscription invoice amount.'
-                );
-            }
-
-            /*
-             * Set checkout state.
-             */
-            $this->paymentIntentId =
-                (string) $paymentIntent->id;
-
-            $this->clientSecret =
-                (string) $paymentIntent->client_secret;
-
-            $this->paymentStatus =
-                (string) (
-                    $paymentIntent->status
-                    ?? 'requires_payment_method'
-                );
+            $this->paymentStatus = 'succeeded';
 
             $this->checkoutError = null;
 
-            /*
-             * Notify frontend.
-             */
-            $this->dispatch(
+            return;
+        }
+
+        if ($paymentIntent === null) {
+            throw new \RuntimeException(
+                'Stripe created the subscription and initial invoice, but no initial PaymentIntent client secret was returned. Invoice: ' .
+                ($latestInvoice->id ?? 'unknown') .
+                ', amount_due: ' .
+                $amountDue
+            );
+        }
+
+        if (empty($paymentIntent->client_secret)) {
+            throw new \RuntimeException(
+                'Stripe returned the subscription PaymentIntent without a client secret.'
+            );
+        }
+
+        if (
+            isset($paymentIntent->amount)
+            && isset($latestInvoice->amount_due)
+            && (int) $paymentIntent->amount
+                !== (int) $latestInvoice->amount_due
+        ) {
+            throw new \RuntimeException(
+                'Stripe PaymentIntent amount does not match the initial subscription invoice amount.'
+            );
+        }
+
+        $this->paymentIntentId =
+            (string) $paymentIntent->id;
+
+        $this->clientSecret =
+            (string) $paymentIntent->client_secret;
+
+        $this->paymentStatus =
+            (string) (
+                $paymentIntent->status
+                ?? 'requires_payment_method'
+            );
+
+        $this->checkoutError = null;
+
+        $this->dispatch(
             'stripe-checkout-ready',
             clientSecret: $this->clientSecret,
             paymentIntentId: $this->paymentIntentId,
             paymentStatus: $this->paymentStatus,
         );
 
-            Log::info(
-                'Stripe Subscription checkout ready.',
-                [
-                    'local_invoice_id' =>
-                        $this->invoice->id,
+        Log::info(
+            'Stripe Subscription checkout ready.',
+            [
+                'local_invoice_id' =>
+                    $this->invoice->id,
 
-                    'stripe_subscription_id' =>
-                        $subscription->id,
+                'stripe_subscription_id' =>
+                    $subscription->id,
 
-                    'stripe_invoice_id' =>
-                        $latestInvoice->id
-                        ?? null,
+                'stripe_invoice_id' =>
+                    $latestInvoice->id ?? null,
 
-                    'payment_intent_id' =>
-                        $this->paymentIntentId,
+                'payment_intent_id' =>
+                    $this->paymentIntentId,
 
-                    'payment_intent_status' =>
-                        $this->paymentStatus,
+                'payment_intent_status' =>
+                    $this->paymentStatus,
 
-                    'stripe_invoice_amount_due' =>
-                        $amountDue,
+                'stripe_invoice_amount_due' =>
+                    $amountDue,
 
-                    'local_invoice_total' =>
-                        $this->totalInCents,
-                ]
-            );
+                'local_invoice_total' =>
+                    $this->totalInCents,
+            ]
+        );
 
-        } catch (Throwable $e) {
-            $this->clientSecret = null;
+    } catch (Throwable $e) {
+        $this->clientSecret = null;
 
-            $this->paymentIntentId = null;
+        $this->paymentIntentId = null;
 
-            $this->paymentStatus = null;
+        $this->paymentStatus = null;
 
-            $this->checkoutError =
-                'Stripe could not initialize this subscription checkout. Please try again.';
+        $this->checkoutError =
+            'Stripe could not initialize this subscription checkout. Please try again.';
 
-            Log::error(
-                'Stripe Subscription initialization failed.',
-                [
-                    'invoice_id' =>
-                        $this->invoice->id
-                        ?? null,
+        Log::error(
+            'Stripe Subscription initialization failed.',
+            [
+                'invoice_id' =>
+                    $this->invoice->id ?? null,
 
-                    'existing_stripe_id' =>
-                        $this->invoice->stripe_id
-                        ?? null,
+                'existing_stripe_id' =>
+                    $this->invoice->stripe_id ?? null,
 
-                    'message' =>
-                        $e->getMessage(),
+                'message' =>
+                    $e->getMessage(),
 
-                    'exception' =>
-                        get_class($e),
-                ]
-            );
-        }
+                'exception' =>
+                    get_class($e),
+            ]
+        );
     }
+}
 
     /**
      * Get confirmation_secret.client_secret from an Invoice.
@@ -1175,173 +978,7 @@ class StripeCheckout extends Component
             );
     }
 
-    /**
-     * Create/reuse a one-time Stripe Price.
-     */
-    protected function resolveOneTimeStripePriceId(
-        StripeClient $stripe,
-        $item,
-        int $amount,
-        string $description
-    ): string {
-        $existingPriceId =
-            trim(
-                (string) (
-                    $item->stripe_price_id
-                    ?? ''
-                )
-            );
-
-        /*
-         * If the invoice item already has a Stripe price,
-         * validate and reuse it.
-         */
-        if ($existingPriceId !== '') {
-            $existingPrice =
-                $stripe->prices->retrieve(
-                    $existingPriceId,
-                    []
-                );
-
-            if (
-                isset(
-                    $existingPrice->type
-                )
-                && $existingPrice->type !== 'one_time'
-            ) {
-                throw new \RuntimeException(
-                    'Stripe price ' .
-                    $existingPriceId .
-                    ' is recurring but this invoice item is one-time.'
-                );
-            }
-
-            if (
-                isset(
-                    $existingPrice->currency
-                )
-                && strtolower(
-                    (string) $existingPrice->currency
-                ) !== 'usd'
-            ) {
-                throw new \RuntimeException(
-                    'Stripe price ' .
-                    $existingPriceId .
-                    ' is not configured in USD.'
-                );
-            }
-
-            if (
-                isset(
-                    $existingPrice->unit_amount
-                )
-                && (int) $existingPrice->unit_amount
-                    !== $amount
-            ) {
-                throw new \RuntimeException(
-                    'Stripe price ' .
-                    $existingPriceId .
-                    ' does not match the invoice item amount.'
-                );
-            }
-
-            return $existingPriceId;
-        }
-
-        /*
-         * Create a reusable one-time Price.
-         *
-         * add_invoice_items accepts a Price + quantity.
-         */
-        $priceData = [
-            'currency' =>
-                'usd',
-
-            'unit_amount' =>
-                $amount,
-
-            'product_data' => [
-                'name' =>
-                    $description,
-
-                'metadata' => [
-                    'invoice_id' =>
-                        (string) $this->invoice->id,
-                ],
-            ],
-
-            'metadata' => [
-                'invoice_id' =>
-                    (string) $this->invoice->id,
-
-                'checkout_token' =>
-                    (string) $this->invoice->checkout_token,
-            ],
-        ];
-
-        $itemId =
-            trim(
-                (string) (
-                    $item->id
-                    ?? ''
-                )
-            );
-
-        if ($itemId === '') {
-            $itemId =
-                sha1(
-                    $description .
-                    '|' .
-                    $amount
-                );
-        }
-
-        $idempotencyKey =
-            'checkout-one-time-price-' .
-            (string) $this->invoice->id .
-            '-' .
-            $itemId;
-
-        $price =
-            $stripe->prices->create(
-                $priceData,
-                [
-                    'idempotency_key' =>
-                        $idempotencyKey,
-                ]
-            );
-
-        if (
-            empty($price->id)
-        ) {
-            throw new \RuntimeException(
-                'Stripe did not return an ID for the one-time Price.'
-            );
-        }
-
-        Log::info(
-            'Stripe one-time Price created.',
-            [
-                'invoice_id' =>
-                    $this->invoice->id,
-
-                'invoice_item_id' =>
-                    $item->id ?? null,
-
-                'price_id' =>
-                    $price->id,
-
-                'amount' =>
-                    $amount,
-
-                'description' =>
-                    $description,
-            ]
-        );
-
-        return (string) $price->id;
-    }
-
+  
     /**
      * Extract initial PaymentIntent from a subscription.
      *

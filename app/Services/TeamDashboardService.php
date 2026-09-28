@@ -578,7 +578,9 @@ class TeamDashboardService
                 $invoice->partnerShareInCents();
         }
 
-        // Backwards-compatible aliases.
+        /*
+         * Backwards-compatible aliases.
+         */
         $khaledShare = $ownerShare;
         $karamShare = $partnerShare;
 
@@ -620,27 +622,69 @@ class TeamDashboardService
         |--------------------------------------------------------------------------
         | Current MRR / ARR
         |--------------------------------------------------------------------------
+        |
+        | IMPORTANT:
+        |
+        | An invoice can contain BOTH:
+        |
+        |   - one-time revenue
+        |   - recurring/add-on revenue
+        |
+        | Therefore we DO NOT use payment_type to determine the entire
+        | invoice type.
+        |
+        | monthlyRecurringAmountInCents() tells us how much of the invoice
+        | contributes to monthly recurring revenue.
+        |
+        | Example:
+        |
+        |   Invoice = $20,358
+        |   Recurring addons = $358
+        |
+        |   MRR = $358
+        |--------------------------------------------------------------------------
         */
 
         $stepStartedAt = microtime(true);
 
-        $subscriptionInvoices =
-            $this->subscriptionInvoices($team);
+        $allSubscriptionInvoices = $allPaidInvoices
+            ->filter(
+                function (Invoice $invoice): bool {
+                    return (int) $invoice
+                        ->monthlyRecurringAmountInCents() > 0;
+                }
+            );
 
         $this->logComplete(
             'subscriptionInvoices',
             $stepStartedAt,
             [
                 'team_id' => $team->id,
-                'count' => $subscriptionInvoices->count(),
+                'count' => $allSubscriptionInvoices->count(),
             ]
         );
 
-        $mrr = (int) $subscriptionInvoices->sum(
-            fn (Invoice $invoice) =>
-                (int) $invoice
-                    ->monthlyRecurringAmountInCents()
+        /*
+        |--------------------------------------------------------------------------
+        | MRR
+        |--------------------------------------------------------------------------
+        */
+
+        $mrr = (int) $allSubscriptionInvoices->sum(
+            function (Invoice $invoice): int {
+                return max(
+                    0,
+                    (int) $invoice
+                        ->monthlyRecurringAmountInCents()
+                );
+            }
         );
+
+        /*
+        |--------------------------------------------------------------------------
+        | ARR
+        |--------------------------------------------------------------------------
+        */
 
         $arr = $mrr * 12;
 
@@ -649,6 +693,8 @@ class TeamDashboardService
             $stepStartedAt,
             [
                 'team_id' => $team->id,
+                'subscription_invoice_count' =>
+                    $allSubscriptionInvoices->count(),
                 'mrr' => $mrr,
                 'arr' => $arr,
             ]
@@ -748,41 +794,95 @@ class TeamDashboardService
         |--------------------------------------------------------------------------
         | Revenue By Payment Type
         |--------------------------------------------------------------------------
+        |
+        | DO NOT use resolveInvoicePaymentType() here.
+        |
+        | Why?
+        |
+        | The invoice can be mixed:
+        |
+        |   payment_type = OneTime
+        |   invoice total = $20,358
+        |   recurring portion = $358
+        |   one-time portion = $20,000
+        |
+        | Therefore:
+        |
+        |   Subscription revenue = recurring portion
+        |   One-time revenue     = invoice total - recurring portion
+        |--------------------------------------------------------------------------
         */
 
         $stepStartedAt = microtime(true);
 
-        $subscriptionRevenue =
-            $this->revenueForPaymentType(
-                $successfulTransactions,
-                $paidInvoices,
-                PaymentType::Subscription
-            );
+        /*
+        | Calculate recurring/subscription revenue for this reporting period.
+        */
+        $subscriptionRevenue = (int) $paidInvoices->sum(
+            function (Invoice $invoice): int {
+                return max(
+                    0,
+                    (int) $invoice
+                        ->monthlyRecurringAmountInCents()
+                );
+            }
+        );
 
         $this->logComplete(
             'subscriptionRevenue',
             $stepStartedAt,
             [
                 'team_id' => $team->id,
-                'amount' => $subscriptionRevenue,
+                'invoice_count' =>
+                    $paidInvoices->count(),
+                'amount' =>
+                    $subscriptionRevenue,
             ]
         );
 
+        /*
+        |--------------------------------------------------------------------------
+        | One-Time Revenue
+        |--------------------------------------------------------------------------
+        |
+        | For every invoice:
+        |
+        |   one-time amount =
+        |       invoice total - recurring amount
+        |
+        | Example:
+        |
+        |   20,358 - 358 = 20,000
+        |--------------------------------------------------------------------------
+        */
+
         $stepStartedAt = microtime(true);
 
-        $oneTimeRevenue =
-            $this->revenueForPaymentType(
-                $successfulTransactions,
-                $paidInvoices,
-                PaymentType::OneTime
-            );
+        $invoiceBasedGrossRevenue = (int) $paidInvoices->sum(
+            function (Invoice $invoice): int {
+                return max(
+                    0,
+                    (int) $invoice->amount
+                );
+            }
+        );
+
+        $oneTimeRevenue = max(
+            0,
+            $invoiceBasedGrossRevenue - $subscriptionRevenue
+        );
 
         $this->logComplete(
             'oneTimeRevenue',
             $stepStartedAt,
             [
                 'team_id' => $team->id,
-                'amount' => $oneTimeRevenue,
+                'invoice_gross_revenue' =>
+                    $invoiceBasedGrossRevenue,
+                'subscription_revenue' =>
+                    $subscriptionRevenue,
+                'one_time_revenue' =>
+                    $oneTimeRevenue,
             ]
         );
 
@@ -859,6 +959,12 @@ class TeamDashboardService
             );
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | Total Invoice Count
+        |--------------------------------------------------------------------------
+        */
+
         $countStartedAt = microtime(true);
 
         $totalInvoices =
@@ -872,6 +978,12 @@ class TeamDashboardService
                 'count' => $totalInvoices,
             ]
         );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Paid Invoice Count
+        |--------------------------------------------------------------------------
+        */
 
         $countStartedAt = microtime(true);
 
@@ -901,31 +1013,103 @@ class TeamDashboardService
         |--------------------------------------------------------------------------
         | Active Subscriptions
         |--------------------------------------------------------------------------
+        |
+        | An invoice is treated as subscription-producing when it has a
+        | positive recurring component.
+        |
+        | We count unique subscription identifiers when available so multiple
+        | invoices from the same subscription don't automatically count as
+        | multiple subscriptions.
+        |--------------------------------------------------------------------------
         */
 
         $stepStartedAt = microtime(true);
 
-        $activeSubscriptions = Invoice::query()
-            ->whereIn(
-                'ticket_id',
-                $invoiceTicketIds
+        $activeSubscriptionInvoices = $allPaidInvoices
+            ->filter(
+                function (Invoice $invoice): bool {
+                    return (int) $invoice
+                        ->monthlyRecurringAmountInCents() > 0;
+                }
+            );
+
+        $activeSubscriptionKeys = $activeSubscriptionInvoices
+            ->map(
+                function (Invoice $invoice): string {
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Preferred: Stripe subscription ID
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        isset($invoice->stripe_subscription_id)
+                        && is_string(
+                            $invoice->stripe_subscription_id
+                        )
+                        && trim(
+                            $invoice->stripe_subscription_id
+                        ) !== ''
+                    ) {
+                        return trim(
+                            $invoice->stripe_subscription_id
+                        );
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Alternative local subscription ID
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        isset($invoice->subscription_id)
+                        && $invoice->subscription_id !== null
+                        && (string) $invoice->subscription_id !== ''
+                    ) {
+                        return (string) $invoice->subscription_id;
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | If invoice stripe_id itself is a sub_... ID
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        is_string($invoice->stripe_id)
+                        && str_starts_with(
+                            trim($invoice->stripe_id),
+                            'sub_'
+                        )
+                    ) {
+                        return trim($invoice->stripe_id);
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Fallback
+                    |--------------------------------------------------------------------------
+                    */
+
+                    return 'invoice:' . $invoice->id;
+                }
             )
-            ->where(
-                'payment_type',
-                PaymentType::Subscription
-            )
-            ->where(
-                'status',
-                InvoiceStatus::Paid
-            )
-            ->count();
+            ->unique()
+            ->values();
+
+        $activeSubscriptions =
+            $activeSubscriptionKeys->count();
 
         $this->logComplete(
             'activeSubscriptions',
             $stepStartedAt,
             [
                 'team_id' => $team->id,
-                'count' => $activeSubscriptions,
+                'recurring_invoice_count' =>
+                    $activeSubscriptionInvoices->count(),
+                'count' =>
+                    $activeSubscriptions,
             ]
         );
 
@@ -953,38 +1137,54 @@ class TeamDashboardService
                 'team_id' => $team->id,
                 'team_slug' => $team->slug,
                 'filter' => $filter,
+
                 'gross_profit' => $grossProfit,
                 'processing_fees' => $processingFees,
                 'net_profit' => $netProfit,
+
                 'pablo_rate' => $pabloRate,
                 'pablo_commission' => $pabloCommission,
                 'team_share_after_pablo' =>
                     $teamShareAfterPablo,
                 'khaled_share' => $khaledShare,
                 'karam_share' => $karamShare,
+
                 'losses' => $losses,
+
                 'mrr' => $mrr,
                 'arr' => $arr,
+
                 'gross_margin_percentage' =>
                     $grossMarginPercentage,
+
                 'monthly_revenue_count' =>
                     $monthlyRevenue->count(),
+
                 'customer_revenue_count' =>
                     $customerRevenue->count(),
+
                 'subscription_revenue' =>
                     $subscriptionRevenue,
+
                 'one_time_revenue' =>
                     $oneTimeRevenue,
+
                 'total_invoices' =>
                     $totalInvoices,
+
                 'paid_invoices' =>
                     $paidInvoicesCount,
+
                 'active_subscriptions' =>
                     $activeSubscriptions,
+
                 'average_invoice' =>
                     $averageInvoiceValue,
+
                 'total_duration_ms' => round(
-                    (microtime(true) - $startedAt) * 1000,
+                    (
+                        microtime(true) - $startedAt
+                    ) * 1000,
                     2
                 ),
             ]
@@ -997,14 +1197,23 @@ class TeamDashboardService
         */
 
         return [
-            'team' => $team,
+            'team' =>
+                $team,
 
-            'grossProfit' => $grossProfit,
-            'netProfit' => $netProfit,
-            'processingFees' => $processingFees,
+            'grossProfit' =>
+                $grossProfit,
 
-            'pabloRate' => $pabloRate,
-            'pabloCommission' => $pabloCommission,
+            'netProfit' =>
+                $netProfit,
+
+            'processingFees' =>
+                $processingFees,
+
+            'pabloRate' =>
+                $pabloRate,
+
+            'pabloCommission' =>
+                $pabloCommission,
 
             'teamShareAfterPablo' =>
                 $teamShareAfterPablo,
@@ -1021,10 +1230,14 @@ class TeamDashboardService
             'partnerShare' =>
                 $partnerShare,
 
-            'losses' => $losses,
+            'losses' =>
+                $losses,
 
-            'mrr' => $mrr,
-            'arr' => $arr,
+            'mrr' =>
+                $mrr,
+
+            'arr' =>
+                $arr,
 
             'grossMarginPercentage' =>
                 $grossMarginPercentage,
@@ -1056,7 +1269,9 @@ class TeamDashboardService
             'averageInvoiceValue' =>
                 $averageInvoiceValue,
 
-            // Backwards-compatible frontend alias.
+            /*
+             * Backwards-compatible frontend alias.
+             */
             'averageInvoice' =>
                 $averageInvoiceValue,
         ];
@@ -1068,18 +1283,26 @@ class TeamDashboardService
                 'team_id' => $team->id ?? null,
                 'team_slug' => $team->slug ?? null,
                 'filter' => $filter ?? null,
+
                 'exception_class' =>
                     get_class($e),
+
                 'message' =>
                     $e->getMessage(),
+
                 'file' =>
                     $e->getFile(),
+
                 'line' =>
                     $e->getLine(),
+
                 'duration_ms' => round(
-                    (microtime(true) - $startedAt) * 1000,
+                    (
+                        microtime(true) - $startedAt
+                    ) * 1000,
                     2
                 ),
+
                 'trace' =>
                     $e->getTraceAsString(),
             ]
@@ -1088,6 +1311,7 @@ class TeamDashboardService
         throw $e;
     }
 }
+
     /*
     |--------------------------------------------------------------------------
     | Team Invoice IDs
@@ -1176,6 +1400,7 @@ class TeamDashboardService
             ->with('customer')
             ->get();
     }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -1374,109 +1599,111 @@ class TeamDashboardService
             return $result;
         }
 
-        /**
- * |--------------------------------------------------------------------------
- * | Year To Date
- * |--------------------------------------------------------------------------
- */
-if ($filter === 'ytd') {
-    $start = now()->startOfYear();
-    $now = now();
+        /*
+        |--------------------------------------------------------------------------
+        | Year To Date
+        |--------------------------------------------------------------------------
+        */
 
-    $months = collect();
+        if ($filter === 'ytd') {
+            $start = now()->startOfYear();
+            $now = now();
 
-    Log::debug('TeamDashboardService: monthlyRevenue YTD grouping', [
-        'start' => $start->toDateTimeString(),
-        'now' => $now->toDateTimeString(),
-        'transaction_count' => $successfulTransactions->count(),
-    ]);
+            $months = collect();
 
-    $stepStartedAt = microtime(true);
+            Log::debug('TeamDashboardService: monthlyRevenue YTD grouping', [
+                'start' => $start->toDateTimeString(),
+                'now' => $now->toDateTimeString(),
+                'transaction_count' => $successfulTransactions->count(),
+            ]);
 
-    // Group successful transactions by year-month.
-    $grouped = $successfulTransactions->groupBy(function ($transaction) {
-        return $transaction->created_at
-            ?->format('Y-m');
-    });
+            $stepStartedAt = microtime(true);
 
-    $this->logComplete(
-        'monthlyRevenue YTD groupBy',
-        $stepStartedAt,
-        [
-            'group_count' => $grouped->count(),
-            'grouped_keys' => $grouped->keys()->values()->all(),
-        ]
-    );
+            // Group successful transactions by year-month.
+            $grouped = $successfulTransactions->groupBy(function ($transaction) {
+                return $transaction->created_at
+                    ?->format('Y-m');
+            });
 
-    /*
-     * Build one entry for every month from January
-     * through the current month.
-     *
-     * We create a new Carbon instance on every iteration
-     * so that the date cannot be accidentally reused/mutated.
-     */
-    $current = $start->copy()->startOfMonth();
-
-    $iteration = 0;
-
-    while ($current->lte($now)) {
-        $iteration++;
-
-        if ($iteration > 24) {
-            Log::critical(
-                'TeamDashboardService: monthlyRevenue YTD safety break triggered',
+            $this->logComplete(
+                'monthlyRevenue YTD groupBy',
+                $stepStartedAt,
                 [
-                    'current' => $current->toDateTimeString(),
-                    'now' => $now->toDateTimeString(),
-                    'iterations' => $iteration,
+                    'group_count' => $grouped->count(),
+                    'grouped_keys' => $grouped->keys()->values()->all(),
                 ]
             );
 
-            break;
+            /*
+             * Build one entry for every month from January
+             * through the current month.
+             *
+             * We create a new Carbon instance on every iteration
+             * so that the date cannot be accidentally reused/mutated.
+             */
+
+            $current = $start->copy()->startOfMonth();
+
+            $iteration = 0;
+
+            while ($current->lte($now)) {
+                $iteration++;
+
+                if ($iteration > 24) {
+                    Log::critical(
+                        'TeamDashboardService: monthlyRevenue YTD safety break triggered',
+                        [
+                            'current' => $current->toDateTimeString(),
+                            'now' => $now->toDateTimeString(),
+                            'iterations' => $iteration,
+                        ]
+                    );
+
+                    break;
+                }
+
+                $monthKey = $current->format('Y-m');
+
+                Log::debug(
+                    'TeamDashboardService: monthlyRevenue YTD month',
+                    [
+                        'iteration' => $iteration,
+                        'month_key' => $monthKey,
+                        'month_label' => $current->format('M'),
+                    ]
+                );
+
+                $amount = $grouped
+                    ->get($monthKey, collect())
+                    ->sum('amount');
+
+                $months->push([
+                    // Display label: Jan, Feb, Mar, etc.
+                    'month' => $current->format('M'),
+
+                    // Unique month identifier: 2026-01, 2026-02, etc.
+                    'month_key' => $monthKey,
+
+                    // Total revenue for that month.
+                    'value' => (int) $amount,
+                ]);
+
+                // IMPORTANT:
+                // Use a fresh Carbon copy for the next iteration.
+                $current = $current->copy()->addMonth()->startOfMonth();
+            }
+
+            $this->logComplete(
+                'monthlyRevenue YTD',
+                $startedAt,
+                [
+                    'result_count' => $months->count(),
+                    'months' => $months->all(),
+                ]
+            );
+
+            return $months;
         }
-
-        $monthKey = $current->format('Y-m');
-
-        Log::debug(
-            'TeamDashboardService: monthlyRevenue YTD month',
-            [
-                'iteration' => $iteration,
-                'month_key' => $monthKey,
-                'month_label' => $current->format('M'),
-            ]
-        );
-
-        $amount = $grouped
-            ->get($monthKey, collect())
-            ->sum('amount');
-
-        $months->push([
-            // Display label: Jan, Feb, Mar, etc.
-            'month' => $current->format('M'),
-
-            // Unique month identifier: 2026-01, 2026-02, etc.
-            'month_key' => $monthKey,
-
-            // Total revenue for that month.
-            'value' => (int) $amount,
-        ]);
-
-        // IMPORTANT:
-        // Use a fresh Carbon copy for the next iteration.
-        $current = $current->copy()->addMonth()->startOfMonth();
-    }
-
-    $this->logComplete(
-        'monthlyRevenue YTD',
-        $startedAt,
-        [
-            'result_count' => $months->count(),
-            'months' => $months->all(),
-        ]
-    );
-
-    return $months;
-}
 
         /*
         |--------------------------------------------------------------------------
@@ -1619,53 +1846,22 @@ if ($filter === 'ytd') {
     protected function resolveTransactionPaymentType(
         object $transaction
     ): PaymentType {
-        if (! empty($transaction->invoice)) {
-            $invoiceType =
-                $transaction->invoice->payment_type
-                    ?? null;
+        $invoice = $transaction->invoice ?? null;
 
-            if (
-                $invoiceType instanceof PaymentType
-            ) {
-                return $invoiceType;
-            }
-
-            if (
-                is_string($invoiceType)
-                || is_int($invoiceType)
-            ) {
-                return PaymentType::tryFrom(
-                    (string) $invoiceType
-                ) ?? PaymentType::OneTime;
-            }
-        }
-
-        if (! empty($transaction->invoice_id)) {
+        if (!$invoice && !empty($transaction->invoice_id)) {
             $invoice = Invoice::query()
                 ->find($transaction->invoice_id);
-
-            if ($invoice) {
-                $paymentType =
-                    $invoice->payment_type;
-
-                if (
-                    $paymentType instanceof PaymentType
-                ) {
-                    return $paymentType;
-                }
-
-                if (
-                    is_string($paymentType)
-                    || is_int($paymentType)
-                ) {
-                    return PaymentType::tryFrom(
-                        (string) $paymentType
-                    ) ?? PaymentType::OneTime;
-                }
-            }
         }
 
-        return PaymentType::OneTime;
+        if (!$invoice) {
+            return PaymentType::OneTime;
+        }
+
+        return $invoice->payment_type instanceof PaymentType
+            ? $invoice->payment_type
+            : PaymentType::tryFrom(
+                (string) $invoice->payment_type
+            ) ?? PaymentType::OneTime;
     }
 
     /*
@@ -1675,599 +1871,166 @@ if ($filter === 'ytd') {
     */
 
     protected function stripeRevenueForTeam(
-    Team $team
-): array {
-    $startedAt = microtime(true);
+        Team $team
+    ): array {
+        $startedAt = microtime(true);
 
-    $this->logStart(
-        'stripeRevenueForTeam',
-        [
-            'team_id' => $team->id,
-            'team_slug' => $team->slug,
-        ]
-    );
-
-    try {
-        $transactions = collect();
-        $totalRevenue = 0;
-
-        /*
-        |--------------------------------------------------------------------------
-        | Team Invoice IDs
-        |--------------------------------------------------------------------------
-        */
-
-        $stepStartedAt = microtime(true);
-
-        $teamInvoiceIds = $this->teamInvoiceIds($team);
-
-        $teamInvoiceIdLookup = $teamInvoiceIds
-            ->map(fn ($id) => (string) $id)
-            ->flip();
-
-        $teamInvoices = Invoice::query()
-            ->whereIn('id', $teamInvoiceIds)
-            ->get()
-            ->keyBy(fn ($invoice) => (string) $invoice->id);
-
-        $this->logComplete(
-            'Stripe team invoice IDs',
-            $stepStartedAt,
+        $this->logStart(
+            'stripeRevenueForTeam',
             [
                 'team_id' => $team->id,
-                'invoice_count' => $teamInvoiceIds->count(),
+                'team_slug' => $team->slug,
             ]
         );
 
-        /*
-        |--------------------------------------------------------------------------
-        | Team Customer Stripe IDs
-        |--------------------------------------------------------------------------
-        */
-
-        $stepStartedAt = microtime(true);
-
-        $customerStripeIds = $team
-            ->tickets()
-            ->with('customer')
-            ->get()
-            ->pluck('customer.stripe_id')
-            ->filter()
-            ->unique()
-            ->values();
-
-        $this->logComplete(
-            'Stripe customer IDs query',
-            $stepStartedAt,
-            [
-                'team_id' => $team->id,
-                'customer_count' => $customerStripeIds->count(),
-                'stripe_customer_ids' => $customerStripeIds->all(),
-            ]
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | Deduplication
-        |--------------------------------------------------------------------------
-        |
-        | Use the actual Stripe PaymentIntent ID.
-        |
-        */
-
-        $seenPaymentIntentIds = [];
-
-        /*
-        |--------------------------------------------------------------------------
-        | Process PaymentIntent
-        |--------------------------------------------------------------------------
-        */
-
-        $processPaymentIntent = function (
-            object $paymentIntent,
-            ?Invoice $invoice = null
-        ) use (
-            &$transactions,
-            &$totalRevenue,
-            &$seenPaymentIntentIds,
-            $team,
-            $teamInvoiceIdLookup
-        ): void {
-            $paymentIntentId =
-                (string) ($paymentIntent->id ?? '');
-
-            if ($paymentIntentId === '') {
-                return;
-            }
+        try {
+            $transactions = collect();
+            $totalRevenue = 0;
 
             /*
             |--------------------------------------------------------------------------
-            | Only Successful Payments
+            | Team Invoice IDs
             |--------------------------------------------------------------------------
             */
 
-            if (
-                isset($paymentIntent->status)
-                && $paymentIntent->status !== 'succeeded'
-            ) {
-                Log::debug(
-                    'TeamDashboardService: PaymentIntent skipped because not succeeded',
-                    [
-                        'team_id' => $team->id,
-                        'payment_intent_id' =>
-                            $paymentIntentId,
-                        'status' =>
-                            $paymentIntent->status,
-                    ]
-                );
+            $stepStartedAt = microtime(true);
 
-                return;
-            }
+            $teamInvoiceIds = $this->teamInvoiceIds($team);
+
+            $teamInvoiceIdLookup = $teamInvoiceIds
+                ->map(fn ($id) => (string) $id)
+                ->flip();
+
+            $teamInvoices = Invoice::query()
+                ->whereIn('id', $teamInvoiceIds)
+                ->get()
+                ->keyBy(fn ($invoice) => (string) $invoice->id);
+
+            $this->logComplete(
+                'Stripe team invoice IDs',
+                $stepStartedAt,
+                [
+                    'team_id' => $team->id,
+                    'invoice_count' => $teamInvoiceIds->count(),
+                ]
+            );
 
             /*
             |--------------------------------------------------------------------------
-            | Deduplicate
+            | Team Customer Stripe IDs
             |--------------------------------------------------------------------------
             */
 
-            if (
-                isset(
-                    $seenPaymentIntentIds[$paymentIntentId]
-                )
-            ) {
-                Log::debug(
-                    'TeamDashboardService: PaymentIntent duplicate skipped',
-                    [
-                        'team_id' => $team->id,
-                        'payment_intent_id' =>
-                            $paymentIntentId,
-                    ]
-                );
+            $stepStartedAt = microtime(true);
 
-                return;
-            }
+            $customerStripeIds = $team
+                ->tickets()
+                ->with('customer')
+                ->get()
+                ->pluck('customer.stripe_id')
+                ->filter()
+                ->unique()
+                ->values();
 
-            $seenPaymentIntentIds[$paymentIntentId] = true;
+            $this->logComplete(
+                'Stripe customer IDs query',
+                $stepStartedAt,
+                [
+                    'team_id' => $team->id,
+                    'customer_count' => $customerStripeIds->count(),
+                    'stripe_customer_ids' => $customerStripeIds->all(),
+                ]
+            );
 
             /*
             |--------------------------------------------------------------------------
-            | Metadata
+            | Deduplication
             |--------------------------------------------------------------------------
+            |
+            | Use the actual Stripe PaymentIntent ID.
+            |
             */
 
-            $metadata =
-                $paymentIntent->metadata
-                ?? (object) [];
-
-            $invoiceId =
-                $metadata->invoice_id
-                ?? null;
+            $seenPaymentIntentIds = [];
 
             /*
             |--------------------------------------------------------------------------
-            | Resolve Invoice
+            | Process PaymentIntent
             |--------------------------------------------------------------------------
             */
 
-            if (!$invoice && $invoiceId) {
-                $invoice = $teamInvoices->get(
-                    (string) $invoiceId
-                );
+            $processPaymentIntent = function (
+                object $paymentIntent,
+                ?Invoice $invoice = null
+            ) use (
+                &$transactions,
+                &$totalRevenue,
+                &$seenPaymentIntentIds,
+                $team,
+                $teamInvoiceIdLookup,
+                $teamInvoices
+            ): void {
+                $paymentIntentId =
+                    (string) ($paymentIntent->id ?? '');
 
-                if (!$invoice) {
-                    $invoice = Invoice::query()
-                        ->find($invoiceId);
+                if ($paymentIntentId === '') {
+                    return;
                 }
-            }
 
-            /*
-            |--------------------------------------------------------------------------
-            | Verify Invoice Belongs To Team
-            |--------------------------------------------------------------------------
-            */
-
-            if (
-                $invoice
-                && !$teamInvoiceIdLookup->has(
-                    (string) $invoice->id
-                )
-            ) {
-                Log::debug(
-                    'TeamDashboardService: PaymentIntent skipped because invoice belongs to another team',
-                    [
-                        'team_id' => $team->id,
-                        'invoice_id' => $invoice->id,
-                        'payment_intent_id' =>
-                            $paymentIntentId,
-                    ]
-                );
-
-                return;
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | Resolve Invoice From Customer If Needed
-            |--------------------------------------------------------------------------
-            */
-
-            $customerStripeId =
-                $paymentIntent->customer
-                ?? null;
-
-            if (
-                is_object($customerStripeId)
-                && isset($customerStripeId->id)
-            ) {
-                $customerStripeId =
-                    $customerStripeId->id;
-            }
-
-            if (!$invoice && $customerStripeId) {
-                $invoice =
-                    $this->teamInvoicesForCustomer(
-                        $team,
-                        $customerStripeId
-                    )->first();
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | Stripe PaymentIntent Details
-            |--------------------------------------------------------------------------
-            */
-
-            $paymentIntentDetails =
-                $this->stripe
-                    ->paymentIntents
-                    ->retrieve(
-                        $paymentIntentId,
-                        [
-                            'expand' => [
-                                'charges.data.balance_transaction',
-                            ],
-                        ]
-                    );
-
-            /*
-            |--------------------------------------------------------------------------
-            | Resolve Charge / Balance Transaction
-            |--------------------------------------------------------------------------
-            */
-
-            $charges =
-                $paymentIntentDetails
-                    ->charges
-                    ->data
-                    ?? [];
-
-            $balanceTransaction = null;
-
-            if (!empty($charges)) {
-                $balanceTransaction =
-                    $charges[0]
-                        ->balance_transaction
-                        ?? null;
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | Fallback: Retrieve Latest Charge
-            |--------------------------------------------------------------------------
-            */
-
-            if (!$balanceTransaction) {
-                $latestCharge =
-                    $paymentIntentDetails
-                        ->latest_charge
-                        ?? null;
-
-                $latestChargeId = null;
-
-                if (is_string($latestCharge)) {
-                    $latestChargeId =
-                        $latestCharge;
-                } elseif (
-                    is_object($latestCharge)
-                    && isset($latestCharge->id)
-                ) {
-                    $latestChargeId =
-                        $latestCharge->id;
-
-                    $balanceTransaction =
-                        $latestCharge
-                            ->balance_transaction
-                            ?? null;
-                }
+                /*
+                |--------------------------------------------------------------------------
+                | Only Successful Payments
+                |--------------------------------------------------------------------------
+                */
 
                 if (
-                    !$balanceTransaction
-                    && $latestChargeId
+                    isset($paymentIntent->status)
+                    && $paymentIntent->status !== 'succeeded'
                 ) {
-                    $charge =
-                        $this->stripe
-                            ->charges
-                            ->retrieve(
-                                $latestChargeId,
-                                [
-                                    'expand' => [
-                                        'balance_transaction',
-                                    ],
-                                ]
-                            );
-
-                    $balanceTransaction =
-                        $charge
-                            ->balance_transaction
-                            ?? null;
-                }
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | Stripe Processing Fee
-            |--------------------------------------------------------------------------
-            */
-
-            $processingFee = isset(
-                $balanceTransaction->fee
-            )
-                ? -abs(
-                    (int) $balanceTransaction->fee
-                )
-                : 0;
-
-            /*
-            |--------------------------------------------------------------------------
-            | Stripe Net
-            |--------------------------------------------------------------------------
-            */
-
-            $grossAmount = (int) (
-                $paymentIntentDetails->amount_received
-                ?? $paymentIntentDetails->amount
-                ?? $paymentIntent->amount
-                ?? 0
-            );
-
-            $netAmount = isset(
-                $balanceTransaction->net
-            )
-                ? (int) $balanceTransaction->net
-                : $grossAmount + $processingFee;
-
-            /*
-            |--------------------------------------------------------------------------
-            | Created Date
-            |--------------------------------------------------------------------------
-            */
-
-            $createdTimestamp = (int) (
-                $paymentIntentDetails->created
-                ?? $paymentIntent->created
-                ?? now()->timestamp
-            );
-
-            $createdAt =
-                Carbon::createFromTimestamp(
-                    $createdTimestamp,
-                    config('app.timezone')
-                );
-
-            /*
-            |--------------------------------------------------------------------------
-            | Build Transaction Object
-            |--------------------------------------------------------------------------
-            */
-
-            $transaction = (object) [
-                'customer_id' =>
-                    $invoice?->customer_id,
-
-                'invoice_id' =>
-                    $invoice?->id
-                    ?? $invoiceId,
-
-                'stripe_payment_intent_id' =>
-                    $paymentIntentId,
-
-                'amount' =>
-                    (int) (
-                        $paymentIntentDetails->amount
-                        ?? $paymentIntent->amount
-                        ?? 0
-                    ),
-
-                'processing_fee' =>
-                    $processingFee,
-
-                'net_amount' =>
-                    $netAmount,
-
-                'created_at' =>
-                    $createdAt,
-
-                'status' =>
-                    TransactionStatus::Succeeded,
-
-                'invoice' => (object) [
-                    'payment_type' =>
-                        $invoice?->payment_type
-                        ?? PaymentType::OneTime,
-                ],
-            ];
-
-            $transactions->push(
-                $transaction
-            );
-
-            $totalRevenue +=
-                $transaction->amount;
-
-            Log::info(
-                'TeamDashboardService: Stripe PaymentIntent processed',
-                [
-                    'team_id' => $team->id,
-                    'payment_intent_id' =>
-                        $paymentIntentId,
-                    'invoice_id' =>
-                        $transaction->invoice_id,
-                    'customer_id' =>
-                        $transaction->customer_id,
-                    'payment_type' =>
-                        $transaction
-                            ->invoice
-                            ->payment_type
-                            ->value
-                            ?? $transaction
-                                ->invoice
-                                ->payment_type
-                                ?? null,
-                    'amount' =>
-                        $transaction->amount,
-                    'processing_fee' =>
-                        $processingFee,
-                    'net_amount' =>
-                        $netAmount,
-                    'created_at' =>
-                        $createdAt->toDateTimeString(),
-                ]
-            );
-        };
-
-        /*
-        |--------------------------------------------------------------------------
-        | IMPORTANT:
-        | Process invoices that have a persisted PaymentIntent ID.
-        |
-        | This is what fixes the one-time payment.
-        |--------------------------------------------------------------------------
-        */
-
-        $stepStartedAt = microtime(true);
-
-        $invoicesWithPaymentIntents =
-            $teamInvoices->filter(
-                function ($invoice) {
-                    $stripeId =
-                        (string) (
-                            $invoice->stripe_id
-                            ?? ''
-                        );
-
-                    return
-                        $stripeId !== ''
-                        && str_starts_with(
-                            $stripeId,
-                            'pi_'
-                        )
-                        && $invoice->status ===
-                            InvoiceStatus::Paid;
-                }
-            );
-
-        foreach (
-            $invoicesWithPaymentIntents
-            as $invoice
-        ) {
-            $paymentIntentId =
-                (string) $invoice->stripe_id;
-
-            try {
-                Log::info(
-                    'TeamDashboardService: retrieving invoice PaymentIntent',
-                    [
-                        'team_id' => $team->id,
-                        'invoice_id' => $invoice->id,
-                        'payment_intent_id' =>
-                            $paymentIntentId,
-                    ]
-                );
-
-                $paymentIntent =
-                    $this->stripe
-                        ->paymentIntents
-                        ->retrieve(
-                            $paymentIntentId
-                        );
-
-                $processPaymentIntent(
-                    $paymentIntent,
-                    $invoice
-                );
-            } catch (Throwable $e) {
-                Log::error(
-                    'TeamDashboardService: failed to retrieve invoice PaymentIntent',
-                    [
-                        'team_id' => $team->id,
-                        'invoice_id' => $invoice->id,
-                        'payment_intent_id' =>
-                            $paymentIntentId,
-                        'message' =>
-                            $e->getMessage(),
-                    ]
-                );
-            }
-        }
-
-        $this->logComplete(
-            'Persisted invoice PaymentIntents',
-            $stepStartedAt,
-            [
-                'team_id' => $team->id,
-                'invoice_count' =>
-                    $invoicesWithPaymentIntents->count(),
-                'processed_count' =>
-                    $transactions->count(),
-            ]
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | Search Stripe PaymentIntents By Customer
-        |--------------------------------------------------------------------------
-        |
-        | This continues to handle subscription payments whose invoice
-        | stripe_id is a Stripe Subscription ID (sub_...).
-        |
-        |--------------------------------------------------------------------------
-        */
-
-        foreach (
-            $customerStripeIds
-            as $customerStripeId
-        ) {
-            $customerStartedAt =
-                microtime(true);
-
-            Log::info(
-                'TeamDashboardService: Stripe customer SEARCH START',
-                [
-                    'team_id' => $team->id,
-                    'stripe_customer_id' =>
-                        $customerStripeId,
-                ]
-            );
-
-            $results =
-                $this->stripe
-                    ->paymentIntents
-                    ->search(
+                    Log::debug(
+                        'TeamDashboardService: PaymentIntent skipped because not succeeded',
                         [
-                            'query' =>
-                                "customer:'{$customerStripeId}' "
-                                . "AND status:'succeeded'",
-                            'limit' => 100,
+                            'team_id' => $team->id,
+                            'payment_intent_id' =>
+                                $paymentIntentId,
+                            'status' =>
+                                $paymentIntent->status,
                         ]
                     );
 
-            $paymentIntentIteration = 0;
+                    return;
+                }
 
-            foreach (
-                $results->data ?? []
-                as $paymentIntent
-            ) {
-                $paymentIntentIteration++;
+                /*
+                |--------------------------------------------------------------------------
+                | Deduplicate
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    isset(
+                        $seenPaymentIntentIds[$paymentIntentId]
+                    )
+                ) {
+                    Log::debug(
+                        'TeamDashboardService: PaymentIntent duplicate skipped',
+                        [
+                            'team_id' => $team->id,
+                            'payment_intent_id' =>
+                                $paymentIntentId,
+                        ]
+                    );
+
+                    return;
+                }
+
+                $seenPaymentIntentIds[$paymentIntentId] = true;
+
+                /*
+                |--------------------------------------------------------------------------
+                | Metadata
+                |--------------------------------------------------------------------------
+                */
 
                 $metadata =
                     $paymentIntent->metadata
@@ -2277,42 +2040,26 @@ if ($filter === 'ytd') {
                     $metadata->invoice_id
                     ?? null;
 
-                $invoice = null;
+                /*
+                |--------------------------------------------------------------------------
+                | Resolve Invoice
+                |--------------------------------------------------------------------------
+                */
 
-                if ($invoiceId) {
-                    $invoice =
-                        $teamInvoices->get(
-                            (string) $invoiceId
-                        );
+                if (!$invoice && $invoiceId) {
+                    $invoice = $teamInvoices->get(
+                        (string) $invoiceId
+                    );
 
                     if (!$invoice) {
-                        $invoice =
-                            Invoice::query()
-                                ->find($invoiceId);
+                        $invoice = Invoice::query()
+                            ->find($invoiceId);
                     }
                 }
 
                 /*
                 |--------------------------------------------------------------------------
-                | If metadata didn't identify the invoice,
-                | resolve it from the Stripe customer.
-                |--------------------------------------------------------------------------
-                */
-
-                if (
-                    !$invoice
-                    && $customerStripeId
-                ) {
-                    $invoice =
-                        $this->teamInvoicesForCustomer(
-                            $team,
-                            $customerStripeId
-                        )->first();
-                }
-
-                /*
-                |--------------------------------------------------------------------------
-                | Verify Team Ownership
+                | Verify Invoice Belongs To Team
                 |--------------------------------------------------------------------------
                 */
 
@@ -2322,91 +2069,540 @@ if ($filter === 'ytd') {
                         (string) $invoice->id
                     )
                 ) {
-                    continue;
+                    Log::debug(
+                        'TeamDashboardService: PaymentIntent skipped because invoice belongs to another team',
+                        [
+                            'team_id' => $team->id,
+                            'invoice_id' => $invoice->id,
+                            'payment_intent_id' =>
+                                $paymentIntentId,
+                        ]
+                    );
+
+                    return;
                 }
 
-                $processPaymentIntent(
-                    $paymentIntent,
-                    $invoice
+                /*
+                |--------------------------------------------------------------------------
+                | Resolve Invoice From Customer If Needed
+                |--------------------------------------------------------------------------
+                */
+
+                $customerStripeId =
+                    $paymentIntent->customer
+                    ?? null;
+
+                if (
+                    is_object($customerStripeId)
+                    && isset($customerStripeId->id)
+                ) {
+                    $customerStripeId =
+                        $customerStripeId->id;
+                }
+
+                if (!$invoice && $customerStripeId) {
+                    $invoice =
+                        $this->teamInvoicesForCustomer(
+                            $team,
+                            $customerStripeId
+                        )->first();
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Stripe PaymentIntent Details
+                |--------------------------------------------------------------------------
+                */
+
+                $paymentIntentDetails =
+                    $this->stripe
+                        ->paymentIntents
+                        ->retrieve(
+                            $paymentIntentId,
+                            [
+                                'expand' => [
+                                    'charges.data.balance_transaction',
+                                ],
+                            ]
+                        );
+
+                /*
+                |--------------------------------------------------------------------------
+                | Resolve Charge / Balance Transaction
+                |--------------------------------------------------------------------------
+                */
+
+                $charges =
+                    $paymentIntentDetails
+                        ->charges
+                        ->data
+                        ?? [];
+
+                $balanceTransaction = null;
+
+                if (!empty($charges)) {
+                    $balanceTransaction =
+                        $charges[0]
+                            ->balance_transaction
+                            ?? null;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Fallback: Retrieve Latest Charge
+                |--------------------------------------------------------------------------
+                */
+
+                if (!$balanceTransaction) {
+                    $latestCharge =
+                        $paymentIntentDetails
+                            ->latest_charge
+                            ?? null;
+
+                    $latestChargeId = null;
+
+                    if (is_string($latestCharge)) {
+                        $latestChargeId =
+                            $latestCharge;
+                    } elseif (
+                        is_object($latestCharge)
+                        && isset($latestCharge->id)
+                    ) {
+                        $latestChargeId =
+                            $latestCharge->id;
+
+                        $balanceTransaction =
+                            $latestCharge
+                                ->balance_transaction
+                                ?? null;
+                    }
+
+                    if (
+                        !$balanceTransaction
+                        && $latestChargeId
+                    ) {
+                        $charge =
+                            $this->stripe
+                                ->charges
+                                ->retrieve(
+                                    $latestChargeId,
+                                    [
+                                        'expand' => [
+                                            'balance_transaction',
+                                        ],
+                                    ]
+                                );
+
+                        $balanceTransaction =
+                            $charge
+                                ->balance_transaction
+                                ?? null;
+                    }
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Stripe Processing Fee
+                |--------------------------------------------------------------------------
+                */
+
+                $processingFee = isset(
+                    $balanceTransaction->fee
+                )
+                    ? -abs(
+                        (int) $balanceTransaction->fee
+                    )
+                    : 0;
+
+                /*
+                |--------------------------------------------------------------------------
+                | Stripe Net
+                |--------------------------------------------------------------------------
+                */
+
+                $grossAmount = (int) (
+                    $paymentIntentDetails->amount_received
+                    ?? $paymentIntentDetails->amount
+                    ?? $paymentIntent->amount
+                    ?? 0
                 );
+
+                $netAmount = isset(
+                    $balanceTransaction->net
+                )
+                    ? (int) $balanceTransaction->net
+                    : $grossAmount + $processingFee;
+
+                /*
+                |--------------------------------------------------------------------------
+                | Created Date
+                |--------------------------------------------------------------------------
+                */
+
+                $createdTimestamp = (int) (
+                    $paymentIntentDetails->created
+                    ?? $paymentIntent->created
+                    ?? now()->timestamp
+                );
+
+                $createdAt =
+                    Carbon::createFromTimestamp(
+                        $createdTimestamp,
+                        config('app.timezone')
+                    );
+
+                /*
+                |--------------------------------------------------------------------------
+                | Build Transaction Object
+                |--------------------------------------------------------------------------
+                */
+
+                $transaction = (object) [
+                    'customer_id' =>
+                        $invoice?->customer_id,
+
+                    'invoice_id' =>
+                        $invoice?->id
+                        ?? $invoiceId,
+
+                    'stripe_payment_intent_id' =>
+                        $paymentIntentId,
+
+                    'amount' =>
+                        (int) (
+                            $paymentIntentDetails->amount
+                            ?? $paymentIntent->amount
+                            ?? 0
+                        ),
+
+                    'processing_fee' =>
+                        $processingFee,
+
+                    'net_amount' =>
+                        $netAmount,
+
+                    'created_at' =>
+                        $createdAt,
+
+                    'status' =>
+                        TransactionStatus::Succeeded,
+
+                    'invoice' => (object) [
+                        'payment_type' =>
+                            $invoice?->payment_type
+                            ?? PaymentType::OneTime,
+                    ],
+                ];
+
+                $transactions->push(
+                    $transaction
+                );
+
+                $totalRevenue +=
+                    $transaction->amount;
+
+                Log::info(
+                    'TeamDashboardService: Stripe PaymentIntent processed',
+                    [
+                        'team_id' => $team->id,
+                        'payment_intent_id' =>
+                            $paymentIntentId,
+                        'invoice_id' =>
+                            $transaction->invoice_id,
+                        'customer_id' =>
+                            $transaction->customer_id,
+                        'payment_type' =>
+                            $transaction
+                                ->invoice
+                                ->payment_type
+                                ->value
+                                ?? $transaction
+                                    ->invoice
+                                    ->payment_type
+                                ?? null,
+                        'amount' =>
+                            $transaction->amount,
+                        'processing_fee' =>
+                            $processingFee,
+                        'net_amount' =>
+                            $netAmount,
+                        'created_at' =>
+                            $createdAt->toDateTimeString(),
+                    ]
+                );
+            };
+
+            /*
+            |--------------------------------------------------------------------------
+            | IMPORTANT:
+            | Process invoices that have a persisted PaymentIntent ID.
+            |--------------------------------------------------------------------------
+            |
+            | This is what fixes the one-time payment.
+            |
+            */
+
+            $stepStartedAt = microtime(true);
+
+            $invoicesWithPaymentIntents =
+                $teamInvoices->filter(
+                    function ($invoice) {
+                        $stripeId =
+                            (string) (
+                                $invoice->stripe_id
+                                ?? ''
+                            );
+
+                        return
+                            $stripeId !== ''
+                            && str_starts_with(
+                                $stripeId,
+                                'pi_'
+                            )
+                            && $invoice->status ===
+                                InvoiceStatus::Paid;
+                    }
+                );
+
+            foreach (
+                $invoicesWithPaymentIntents
+                as $invoice
+            ) {
+                $paymentIntentId =
+                    (string) $invoice->stripe_id;
+
+                try {
+                    Log::info(
+                        'TeamDashboardService: retrieving invoice PaymentIntent',
+                        [
+                            'team_id' => $team->id,
+                            'invoice_id' => $invoice->id,
+                            'payment_intent_id' =>
+                                $paymentIntentId,
+                        ]
+                    );
+
+                    $paymentIntent =
+                        $this->stripe
+                            ->paymentIntents
+                            ->retrieve(
+                                $paymentIntentId
+                            );
+
+                    $processPaymentIntent(
+                        $paymentIntent,
+                        $invoice
+                    );
+                } catch (Throwable $e) {
+                    Log::error(
+                        'TeamDashboardService: failed to retrieve invoice PaymentIntent',
+                        [
+                            'team_id' => $team->id,
+                            'invoice_id' => $invoice->id,
+                            'payment_intent_id' =>
+                                $paymentIntentId,
+                            'message' =>
+                                $e->getMessage(),
+                        ]
+                    );
+                }
             }
 
             $this->logComplete(
-                'Stripe customer processing',
-                $customerStartedAt,
+                'Persisted invoice PaymentIntents',
+                $stepStartedAt,
                 [
                     'team_id' => $team->id,
-                    'stripe_customer_id' =>
-                        $customerStripeId,
-                    'payment_intent_count' =>
-                        $paymentIntentIteration,
+                    'invoice_count' =>
+                        $invoicesWithPaymentIntents->count(),
+                    'processed_count' =>
+                        $transactions->count(),
                 ]
             );
-        }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Final Stripe Result
-        |--------------------------------------------------------------------------
-        */
+            /*
+            |--------------------------------------------------------------------------
+            | Search Stripe PaymentIntents By Customer
+            |--------------------------------------------------------------------------
+            |
+            | This continues to handle subscription payments whose invoice
+            | stripe_id is a Stripe Subscription ID (sub_...).
+            |
+            */
 
-        Log::info(
-            'TeamDashboardService: stripeRevenueForTeam END',
-            [
-                'team_id' => $team->id,
-                'transaction_count' =>
-                    $transactions->count(),
-                'total_revenue' =>
+            foreach (
+                $customerStripeIds
+                as $customerStripeId
+            ) {
+                $customerStartedAt =
+                    microtime(true);
+
+                Log::info(
+                    'TeamDashboardService: Stripe customer SEARCH START',
+                    [
+                        'team_id' => $team->id,
+                        'stripe_customer_id' =>
+                            $customerStripeId,
+                    ]
+                );
+
+                $results =
+                    $this->stripe
+                        ->paymentIntents
+                        ->search(
+                            [
+                                'query' =>
+                                    "customer:'{$customerStripeId}' "
+                                    . "AND status:'succeeded'",
+                                'limit' => 100,
+                            ]
+                        );
+
+                $paymentIntentIteration = 0;
+
+                foreach (
+                    $results->data ?? []
+                    as $paymentIntent
+                ) {
+                    $paymentIntentIteration++;
+
+                    $metadata =
+                        $paymentIntent->metadata
+                        ?? (object) [];
+
+                    $invoiceId =
+                        $metadata->invoice_id
+                        ?? null;
+
+                    $invoice = null;
+
+                    if ($invoiceId) {
+                        $invoice =
+                            $teamInvoices->get(
+                                (string) $invoiceId
+                            );
+
+                        if (!$invoice) {
+                            $invoice =
+                                Invoice::query()
+                                    ->find($invoiceId);
+                        }
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | If metadata didn't identify the invoice,
+                    | resolve it from the Stripe customer.
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        !$invoice
+                        && $customerStripeId
+                    ) {
+                        $invoice =
+                            $this->teamInvoicesForCustomer(
+                                $team,
+                                $customerStripeId
+                            )->first();
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Verify Team Ownership
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        $invoice
+                        && !$teamInvoiceIdLookup->has(
+                            (string) $invoice->id
+                        )
+                    ) {
+                        continue;
+                    }
+
+                    $processPaymentIntent(
+                        $paymentIntent,
+                        $invoice
+                    );
+                }
+
+                $this->logComplete(
+                    'Stripe customer processing',
+                    $customerStartedAt,
+                    [
+                        'team_id' => $team->id,
+                        'stripe_customer_id' =>
+                            $customerStripeId,
+                        'payment_intent_count' =>
+                            $paymentIntentIteration,
+                    ]
+                );
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Final Stripe Result
+            |--------------------------------------------------------------------------
+            */
+
+            Log::info(
+                'TeamDashboardService: stripeRevenueForTeam END',
+                [
+                    'team_id' => $team->id,
+                    'transaction_count' =>
+                        $transactions->count(),
+                    'total_revenue' =>
+                        $totalRevenue,
+                    'total_duration_ms' =>
+                        round(
+                            (
+                                microtime(true)
+                                - $startedAt
+                            ) * 1000,
+                            2
+                        ),
+                ]
+            );
+
+            return [
+                'transactions' =>
+                    $transactions,
+
+                'revenue' =>
                     $totalRevenue,
-                'total_duration_ms' =>
-                    round(
-                        (
-                            microtime(true)
-                            - $startedAt
-                        ) * 1000,
-                        2
-                    ),
-            ]
-        );
+            ];
+        } catch (Throwable $e) {
+            Log::error(
+                'TeamDashboardService: stripeRevenueForTeam FAILED',
+                [
+                    'team_id' => $team->id ?? null,
+                    'team_slug' => $team->slug ?? null,
+                    'exception_class' =>
+                        get_class($e),
+                    'message' =>
+                        $e->getMessage(),
+                    'file' =>
+                        $e->getFile(),
+                    'line' =>
+                        $e->getLine(),
+                    'duration_ms' =>
+                        round(
+                            (
+                                microtime(true)
+                                - $startedAt
+                            ) * 1000,
+                            2
+                        ),
+                    'trace' =>
+                        $e->getTraceAsString(),
+                ]
+            );
 
-        return [
-            'transactions' =>
-                $transactions,
-
-            'revenue' =>
-                $totalRevenue,
-        ];
-
-    } catch (Throwable $e) {
-        Log::error(
-            'TeamDashboardService: stripeRevenueForTeam FAILED',
-            [
-                'team_id' => $team->id ?? null,
-                'team_slug' => $team->slug ?? null,
-                'exception_class' =>
-                    get_class($e),
-                'message' =>
-                    $e->getMessage(),
-                'file' =>
-                    $e->getFile(),
-                'line' =>
-                    $e->getLine(),
-                'duration_ms' =>
-                    round(
-                        (
-                            microtime(true)
-                            - $startedAt
-                        ) * 1000,
-                        2
-                    ),
-                'trace' =>
-                    $e->getTraceAsString(),
-            ]
-        );
-
-        throw $e;
+            throw $e;
+        }
     }
-}
 
     /*
     |--------------------------------------------------------------------------
@@ -2478,5 +2674,55 @@ if ($filter === 'ytd') {
         );
 
         return $result;
+    }
+
+    protected function resolveInvoicePaymentType(Invoice $invoice): PaymentType 
+    {
+        try {
+        
+        $stripeId = $invoice->stripe_id ?? null; 
+        
+        if (is_string($stripeId)) {
+            $stripeId = trim($stripeId);
+        
+            if (str_starts_with($stripeId, 'sub_')) {
+                return PaymentType::Subscription;
+            }
+
+            if (str_starts_with($stripeId, 'pi_')) {
+                return PaymentType::OneTime;
+            }
+        }
+        
+        // fallsback to locally stored payment types 
+
+        if ($invoice->payment_type instanceof PaymentType) {
+            return $invoice->payment_type;
+        }
+
+        $paymentType = PaymentType::tryFrom((string) $invoice->payment_type);
+        
+        if ($paymentType) {
+            return $paymentType;
+        }
+
+        // unknown or malformed data shouldn't throw exceptions so we default to one time so we don't incorrectly inflate the MRR
+        return PaymentType::OneTime;
+    }
+    catch (Throwable $e) {
+        Log::warning(
+            __CLASS__. ' failed to resolve invoice payment type', 
+            [
+                'invoice_id' => $invoice->id ?? null,
+                'stripe_id' => $invoice->stripe_id ?? null,
+                'payment_type' => $invoice->payment_type ?? null,
+                'message' => $e->getMessage(),
+                'exception_class' => get_class($e),
+            ]
+        );
+    
+        return PaymentType::OneTime;
+    }
+
     }
 }
