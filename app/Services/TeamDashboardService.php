@@ -671,14 +671,43 @@ class TeamDashboardService
         */
 
         $mrr = (int) $allSubscriptionInvoices->sum(
-            function (Invoice $invoice): int {
-                return max(
-                    0,
-                    (int) $invoice
-                        ->monthlyRecurringAmountInCents()
-                );
+        function (Invoice $invoice): int {
+            $grossInvoice = max(
+                0,
+                (int) $invoice->total_amount
+            );
+
+            $recurringAmount = max(
+                0,
+                (int) $invoice->monthlyRecurringAmountInCents()
+            );
+
+            $stripeFee = max(
+                0,
+                -(int) $invoice->stripeProcessingFeeInCents()
+            );
+
+            if ($grossInvoice <= 0 || $recurringAmount <= 0) {
+                return 0;
             }
-        );
+
+            /*
+            * Allocate the Stripe fee proportionally to the recurring
+            * portion of the invoice.
+            */
+            $recurringStripeFee = (int) round(
+                $stripeFee
+                * ($recurringAmount / $grossInvoice)
+            );
+
+            return max(
+                $recurringAmount - $recurringStripeFee,
+                0
+            );
+        }
+    );
+
+    $arr = $mrr * 12;
 
         /*
         |--------------------------------------------------------------------------

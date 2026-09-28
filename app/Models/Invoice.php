@@ -126,11 +126,11 @@ class Invoice extends Model
 
     public function pabloCommissionInCents(): int
     {
-        $gross = (int) $this->total_amount;
-        $rate = $gross < 200000 ? 0.10 : 0.20;
+        $net = $this->netAmountInCents();
+        $rate = $net < 200000 ? 0.10 : 0.20;
 
         return (int) round(
-            $gross * $rate
+            $net * $rate
         );
     }
 

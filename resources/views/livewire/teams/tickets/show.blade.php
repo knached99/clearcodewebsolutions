@@ -1076,7 +1076,7 @@
                     CHARGE ACTIONS
                 ===================================================== --}}
                 @if (
-                    $status === 'resolved' &&
+                    $status === 'resolved' || $status === 'closed' &&
                         (auth()->user()->currentTeam->hasAdmin() ||
                             auth()->user()->currentTeam->owner()->id === auth()->id() ||
                             auth()->user()->currentTeam->hasMember(auth()->user())))

@@ -312,7 +312,7 @@
             </div>
 
             <div class="metric-description">
-                Monthly recurring revenue
+              (NET) Monthly recurring revenue
             </div>
 
         </article>
@@ -337,7 +337,7 @@
             </div>
 
             <div class="metric-description">
-                Annualized recurring revenue
+              (NET)  Annualized recurring revenue
             </div>
 
         </article>
@@ -533,7 +533,7 @@
                 </strong>
 
                 <span class="distribution-summary-description">
-                    {{ $pabloRateDisplay }} of gross revenue
+                    {{ $pabloRateDisplay }} of net revenue
                 </span>
 
             </div>
@@ -588,7 +588,7 @@
                 </div>
 
                 <div class="distribution-recipient-description">
-                    {{ $pabloRateDisplay }} of gross revenue
+                    {{ $pabloRateDisplay }} of net revenue
                 </div>
 
                 <div class="distribution-recipient-rule">
