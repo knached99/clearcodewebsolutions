@@ -234,7 +234,7 @@
                                             </strong>
 
                                             @if($testimonial->display_role)
-                                                <span>
+                                                <span style="color: #fff; font-size: 12px;">
                                                     {{ $testimonial->display_role }}
                                                 </span>
                                             @endif
