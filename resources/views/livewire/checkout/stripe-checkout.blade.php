@@ -2,1583 +2,3171 @@
     <script src="https://js.stripe.com/v3/"></script>
 @endassets
 
-<div class="min-h-screen bg-slate-50">
-    <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+<div class="cc-checkout">
 
-        {{-- ============================================================
-            PAGE HEADER
-        ============================================================= --}}
-        <div class="mb-8">
-            <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                    <p class="text-sm font-medium text-slate-500">
-                        Secure Checkout
-                    </p>
+    <style>
+        html,
+        body {
+            background: oklch(13% 0.028 261.692) !important;
+        }
 
-                    <h1 class="mt-1 text-3xl font-bold tracking-tight text-slate-900">
-                        Complete Your Payment
-                    </h1>
+        .cc-checkout {
+            width: 100%;
+            max-width: 980px;
+            margin: 0 auto;
+            color: #f5f2f7;
+            font-family:
+                Inter,
+                ui-sans-serif,
+                system-ui,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+        }
 
-                    <p class="mt-2 text-sm text-slate-600">
-                        Review your order, provide your billing details, sign the agreement, and complete payment securely.
-                    </p>
-                </div>
+        .cc-checkout__shell {
+            background: #0b090d;
+            border: 1px solid #27212b;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 18px 60px rgba(0, 0, 0, .45);
+        }
 
-                <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm">
+        .cc-checkout__header {
+            padding: 28px 30px 24px;
+            border-bottom: 1px solid #27212b;
+            background:
+                radial-gradient(
+                    circle at top right,
+                    rgba(208, 139, 212, .10),
+                    transparent 35%
+                ),
+                #100c12;
+        }
+
+        .cc-checkout__eyebrow {
+            margin: 0 0 8px;
+            color: #b9adb9;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .cc-checkout__title {
+            margin: 0;
+            color: #ffffff;
+            font-size: 28px;
+            line-height: 1.15;
+            font-weight: 800;
+        }
+
+        .cc-checkout__subtitle {
+            margin: 9px 0 0;
+            color: #aaa0ad;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .cc-checkout__body {
+            display: grid;
+            grid-template-columns: minmax(0, 1.35fr) minmax(320px, .85fr);
+            gap: 24px;
+            padding: 26px;
+            background: #0b090d;
+        }
+
+        .cc-checkout__main,
+        .cc-checkout__sidebar {
+            min-width: 0;
+        }
+
+        .cc-checkout__section {
+            margin-bottom: 22px;
+            padding: 20px;
+            border: 1px solid #29222d;
+            border-radius: 14px;
+            background: #131017;
+        }
+
+        .cc-checkout__section:last-child {
+            margin-bottom: 0;
+        }
+
+        .cc-checkout__section-title {
+            margin: 0 0 5px;
+            color: #fff;
+            font-size: 17px;
+            line-height: 1.3;
+            font-weight: 800;
+        }
+
+        .cc-checkout__section-text {
+            margin: 0 0 18px;
+            color: #9f969f;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+
+        .cc-checkout__grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .cc-checkout__field {
+            min-width: 0;
+        }
+
+        .cc-checkout__field--full {
+            grid-column: 1 / -1;
+        }
+
+        .cc-checkout__label {
+            display: block;
+            margin-bottom: 7px;
+            color: #d8d0da;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .cc-checkout__input {
+            width: 100%;
+            height: 46px;
+            padding: 0 13px;
+            border: 1px solid #3b313f;
+            border-radius: 10px;
+            outline: none;
+            background: #0d0a0f;
+            color: #fff;
+            font-size: 14px;
+            transition:
+                border-color .15s ease,
+                box-shadow .15s ease;
+        }
+
+        .cc-checkout__input:focus {
+            border-color: #9b5aa0;
+            box-shadow: 0 0 0 3px rgba(155, 90, 160, .12);
+        }
+
+        .cc-checkout__input::placeholder {
+            color: #6f6871;
+        }
+
+        .cc-checkout__items {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .cc-checkout__item {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 13px 14px;
+            border: 1px solid #2c2530;
+            border-radius: 11px;
+            background: #0e0b10;
+        }
+
+        .cc-checkout__item-info {
+            min-width: 0;
+        }
+
+        .cc-checkout__item-name {
+            margin: 0;
+            color: #f7f4f8;
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        .cc-checkout__item-meta {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .cc-checkout__item-description {
+            margin: 5px 0 0;
+            color: #8f8791;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        .cc-checkout__item-price {
+            flex: 0 0 auto;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .cc-checkout__addon-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 8px;
+            border: 1px solid #4a3150;
+            border-radius: 999px;
+            background: #211629;
+            color: #d08bd4;
+            font-size: 10px;
+            font-weight: 700;
+            line-height: 1.2;
+            text-transform: uppercase;
+            letter-spacing: .03em;
+            white-space: nowrap;
+        }
+
+        .cc-checkout__addon-badge svg {
+            width: 13px;
+            height: 13px;
+            flex: 0 0 13px;
+        }
+
+        .cc-checkout__summary {
+            display: flex;
+            flex-direction: column;
+            gap: 11px;
+        }
+
+        .cc-checkout__summary-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            color: #aaa1ad;
+            font-size: 13px;
+        }
+
+        .cc-checkout__summary-row strong {
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .cc-checkout__summary-total {
+            margin-top: 6px;
+            padding-top: 15px;
+            border-top: 1px solid #302733;
+        }
+
+        .cc-checkout__summary-total span:first-child {
+            color: #fff;
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .cc-checkout__summary-total strong {
+            color: #fff;
+            font-size: 23px;
+            font-weight: 900;
+        }
+
+        .cc-checkout__agreement {
+            position: relative;
+        }
+
+        .cc-checkout__agreement-copy {
+            margin-bottom: 14px;
+            padding: 14px;
+            border: 1px solid #342937;
+            border-radius: 11px;
+            background: #0e0b10;
+            color: #aaa1ab;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .cc-checkout__signature {
+            overflow: hidden;
+            border: 1px solid #3b313f;
+            border-radius: 11px;
+            background: #0d0a0f;
+        }
+
+        .cc-checkout__signature canvas {
+            display: block;
+            width: 100%;
+            height: 180px;
+            touch-action: none;
+            cursor: crosshair;
+            background: #0d0a0f;
+        }
+
+        .cc-checkout__signature-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 9px 11px;
+            border-top: 1px solid #2f2833;
+            background: #151116;
+        }
+
+        .cc-checkout__signature-hint {
+            color: #756d79;
+            font-size: 11px;
+        }
+
+        .cc-checkout__button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 44px;
+            padding: 0 15px;
+            border: 0;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            transition:
+                opacity .15s ease,
+                transform .15s ease,
+                background .15s ease;
+        }
+
+        .cc-checkout__button:hover:not(:disabled) {
+            transform: translateY(-1px);
+        }
+
+        .cc-checkout__button:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .cc-checkout__button--primary {
+            background: #b56ab9;
+            color: #fff;
+        }
+
+        .cc-checkout__button--primary:hover:not(:disabled) {
+            background: #c277c5;
+        }
+
+        .cc-checkout__button--secondary {
+            background: #2a222d;
+            color: #ddd4df;
+        }
+
+        .cc-checkout__button--secondary:hover:not(:disabled) {
+            background: #342a37;
+        }
+
+        .cc-checkout__button--pay {
+            width: 100%;
+            margin-top: 14px;
+            min-height: 52px;
+            font-size: 14px;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | PAYMENT SLIDER
+        |--------------------------------------------------------------------------
+        */
+
+        .cc-payment-slider {
+            width: 100%;
+        }
+
+        .cc-payment-slider__tabs {
+            display: flex;
+            align-items: stretch;
+            gap: 7px;
+
+            margin-bottom: 14px;
+
+            padding: 5px;
+
+            border: 1px solid #29222d;
+            border-radius: 13px;
+
+            background: #0e0b10;
+
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .cc-payment-slider__tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .cc-payment-slider__tab {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            flex: 1 1 0;
+
+            min-width: 115px;
+
+            gap: 8px;
+
+            padding: 10px 11px;
+
+            border: 1px solid transparent;
+            border-radius: 9px;
+
+            background: transparent;
+
+            color: #7f7581;
+
+            cursor: pointer;
+
+            text-align: left;
+
+            transition:
+                color .35s cubic-bezier(.22,1,.36,1),
+                background .35s cubic-bezier(.22,1,.36,1),
+                border-color .35s cubic-bezier(.22,1,.36,1),
+                box-shadow .35s cubic-bezier(.22,1,.36,1),
+                transform .35s cubic-bezier(.22,1,.36,1);
+        }
+
+        .cc-payment-slider__tab:hover {
+            color: #d5cdd8;
+        }
+
+        .cc-payment-slider__tab.is-active {
+            color: #fff;
+
+            border-color: #3b2f3f;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(208,139,212,.11),
+                    rgba(208,139,212,.025)
+                );
+
+            box-shadow:
+                inset 0 1px 0 rgba(255,255,255,.035),
+                0 7px 18px rgba(0,0,0,.16);
+        }
+
+        .cc-payment-slider__tab:active {
+            transform: translateY(1px);
+        }
+
+        .cc-payment-slider__tab-icon {
+            display: grid;
+            place-items: center;
+
+            width: 28px;
+            height: 28px;
+
+            flex: 0 0 28px;
+
+            border: 1px solid rgba(255,255,255,.07);
+            border-radius: 8px;
+
+            background: rgba(255,255,255,.022);
+
+            color: #8f8391;
+
+            transition:
+                color .35s ease,
+                border-color .35s ease,
+                background .35s ease;
+        }
+
+        .cc-payment-slider__tab.is-active
+        .cc-payment-slider__tab-icon {
+            color: #d08bd4;
+
+            border-color:
+                rgba(208,139,212,.20);
+
+            background:
+                rgba(208,139,212,.08);
+        }
+
+        .cc-payment-slider__tab-icon svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .cc-payment-slider__tab-copy {
+            display: flex;
+            flex-direction: column;
+
+            gap: 2px;
+
+            min-width: 0;
+        }
+
+        .cc-payment-slider__tab-copy strong {
+            color: inherit;
+
+            font-size: 11px;
+            font-weight: 800;
+
+            line-height: 1.15;
+        }
+
+        .cc-payment-slider__tab-copy span {
+            color: #6f6771;
+
+            font-size: 8px;
+            line-height: 1.2;
+
+            white-space: nowrap;
+        }
+
+        .cc-payment-slider__viewport {
+            width: 100%;
+
+            overflow: hidden;
+
+            border-radius: 11px;
+        }
+
+        .cc-payment-slider__track {
+            display: flex;
+
+            width: 300%;
+
+            transform:
+                translate3d(0, 0, 0);
+
+            transition:
+                transform 650ms cubic-bezier(.22,1,.36,1);
+
+            will-change: transform;
+        }
+
+        .cc-payment-slider__track.is-wallet {
+            transform:
+                translate3d(-33.333333%, 0, 0);
+        }
+
+
+
+        .cc-payment-slider__panel {
+            width: 33.333333%;
+            min-width: 33.333333%;
+
+            box-sizing: border-box;
+        }
+
+        .cc-payment-slider__panel-inner {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | STRIPE CARD PANEL
+        |--------------------------------------------------------------------------
+        */
+
+        .cc-checkout__stripe-box {
+            min-height: 120px;
+        }
+
+        .cc-checkout__stripe-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            min-height: 96px;
+
+            color: #8f8792;
+
+            font-size: 13px;
+        }
+
+        .cc-checkout__stripe-loading[hidden],
+        .cc-checkout__stripe-payment[hidden] {
+            display: none !important;
+        }
+
+        .cc-checkout__stripe-payment {
+            min-height: 100px;
+        }
+
+        #payment-element {
+            width: 100%;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | WALLET PANEL
+        |--------------------------------------------------------------------------
+        */
+
+        .cc-payment-wallets {
+            min-height: 150px;
+
+            padding: 17px;
+
+            border: 1px solid #29222d;
+            border-radius: 11px;
+
+            background:
+                radial-gradient(
+                    circle at 85% 15%,
+                    rgba(208,139,212,.065),
+                    transparent 40%
+                ),
+                #0e0b10;
+
+            box-shadow:
+                inset 0 1px 0 rgba(255,255,255,.025);
+        }
+
+        .cc-payment-wallets__heading {
+            display: flex;
+            flex-direction: column;
+
+            gap: 3px;
+
+            margin-bottom: 15px;
+        }
+
+        .cc-payment-wallets__heading strong {
+            color: #f5f2f7;
+
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .cc-payment-wallets__heading span {
+            color: #807783;
+
+            font-size: 11px;
+            line-height: 1.45;
+        }
+
+        #express-checkout-element {
+            width: 100%;
+        }
+
+        .cc-payment-wallets__loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            min-height: 90px;
+
+            color: #827985;
+
+            font-size: 12px;
+        }
+
+        .cc-payment-wallets__loading[hidden] {
+            display: none !important;
+        }
+
+        .cc-payment-wallets__unavailable {
+            margin-top: 12px;
+
+            padding: 11px 12px;
+
+            border: 1px solid #302833;
+            border-radius: 9px;
+
+            background:
+                rgba(255,255,255,.016);
+
+            color: #817782;
+
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .cc-payment-wallets__unavailable[hidden] {
+            display: none !important;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | ERRORS / STATUS
+        |--------------------------------------------------------------------------
+        */
+
+        .cc-checkout__error {
+            margin-top: 12px;
+
+            padding: 12px 13px;
+
+            border: 1px solid #5a3038;
+            border-radius: 10px;
+
+            background: #241216;
+
+            color: #f1aeb8;
+
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .cc-checkout__error[hidden] {
+            display: none !important;
+        }
+
+        .cc-checkout__status {
+            margin-top: 12px;
+
+            color: #918992;
+
+            font-size: 11px;
+
+            text-align: center;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | SUCCESS
+        |--------------------------------------------------------------------------
+        */
+
+        .cc-checkout__success {
+            padding: 42px 26px;
+
+            background: #0b090d;
+
+            text-align: center;
+        }
+
+        .cc-checkout__success-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            width: 54px;
+            height: 54px;
+
+            margin-bottom: 15px;
+
+            border-radius: 50%;
+
+            background: #17251a;
+
+            color: #8fd48f;
+        }
+
+        .cc-checkout__success h2 {
+            margin: 0;
+
+            color: #fff;
+
+            font-size: 25px;
+        }
+
+        .cc-checkout__success p {
+            max-width: 560px;
+
+            margin: 10px auto 0;
+
+            color: #a59da8;
+
+            font-size: 13px;
+
+            line-height: 1.6;
+        }
+
+        .cc-checkout__small {
+            color: #77707a;
+
+            font-size: 10px;
+
+            line-height: 1.5;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | RESPONSIVE
+        |--------------------------------------------------------------------------
+        */
+
+        @media (max-width: 820px) {
+
+            .cc-checkout__body {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+        @media (max-width: 600px) {
+
+            .cc-checkout__header {
+                padding: 22px 18px 20px;
+            }
+
+            .cc-checkout__body {
+                padding: 16px;
+            }
+
+            .cc-checkout__section {
+                padding: 16px;
+            }
+
+            .cc-checkout__grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cc-checkout__field--full {
+                grid-column: auto;
+            }
+
+            .cc-checkout__title {
+                font-size: 23px;
+            }
+
+            .cc-checkout__item {
+                flex-direction: column;
+            }
+
+            .cc-checkout__item-price {
+                align-self: flex-end;
+            }
+
+            .cc-payment-slider__tab {
+                min-width: 105px;
+                padding: 9px 9px;
+            }
+
+            .cc-payment-slider__tab-copy span {
+                display: none;
+            }
+
+            .cc-payment-slider__tab-copy strong {
+                font-size: 10px;
+            }
+
+            .cc-payment-slider__tab-icon {
+                width: 26px;
+                height: 26px;
+                flex-basis: 26px;
+            }
+
+        }
+    </style>
+
+    <div class="cc-checkout__shell">
+
+        @if ($checkoutSuccessful)
+
+            <div class="cc-checkout__success">
+
+                <div class="cc-checkout__success-icon">
                     <svg
-                        class="h-4 w-4 text-emerald-600"
-                        fill="none"
+                        width="25"
+                        height="25"
                         viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        stroke-width="2"
+                        fill="none"
+                        aria-hidden="true"
                     >
                         <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M12 11c2.21 0 4-1.79 4-4S14.21 3 12 3 8 4.79 8 7s1.79 4 4 4Z"
-                        />
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M5.5 21a6.5 6.5 0 0 1 13 0"
-                        />
-                    </svg>
-
-                    Secure Checkout
-                </div>
-            </div>
-        </div>
-
-        {{-- ============================================================
-            GLOBAL SUCCESS STATE
-        ============================================================= --}}
-        @if ($checkoutSuccessful)
-            <div class="mb-8 rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
-                <div class="flex items-start gap-4">
-                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-emerald-100">
-                        <svg
-                            class="h-6 w-6 text-emerald-600"
-                            fill="none"
-                            viewBox="0 0 24 24"
+                            d="m6 12 4 4 8-8"
                             stroke="currentColor"
                             stroke-width="2"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="m5 13 4 4L19 7"
-                            />
-                        </svg>
-                    </div>
-
-                    <div>
-                        <h2 class="text-lg font-semibold text-emerald-900">
-                            Payment Received
-                        </h2>
-
-                        <p class="mt-1 text-sm text-emerald-700">
-                            Your payment was successfully processed.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        @endif
-
-        {{-- ============================================================
-            CHECKOUT ERROR
-        ============================================================= --}}
-        @if ($checkoutError)
-            <div class="mb-8 rounded-2xl border border-red-200 bg-red-50 p-5">
-                <div class="flex items-start gap-3">
-                    <svg
-                        class="mt-0.5 h-5 w-5 shrink-0 text-red-600"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        stroke-width="2"
-                    >
-                        <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                            d="M12 9v4m0 4h.01M10.29 3.86l-7.82 13.5A1 1 0 0 0 3.34 19h17.32a1 1 0 0 0 .87-1.64l-7.82-13.5a1 1 0 0 0-3.42 0Z"
                         />
                     </svg>
-
-                    <div>
-                        <h3 class="font-semibold text-red-900">
-                            Payment Error
-                        </h3>
-
-                        <p class="mt-1 text-sm leading-6 text-red-700">
-                            {{ $checkoutError }}
-                        </p>
-                    </div>
                 </div>
+
+                <h2>Payment successful</h2>
+
+                <p>
+                    Your payment for this invoice has been confirmed.
+                    Your subscription, when applicable, will continue
+                    according to the recurring items on the invoice.
+                </p>
+
             </div>
-        @endif
 
-        <div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
+        @else
 
-            {{-- ========================================================
-                LEFT SIDE
-            ========================================================= --}}
-            <div class="space-y-8">
+            <div class="cc-checkout__header">
 
-                {{-- ====================================================
-                    BILLING INFORMATION
-                ===================================================== --}}
-                <section class="rounded-3xl border border-slate-200 bg-white shadow-sm">
-                    <div class="border-b border-slate-100 px-6 py-5 sm:px-8">
-                        <div class="flex items-center gap-3">
-                            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100">
-                                <svg
-                                    class="h-5 w-5 text-slate-700"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        d="M3 10.5V21h18V10.5"
-                                    />
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        d="M12 3 2.5 9.5h19L12 3Z"
-                                    />
-                                </svg>
-                            </div>
+                <p class="cc-checkout__eyebrow">
+                    Secure checkout
+                </p>
 
-                            <div>
-                                <h2 class="text-lg font-semibold text-slate-900">
-                                    Billing Information
-                                </h2>
+                <h1 class="cc-checkout__title">
+                    Complete your payment
+                </h1>
 
-                                <p class="mt-0.5 text-sm text-slate-500">
-                                    Enter the billing information associated with this payment.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                <p class="cc-checkout__subtitle">
+                    Invoice #{{ $invoice->id }}
+                </p>
 
-                    <div class="p-6 sm:p-8">
-                        <div class="grid gap-5 sm:grid-cols-2">
+            </div>
 
-                            {{-- Billing Name --}}
-                            <div class="sm:col-span-1">
+
+            <div class="cc-checkout__body">
+
+                <main class="cc-checkout__main">
+
+                    {{-- BILLING --}}
+
+                    <section class="cc-checkout__section">
+
+                        <h2 class="cc-checkout__section-title">
+                            Billing information
+                        </h2>
+
+                        <p class="cc-checkout__section-text">
+                            Enter the billing details that should be
+                            associated with this payment.
+                        </p>
+
+                        <div class="cc-checkout__grid">
+
+                            <div class="cc-checkout__field">
+
                                 <label
+                                    class="cc-checkout__label"
                                     for="billing-name"
-                                    class="mb-2 block text-sm font-medium text-slate-700"
                                 >
-                                    Full Name
+                                    Full name
                                 </label>
 
                                 <input
                                     id="billing-name"
                                     type="text"
-                                    wire:model.defer="billingName"
+                                    class="cc-checkout__input"
+                                    wire:model.live="billingName"
                                     autocomplete="name"
-                                    class="block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 placeholder-slate-400 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
-                                    placeholder="John Doe"
-                                />
+                                    placeholder="Your full name"
+                                >
 
-                                @error('billingName')
-                                    <p class="mt-2 text-sm text-red-600">
-                                        {{ $message }}
-                                    </p>
-                                @enderror
                             </div>
 
-                            {{-- Billing Email --}}
-                            <div class="sm:col-span-1">
+
+                            <div class="cc-checkout__field">
+
                                 <label
+                                    class="cc-checkout__label"
                                     for="billing-email"
-                                    class="mb-2 block text-sm font-medium text-slate-700"
                                 >
-                                    Email Address
+                                    Email address
                                 </label>
 
                                 <input
                                     id="billing-email"
                                     type="email"
-                                    wire:model.defer="billingEmail"
+                                    class="cc-checkout__input"
+                                    wire:model.live="billingEmail"
                                     autocomplete="email"
-                                    class="block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 placeholder-slate-400 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
-                                    placeholder="john@example.com"
-                                />
-
-                                @error('billingEmail')
-                                    <p class="mt-2 text-sm text-red-600">
-                                        {{ $message }}
-                                    </p>
-                                @enderror
-                            </div>
-
-                        </div>
-
-                        <div class="mt-5 rounded-xl bg-slate-50 p-4">
-                            <div class="flex items-start gap-3">
-                                <svg
-                                    class="mt-0.5 h-5 w-5 shrink-0 text-slate-500"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                    stroke-width="2"
+                                    placeholder="you@example.com"
                                 >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        d="M3 8.5 12 14l9-5.5M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2Z"
-                                    />
-                                </svg>
 
-                                <p class="text-sm leading-6 text-slate-600">
-                                    Your email address will be used for your payment receipt and checkout confirmation.
-                                </p>
                             </div>
-                        </div>
-                    </div>
-                </section>
 
-                {{-- ====================================================
-                    SIGNATURE
-                    KEEPING SIGNATURE CAPTURE SECTION
-                ===================================================== --}}
-                @if ($signatureRequired)
-                    <section class="rounded-3xl border border-slate-200 bg-white shadow-sm">
-                        <div class="border-b border-slate-100 px-6 py-5 sm:px-8">
-                            <div class="flex items-center gap-3">
-                                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100">
-                                    <svg
-                                        class="h-5 w-5 text-slate-700"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                    >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            d="m14 6 4 4M4 20l4.5-1 10-10a2.12 2.12 0 0 0-3-3l-10 10L4 20Z"
-                                        />
-                                    </svg>
-                                </div>
-
-                                <div>
-                                    <h2 class="text-lg font-semibold text-slate-900">
-                                        Agreement & Signature
-                                    </h2>
-
-                                    <p class="mt-0.5 text-sm text-slate-500">
-                                        Please review and sign before completing payment.
-                                    </p>
-                                </div>
-                            </div>
                         </div>
 
-                        <div class="p-6 sm:p-8">
+                    </section>
 
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                                <p class="text-sm leading-6 text-slate-700">
-                                    By signing below, you acknowledge that you have reviewed and agree to the applicable invoice and agreement terms.
-                                </p>
+
+                    {{-- AGREEMENT SIGNATURE --}}
+
+                    @if ($signatureRequired && !$hasSignedAgreement)
+
+                        <section
+                            class="cc-checkout__section cc-checkout__agreement"
+                            wire:ignore
+                        >
+
+                            <h2 class="cc-checkout__section-title">
+                                Agreement signature
+                            </h2>
+
+                            <p class="cc-checkout__section-text">
+                                This invoice includes recurring services.
+                                Please sign the agreement below before
+                                continuing to payment.
+                            </p>
+
+                            <div class="cc-checkout__agreement-copy">
+                                By signing below, you acknowledge the
+                                recurring services included in this invoice
+                                and authorize payment according to the
+                                displayed billing terms.
                             </div>
 
-                            {{-- =================================================
-                                SIGNATURE PAD
-                                PRESERVED AS PART OF THE UI
-                            ================================================== --}}
-                            <div class="mt-6">
-                                <div class="mb-2 flex items-center justify-between">
-                                    <label class="text-sm font-medium text-slate-700">
-                                        Signature
-                                    </label>
+                            <div class="cc-checkout__signature">
+
+                                <canvas
+                                    id="agreement-signature-pad"
+                                    width="760"
+                                    height="180"
+                                    aria-label="Agreement signature pad"
+                                ></canvas>
+
+                                <div
+                                    class="cc-checkout__signature-toolbar"
+                                >
+
+                                    <span class="cc-checkout__signature-hint">
+                                        Draw your signature above.
+                                    </span>
 
                                     <button
                                         type="button"
-                                        id="clear-signature"
-                                        class="text-sm font-medium text-slate-500 transition hover:text-slate-900"
+                                        class="cc-checkout__button cc-checkout__button--secondary"
+                                        data-clear-signature
                                     >
                                         Clear
                                     </button>
+
                                 </div>
 
-                                <div class="overflow-hidden rounded-2xl border border-slate-300 bg-white">
-                                    <canvas
-                                        id="signature-pad"
-                                        class="block h-56 w-full touch-none"
-                                    ></canvas>
-                                </div>
-
-                                <input
-                                    type="hidden"
-                                    id="signature-data"
-                                    wire:model="signatureData"
-                                />
-
-                                <div class="mt-2 flex items-center justify-between gap-4">
-                                    <p class="text-xs text-slate-500">
-                                        Sign using your mouse, trackpad, or finger.
-                                    </p>
-
-                                    <span
-                                        id="signature-status"
-                                        class="text-xs font-medium text-slate-400"
-                                    >
-                                        Not signed
-                                    </span>
-                                </div>
-
-                                @error('signatureData')
-                                    <p class="mt-2 text-sm text-red-600">
-                                        {{ $message }}
-                                    </p>
-                                @enderror
                             </div>
 
-                            {{-- Existing agreement/signature state --}}
-                            @if ($hasSignedAgreement)
-                                <div class="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-                                    <div class="flex items-start gap-3">
-                                        <svg
-                                            class="mt-0.5 h-5 w-5 shrink-0 text-emerald-600"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                            stroke-width="2"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                d="m5 13 4 4L19 7"
-                                            />
-                                        </svg>
-
-                                        <div>
-                                            <p class="text-sm font-semibold text-emerald-900">
-                                                Agreement Signed
-                                            </p>
-
-                                            <p class="mt-1 text-sm text-emerald-700">
-                                                Your signature has been captured.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
-
-                        </div>
-                    </section>
-                @endif
-
-                {{-- ====================================================
-                    PAYMENT SECTION
-                ===================================================== --}}
-                <section class="rounded-3xl border border-slate-200 bg-white shadow-sm">
-                    <div class="border-b border-slate-100 px-6 py-5 sm:px-8">
-                        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100">
-                                    <svg
-                                        class="h-5 w-5 text-slate-700"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                    >
-                                        <rect
-                                            width="18"
-                                            height="14"
-                                            x="3"
-                                            y="5"
-                                            rx="2"
-                                            ry="2"
-                                        />
-                                        <path
-                                            d="M3 10h18"
-                                        />
-                                    </svg>
-                                </div>
-
-                                <div>
-                                    <h2 class="text-lg font-semibold text-slate-900">
-                                        Payment
-                                    </h2>
-
-                                    <p class="mt-0.5 text-sm text-slate-500">
-                                        Select your preferred payment method below.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div class="flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700">
-                                <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-                                Secure payment
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="p-6 sm:p-8">
-
-                        {{-- =================================================
-                            PAYMENT METHOD ORDER / UI RAIL
-
-                            This is visual only. Stripe remains responsible
-                            for secure method selection inside the Element.
-                        ================================================== --}}
-                        <div class="mb-6">
-                            <div class="flex items-center justify-between gap-4">
-                                <div>
-                                    <p class="text-sm font-semibold text-slate-900">
-                                        Payment methods
-                                    </p>
-
-                                    <p class="mt-1 text-xs text-slate-500">
-                                        Available methods are shown based on your device, browser, currency, and Stripe configuration.
-                                    </p>
-                                </div>
-
-                                <div class="hidden shrink-0 items-center gap-1 sm:flex">
-                                    <span class="h-1.5 w-1.5 rounded-full bg-slate-900"></span>
-                                    <span class="h-1.5 w-1.5 rounded-full bg-slate-300"></span>
-                                    <span class="h-1.5 w-1.5 rounded-full bg-slate-300"></span>
-                                </div>
-                            </div>
-
-                            <div class="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
-                                <div class="flex gap-3 overflow-x-auto px-3 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-
-                                    <div class="min-w-[150px] rounded-xl border border-slate-300 bg-white px-4 py-3 shadow-sm">
-                                        <div class="flex items-center gap-3">
-                                            <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100">
-                                                <svg
-                                                    class="h-5 w-5 text-slate-700"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                    stroke="currentColor"
-                                                    stroke-width="2"
-                                                >
-                                                    <rect
-                                                        width="20"
-                                                        height="14"
-                                                        x="2"
-                                                        y="5"
-                                                        rx="2"
-                                                    />
-                                                    <path d="M2 10h20" />
-                                                </svg>
-                                            </div>
-
-                                            <div>
-                                                <p class="text-sm font-semibold text-slate-900">
-                                                    Card
-                                                </p>
-
-                                                <p class="text-xs text-slate-500">
-                                                    Visa, Mastercard, etc.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="min-w-[150px] rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-                                        <div class="flex items-center gap-3">
-                                            <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100">
-                                                <svg
-                                                    class="h-5 w-5 text-slate-700"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                    stroke="currentColor"
-                                                    stroke-width="2"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        d="M3 10h18M5 10v8m4-8v8m6-8v8m4-8v8M3 21h18M4 7l8-4 8 4v3H4V7Z"
-                                                    />
-                                                </svg>
-                                            </div>
-
-                                            <div>
-                                                <p class="text-sm font-semibold text-slate-900">
-                                                    Bank
-                                                </p>
-
-                                                <p class="text-xs text-slate-500">
-                                                    US bank account
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="min-w-[150px] rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-                                        <div class="flex items-center gap-3">
-                                            <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100">
-                                                <span class="text-sm font-bold text-slate-800">
-                                                    
-                                                </span>
-                                            </div>
-
-                                            <div>
-                                                <p class="text-sm font-semibold text-slate-900">
-                                                    Apple Pay
-                                                </p>
-
-                                                <p class="text-xs text-slate-500">
-                                                    Fast checkout
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="min-w-[150px] rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-                                        <div class="flex items-center gap-3">
-                                            <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100">
-                                                <span class="text-sm font-bold text-slate-800">
-                                                    G
-                                                </span>
-                                            </div>
-
-                                            <div>
-                                                <p class="text-sm font-semibold text-slate-900">
-                                                    Google Pay
-                                                </p>
-
-                                                <p class="text-xs text-slate-500">
-                                                    Fast checkout
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="min-w-[150px] rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-                                        <div class="flex items-center gap-3">
-                                            <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100">
-                                                <span class="text-sm font-bold text-slate-800">
-                                                    A
-                                                </span>
-                                            </div>
-
-                                            <div>
-                                                <p class="text-sm font-semibold text-slate-900">
-                                                    Affirm
-                                                </p>
-
-                                                <p class="text-xs text-slate-500">
-                                                    Pay over time
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="min-w-[150px] rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-                                        <div class="flex items-center gap-3">
-                                            <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100">
-                                                <span class="text-sm font-bold text-slate-800">
-                                                    K
-                                                </span>
-                                            </div>
-
-                                            <div>
-                                                <p class="text-sm font-semibold text-slate-900">
-                                                    Klarna
-                                                </p>
-
-                                                <p class="text-xs text-slate-500">
-                                                    Flexible payments
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="min-w-[150px] rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-                                        <div class="flex items-center gap-3">
-                                            <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100">
-                                                <span class="text-sm font-bold text-slate-800">
-                                                    $
-                                                </span>
-                                            </div>
-
-                                            <div>
-                                                <p class="text-sm font-semibold text-slate-900">
-                                                    Cash App
-                                                </p>
-
-                                                <p class="text-xs text-slate-500">
-                                                    Pay with Cash App
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="min-w-[150px] rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-                                        <div class="flex items-center gap-3">
-                                            <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100">
-                                                <span class="text-sm font-bold text-slate-800">
-                                                    a
-                                                </span>
-                                            </div>
-
-                                            <div>
-                                                <p class="text-sm font-semibold text-slate-900">
-                                                    Amazon Pay
-                                                </p>
-
-                                                <p class="text-xs text-slate-500">
-                                                    Fast checkout
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- =================================================
-                            STRIPE PAYMENT ELEMENT
-
-                            IMPORTANT:
-                            This remains the existing Payment Element.
-                            The payment confirmation logic below is unchanged.
-                        ================================================== --}}
-                        <div class="rounded-2xl border border-slate-200 bg-white">
-                            <div class="border-b border-slate-100 px-5 py-4">
-                                <div class="flex items-center justify-between gap-4">
-                                    <div>
-                                        <p class="text-sm font-semibold text-slate-900">
-                                            Choose a payment method
-                                        </p>
-
-                                        <p class="mt-1 text-xs text-slate-500">
-                                            Stripe securely handles your payment information.
-                                        </p>
-                                    </div>
-
-                                    <svg
-                                        class="h-5 w-5 text-slate-400"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                    >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            d="M12 15v2m-6 0h12a1 1 0 0 0 1-1v-5a7 7 0 1 0-14 0v5a1 1 0 0 0 1 1Z"
-                                        />
-                                    </svg>
-                                </div>
-                            </div>
-
-                            <div class="p-5">
-                                <div
-                                    id="payment-element"
-                                    class="min-h-[240px]"
-                                ></div>
-
-                                <div
-                                    id="payment-element-loading"
-                                    class="flex min-h-[240px] items-center justify-center"
-                                >
-                                    <div class="text-center">
-                                        <div class="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-slate-800"></div>
-
-                                        <p class="mt-3 text-sm font-medium text-slate-700">
-                                            Loading payment methods…
-                                        </p>
-
-                                        <p class="mt-1 text-xs text-slate-500">
-                                            Securely connecting to Stripe.
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div
-                                    id="payment-element-error"
-                                    class="mt-4 hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-                                ></div>
-                            </div>
-                        </div>
-
-                        {{-- =================================================
-                            PAYMENT SECURITY NOTICE
-                        ================================================== --}}
-                        <div class="mt-5 flex items-start gap-3 rounded-xl bg-slate-50 p-4">
-                            <svg
-                                class="mt-0.5 h-5 w-5 shrink-0 text-slate-500"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                stroke-width="2"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="M12 3 5 6v5c0 4.8 2.9 8.1 7 10 4.1-1.9 7-5.2 7-10V6l-7-3Z"
-                                />
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="m9 12 2 2 4-4"
-                                />
-                            </svg>
-
-                            <p class="text-xs leading-5 text-slate-600">
-                                Your payment details are securely processed by Stripe. Your full card or bank details are never stored on this website.
-                            </p>
-                        </div>
-
-                        {{-- =================================================
-                            SUBMIT PAYMENT
-                        ================================================== --}}
-                        <div class="mt-7">
                             <button
-                                id="submit-payment"
                                 type="button"
-                                wire:loading.attr="disabled"
-                                wire:target="paymentCompleted,validateBilling"
-                                class="group relative flex w-full items-center justify-center gap-3 rounded-2xl bg-slate-900 px-6 py-4 text-base font-semibold text-white shadow-lg shadow-slate-900/10 transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                                class="cc-checkout__button cc-checkout__button--primary"
+                                data-signature-submit
+                                style="width:100%; margin-top:12px;"
                             >
-                                <span
-                                    id="submit-payment-spinner"
-                                    class="hidden h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white"
-                                ></span>
+                                Sign agreement and continue
+                            </button>
 
-                                <span id="submit-payment-text">
-                                    Pay {{ $formattedTotal }}
+                        </section>
+
+                    @endif
+
+
+                    {{-- PAYMENT --}}
+
+                    @if (!$signatureRequired || $hasSignedAgreement)
+
+                        <section class="cc-checkout__section">
+
+                            <h2 class="cc-checkout__section-title">
+                                Payment
+                            </h2>
+
+                            <p class="cc-checkout__section-text">
+                                Choose how you would like to pay.
+                            </p>
+
+
+                            <div
+                                class="cc-payment-slider"
+                                data-payment-slider
+                            >
+
+                                {{-- PAYMENT METHOD TABS --}}
+
+                                <div class="cc-payment-slider__tabs">
+
+                                    {{-- CARD --}}
+
+                                    <button
+                                        type="button"
+                                        class="cc-payment-slider__tab is-active"
+                                        data-payment-tab="card"
+                                    >
+
+                                        <span class="cc-payment-slider__tab-icon">
+
+                                            <svg
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                aria-hidden="true"
+                                            >
+                                                <rect
+                                                    x="3"
+                                                    y="5"
+                                                    width="18"
+                                                    height="14"
+                                                    rx="2"
+                                                    stroke="currentColor"
+                                                    stroke-width="1.6"
+                                                />
+
+                                                <path
+                                                    d="M3 10h18"
+                                                    stroke="currentColor"
+                                                    stroke-width="1.6"
+                                                />
+                                            </svg>
+
+                                        </span>
+
+                                        <span class="cc-payment-slider__tab-copy">
+
+                                            <strong>Card</strong>
+
+                                            <span>
+                                                Credit or debit
+                                            </span>
+
+                                        </span>
+
+                                    </button>
+
+
+                                    {{-- WALLETS --}}
+
+                                    <button
+                                        type="button"
+                                        class="cc-payment-slider__tab"
+                                        data-payment-tab="wallet"
+                                    >
+
+                                        <span class="cc-payment-slider__tab-icon">
+
+                                            <svg
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                aria-hidden="true"
+                                            >
+                                                <rect
+                                                    x="3"
+                                                    y="5"
+                                                    width="18"
+                                                    height="14"
+                                                    rx="3"
+                                                    stroke="currentColor"
+                                                    stroke-width="1.6"
+                                                />
+
+                                                <path
+                                                    d="M16 12h3"
+                                                    stroke="currentColor"
+                                                    stroke-width="1.6"
+                                                    stroke-linecap="round"
+                                                />
+
+                                                <circle
+                                                    cx="16"
+                                                    cy="12"
+                                                    r=".9"
+                                                    fill="currentColor"
+                                                />
+                                            </svg>
+
+                                        </span>
+
+                                        <span class="cc-payment-slider__tab-copy">
+
+                                            <strong>Wallets</strong>
+
+                                            <span>
+                                                Apple / Google / PayPal
+                                            </span>
+
+                                        </span>
+
+                                    </button>
+
+
+                                {{-- SLIDER VIEWPORT --}}
+
+                                <div class="cc-payment-slider__viewport">
+
+                                    <div
+                                        class="cc-payment-slider__track"
+                                        data-payment-track
+                                    >
+
+                                        {{-- =====================================================
+                                             CARD PANEL
+                                        ====================================================== --}}
+
+                                        <div class="cc-payment-slider__panel">
+
+                                            <div
+                                                class="cc-payment-slider__panel-inner"
+                                            >
+
+                                                <div class="cc-checkout__stripe-box">
+
+                                                    @if (
+                                                        $clientSecret
+                                                        && $paymentStatus !== 'succeeded'
+                                                        && $paymentStatus !== 'processing'
+                                                    )
+
+                                                        <div
+                                                            data-stripe-loading
+                                                            class="cc-checkout__stripe-loading"
+                                                        >
+                                                            Loading secure
+                                                            payment form...
+                                                        </div>
+
+                                                        <div
+                                                            data-stripe-payment-element
+                                                            class="cc-checkout__stripe-payment"
+                                                            wire:ignore
+                                                            hidden
+                                                        >
+                                                            <div id="payment-element"></div>
+                                                        </div>
+
+                                                    @else
+
+                                                        @if (
+                                                            $paymentStatus === 'processing'
+                                                        )
+
+                                                            <div
+                                                                class="cc-checkout__stripe-loading"
+                                                            >
+                                                                Payment is
+                                                                processing...
+                                                            </div>
+
+                                                        @elseif ($paymentStatus !== 'succeeded')
+
+                                                            <div
+                                                                class="cc-checkout__stripe-loading"
+                                                            >
+                                                                Loading secure
+                                                                payment form...
+                                                            </div>
+
+                                                        @endif
+
+                                                    @endif
+
+                                                </div>
+
+
+                                                @if (
+                                                    $clientSecret
+                                                    && $paymentStatus !== 'succeeded'
+                                                    && $paymentStatus !== 'processing'
+                                                )
+
+                                                    <button
+                                                        type="button"
+                                                        class="cc-checkout__button cc-checkout__button--primary cc-checkout__button--pay"
+                                                        data-stripe-pay
+                                                        disabled
+                                                    >
+                                                        Pay {{ $formattedTotal }}
+                                                    </button>
+
+                                                    <div
+                                                        class="cc-checkout__error"
+                                                        data-stripe-error
+                                                        hidden
+                                                    ></div>
+
+                                                    <div
+                                                        class="cc-checkout__status"
+                                                        data-stripe-status
+                                                    >
+                                                        Secure Stripe payment
+                                                        form is initializing...
+                                                    </div>
+
+                                                @endif
+
+                                            </div>
+
+                                        </div>
+
+
+                                        {{-- =====================================================
+                                             WALLET PANEL
+                                        ====================================================== --}}
+
+                                        <div class="cc-payment-slider__panel">
+
+                                            <div
+                                                class="cc-payment-slider__panel-inner"
+                                            >
+
+                                                <div class="cc-payment-wallets">
+
+                                                    <div class="cc-payment-wallets__heading">
+
+                                                        <strong>
+                                                            Express checkout
+                                                        </strong>
+
+                                                        <span>
+                                                            Pay instantly with
+                                                            an eligible wallet.
+                                                        </span>
+
+                                                    </div>
+
+
+                                                    <div
+                                                        class="cc-payment-wallets__loading"
+                                                        data-wallet-loading
+                                                    >
+                                                        Checking available
+                                                        payment wallets...
+                                                    </div>
+
+
+                                                    <div
+                                                        id="express-checkout-element"
+                                                        wire:ignore
+                                                    ></div>
+
+
+                                                    <div
+                                                        class="cc-payment-wallets__unavailable"
+                                                        data-wallets-unavailable
+                                                        hidden
+                                                    >
+                                                        Apple Pay, Google Pay,
+                                                        and PayPal are not
+                                                        currently available
+                                                        for this browser,
+                                                        device, or Stripe
+                                                        account configuration.
+                                                    </div>
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+
+                    
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </section>
+
+                    @endif
+
+
+                    @if ($checkoutError)
+
+                        <div class="cc-checkout__error">
+                            {{ $checkoutError }}
+                        </div>
+
+                    @endif
+
+                </main>
+
+
+                {{-- ORDER SUMMARY --}}
+
+                <aside class="cc-checkout__sidebar">
+
+                    <section class="cc-checkout__section">
+
+                        <h2 class="cc-checkout__section-title">
+                            Order summary
+                        </h2>
+
+                        <p class="cc-checkout__section-text">
+                            Invoice items
+                        </p>
+
+
+                        <div class="cc-checkout__items">
+
+                            @foreach ($invoice->items as $item)
+
+                                @php
+
+                                    $itemDescription =
+                                        $item->description
+                                        ?? $item->name
+                                        ?? $item->title
+                                        ?? 'Invoice item';
+
+                                    $itemTotal =
+                                        $item->total
+                                        ?? $item->amount
+                                        ?? $item->unit_amount
+                                        ?? $item->price
+                                        ?? 0;
+
+                                    $quantity = max(
+                                        1,
+                                        (int) ($item->quantity ?? 1)
+                                    );
+
+                                    $displayTotal =
+                                        $item->total !== null
+                                        && $item->total !== ''
+                                            ? (float) $item->total
+                                            : ((float) $itemTotal * $quantity);
+
+                                    $displayTotalFormatted =
+                                        number_format(
+                                            $displayTotal / 100,
+                                            2
+                                        );
+
+                                @endphp
+
+
+                                <div
+                                    class="cc-checkout__item"
+                                    wire:key="checkout-item-{{ $item->id }}"
+                                >
+
+                                    <div class="cc-checkout__item-info">
+
+                                        <p class="cc-checkout__item-name">
+                                            {{ $itemDescription }}
+                                        </p>
+
+                                        <div class="cc-checkout__item-meta">
+
+                                            @if ($item->is_subscription)
+
+                                                <span
+                                                    class="cc-checkout__addon-badge"
+                                                >
+
+                                                    <svg
+                                                        viewBox="0 0 24 24"
+                                                        fill="none"
+                                                        aria-hidden="true"
+                                                    >
+                                                        <path
+                                                            d="M20 7h-9a5 5 0 0 0-5 5v1"
+                                                            stroke="currentColor"
+                                                            stroke-width="1.8"
+                                                            stroke-linecap="round"
+                                                            stroke-linejoin="round"
+                                                        />
+
+                                                        <path
+                                                            d="m7 10-3 3 3 3"
+                                                            stroke="currentColor"
+                                                            stroke-width="1.8"
+                                                            stroke-linecap="round"
+                                                            stroke-linejoin="round"
+                                                        />
+
+                                                        <path
+                                                            d="M4 17h9a5 5 0 0 0 5-5v-1"
+                                                            stroke="currentColor"
+                                                            stroke-width="1.8"
+                                                            stroke-linecap="round"
+                                                            stroke-linejoin="round"
+                                                        />
+
+                                                        <path
+                                                            d="m17 14 3-3-3-3"
+                                                            stroke="currentColor"
+                                                            stroke-width="1.8"
+                                                            stroke-linecap="round"
+                                                            stroke-linejoin="round"
+                                                        />
+                                                    </svg>
+
+                                                    <span>
+                                                        Recurring
+                                                    </span>
+
+                                                </span>
+
+                                            @else
+
+                                                <span
+                                                    class="cc-checkout__small"
+                                                >
+                                                    One-time
+                                                </span>
+
+                                            @endif
+
+
+                                            @if ($quantity > 1)
+
+                                                <span
+                                                    class="cc-checkout__small"
+                                                >
+                                                    Qty {{ $quantity }}
+                                                </span>
+
+                                            @endif
+
+                                        </div>
+
+
+                                        @if (
+                                            !empty($item->description)
+                                            && !empty($item->name)
+                                        )
+
+                                            <p
+                                                class="cc-checkout__item-description"
+                                            >
+                                                {{ $item->description }}
+                                            </p>
+
+                                        @endif
+
+                                    </div>
+
+
+                                    <div class="cc-checkout__item-price">
+                                        ${{ $displayTotalFormatted }}
+                                    </div>
+
+                                </div>
+
+                            @endforeach
+
+                        </div>
+
+
+                        <div
+                            class="cc-checkout__summary"
+                            style="margin-top:18px;"
+                        >
+
+                            <div
+                                class="cc-checkout__summary-row cc-checkout__summary-total"
+                            >
+
+                                <span>
+                                    Total
                                 </span>
 
-                                <svg
-                                    class="h-5 w-5 transition-transform group-hover:translate-x-0.5"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        d="M5 12h14M13 6l6 6-6 6"
-                                    />
-                                </svg>
-                            </button>
+                                <strong>
+                                    ${{ $formattedTotal }}
+                                </strong>
+
+                            </div>
+
                         </div>
 
-                        <div class="mt-4 text-center">
-                            <p class="text-xs leading-5 text-slate-500">
-                                By clicking the payment button, you authorize the payment for the amount shown above.
-                            </p>
-                        </div>
+                    </section>
 
-                    </div>
-                </section>
+                </aside>
 
             </div>
 
-            {{-- ========================================================
-                RIGHT SIDE — ORDER SUMMARY
-            ========================================================= --}}
-            <aside class="lg:sticky lg:top-8 lg:self-start">
-                <div class="rounded-3xl border border-slate-200 bg-white shadow-sm">
+        @endif
 
-                    <div class="border-b border-slate-100 px-6 py-5">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-sm font-medium text-slate-500">
-                                    Order Summary
-                                </p>
-
-                                <h2 class="mt-1 text-xl font-bold text-slate-900">
-                                    Invoice #{{ $invoice->id }}
-                                </h2>
-                            </div>
-
-                            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100">
-                                <svg
-                                    class="h-5 w-5 text-slate-700"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        d="M7 3h10a2 2 0 0 1 2 2v16l-7-3-7 3V5a2 2 0 0 1 2-2Z"
-                                    />
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="p-6">
-
-                        {{-- Customer --}}
-                        <div class="rounded-2xl bg-slate-50 p-4">
-                            <p class="text-xs font-medium uppercase tracking-wide text-slate-400">
-                                Customer
-                            </p>
-
-                            <p class="mt-1 text-sm font-semibold text-slate-900">
-                                {{ $invoice->customer?->name ?? $billingName }}
-                            </p>
-
-                            @if ($invoice->customer?->email ?? $billingEmail)
-                                <p class="mt-1 break-all text-sm text-slate-500">
-                                    {{ $invoice->customer?->email ?? $billingEmail }}
-                                </p>
-                            @endif
-                        </div>
-
-                        {{-- Ticket --}}
-                        @if ($invoice->ticket)
-                            <div class="mt-4 rounded-2xl border border-slate-200 p-4">
-                                <p class="text-xs font-medium uppercase tracking-wide text-slate-400">
-                                    Ticket
-                                </p>
-
-                                <p class="mt-1 text-sm font-semibold text-slate-900">
-                                    {{ $invoice->ticket->name ?? $invoice->ticket->title ?? 'Service' }}
-                                </p>
-                            </div>
-                        @endif
-
-                        {{-- Items --}}
-                        <div class="mt-6">
-                            <div class="mb-3 flex items-center justify-between">
-                                <h3 class="text-sm font-semibold text-slate-900">
-                                    Items
-                                </h3>
-
-                                <span class="text-xs font-medium text-slate-400">
-                                    {{ $invoice->items?->count() ?? 0 }}
-                                </span>
-                            </div>
-
-                            <div class="space-y-4">
-                                @forelse ($invoice->items ?? [] as $item)
-                                    @php
-                                        $quantity = (int) ($item->quantity ?? 1);
-
-                                        $itemTotal =
-                                            $item->total_amount
-                                            ?? $item->amount
-                                            ?? null;
-
-                                        $unitAmount =
-                                            $item->unit_amount
-                                            ?? $item->price
-                                            ?? 0;
-
-                                        if ($itemTotal === null) {
-                                            $itemTotal = ((int) $unitAmount) * max($quantity, 1);
-                                        }
-
-                                        $itemTotal = (int) $itemTotal;
-                                    @endphp
-
-                                    <div class="flex items-start justify-between gap-4">
-                                        <div class="min-w-0">
-                                            <p class="text-sm font-medium text-slate-900">
-                                                {{ $item->name ?? $item->description ?? 'Item' }}
-                                            </p>
-
-                                            @if ($quantity > 1)
-                                                <p class="mt-1 text-xs text-slate-500">
-                                                    Qty {{ $quantity }}
-                                                </p>
-                                            @endif
-                                        </div>
-
-                                        <p class="shrink-0 text-sm font-semibold text-slate-900">
-                                            ${{ number_format($itemTotal / 100, 2) }}
-                                        </p>
-                                    </div>
-                                @empty
-                                    <div class="rounded-xl bg-slate-50 p-4">
-                                        <p class="text-sm text-slate-500">
-                                            No line items available.
-                                        </p>
-                                    </div>
-                                @endforelse
-                            </div>
-                        </div>
-
-                        {{-- Divider --}}
-                        <div class="my-6 border-t border-slate-200"></div>
-
-                        {{-- Total --}}
-                        <div class="flex items-end justify-between gap-4">
-                            <div>
-                                <p class="text-sm font-medium text-slate-500">
-                                    Total Due
-                                </p>
-
-                                <p class="mt-1 text-xs text-slate-400">
-                                    USD
-                                </p>
-                            </div>
-
-                            <p class="text-3xl font-bold tracking-tight text-slate-900">
-                                {{ $formattedTotal }}
-                            </p>
-                        </div>
-
-                        {{-- Secure note --}}
-                        <div class="mt-6 rounded-2xl border border-slate-200 p-4">
-                            <div class="flex items-start gap-3">
-                                <svg
-                                    class="mt-0.5 h-5 w-5 shrink-0 text-slate-500"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        d="M12 11V7m0 8h.01M5.5 10.5a6.5 6.5 0 1 1 13 0c0 3.2-2.3 5.4-3.9 6.6a4.2 4.2 0 0 1-4.2 0c-1.6-1.2-3.9-3.4-3.9-6.6Z"
-                                    />
-                                </svg>
-
-                                <div>
-                                    <p class="text-sm font-semibold text-slate-900">
-                                        Secure checkout
-                                    </p>
-
-                                    <p class="mt-1 text-xs leading-5 text-slate-500">
-                                        Payment processing is handled securely by Stripe.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            </aside>
-
-        </div>
     </div>
+
 </div>
 
+
 @script
+
 <script>
-document.addEventListener('livewire:init', () => {
+(() => {
+    'use strict';
+
+    const root = $wire.$el;
+
+    if (!root) {
+        return;
+    }
+
+    const publishableKey =
+        @js(config('services.stripe.key'));
 
     let stripe = null;
     let elements = null;
+
     let paymentElement = null;
+    let expressCheckoutElement = null;
 
     let paymentElementReady = false;
-    let paymentSubmitting = false;
+    let expressCheckoutReady = false;
 
-    const clientSecret = @js($clientSecret);
-    const billingName = @js($billingName);
-    const billingEmail = @js($billingEmail);
+    let initializingStripe = false;
 
-    const paymentElementContainer = document.getElementById('payment-element');
-    const paymentElementLoading = document.getElementById('payment-element-loading');
-    const paymentElementError = document.getElementById('payment-element-error');
-    const submitPaymentButton = document.getElementById('submit-payment');
-    const submitPaymentText = document.getElementById('submit-payment-text');
-    const submitPaymentSpinner = document.getElementById('submit-payment-spinner');
+    let stripePaymentId =
+        @js($paymentIntentId);
 
-    function setPaymentError(message = '') {
-        if (!paymentElementError) {
-            return;
-        }
+    let currentClientSecret =
+        @js($clientSecret);
 
-        if (!message) {
-            paymentElementError.classList.add('hidden');
-            paymentElementError.textContent = '';
-            return;
-        }
+    const initialPaymentStatus =
+        @js($paymentStatus);
 
-        paymentElementError.textContent = message;
-        paymentElementError.classList.remove('hidden');
-    }
-
-    function setSubmitting(isSubmitting) {
-        paymentSubmitting = isSubmitting;
-
-        if (!submitPaymentButton) {
-            return;
-        }
-
-        submitPaymentButton.disabled = isSubmitting || !paymentElementReady;
-
-        if (submitPaymentSpinner) {
-            submitPaymentSpinner.classList.toggle('hidden', !isSubmitting);
-        }
-
-        if (submitPaymentText) {
-            submitPaymentText.textContent = isSubmitting
-                ? 'Processing Payment…'
-                : @js('Pay ' . $formattedTotal);
-        }
-    }
-
-    function initStripe() {
-        if (!clientSecret) {
-            setPaymentError('Unable to initialize secure payment. Missing payment client secret.');
-            if (paymentElementLoading) {
-                paymentElementLoading.classList.add('hidden');
-            }
-            return;
-        }
-
-        if (typeof window.Stripe !== 'function') {
-            setPaymentError('Stripe could not be loaded. Please refresh the page and try again.');
-            if (paymentElementLoading) {
-                paymentElementLoading.classList.add('hidden');
-            }
-            return;
-        }
-
-        try {
-            stripe = Stripe(@js(config('services.stripe.key')));
-
-            elements = stripe.elements({
-                clientSecret: clientSecret,
-
-                appearance: {
-                    theme: 'stripe',
-
-                    variables: {
-                        colorPrimary: '#0f172a',
-                        colorBackground: '#ffffff',
-                        colorText: '#0f172a',
-                        colorTextSecondary: '#64748b',
-                        colorDanger: '#dc2626',
-                        fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-                        borderRadius: '14px',
-                        spacingUnit: '4px',
-                    },
-
-                    rules: {
-                        '.Input': {
-                            border: '1px solid #cbd5e1',
-                            boxShadow: 'none',
-                        },
-
-                        '.Input:focus': {
-                            border: '1px solid #0f172a',
-                            boxShadow: '0 0 0 2px rgba(15, 23, 42, 0.08)',
-                        },
-
-                        '.Label': {
-                            fontWeight: '600',
-                        },
-                    },
-                },
-            });
-
-            paymentElement = elements.create('payment', {
-
-                /*
-                 * UI ONLY:
-                 * accordion prevents Stripe's collapsed/dropdown-style
-                 * presentation.
-                 *
-                 * Payment confirmation logic remains unchanged.
-                 */
-                layout: {
-                    type: 'accordion',
-                    defaultCollapsed: false,
-                    radios: true,
-                },
-
-                /*
-                 * Requested order:
-                 *
-                 * 1. Card
-                 * 2. Bank
-                 * 3. Apple Pay
-                 * 4. Google Pay
-                 * 5. Affirm
-                 * 6. Klarna
-                 * 7. Cash App
-                 * 8. Amazon Pay
-                 *
-                 * Zelle is intentionally omitted.
-                 */
-                paymentMethodOrder: [
-                    'card',
-                    'us_bank_account',
-                    'apple_pay',
-                    'google_pay',
-                    'affirm',
-                    'klarna',
-                    'cashapp',
-                    'amazon_pay',
-                ],
-
-                wallets: {
-                    applePay: 'auto',
-                    googlePay: 'auto',
-                    link: 'never',
-                },
-
-                defaultValues: {
-                    billingDetails: {
-                        name: billingName || undefined,
-                        email: billingEmail || undefined,
-                    },
-                },
-
-                fields: {
-                    billingDetails: {
-                        name: 'never',
-                        email: 'never',
-                        phone: 'auto',
-                        address: 'auto',
-                    },
-                },
-            });
-
-            paymentElement.on('ready', () => {
-                paymentElementReady = true;
-
-                if (paymentElementLoading) {
-                    paymentElementLoading.classList.add('hidden');
-                }
-
-                setPaymentError('');
-
-                if (!paymentSubmitting) {
-                    submitPaymentButton.disabled = false;
-                }
-
-                window.dispatchEvent(
-                    new CustomEvent('stripe-checkout-ready')
-                );
-            });
-
-            paymentElement.on('change', (event) => {
-                if (event?.error?.message) {
-                    setPaymentError(event.error.message);
-                } else {
-                    setPaymentError('');
-                }
-            });
-
-            paymentElement.on('loaderror', (event) => {
-                paymentElementReady = false;
-
-                if (paymentElementLoading) {
-                    paymentElementLoading.classList.add('hidden');
-                }
-
-                setPaymentError(
-                    event?.error?.message ||
-                    'Unable to load the payment form.'
-                );
-
-                if (submitPaymentButton) {
-                    submitPaymentButton.disabled = true;
-                }
-            });
-
-            paymentElement.mount('#payment-element');
-
-        } catch (error) {
-            console.error(error);
-
-            if (paymentElementLoading) {
-                paymentElementLoading.classList.add('hidden');
-            }
-
-            setPaymentError(
-                'Unable to initialize the secure payment form.'
-            );
-        }
-    }
 
     /*
-     * ================================================================
-     * EXISTING PAYMENT FLOW
-     * ================================================================
-     *
-     * This remains the same:
-     *
-     * 1. Validate billing
-     * 2. elements.submit()
-     * 3. stripe.confirmPayment()
-     * 4. Verify returned PaymentIntent
-     * 5. Livewire paymentCompleted()
-     *
-     * No signature/payment backend methods are changed here.
-     */
-    async function submitPayment() {
+    |--------------------------------------------------------------------------
+    | DOM helpers
+    |--------------------------------------------------------------------------
+    */
 
-        if (paymentSubmitting) {
+    const waitForDom = () => {
+        return new Promise((resolve) => {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(resolve);
+            });
+        });
+    };
+
+
+    const billingNameInput = () => {
+        return root.querySelector('#billing-name');
+    };
+
+
+    const billingEmailInput = () => {
+        return root.querySelector('#billing-email');
+    };
+
+
+    const stripeLoading = () => {
+        return root.querySelector('[data-stripe-loading]');
+    };
+
+
+    const stripePaymentContainer = () => {
+        return root.querySelector('[data-stripe-payment-element]');
+    };
+
+
+    const payButton = () => {
+        return root.querySelector('[data-stripe-pay]');
+    };
+
+
+    const stripeError = () => {
+        return root.querySelector('[data-stripe-error]');
+    };
+
+
+    const stripeStatus = () => {
+        return root.querySelector('[data-stripe-status]');
+    };
+
+
+    const walletLoading = () => {
+        return root.querySelector('[data-wallet-loading]');
+    };
+
+
+    const walletsUnavailable = () => {
+        return root.querySelector(
+            '[data-wallets-unavailable]'
+        );
+    };
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Payment slider
+    |--------------------------------------------------------------------------
+    */
+
+    const paymentTrack = () => {
+        return root.querySelector(
+            '[data-payment-track]'
+        );
+    };
+
+
+    const paymentTabs = () => {
+        return root.querySelectorAll(
+            '[data-payment-tab]'
+        );
+    };
+
+
+    const setPaymentSlide = (method) => {
+        const track = paymentTrack();
+
+        if (!track) {
             return;
         }
 
-        if (!stripe || !elements || !paymentElementReady) {
-            setPaymentError(
-                'The secure payment form is not ready yet. Please wait a moment and try again.'
+        track.classList.toggle(
+            'is-wallet',
+            method === 'wallet'
+        );
+
+        paymentTabs().forEach((tab) => {
+            tab.classList.toggle(
+                'is-active',
+                tab.dataset.paymentTab === method
             );
+        });
+    };
+
+
+    paymentTabs().forEach((tab) => {
+        tab.addEventListener(
+            'click',
+            () => {
+                setPaymentSlide(
+                    tab.dataset.paymentTab
+                );
+            }
+        );
+    });
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Stripe UI helpers
+    |--------------------------------------------------------------------------
+    */
+
+    const showStripeError = (message) => {
+
+        const el = stripeError();
+
+        if (!el) {
             return;
         }
+
+        el.textContent =
+            message
+            || 'Unable to initialize the payment form.';
+
+        el.hidden = false;
+    };
+
+
+    const clearStripeError = () => {
+
+        const el = stripeError();
+
+        if (!el) {
+            return;
+        }
+
+        el.textContent = '';
+        el.hidden = true;
+    };
+
+
+    const setStripeStatus = (message) => {
+
+        const el = stripeStatus();
+
+        if (el) {
+            el.textContent = message || '';
+        }
+    };
+
+
+    const setPaymentButtonState = (
+        disabled,
+        text = null
+    ) => {
+
+        const button = payButton();
+
+        if (!button) {
+            return;
+        }
+
+        button.disabled = disabled;
+
+        if (text !== null) {
+            button.textContent = text;
+        }
+    };
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Destroy Stripe Elements
+    |--------------------------------------------------------------------------
+    */
+
+    const destroyStripeElement = () => {
+
+        paymentElementReady = false;
+        expressCheckoutReady = false;
+
+        if (paymentElement) {
+
+            try {
+                paymentElement.unmount();
+            } catch (e) {
+                // Ignore unmount errors during Livewire DOM transitions.
+            }
+
+            paymentElement = null;
+        }
+
+        if (expressCheckoutElement) {
+
+            try {
+                expressCheckoutElement.unmount();
+            } catch (e) {
+                // Ignore unmount errors during Livewire DOM transitions.
+            }
+
+            expressCheckoutElement = null;
+        }
+
+        elements = null;
+    };
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Initialize Stripe
+    |--------------------------------------------------------------------------
+    */
+
+    const initializeStripe = async (
+        clientSecret
+    ) => {
+
+        if (!clientSecret) {
+            return;
+        }
+
+
+        if (!publishableKey) {
+
+            showStripeError(
+                'Stripe publishable key is missing.'
+            );
+
+            setStripeStatus(
+                'Stripe configuration error.'
+            );
+
+            return;
+        }
+
+
+        if (
+            initializingStripe
+            && currentClientSecret === clientSecret
+            && paymentElement
+        ) {
+            return;
+        }
+
+
+        if (
+            currentClientSecret === clientSecret
+            && paymentElementReady
+            && paymentElement
+        ) {
+            return;
+        }
+
+
+        initializingStripe = true;
+
+        currentClientSecret = clientSecret;
+
+        clearStripeError();
+
+        setPaymentButtonState(
+            true,
+            'Loading secure payment form...'
+        );
+
+        setStripeStatus(
+            'Loading secure payment form...'
+        );
+
 
         try {
-            setPaymentError('');
-            setSubmitting(true);
+
+            await waitForDom();
+
+
+            const paymentMount =
+                root.querySelector(
+                    '#payment-element'
+                );
+
+            const expressMount =
+                root.querySelector(
+                    '#express-checkout-element'
+                );
+
+            const paymentContainer =
+                stripePaymentContainer();
+
+            const loading =
+                stripeLoading();
+
+            const walletLoader =
+                walletLoading();
+
+
+            if (!paymentMount) {
+                throw new Error(
+                    'Stripe payment container is not available in the DOM.'
+                );
+            }
+
+
+            if (!window.Stripe) {
+                throw new Error(
+                    'Stripe.js failed to load.'
+                );
+            }
+
+
+            stripe =
+                stripe
+                || window.Stripe(
+                    publishableKey
+                );
+
+
+            if (!stripe) {
+                throw new Error(
+                    'Unable to create Stripe instance.'
+                );
+            }
+
+
+            destroyStripeElement();
+
+
+            const billingName =
+                billingNameInput()?.value?.trim()
+                || '';
+
+            const billingEmail =
+                billingEmailInput()?.value?.trim()
+                || '';
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Stripe Elements group
+            |--------------------------------------------------------------------------
+            */
+
+            elements = stripe.elements({
+                clientSecret,
+
+                appearance: {
+                    theme: 'night',
+
+                    variables: {
+                        colorPrimary: '#b56ab9',
+                        colorBackground: '#0d0a0f',
+                        colorText: '#f5f2f7',
+                        colorTextSecondary: '#a69da9',
+                        colorDanger: '#e58d9c',
+                        borderRadius: '10px',
+
+                        fontFamily:
+                            'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                    },
+                },
+            });
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Payment Element
+            |--------------------------------------------------------------------------
+            */
+
+            paymentElement =
+                elements.create(
+                    'payment',
+                    {
+                        layout: {
+                            type: 'tabs',
+                        },
+
+                        defaultValues: {
+                            billingDetails: {
+                                name: billingName,
+                                email: billingEmail,
+                            },
+                        },
+
+                        fields: {
+                            billingDetails: {
+                                name: 'always',
+                                email: 'auto',
+                                address: 'if_required',
+                            },
+                        },
+
+                        /*
+                         * Wallets are handled in Express Checkout
+                         * so they don't also appear inside Payment Element.
+                         */
+                        wallets: {
+                            applePay: 'never',
+                            googlePay: 'never',
+                            link: 'never',
+                        },
+                    }
+                );
+
+
+            paymentElement.on(
+                'loaderstart',
+                () => {
+
+                    setStripeStatus(
+                        'Loading Stripe payment form...'
+                    );
+                }
+            );
+
+
+            paymentElement.on(
+                'ready',
+                () => {
+
+                    paymentElementReady = true;
+
+                    if (loading) {
+                        loading.hidden = true;
+                    }
+
+                    if (paymentContainer) {
+                        paymentContainer.hidden = false;
+                    }
+
+                    setPaymentButtonState(
+                        false,
+                        `Pay ${@js('$' . $formattedTotal)}`
+                    );
+
+                    setStripeStatus(
+                        'Your payment information is ready.'
+                    );
+                }
+            );
+
+
+            paymentElement.on(
+                'change',
+                (event) => {
+
+                    if (event?.error?.message) {
+
+                        showStripeError(
+                            event.error.message
+                        );
+
+                    } else {
+
+                        clearStripeError();
+
+                    }
+                }
+            );
+
+
+            paymentElement.on(
+                'loaderror',
+                (event) => {
+
+                    const message =
+                        event?.error?.message
+                        || 'Stripe could not load the payment form.';
+
+                    showStripeError(message);
+
+                    setPaymentButtonState(
+                        true,
+                        'Payment form unavailable'
+                    );
+
+                    setStripeStatus(
+                        'Stripe payment form failed to load.'
+                    );
+                }
+            );
+
+
+            paymentElement.mount(
+                paymentMount
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Express Checkout
+            |--------------------------------------------------------------------------
+            |
+            | Express Checkout supports eligible:
+            |
+            | - Apple Pay
+            | - Google Pay
+            | - PayPal
+            |
+            | Stripe decides which are actually available based on
+            | account configuration, device, browser, domain, currency,
+            | and customer eligibility.
+            |--------------------------------------------------------------------------
+            */
+
+            if (expressMount) {
+
+                expressCheckoutElement =
+                    elements.create(
+                        'expressCheckout',
+                        {
+                            buttonHeight: 50,
+
+                            layout: {
+                                maxColumns: 1,
+                                maxRows: 3,
+                            },
+
+                            buttonType: {
+                                applePay: 'buy',
+                                googlePay: 'buy',
+                                paypal: 'buynow',
+                            },
+
+                            buttonTheme: {
+                                applePay: 'black',
+                                googlePay: 'black',
+                                paypal: 'black',
+                            },
+                        }
+                    );
+
+
+                expressCheckoutElement.on(
+                    'ready',
+                    ({
+                        availablePaymentMethods
+                    }) => {
+
+                        if (walletLoader) {
+                            walletLoader.hidden = true;
+                        }
+
+
+                        const walletAvailable =
+                            availablePaymentMethods
+                            && (
+                                availablePaymentMethods.applePay
+                                || availablePaymentMethods.googlePay
+                                || availablePaymentMethods.paypal
+                            );
+
+
+                        expressCheckoutReady =
+                            Boolean(
+                                walletAvailable
+                            );
+
+
+                        const unavailable =
+                            walletsUnavailable();
+
+
+                        if (unavailable) {
+                            unavailable.hidden =
+                                expressCheckoutReady;
+                        }
+
+
+                        if (!expressCheckoutReady) {
+
+                            setStripeStatus(
+                                'No supported express wallet is currently available.'
+                            );
+                        }
+                    }
+                );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Express Checkout click
+                |--------------------------------------------------------------------------
+                |
+                | This is deliberately handled through the same PaymentIntent
+                | flow. The event gives Stripe what it needs to authorize
+                | the selected wallet, and confirmPayment finalizes it.
+                |--------------------------------------------------------------------------
+                */
+
+                expressCheckoutElement.on(
+                    'confirm',
+                    async (event) => {
+
+                        clearStripeError();
+
+                        setStripeStatus(
+                            'Confirming wallet payment securely...'
+                        );
+
+
+                        try {
+
+                            const billingName =
+                                billingNameInput()?.value?.trim()
+                                || '';
+
+                            const billingEmail =
+                                billingEmailInput()?.value?.trim()
+                                || '';
+
+
+                            $wire.billingName =
+                                billingName;
+
+                            $wire.billingEmail =
+                                billingEmail;
+
+
+                            /*
+                            |--------------------------------------------------------------------------
+                            | Keep your existing billing validation logic.
+                            |--------------------------------------------------------------------------
+                            */
+
+                            await $wire.validateBilling();
+
+
+                            /*
+                            |--------------------------------------------------------------------------
+                            | Confirm the PaymentIntent using the same
+                            | Elements instance / client secret.
+                            |--------------------------------------------------------------------------
+                            */
+
+                            const result =
+                                await stripe.confirmPayment({
+                                    elements,
+
+                                    clientSecret,
+
+                                    confirmParams: {
+                                        return_url:
+                                            window.location.href,
+                                    },
+
+                                    redirect: 'if_required',
+                                });
+
+
+                            if (result?.error) {
+
+                                showStripeError(
+                                    result.error.message
+                                    || 'Stripe could not confirm this payment.'
+                                );
+
+                                setStripeStatus(
+                                    'Wallet payment confirmation failed.'
+                                );
+
+                                return;
+                            }
+
+
+                            const paymentIntent =
+                                result?.paymentIntent;
+
+
+                            if (!paymentIntent) {
+
+                                throw new Error(
+                                    'Stripe did not return a PaymentIntent after wallet confirmation.'
+                                );
+                            }
+
+
+                            stripePaymentId =
+                                paymentIntent.id;
+
+
+                            const backendPaymentIntentId =
+                                @js($paymentIntentId);
+
+
+                            if (
+                                backendPaymentIntentId
+                                && paymentIntent.id
+                                    !== backendPaymentIntentId
+                            ) {
+
+                                throw new Error(
+                                    'The confirmed payment does not match the invoice payment.'
+                                );
+                            }
+
+
+                            const expectedAmount =
+                                Number(
+                                    @js($totalInCents)
+                                );
+
+
+                            if (
+                                Number.isFinite(
+                                    expectedAmount
+                                )
+                                && expectedAmount > 0
+                                && Number(
+                                    paymentIntent.amount
+                                ) !== expectedAmount
+                            ) {
+
+                                throw new Error(
+                                    'The confirmed payment amount does not match the invoice total.'
+                                );
+                            }
+
+
+                            if (
+                                paymentIntent.currency
+                                !== 'usd'
+                            ) {
+
+                                throw new Error(
+                                    'The confirmed payment currency does not match the invoice.'
+                                );
+                            }
+
+
+                            /*
+                            |--------------------------------------------------------------------------
+                            | Payment result
+                            |--------------------------------------------------------------------------
+                            */
+
+                            if (
+                                paymentIntent.status
+                                === 'succeeded'
+                            ) {
+
+                                setStripeStatus(
+                                    'Payment confirmed.'
+                                );
+
+
+                                await $wire.paymentCompleted(
+                                    paymentIntent.id
+                                );
+
+                                return;
+                            }
+
+
+                            if (
+                                paymentIntent.status
+                                === 'processing'
+                            ) {
+
+                                setStripeStatus(
+                                    'Payment is processing.'
+                                );
+
+
+                                await $wire.paymentCompleted(
+                                    paymentIntent.id
+                                );
+
+                                return;
+                            }
+
+
+                            if (
+                                paymentIntent.status
+                                === 'requires_action'
+                            ) {
+
+                                setStripeStatus(
+                                    'Additional authentication is required to complete the payment.'
+                                );
+
+                                return;
+                            }
+
+
+                            throw new Error(
+                                `Stripe returned payment status: ${paymentIntent.status}`
+                            );
+
+                        } catch (error) {
+
+                            console.error(
+                                'Express Checkout payment failed:',
+                                error
+                            );
+
+
+                            showStripeError(
+                                error?.message
+                                || 'Unable to complete the wallet payment.'
+                            );
+
+
+                            setStripeStatus(
+                                'Wallet payment could not be completed.'
+                            );
+                        }
+                    }
+                );
+
+
+                expressCheckoutElement.mount(
+                    expressMount
+                );
+            }
+
+        } catch (error) {
+
+            console.error(
+                'Stripe initialization failed:',
+                error
+            );
+
+
+            paymentElementReady = false;
+            expressCheckoutReady = false;
+
+            paymentElement = null;
+            expressCheckoutElement = null;
+            elements = null;
+
+
+            showStripeError(
+                error?.message
+                || 'Unable to initialize Stripe payment form.'
+            );
+
+
+            setPaymentButtonState(
+                true,
+                'Payment form unavailable'
+            );
+
+
+            setStripeStatus(
+                'Stripe initialization failed.'
+            );
+
+        } finally {
+
+            initializingStripe = false;
+        }
+    };
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Existing card payment submission
+    |--------------------------------------------------------------------------
+    */
+
+    const submitPayment = async () => {
+
+        if (
+            !stripe
+            || !elements
+            || !paymentElement
+            || !paymentElementReady
+        ) {
+
+            showStripeError(
+                'The secure payment form is not ready yet.'
+            );
+
+            return;
+        }
+
+
+        const button = payButton();
+
+        if (button?.disabled) {
+            return;
+        }
+
+
+        clearStripeError();
+
+
+        setPaymentButtonState(
+            true,
+            'Processing payment...'
+        );
+
+
+        setStripeStatus(
+            'Validating your payment details...'
+        );
+
+
+        try {
+
+            const billingName =
+                billingNameInput()?.value?.trim()
+                || '';
+
+            const billingEmail =
+                billingEmailInput()?.value?.trim()
+                || '';
+
+
+            $wire.billingName =
+                billingName;
+
+            $wire.billingEmail =
+                billingEmail;
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Existing Livewire validation
+            |--------------------------------------------------------------------------
+            */
 
             await $wire.validateBilling();
 
-            const submitResult = await elements.submit();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Stripe Payment Element submission
+            |--------------------------------------------------------------------------
+            */
+
+            const submitResult =
+                await elements.submit();
+
 
             if (submitResult?.error) {
-                setPaymentError(
-                    submitResult.error.message ||
-                    'Please review your payment information.'
+
+                showStripeError(
+                    submitResult.error.message
+                    || 'Please correct the payment details and try again.'
                 );
 
-                setSubmitting(false);
+
+                setPaymentButtonState(
+                    false,
+                    `Pay ${@js('$' . $formattedTotal)}`
+                );
+
+
+                setStripeStatus(
+                    'Please review the payment details.'
+                );
+
                 return;
             }
 
-            const result = await stripe.confirmPayment({
-                elements,
-                clientSecret,
 
-                confirmParams: {
-                    return_url: window.location.href,
-                },
+            setStripeStatus(
+                'Confirming payment securely with Stripe...'
+            );
 
-                redirect: 'if_required',
-            });
 
-            if (result.error) {
-                setPaymentError(
-                    result.error.message ||
-                    'Your payment could not be completed.'
+            const result =
+                await stripe.confirmPayment({
+                    elements,
+
+                    clientSecret,
+
+                    confirmParams: {
+                        return_url:
+                            window.location.href,
+                    },
+
+                    redirect: 'if_required',
+                });
+
+
+            if (result?.error) {
+
+                showStripeError(
+                    result.error.message
+                    || 'Stripe could not confirm this payment.'
                 );
 
-                setSubmitting(false);
+
+                setPaymentButtonState(
+                    false,
+                    `Pay ${@js('$' . $formattedTotal)}`
+                );
+
+
+                setStripeStatus(
+                    'Payment confirmation failed.'
+                );
+
                 return;
             }
 
-            const paymentIntent = result.paymentIntent;
+
+            const paymentIntent =
+                result?.paymentIntent;
+
 
             if (!paymentIntent) {
-                setPaymentError(
-                    'Stripe did not return a payment result. Please try again.'
-                );
 
-                setSubmitting(false);
-                return;
+                throw new Error(
+                    'Stripe did not return a PaymentIntent after confirmation.'
+                );
             }
+
+
+            stripePaymentId =
+                paymentIntent.id;
+
+
+            const backendPaymentIntentId =
+                @js($paymentIntentId);
+
 
             if (
-                paymentIntent.status === 'succeeded' ||
-                paymentIntent.status === 'processing'
+                backendPaymentIntentId
+                && paymentIntent.id
+                    !== backendPaymentIntentId
             ) {
-                await $wire.paymentCompleted(paymentIntent.id);
+
+                throw new Error(
+                    'The confirmed payment does not match the invoice payment.'
+                );
+            }
+
+
+            const expectedAmount =
+                Number(
+                    @js($totalInCents)
+                );
+
+
+            if (
+                Number.isFinite(expectedAmount)
+                && expectedAmount > 0
+                && Number(paymentIntent.amount)
+                    !== expectedAmount
+            ) {
+
+                throw new Error(
+                    'The confirmed payment amount does not match the invoice total.'
+                );
+            }
+
+
+            if (
+                paymentIntent.currency
+                !== 'usd'
+            ) {
+
+                throw new Error(
+                    'The confirmed payment currency does not match the invoice.'
+                );
+            }
+
+
+            if (
+                paymentIntent.status
+                === 'succeeded'
+            ) {
+
+                setStripeStatus(
+                    'Payment confirmed.'
+                );
+
+
+                await $wire.paymentCompleted(
+                    paymentIntent.id
+                );
+
+
+                setPaymentButtonState(
+                    true,
+                    'Payment complete'
+                );
+
+
                 return;
             }
 
-            setPaymentError(
-                'Your payment is not complete yet. Please review the payment status and try again.'
-            );
 
-            setSubmitting(false);
+            if (
+                paymentIntent.status
+                === 'processing'
+            ) {
+
+                setStripeStatus(
+                    'Payment is processing.'
+                );
+
+
+                await $wire.paymentCompleted(
+                    paymentIntent.id
+                );
+
+
+                setPaymentButtonState(
+                    true,
+                    'Payment processing'
+                );
+
+
+                return;
+            }
+
+
+            if (
+                paymentIntent.status
+                === 'requires_action'
+            ) {
+
+                setStripeStatus(
+                    'Additional authentication is required to complete the payment.'
+                );
+
+
+                setPaymentButtonState(
+                    false,
+                    `Pay ${@js('$' . $formattedTotal)}`
+                );
+
+
+                return;
+            }
+
+
+            throw new Error(
+                `Stripe returned payment status: ${paymentIntent.status}`
+            );
 
         } catch (error) {
-            console.error(error);
 
-            setPaymentError(
-                error?.message ||
-                'Something went wrong while processing your payment.'
+            console.error(
+                'Payment submission failed:',
+                error
             );
 
-            setSubmitting(false);
-        }
-    }
 
-    if (submitPaymentButton) {
-        submitPaymentButton.addEventListener('click', submitPayment);
-    }
+            const message =
+                error?.message
+                || 'Unable to complete the payment.';
+
+
+            showStripeError(message);
+
+
+            setPaymentButtonState(
+                false,
+                `Pay ${@js('$' . $formattedTotal)}`
+            );
+
+
+            setStripeStatus(
+                'Payment could not be completed.'
+            );
+        }
+    };
+
 
     /*
-     * ================================================================
-     * SIGNATURE PAD
-     * ================================================================
-     *
-     * Signature capture preserved.
-     */
-    const signatureCanvas = document.getElementById('signature-pad');
-    const signatureInput = document.getElementById('signature-data');
-    const clearSignatureButton = document.getElementById('clear-signature');
-    const signatureStatus = document.getElementById('signature-status');
+    |--------------------------------------------------------------------------
+    | Card payment button
+    |--------------------------------------------------------------------------
+    |
+    | Event delegation survives Livewire DOM morphs.
+    |--------------------------------------------------------------------------
+    */
 
-    let signatureCtx = null;
-    let signatureDrawing = false;
-    let signatureHasContent = false;
+    root.addEventListener(
+        'click',
+        (event) => {
 
-    function resizeSignatureCanvas() {
-        if (!signatureCanvas) {
-            return;
-        }
-
-        const ratio = Math.max(window.devicePixelRatio || 1, 1);
-        const rect = signatureCanvas.getBoundingClientRect();
-
-        const existingData = signatureHasContent
-            ? signatureCanvas.toDataURL('image/png')
-            : null;
-
-        signatureCanvas.width = rect.width * ratio;
-        signatureCanvas.height = rect.height * ratio;
-
-        signatureCtx = signatureCanvas.getContext('2d');
-
-        if (!signatureCtx) {
-            return;
-        }
-
-        signatureCtx.scale(ratio, ratio);
-        signatureCtx.lineWidth = 2;
-        signatureCtx.lineCap = 'round';
-        signatureCtx.lineJoin = 'round';
-        signatureCtx.strokeStyle = '#0f172a';
-
-        if (existingData) {
-            const image = new Image();
-
-            image.onload = () => {
-                signatureCtx.drawImage(
-                    image,
-                    0,
-                    0,
-                    rect.width,
-                    rect.height
+            const button =
+                event.target.closest(
+                    '[data-stripe-pay]'
                 );
-            };
 
-            image.src = existingData;
+
+            if (
+                !button
+                || !root.contains(button)
+            ) {
+                return;
+            }
+
+
+            event.preventDefault();
+
+            submitPayment();
         }
-    }
+    );
 
-    function getSignaturePosition(event) {
-        const rect = signatureCanvas.getBoundingClientRect();
 
-        if (event.touches && event.touches.length) {
+    /*
+    |--------------------------------------------------------------------------
+    | Signature pad
+    |--------------------------------------------------------------------------
+    */
+
+    const setupSignaturePad = () => {
+
+        const canvas =
+            root.querySelector(
+                '#agreement-signature-pad'
+            );
+
+
+        if (
+            !canvas
+            || canvas.dataset.initialized === '1'
+        ) {
+            return;
+        }
+
+
+        canvas.dataset.initialized = '1';
+
+
+        const ctx =
+            canvas.getContext('2d');
+
+
+        if (!ctx) {
+            return;
+        }
+
+
+        ctx.lineWidth = 2.1;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        ctx.strokeStyle =
+            '#f5f2f7';
+
+
+        let drawing = false;
+        let hasInk = false;
+
+
+        const pointFromEvent = (event) => {
+
+            const rect =
+                canvas.getBoundingClientRect();
+
+
             return {
-                x: event.touches[0].clientX - rect.left,
-                y: event.touches[0].clientY - rect.top,
+
+                x:
+                    (event.clientX - rect.left)
+                    * (canvas.width / rect.width),
+
+                y:
+                    (event.clientY - rect.top)
+                    * (canvas.height / rect.height),
             };
-        }
-
-        return {
-            x: event.clientX - rect.left,
-            y: event.clientY - rect.top,
         };
-    }
 
-    function startSignature(event) {
-        if (!signatureCtx) {
-            return;
-        }
 
-        event.preventDefault();
+        const start = (event) => {
 
-        signatureDrawing = true;
+            event.preventDefault();
 
-        const position = getSignaturePosition(event);
+            drawing = true;
 
-        signatureCtx.beginPath();
-        signatureCtx.moveTo(position.x, position.y);
-    }
 
-    function drawSignature(event) {
-        if (!signatureDrawing || !signatureCtx) {
-            return;
-        }
-
-        event.preventDefault();
-
-        const position = getSignaturePosition(event);
-
-        signatureCtx.lineTo(position.x, position.y);
-        signatureCtx.stroke();
-
-        signatureHasContent = true;
-
-        if (signatureStatus) {
-            signatureStatus.textContent = 'Signature captured';
-            signatureStatus.classList.remove(
-                'text-slate-400'
-            );
-
-            signatureStatus.classList.add(
-                'text-emerald-600'
-            );
-        }
-
-        if (signatureInput) {
-            signatureInput.value =
-                signatureCanvas.toDataURL('image/png');
-
-            signatureInput.dispatchEvent(
-                new Event('input', {
-                    bubbles: true,
-                })
-            );
-        }
-
-        /*
-         * Keep Livewire signature data synced.
-         */
-        if (window.Livewire) {
             try {
-                $wire.set(
-                    'signatureData',
-                    signatureCanvas.toDataURL('image/png')
+
+                canvas.setPointerCapture(
+                    event.pointerId
                 );
-            } catch (error) {
-                console.debug(
-                    'Unable to sync signatureData immediately.',
-                    error
-                );
+
+            } catch (e) {
+                // Ignore unsupported pointer capture.
             }
-        }
-    }
 
-    function endSignature(event) {
-        if (!signatureDrawing) {
-            return;
-        }
 
-        event?.preventDefault();
+            const point =
+                pointFromEvent(event);
 
-        signatureDrawing = false;
 
-        if (signatureCtx) {
-            signatureCtx.closePath();
-        }
-    }
+            ctx.beginPath();
 
-    function clearSignature() {
-        if (!signatureCanvas || !signatureCtx) {
-            return;
-        }
-
-        const rect = signatureCanvas.getBoundingClientRect();
-
-        signatureCtx.clearRect(
-            0,
-            0,
-            rect.width,
-            rect.height
-        );
-
-        signatureHasContent = false;
-
-        if (signatureInput) {
-            signatureInput.value = '';
-
-            signatureInput.dispatchEvent(
-                new Event('input', {
-                    bubbles: true,
-                })
-            );
-        }
-
-        if (signatureStatus) {
-            signatureStatus.textContent = 'Not signed';
-
-            signatureStatus.classList.add(
-                'text-slate-400'
+            ctx.moveTo(
+                point.x,
+                point.y
             );
 
-            signatureStatus.classList.remove(
-                'text-emerald-600'
+            ctx.lineTo(
+                point.x + 0.01,
+                point.y + 0.01
             );
-        }
 
-        if (window.Livewire) {
+            ctx.stroke();
+
+
+            hasInk = true;
+        };
+
+
+        const move = (event) => {
+
+            if (!drawing) {
+                return;
+            }
+
+
+            event.preventDefault();
+
+
+            const point =
+                pointFromEvent(event);
+
+
+            ctx.lineTo(
+                point.x,
+                point.y
+            );
+
+            ctx.stroke();
+
+
+            hasInk = true;
+        };
+
+
+        const stop = (event) => {
+
+            if (!drawing) {
+                return;
+            }
+
+
+            event.preventDefault();
+
+            drawing = false;
+
+
             try {
-                $wire.set('signatureData', '');
-            } catch (error) {
-                console.debug(
-                    'Unable to clear signatureData immediately.',
-                    error
+
+                canvas.releasePointerCapture(
+                    event.pointerId
                 );
+
+            } catch (e) {
+                // Ignore unsupported pointer capture.
             }
+        };
+
+
+        canvas.addEventListener(
+            'pointerdown',
+            start,
+            { passive: false }
+        );
+
+
+        canvas.addEventListener(
+            'pointermove',
+            move,
+            { passive: false }
+        );
+
+
+        canvas.addEventListener(
+            'pointerup',
+            stop,
+            { passive: false }
+        );
+
+
+        canvas.addEventListener(
+            'pointercancel',
+            stop,
+            { passive: false }
+        );
+
+
+        canvas.addEventListener(
+            'pointerleave',
+            stop,
+            { passive: false }
+        );
+
+
+        const agreement =
+            canvas.closest(
+                '.cc-checkout__agreement'
+            );
+
+
+        const clearButton =
+            agreement?.querySelector(
+                '[data-clear-signature]'
+            );
+
+
+        const submitButton =
+            agreement?.querySelector(
+                '[data-signature-submit]'
+            );
+
+
+        if (clearButton) {
+
+            clearButton.addEventListener(
+                'click',
+                () => {
+
+                    ctx.clearRect(
+                        0,
+                        0,
+                        canvas.width,
+                        canvas.height
+                    );
+
+                    hasInk = false;
+                }
+            );
         }
-    }
 
-    if (signatureCanvas) {
-        resizeSignatureCanvas();
 
-        signatureCanvas.addEventListener(
-            'mousedown',
-            startSignature
-        );
+        if (submitButton) {
 
-        signatureCanvas.addEventListener(
-            'mousemove',
-            drawSignature
-        );
+            submitButton.addEventListener(
+                'click',
+                async () => {
 
-        signatureCanvas.addEventListener(
-            'mouseup',
-            endSignature
-        );
+                    if (!hasInk) {
 
-        signatureCanvas.addEventListener(
-            'mouseleave',
-            endSignature
-        );
+                        alert(
+                            'Please sign the agreement before continuing.'
+                        );
 
-        signatureCanvas.addEventListener(
-            'touchstart',
-            startSignature,
-            { passive: false }
-        );
+                        return;
+                    }
 
-        signatureCanvas.addEventListener(
-            'touchmove',
-            drawSignature,
-            { passive: false }
-        );
 
-        signatureCanvas.addEventListener(
-            'touchend',
-            endSignature,
-            { passive: false }
-        );
+                    submitButton.disabled =
+                        true;
 
-        signatureCanvas.addEventListener(
-            'touchcancel',
-            endSignature,
-            { passive: false }
-        );
+                    submitButton.textContent =
+                        'Saving signature...';
 
-        window.addEventListener(
-            'resize',
-            resizeSignatureCanvas
-        );
-    }
 
-    if (clearSignatureButton) {
-        clearSignatureButton.addEventListener(
-            'click',
-            clearSignature
-        );
-    }
+                    try {
+
+                        const signatureData =
+                            canvas.toDataURL(
+                                'image/png'
+                            );
+
+
+                        await $wire.saveSignature(
+                            signatureData
+                        );
+
+                    } catch (error) {
+
+                        console.error(
+                            'Signature submission failed:',
+                            error
+                        );
+
+
+                        submitButton.disabled =
+                            false;
+
+                        submitButton.textContent =
+                            'Sign agreement and continue';
+
+
+                        alert(
+                            error?.message
+                            || 'The signature could not be saved.'
+                        );
+                    }
+                }
+            );
+        }
+    };
+
 
     /*
-     * Initialize Stripe.
-     */
-    initStripe();
+    |--------------------------------------------------------------------------
+    | Watch Livewire clientSecret
+    |--------------------------------------------------------------------------
+    */
 
-});
+    $wire.$watch(
+        'clientSecret',
+        async (clientSecret) => {
+
+            if (!clientSecret) {
+                return;
+            }
+
+
+            await waitForDom();
+
+            await initializeStripe(
+                clientSecret
+            );
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Watch paymentIntentId
+    |--------------------------------------------------------------------------
+    */
+
+    $wire.$watch(
+        'paymentIntentId',
+        (paymentIntentId) => {
+
+            if (paymentIntentId) {
+
+                stripePaymentId =
+                    paymentIntentId;
+            }
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Initial state
+    |--------------------------------------------------------------------------
+    */
+
+    (async () => {
+
+        await waitForDom();
+
+        setupSignaturePad();
+
+
+        if (
+            currentClientSecret
+            && initialPaymentStatus !== 'succeeded'
+            && initialPaymentStatus !== 'processing'
+        ) {
+
+            await initializeStripe(
+                currentClientSecret
+            );
+        }
+
+    })();
+
+})();
 </script>
+
 @endscript
