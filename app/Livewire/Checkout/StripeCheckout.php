@@ -305,10 +305,6 @@ class StripeCheckout extends Component
      */
     protected function createStripeCheckoutIntent(): void 
     {
-        if ($this->invoice->payment_type === PaymentType::Subscription) {
-            $this->createSubscriptionCheckout();
-            return;
-        }
         $this->createPaymentIntent();
     }
 
@@ -330,28 +326,32 @@ class StripeCheckout extends Component
                 );
 
             $paymentIntentData = [
-                'amount' =>
-                    $this->totalInCents,
+            'amount' =>
+                $this->totalInCents,
 
-                'currency' =>
-                    'usd',
+            'currency' =>
+                'usd',
 
-                'automatic_payment_methods' => [
-                    'enabled' => true,
-                ],
+            'automatic_payment_methods' => [
+                'enabled' => true,
+            ],
 
-                'description' =>
-                    'Invoice #' .
-                    $this->invoice->id,
+            'description' =>
+                'Invoice #' .
+                $this->invoice->id,
 
-                'metadata' => [
-                    'invoice_id' =>
-                        (string) $this->invoice->id,
+            'metadata' => [
+                'invoice_id' =>
+                    (string) $this->invoice->id,
 
-                    'checkout_token' =>
-                        (string) $this->invoice->checkout_token,
-                ],
-            ];
+                'checkout_token' =>
+                    (string) $this->invoice->checkout_token,
+            ],
+        ];
+
+        if ($this->invoice->payment_type === PaymentType::Subscription) {
+            $paymentIntentData['setup_future_usage'] = 'off_session';
+        }
 
             if ($customerId !== null) {
                 $paymentIntentData['customer'] =
@@ -364,7 +364,7 @@ class StripeCheckout extends Component
             }
 
             $idempotencyKey =
-                'checkout-payment-intent-' .
+                'checkout-payment-intent-v2' .
                 (string) $this->invoice->id;
 
             $paymentIntent =
@@ -424,15 +424,13 @@ class StripeCheckout extends Component
                         $paymentIntent->status,
                 ]
             );
-        } catch (Throwable $e) {
+        }  catch (Throwable $e) {
             $this->clientSecret = null;
-
             $this->paymentIntentId = null;
-
             $this->paymentStatus = null;
 
             $this->checkoutError =
-                'Stripe could not initialize this checkout. Please try again.';
+                'Stripe error: ' . $e->getMessage();
 
             Log::error(
                 'Stripe PaymentIntent initialization failed.',
@@ -448,6 +446,9 @@ class StripeCheckout extends Component
 
                     'exception' =>
                         get_class($e),
+
+                    'trace' =>
+                        $e->getTraceAsString(),
                 ]
             );
         }
@@ -1626,6 +1627,194 @@ protected function createSubscriptionCheckout(): void
         }
     }
 
+    protected function createRecurringAddonSubscription(
+    mixed $paymentIntent
+): void {
+    /*
+     * The custom Development Services base is intentionally NOT
+     * included because it has no Stripe Price.
+     *
+     * Only existing Stripe recurring addon Prices are included.
+     */
+    $stripe = $this->stripe();
+
+    $customerId = $paymentIntent->customer ?? null;
+
+    if (is_object($customerId)) {
+        $customerId = $customerId->id ?? null;
+    }
+
+    if (! is_string($customerId) || trim($customerId) === '') {
+        throw new \RuntimeException(
+            'A Stripe customer is required to create recurring add-ons.'
+        );
+    }
+
+    $subscriptionItems = [];
+
+    foreach ($this->invoice->items as $item) {
+        if (! (bool) ($item->is_subscription ?? false)) {
+            continue;
+        }
+
+        /*
+         * No Price means this is the custom recurring base.
+         * It is intentionally excluded from Stripe Billing.
+         */
+        $priceId = trim(
+            (string) ($item->stripe_price_id ?? '')
+        );
+
+        if ($priceId === '') {
+            continue;
+        }
+
+        $price = $stripe->prices->retrieve(
+            $priceId,
+            []
+        );
+
+        if (($price->active ?? false) !== true) {
+            throw new \RuntimeException(
+                "Stripe Price {$priceId} is inactive."
+            );
+        }
+
+        if (($price->type ?? null) !== 'recurring') {
+            throw new \RuntimeException(
+                "Stripe Price {$priceId} is not recurring."
+            );
+        }
+
+        if (
+            strtolower(
+                (string) ($price->currency ?? '')
+            ) !== 'usd'
+        ) {
+            throw new \RuntimeException(
+                "Stripe Price {$priceId} is not USD."
+            );
+        }
+
+        $subscriptionItems[] = [
+            'price' => $priceId,
+            'quantity' => max(
+                1,
+                (int) ($item->quantity ?? 1)
+            ),
+        ];
+    }
+
+    /*
+     * There may be no Stripe-managed recurring add-ons.
+     * That's valid because the base recurring amount is local.
+     */
+    if ($subscriptionItems === []) {
+        Log::info(
+            'No Stripe recurring add-ons to subscribe.',
+            [
+                'invoice_id' =>
+                    $this->invoice->id,
+            ]
+        );
+
+        return;
+    }
+
+    /*
+     * The customer already paid today's invoice.
+     *
+     * Start the Stripe add-on subscription one month later
+     * so Stripe does not immediately charge the add-ons again.
+     */
+    $trialEnd = now()
+        ->addMonth()
+        ->timestamp;
+
+    $paymentMethodId =
+        $paymentIntent->payment_method ?? null;
+
+    if (is_object($paymentMethodId)) {
+        $paymentMethodId =
+            $paymentMethodId->id ?? null;
+    }
+
+    $subscriptionData = [
+        'customer' => $customerId,
+
+        'items' => $subscriptionItems,
+
+        'collection_method' => 'charge_automatically',
+
+        'trial_end' => $trialEnd,
+
+        'metadata' => [
+            'invoice_id' =>
+                (string) $this->invoice->id,
+
+            'checkout_token' =>
+                (string) $this->invoice->checkout_token,
+
+            'source' =>
+                'checkout_addons',
+        ],
+
+        'payment_settings' => [
+            'save_default_payment_method' =>
+                'on_subscription',
+        ],
+    ];
+
+    if (
+        is_string($paymentMethodId)
+        && $paymentMethodId !== ''
+    ) {
+        $subscriptionData['default_payment_method'] =
+            $paymentMethodId;
+    }
+
+    $subscription = $stripe
+        ->subscriptions
+        ->create(
+            $subscriptionData,
+            [
+                'idempotency_key' =>
+                    'checkout-addon-subscription-' .
+                    (string) $this->invoice->id,
+            ]
+        );
+
+    /*
+     * Store the actual Stripe Subscription ID.
+     *
+     * NEVER replace it with the PaymentIntent ID.
+     */
+    $this->invoice->stripe_id =
+        (string) $subscription->id;
+
+    $this->invoice->save();
+
+    Log::info(
+        'Stripe recurring addon subscription created.',
+        [
+            'invoice_id' =>
+                $this->invoice->id,
+
+            'subscription_id' =>
+                $subscription->id,
+
+            'payment_intent_id' =>
+                $paymentIntent->id,
+
+            'addon_item_count' =>
+                count($subscriptionItems),
+
+            'trial_end' =>
+                $trialEnd,
+        ]
+    );
+}
+
     /**
      * Mark successful payment.
      */
@@ -1638,9 +1827,29 @@ protected function createSubscriptionCheckout(): void
         $this->paymentIntentId =
             (string) $paymentIntent->id;
 
-        $this->invoice->status = InvoiceStatus::Paid; 
-        $this->invoice->stripe_id = (string) $paymentIntent->id;
-        $this->invoice->save();
+        $this->invoice->status = InvoiceStatus::Paid;
+
+            /*
+            * stripe_id has different meanings:
+            *
+            * One-time invoice:
+            *     pi_...
+            *
+            * Subscription invoice:
+            *     sub_...
+            *
+            * The PaymentIntent ID is already tracked separately in
+            * $this->paymentIntentId and in Stripe metadata.
+            */
+            if (
+                $this->invoice->payment_type !==
+                PaymentType::Subscription
+            ) {
+                $this->invoice->stripe_id =
+                    (string) $paymentIntent->id;
+            }
+
+            $this->invoice->save();
 
         $this->checkoutSuccessful =
             true;
@@ -2198,17 +2407,31 @@ protected function createSubscriptionCheckout(): void
         $this->paymentStatus =
             (string) $paymentIntent->status;
 
-        if (
-            (string) $paymentIntent->status
-            === 'succeeded'
-        ) {
-            $this->applySuccessfulPaymentIntent(
-                $paymentIntent
-            );
-        } else {
-            $this->checkoutSuccessful =
-                false;
-        }
+                if (
+                (string) $paymentIntent->status
+                === 'succeeded'
+            ) {
+                /*
+                * The initial invoice is paid in full first.
+                *
+                * Any Stripe-managed recurring add-ons are started
+                * separately after the successful payment.
+                */
+                if (
+                    $this->invoice->payment_type ===
+                    PaymentType::Subscription
+                ) {
+                    $this->createRecurringAddonSubscription(
+                        $paymentIntent
+                    );
+                }
+
+                $this->applySuccessfulPaymentIntent(
+                    $paymentIntent
+                );
+            } else {
+                $this->checkoutSuccessful = false;
+            }
 
         Log::info(
             'Stripe checkout payment status verified.',

@@ -47,7 +47,10 @@ class ChargeCustomerModal extends Component
             return null;
         }
 
-        return $this->ticket->latestInvoice;
+        return Invoice::query()
+        ->where('ticket_id', $this->ticket->id)
+        ->latest('id')
+        ->first();
     }
 
     #[Computed]
@@ -107,10 +110,14 @@ class ChargeCustomerModal extends Component
      * - the base charge
      * - the first month's addon charges
      */
-    #[Computed]
+   #[Computed]
     public function totalAmountInCents(): int
     {
-        return $this->baseAmountInCents()
+        $monthlyBase = $this->isSubscription
+            ? intdiv($this->baseAmountInCents(), 12)
+            : $this->baseAmountInCents();
+
+        return $monthlyBase
             + $this->addonsMonthlyAmountInCents();
     }
 
@@ -123,11 +130,11 @@ class ChargeCustomerModal extends Component
      * - the base charge is recurring
      * - one or more monthly addons are selected
      */
-    public function hasRecurringInvoiceItems(): bool
-    {
-        return $this->isSubscription
-            || ! empty($this->selectedAddonPriceIds);
-    }
+    // public function hasRecurringInvoiceItems(): bool
+    // {
+    //     return $this->isSubscription
+    //         || ! empty($this->selectedAddonPriceIds);
+    // }
 
     /**
      * Determines the invoice payment type.
@@ -158,7 +165,7 @@ class ChargeCustomerModal extends Component
     public function monthlyRecurringAmountInCents(): int
     {
         $monthlyBase = $this->isSubscription
-            ? $this->baseAmountInCents()
+            ? intdiv($this->baseAmountInCents(), 12)
             : 0;
 
         return $monthlyBase
@@ -316,8 +323,9 @@ class ChargeCustomerModal extends Component
                             : ' (One-Time)'
                     ),
 
-                'amount' =>
-                    $this->baseAmountInCents,
+                'amount' => $this->isSubscription
+                ? intdiv($this->baseAmountInCents(), 12)
+                : $this->baseAmountInCents(),
 
                 /*
                  * Base charge's own billing type.

@@ -889,9 +889,15 @@ class TeamDashboardService
 
         $invoiceBasedGrossRevenue = (int) $paidInvoices->sum(
             function (Invoice $invoice): int {
+
+                $grossAmount = $invoice->total_amount; 
+                if ($grossAmount === null || $grossAmount === '') {
+                    $grossAmount = $invoice->amount;
+                }
+
                 return max(
                     0,
-                    (int) $invoice->amount
+                    (int) $grossAmount
                 );
             }
         );

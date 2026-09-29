@@ -116,7 +116,14 @@
                                             {{ $item->description }}
                                         </p>
 
-                                        @if ($item->is_subscription)
+                                        @if ($item->is_addon)
+                                        <span
+                                            class="inline-flex items-center rounded bg-purple-50 px-2 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-950/50 dark:text-purple-300"
+                                        >
+                                            Add-on · Monthly
+                                        </span>
+
+                                        @elseif ($item->is_subscription)
                                             <span
                                                 class="inline-flex items-center rounded bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300"
                                             >
@@ -126,7 +133,7 @@
                                             <span
                                                 class="inline-flex items-center rounded bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
                                             >
-                                                One-Time
+                                                One Time
                                             </span>
                                         @endif
                                     </div>
@@ -190,7 +197,7 @@
                             </h3>
 
                             <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                                Choose whether the base charge is one-time or recurring.
+                                Choose whether the base charge is one time or recurring.
                             </p>
                         </div>
 
@@ -375,14 +382,14 @@
                                     @if ($this->isSubscription)
 
                                         <span class="font-medium text-indigo-600 dark:text-indigo-400">
-                                            ${{ number_format($this->baseAmountInCents / 100, 2) }}/month
+                                            ${{ number_format(($this->baseAmountInCents / 12) / 100, 2) }}/month
                                         </span>
 
                                     @else
 
                                         <span class="font-medium text-zinc-700 dark:text-zinc-300">
                                             ${{ number_format($this->baseAmountInCents / 100, 2) }}
-                                            one-time
+                                            one time
                                         </span>
 
                                     @endif
