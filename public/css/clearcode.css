@@ -2801,6 +2801,7 @@ html {
     text-transform: uppercase;
 }
 
+/* Pricing */
 /* =============================================================
    PRICING
    ============================================================= */
@@ -2815,9 +2816,9 @@ html {
 }
 
 
-/* -------------------------------------------------------------
-   Header
-   ------------------------------------------------------------- */
+/* =============================================================
+   HEADER
+   ============================================================= */
 
 .pricing-header {
     max-width: 720px;
@@ -2827,9 +2828,7 @@ html {
 
 .pricing-eyebrow {
     margin-bottom: 18px;
-
     color: #c8a2c8;
-
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 3px;
@@ -2837,108 +2836,83 @@ html {
 
 .pricing-header h2 {
     margin: 0 0 22px;
-
     color: #fff;
-
     font-size: clamp(42px, 6vw, 76px);
     font-weight: 600;
-    line-height: .98;
+    line-height: 0.98;
     letter-spacing: -3px;
 }
 
 .pricing-header p {
     max-width: 520px;
     margin: 0 auto;
-
     color: #a1a1aa;
-
     font-size: 16px;
     line-height: 1.7;
 }
 
 
-/* -------------------------------------------------------------
-   Switch
-   ------------------------------------------------------------- */
+/* =============================================================
+   BILLING SWITCH
+   ============================================================= */
 
 .pricing-switch-wrapper {
     display: flex;
     justify-content: center;
-
     margin-bottom: 55px;
 }
 
 .pricing-switch {
     position: relative;
-
     display: grid;
     grid-template-columns: 1fr 1fr;
-
     width: 270px;
     height: 58px;
     padding: 5px;
-
     border: 1px solid #27272a;
     border-radius: 999px;
-
     background: #09090b;
-
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, .025);
+        inset 0 1px 0 rgba(255, 255, 255, 0.025);
 }
 
 .pricing-switch__pill {
     position: absolute;
     top: 5px;
     left: 5px;
-
     width: calc(50% - 5px);
     height: calc(100% - 10px);
-
     border-radius: 999px;
-
     background:
         linear-gradient(
             135deg,
             #4c1d95,
             #7c3aed
         );
-
     box-shadow:
-        0 4px 16px rgba(124, 58, 237, .25);
-
+        0 4px 16px rgba(124, 58, 237, 0.25);
     transform: translate3d(0, 0, 0);
-
     transition:
-        transform 450ms cubic-bezier(.65, 0, .35, 1);
-
+        transform 450ms cubic-bezier(0.65, 0, 0.35, 1);
     will-change: transform;
-
     z-index: 0;
 }
 
-.pricing-switch.monthly-active
-    .pricing-switch__pill {
+.pricing-switch.monthly-active .pricing-switch__pill {
     transform: translate3d(100%, 0, 0);
 }
 
 .pricing-switch__button {
     position: relative;
     z-index: 1;
-
     border: 0;
     outline: 0;
-
     background: transparent;
-
     color: #71717a;
-
     font-size: 13px;
     font-weight: 700;
-    letter-spacing: .3px;
-
+    letter-spacing: 0.3px;
     cursor: pointer;
-
     transition:
         color 250ms ease;
 }
@@ -2948,87 +2922,112 @@ html {
 }
 
 
-/* -------------------------------------------------------------
-   Pricing Grid
-   ------------------------------------------------------------- */
+/* =============================================================
+   PRICING SLIDER
+   ============================================================= */
 
 /*
- * The grid itself owns the vertical space.
+ * The viewport shows exactly one pricing group.
  *
- * The cards are layered inside it, so switching cards cannot
- * change the position of anything below this component.
+ * The track contains:
+ *
+ *   [ ONE-TIME GROUP ][ MONTHLY GROUP ]
+ *
+ * Each group is exactly 50% of the track.
  */
 
-.pricing-grid {
+.pricing-slider {
     position: relative;
-
     width: 100%;
-    max-width: 620px;
+    overflow: hidden;
+}
 
-    /*
-     * Reserve the space occupied by the larger card.
-     * The cards themselves remain naturally sized.
-     */
-    min-height: 610px;
+.pricing-slider__track {
+    display: flex;
+    width: 200%;
+    transform: translate3d(0, 0, 0);
+    transition:
+        transform 700ms cubic-bezier(0.77, 0, 0.175, 1);
+    will-change: transform;
+}
 
-    margin: 0 auto;
+.pricing-slider__track.is-monthly {
+    transform: translate3d(-50%, 0, 0);
 }
 
 
-/* -------------------------------------------------------------
-   Card
-   ------------------------------------------------------------- */
+/* =============================================================
+   PRICING GROUP
+   ============================================================= */
 
-.pricing-grid > .pricing-card {
-    position: absolute;
-    top: 0;
-    left: 0;
-
-    width: 100%;
+.pricing-slider__group {
+    width: 50%;
+    min-width: 50%;
+    flex: 0 0 50%;
+    box-sizing: border-box;
 }
+
+
+/* =============================================================
+   THREE-CARD GRID
+   ============================================================= */
+
+.pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+    width: 100%;
+    margin: 0;
+}
+
+
+/* =============================================================
+   PRICING CARD
+   ============================================================= */
 
 .pricing-card {
     box-sizing: border-box;
-
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-width: 0;
     padding: 42px;
-
     border: 1px solid #27272a;
     border-radius: 24px;
-
     background:
         linear-gradient(
             145deg,
             #111113 0%,
             #08080a 100%
         );
-
     box-shadow:
-        0 30px 80px rgba(0, 0, 0, .35);
-
+        0 30px 80px rgba(0, 0, 0, 0.35);
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
-
-    will-change: transform, opacity;
-
-    transform: translate3d(0, 0, 0);
 }
 
 .pricing-card--featured {
     border-color: #5b21b6;
+    box-shadow:
+        0 30px 80px rgba(0, 0, 0, 0.35),
+        0 0 0 1px rgba(124, 58, 237, 0.08);
 }
 
 
-/* -------------------------------------------------------------
-   Card Top
-   ------------------------------------------------------------- */
+/* =============================================================
+   CARD TOP
+   ============================================================= */
+
+.pricing-card__top {
+    display: flex;
+    flex-direction: column;
+}
 
 .pricing-card__label {
     display: inline-block;
-
+    align-self: flex-start;
     margin-bottom: 18px;
-
     color: #c8a2c8;
-
     font-size: 10px;
     font-weight: 800;
     letter-spacing: 2px;
@@ -3036,152 +3035,225 @@ html {
 
 .pricing-card h3 {
     margin: 0 0 14px;
-
     color: #fff;
-
     font-size: 32px;
     font-weight: 600;
+    line-height: 1.1;
     letter-spacing: -1px;
 }
 
 .pricing-card__top p {
-    max-width: 460px;
     margin: 0;
-
     color: #a1a1aa;
-
     font-size: 15px;
     line-height: 1.7;
 }
 
+.pricing-card__meta {
+    margin-top: 18px;
+    color: #71717a;
+    font-size: 12px;
+    line-height: 1.5;
+}
 
-/* -------------------------------------------------------------
-   Price
-   ------------------------------------------------------------- */
+.pricing-card__title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 14px;
+    color: #fff;
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -1px;
+}
+
+.pricing-card__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 5px 10px;
+
+    border: 1px solid rgba(167, 139, 250, 0.35);
+    border-radius: 999px;
+
+    background: rgba(124, 58, 237, 0.12);
+
+    color: #c4b5fd;
+
+    font-size: 8px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: 1.3px;
+
+    white-space: nowrap;
+}
+
+/* =============================================================
+   PRICE
+   ============================================================= */
 
 .pricing-card__price {
     display: flex;
     align-items: baseline;
-
+    flex-wrap: wrap;
     margin-top: 40px;
 }
 
 .pricing-card__currency {
     margin-right: 4px;
-
     color: #a78bfa;
-
     font-size: 22px;
     font-weight: 600;
 }
 
 .pricing-card__amount {
     color: #fff;
-
     font-size: 64px;
     font-weight: 600;
     line-height: 1;
-
     letter-spacing: -3px;
 }
 
 .pricing-card__suffix {
     margin-left: 10px;
-
     color: #71717a;
-
     font-size: 13px;
 }
 
+.pricing-card__suffix--standalone {
+    margin-left: 0;
+    color: #a1a1aa;
+    font-size: 15px;
+}
 
-/* -------------------------------------------------------------
-   Divider
-   ------------------------------------------------------------- */
+
+/* =============================================================
+   DIVIDER
+   ============================================================= */
 
 .pricing-card__divider {
     height: 1px;
-
     margin: 38px 0 28px;
-
     background: #27272a;
 }
 
 
-/* -------------------------------------------------------------
-   Features
-   ------------------------------------------------------------- */
+/* =============================================================
+   FEATURES
+   ============================================================= */
 
 .pricing-card__features {
     display: flex;
     flex-direction: column;
+    flex: 1;
     gap: 16px;
-
     margin: 0 0 35px;
     padding: 0;
-
     list-style: none;
 }
 
 .pricing-card__features li {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 12px;
-
     color: #d4d4d8;
-
     font-size: 14px;
+    line-height: 1.55;
 }
 
-.pricing-card__features li span {
+.pricing-card__features li > span {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-
     width: 22px;
     height: 22px;
-
     flex: 0 0 22px;
-
+    margin-top: 1px;
     border-radius: 50%;
-
     background: #1c1230;
     color: #a78bfa;
-
     font-size: 13px;
 }
 
+.pricing-card__features small {
+    display: block;
+    margin-top: 4px;
+    color: #71717a;
+    font-size: 12px;
+    line-height: 1.5;
+}
 
-/* -------------------------------------------------------------
+
+/* =============================================================
+   MONTHLY INTRO
+   ============================================================= */
+
+.pricing-monthly-intro {
+    max-width: 760px;
+    margin: 0 auto 38px;
+    text-align: center;
+}
+
+.pricing-monthly-intro__label {
+    margin-bottom: 12px;
+    color: #c8a2c8;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 2px;
+}
+
+.pricing-monthly-intro p {
+    margin: 0;
+    color: #a1a1aa;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+
+/* =============================================================
+   MONTHLY NOTE
+   ============================================================= */
+
+.pricing-card__note {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #71717a;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.pricing-card__note strong {
+    color: #d4d4d8;
+    font-weight: 600;
+}
+
+
+/* =============================================================
    CTA
-   ------------------------------------------------------------- */
+   ============================================================= */
 
 .pricing-card__button {
     display: flex;
     align-items: center;
     justify-content: center;
-
     width: 100%;
     min-height: 54px;
-
+    margin-top: auto;
     border-radius: 10px;
-
     background:
         linear-gradient(
             135deg,
             #4c1d95,
             #7c3aed
         );
-
     color: #fff;
-
     font-size: 13px;
     font-weight: 700;
-
     text-decoration: none;
-
     box-shadow:
-        0 8px 24px rgba(76, 29, 149, .16);
-
+        0 8px 24px rgba(76, 29, 149, 0.16);
     transition:
         transform 220ms ease,
         box-shadow 220ms ease,
@@ -3190,83 +3262,88 @@ html {
 
 .pricing-card__button:hover {
     transform: translateY(-2px);
-
     background:
         linear-gradient(
             135deg,
             #5b21b6,
             #9333ea
         );
-
+    color: #fff;
     box-shadow:
-        0 12px 30px rgba(124, 58, 237, .24);
+        0 12px 30px rgba(124, 58, 237, 0.24);
 }
 
 
-/* -------------------------------------------------------------
-   Card Transition
-   ------------------------------------------------------------- */
+/* =============================================================
+   DESKTOP SIZING
+   ============================================================= */
 
-/*
- * Clean, subtle crossfade.
- *
- * No scale.
- * No blur.
- * No height animation.
- *
- * This keeps the pricing component feeling expensive rather
- * than overly animated.
- */
+@media (max-width: 1200px) {
 
-.pricing-enter {
-    z-index: 2;
+    .pricing-grid {
+        gap: 18px;
+    }
 
-    transition:
-        opacity 350ms ease,
-        transform 400ms cubic-bezier(.22, 1, .36, 1);
-}
+    .pricing-card {
+        padding: 32px;
+    }
 
-.pricing-enter-start {
-    opacity: 0;
+    .pricing-card h3 {
+        font-size: 28px;
+    }
 
-    transform:
-        translate3d(0, 12px, 0);
-}
+    .pricing-card__amount {
+        font-size: 56px;
+    }
 
-.pricing-enter-end {
-    opacity: 1;
-
-    transform:
-        translate3d(0, 0, 0);
 }
 
 
-.pricing-leave {
-    z-index: 1;
+/* =============================================================
+   TABLET
+   ============================================================= */
 
-    transition:
-        opacity 220ms ease,
-        transform 300ms ease;
+@media (max-width: 991px) {
+
+    .pricing-section {
+        padding: 110px 0;
+    }
+
+    .pricing-grid {
+        gap: 16px;
+    }
+
+    .pricing-card {
+        padding: 26px;
+        border-radius: 20px;
+    }
+
+    .pricing-card h3 {
+        font-size: 25px;
+    }
+
+    .pricing-card__top p {
+        font-size: 14px;
+    }
+
+    .pricing-card__amount {
+        font-size: 50px;
+    }
+
+    .pricing-card__features {
+        gap: 13px;
+    }
+
+    .pricing-card__features li {
+        font-size: 13px;
+    }
+
 }
 
-.pricing-leave-start {
-    opacity: 1;
 
-    transform:
-        translate3d(0, 0, 0);
-}
-
-.pricing-leave-end {
-    opacity: 0;
-
-    transform:
-        translate3d(0, -6px, 0);
-}
-
-
-/* -------------------------------------------------------------
-   Mobile
-   ------------------------------------------------------------- */
+/* =============================================================
+   MOBILE
+   ============================================================= */
 
 @media (max-width: 767px) {
 
@@ -3276,11 +3353,34 @@ html {
 
     .pricing-header {
         margin-bottom: 40px;
+        padding: 0 10px;
     }
 
     .pricing-header h2 {
         font-size: 46px;
         letter-spacing: -2px;
+    }
+
+    .pricing-header p {
+        font-size: 15px;
+    }
+
+    .pricing-switch-wrapper {
+        margin-bottom: 40px;
+    }
+
+    .pricing-switch {
+        width: 240px;
+        height: 54px;
+    }
+
+    /*
+     * On mobile, each pricing group still slides horizontally,
+     * but its three cards stack vertically.
+     */
+    .pricing-grid {
+        grid-template-columns: 1fr;
+        gap: 18px;
     }
 
     .pricing-card {
@@ -3296,28 +3396,84 @@ html {
         font-size: 52px;
     }
 
-    .pricing-grid {
-        min-height: 600px;
+    .pricing-card__divider {
+        margin: 30px 0 24px;
     }
+
+    .pricing-card__features {
+        gap: 14px;
+        margin-bottom: 28px;
+    }
+
+    .pricing-monthly-intro {
+        margin-bottom: 28px;
+        padding: 0 12px;
+    }
+
+    .pricing-monthly-intro p {
+        font-size: 13px;
+    }
+
+     .pricing-card__title {
+        font-size: 28px;
+        gap: 8px;
+    }
+
+    .pricing-card__badge {
+        padding: 4px 8px;
+        font-size: 7px;
+    }
+
 }
 
 
-/* -------------------------------------------------------------
-   Reduced Motion
-   ------------------------------------------------------------- */
+/* =============================================================
+   VERY SMALL MOBILE
+   ============================================================= */
+
+@media (max-width: 480px) {
+
+    .pricing-section {
+        padding: 80px 0;
+    }
+
+    .pricing-header h2 {
+        font-size: 40px;
+    }
+
+    .pricing-card {
+        padding: 24px;
+    }
+
+    .pricing-card h3 {
+        font-size: 25px;
+    }
+
+    .pricing-card__amount {
+        font-size: 46px;
+        letter-spacing: -2px;
+    }
+
+    .pricing-card__currency {
+        font-size: 19px;
+    }
+
+}
+
+
+/* =============================================================
+   REDUCED MOTION
+   ============================================================= */
 
 @media (prefers-reduced-motion: reduce) {
 
     .pricing-switch__pill,
     .pricing-switch__button,
+    .pricing-slider__track,
     .pricing-card__button {
         transition: none !important;
     }
 
-    .pricing-enter,
-    .pricing-leave {
-        transition: none !important;
-    }
 }
 
 /* Projects index css */
