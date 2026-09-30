@@ -1351,7 +1351,7 @@
                                     <div class="border-t border-zinc-200 p-4 sm:p-6 dark:border-zinc-800">
                                         <div class="overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-700! dark:border-zinc-800 dark:bg-zinc-950/50!">
                                             <div class="border-b border-zinc-200 px-4 py-3.5 dark:border-zinc-800">
-                                                <div class="flex items-center justify-between gap-3">
+                                                <div class="flex items-center justify-between gap-3 bg-gray-950">
                                                     <div>
                                                         <div class="text-sm font-semibold text-zinc-900 dark:text-white">
                                                             Customer signature
@@ -1708,51 +1708,91 @@
                     SIGNATURE SUMMARY
                 ========================================================= --}}
                 @if ($hasSignature)
-                    <section class="overflow-hidden rounded-[26px] border border-sky-200/80 bg-white shadow-[0_18px_50px_-35px_rgba(14,165,233,.25)] dark:border-sky-500/15 dark:bg-[#141218]">
-                        <div class="border-b border-sky-100 px-5 py-4 dark:border-sky-500/10">
-                            <div class="flex items-center gap-3">
-                                <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300">
-                                    <flux:icon.pencil class="size-5" />
-                                </div>
 
-                                <div class="min-w-0">
+                <section class="overflow-hidden rounded-[26px] border border-sky-200/80 bg-white shadow-[0_18px_50px_-35px_rgba(14,165,233,.25)] dark:border-sky-500/15 dark:bg-[#141218]">
+
+                    <div class="border-b border-sky-100 px-5 py-4 dark:border-sky-500/10">
+
+                        <div class="flex items-center gap-3">
+
+                            <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300">
+                                <flux:icon.pencil class="size-5" />
+                            </div>
+
+                            <div class="min-w-0 flex-1">
+
+                                <div class="flex flex-wrap items-center gap-2">
+
                                     <div class="text-sm font-semibold text-zinc-900 dark:text-white">
                                         Signature captured
                                     </div>
 
-                                    <div class="mt-0.5 text-xs text-zinc-400">
-                                        Signed invoice agreement
-                                    </div>
+                                    <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                                        <span class="size-1.5 rounded-full bg-emerald-500"></span>
+                                        Signed
+                                    </span>
+
                                 </div>
+
+                                <div class="mt-1 flex items-center gap-1.5 text-xs text-zinc-400 dark:text-zinc-500">
+
+                                    <flux:icon.calendar-days class="size-3.5 shrink-0" />
+
+                                    <span>Signed</span>
+
+                                    <time
+                                        datetime="{{ $invoice->signature_signed_at?->utc()->toIso8601String() }}"
+                                        x-data
+                                        x-init="
+                                            const date = new Date($el.dateTime);
+
+                                            $el.textContent = new Intl.DateTimeFormat(undefined, {
+                                                dateStyle: 'long',
+                                                timeStyle: 'short'
+                                            }).format(date);
+                                        "
+                                    >
+                                        {{ $invoice->signature_signed_at?->format('F j, Y g:i A') }}
+                                    </time>
+
+                                </div>
+
                             </div>
+
                         </div>
 
-                        <div class="p-4">
-                            <button
-                                type="button"
-                                x-on:click="openLightbox(@js($signatureData), 'Customer signature')"
-                                class="group flex min-h-[135px] w-full items-center justify-center overflow-hidden rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-4 transition hover:border-violet-300 hover:bg-violet-50/20 dark:border-zinc-700 dark:bg-zinc-950/50 dark:hover:border-violet-500/40"
-                            >
-                                <img
-                                    src="{{ $signatureData }}"
-                                    alt="Captured customer signature"
-                                    class="block max-h-40 max-w-full object-contain transition duration-300 group-hover:scale-[1.015]"
-                                    loading="lazy"
-                                    decoding="async"
-                                />
-                            </button>
+                    </div>
 
-                            <button
-                                type="button"
-                                x-on:click="openLightbox(@js($signatureData), 'Customer signature')"
-                                class="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs font-semibold text-zinc-600 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:text-violet-300"
-                            >
-                                <flux:icon.arrows-pointing-out class="size-4" />
-                                View full signature
-                            </button>
-                        </div>
-                    </section>
-                @endif
+                    <div class="p-4">
+
+                        <button
+                            type="button"
+                            x-on:click="openLightbox(@js($signatureData), 'Customer signature')"
+                            class="group flex min-h-[135px] w-full items-center justify-center overflow-hidden rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-4 transition hover:border-violet-300 hover:bg-violet-50/20 dark:border-zinc-700 dark:bg-zinc-950/50 dark:hover:border-violet-500/40"
+                        >
+                            <img
+                                src="{{ $signatureData }}"
+                                alt="Captured customer signature"
+                                class="block max-h-40 max-w-full object-contain transition duration-300 group-hover:scale-[1.015]"
+                                loading="lazy"
+                                decoding="async"
+                            />
+                        </button>
+
+                        <button
+                            type="button"
+                            x-on:click="openLightbox(@js($signatureData), 'Customer signature')"
+                            class="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs font-semibold text-zinc-600 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:text-violet-300"
+                        >
+                            <flux:icon.arrows-pointing-out class="size-4" />
+                            View full signature
+                        </button>
+
+                    </div>
+
+                </section>
+
+            @endif
 
                 {{-- ========================================================
                     ACTIVITY
