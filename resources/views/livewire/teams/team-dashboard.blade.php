@@ -1,118 +1,65 @@
 <div class="dashboard-shell">
 
     @php
-        $grossProfitDisplay = '$' . number_format(
-            ($grossProfit ?? 0) / 100,
-            2
-        );
+        $grossProfitDisplay = '$' . number_format(($grossProfit ?? 0) / 100, 2);
 
-        $processingFeesDisplay = '$' . number_format(
-            abs(($processingFees ?? 0) / 100),
-            2
-        );
+        $processingFeesDisplay = '$' . number_format(abs(($processingFees ?? 0) / 100), 2);
 
-        $netProfitDisplay = '$' . number_format(
-            ($netProfit ?? 0) / 100,
-            2
-        );
+        $netProfitDisplay = '$' . number_format(($netProfit ?? 0) / 100, 2);
 
-        $pabloCommissionDisplay = '$' . number_format(
-            ($pabloCommission ?? 0) / 100,
-            2
-        );
+        $pabloCommissionDisplay = '$' . number_format(($pabloCommission ?? 0) / 100, 2);
 
-        $ownerShareDisplay = '$' . number_format(
-            ($ownerShare ?? $khaledShare ?? 0) / 100,
-            2
-        );
+        $ownerShareDisplay = '$' . number_format(($ownerShare ?? ($khaledShare ?? 0)) / 100, 2);
 
-        $partnerShareDisplay = '$' . number_format(
-            ($partnerShare ?? $karamShare ?? 0) / 100,
-            2
-        );
+        $partnerShareDisplay = '$' . number_format(($partnerShare ?? ($karamShare ?? 0)) / 100, 2);
 
-        $pabloRateDisplay = number_format(
-            (($pabloRate ?? 0) * 100),
-            0
-        ) . '%';
+        $pabloRateDisplay = number_format(($pabloRate ?? 0) * 100, 0) . '%';
 
-        $teamShareAfterPabloDisplay = '$' . number_format(
-            ($teamShareAfterPablo ?? 0) / 100,
-            2
-        );
+        $teamShareAfterPabloDisplay = '$' . number_format(($teamShareAfterPablo ?? 0) / 100, 2);
 
-        $distributionTotalDisplay = '$' . number_format(
-            (
-                ($pabloCommission ?? 0)
-                + ($khaledShare ?? $ownerShare ?? 0)
-                + ($karamShare ?? $partnerShare ?? 0)
-            ) / 100,
-            2
-        );
+        $distributionTotalDisplay =
+            '$' .
+            number_format(
+                (($pabloCommission ?? 0) +
+                    ($khaledShare ?? ($ownerShare ?? 0)) +
+                    ($karamShare ?? ($partnerShare ?? 0))) /
+                    100,
+                2,
+            );
 
-        $lossDisplay = '$' . number_format(
-            ($losses ?? 0) / 100,
-            2
-        );
+        $lossDisplay = '$' . number_format(($losses ?? 0) / 100, 2);
 
-        $mrrDisplay = '$' . number_format(
-            ($mrr ?? 0) / 100,
-            2
-        );
+        $mrrDisplay = '$' . number_format(($mrr ?? 0) / 100, 2);
 
-        $arrDisplay = '$' . number_format(
-            ($arr ?? 0) / 100,
-            2
-        );
+        $arrDisplay = '$' . number_format(($arr ?? 0) / 100, 2);
 
-        $grossMarginDisplay = number_format(
-            ($grossMarginPercentage ?? 0),
-            2
-        ) . '%';
+        $grossMarginDisplay = number_format($grossMarginPercentage ?? 0, 2) . '%';
 
-        $highestCustomerName =
-            $highestProfitingCustomer['name']
-            ?? 'No customer data';
+        $highestCustomerName = $highestProfitingCustomer['name'] ?? 'No customer data';
 
-        $highestCustomerAmount =
-            isset($highestProfitingCustomer['amount'])
-            ? '$' . number_format(
-                $highestProfitingCustomer['amount'] / 100,
-                2
-            )
+        $highestCustomerAmount = isset($highestProfitingCustomer['amount'])
+            ? '$' . number_format($highestProfitingCustomer['amount'] / 100, 2)
             : '$0.00';
 
-        $revenueLabels = collect(
-            $monthlyRevenue ?? []
-        )
+        $revenueLabels = collect($monthlyRevenue ?? [])
             ->pluck('month')
             ->values()
             ->all();
 
-        $revenueValues = collect(
-            $monthlyRevenue ?? []
-        )
+        $revenueValues = collect($monthlyRevenue ?? [])
             ->pluck('value')
-            ->map(
-                fn ($value) => (int) $value
-            )
+            ->map(fn($value) => (int) $value)
             ->values()
             ->all();
 
-        $customerChartLabels = collect(
-            $customerRevenue ?? []
-        )
+        $customerChartLabels = collect($customerRevenue ?? [])
             ->pluck('name')
             ->values()
             ->all();
 
-        $customerChartValues = collect(
-            $customerRevenue ?? []
-        )
+        $customerChartValues = collect($customerRevenue ?? [])
             ->pluck('amount')
-            ->map(
-                fn ($value) => (int) $value
-            )
+            ->map(fn($value) => (int) $value)
             ->values()
             ->all();
     @endphp
@@ -141,39 +88,136 @@
         </div>
 
 
-        <div class="dashboard-filter-wrap">
-
-            <label for="dashboard-filter">
+        <div class="dashboard-filter-wrap" x-data="dashboardDatePicker()" x-init="init()">
+            <label for="dashboard-filter" class="dashboard-filter-label">
                 Reporting period
             </label>
 
-            <select
-                id="dashboard-filter"
-                class="metric-select"
-                wire:change="setFilter($event.target.value)"
-            >
-                <option
-                    value="max"
-                    @selected($filter === 'max')
-                >
-                    All Time
-                </option>
+            <div class="dashboard-filter-control">
 
-                <option
-                    value="mtd"
-                    @selected($filter === 'mtd')
-                >
-                    Month to Date
-                </option>
+                <div class="dashboard-select-shell">
 
-                <option
-                    value="ytd"
-                    @selected($filter === 'ytd')
-                >
-                    Year to Date
-                </option>
-            </select>
+                    <select id="dashboard-filter" class="metric-select dashboard-period-select"
+                        wire:change="setFilter($event.target.value)"
+                        x-on:change="handleFilterChange($event.target.value)">
+                        <option value="max">
+                            All Time
+                        </option>
 
+                        <option value="mtd">
+                            Month to Date
+                        </option>
+
+                        <option value="3m">
+                            Last 3 Months
+                        </option>
+
+                        <option value="6m">
+                            Last 6 Months
+                        </option>
+
+                        <option value="ytd">
+                            Year to Date
+                        </option>
+
+                        <option value="custom">
+                            Custom Range
+                        </option>
+                    </select>
+
+                    <svg class="dashboard-select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6" />
+                    </svg>
+
+                </div>
+
+                {{-- Custom range picker --}}
+
+                <div x-show="showCustom" x-cloak x-transition:enter="custom-range-enter"
+                    x-transition:enter-start="custom-range-enter-start" x-transition:enter-end="custom-range-enter-end"
+                    class="custom-range-panel">
+
+                    <div class="custom-range-header">
+
+                        <div>
+                            <span class="custom-range-eyebrow">
+                                CUSTOM REPORTING PERIOD
+                            </span>
+
+                            <h4>
+                                Choose your date range
+                            </h4>
+                        </div>
+
+                        <button type="button" class="custom-range-close" x-on:click="closeCustom()"
+                            aria-label="Close date picker">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+
+                    </div>
+
+                    <div class="custom-range-fields">
+
+                        <div class="custom-date-field">
+
+                            <span>
+                                FROM
+                            </span>
+
+                            <input type="date" x-model="startDate" x-on:change="datesChanged()">
+
+                        </div>
+
+                        <div class="custom-range-arrow">
+                            →
+                        </div>
+
+                        <div class="custom-date-field">
+
+                            <span>
+                                TO
+                            </span>
+
+                            <input type="date" x-model="endDate" x-on:change="datesChanged()">
+
+                        </div>
+
+                    </div>
+
+                    <div x-show="dateError" x-transition class="custom-range-error">
+                        Please choose a valid date range.
+                    </div>
+
+                    <div class="custom-range-footer">
+
+                        <div class="custom-range-preview">
+
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M8 7V3m8 4V3m-9 4h10m-9 5h4m-4 4h7M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z" />
+                            </svg>
+
+                            <span x-text="formattedRange"></span>
+
+                        </div>
+
+                        <button type="button" class="custom-range-apply" x-on:click="applyRange()"
+                            x-bind:disabled="!canApply">
+                            Apply Range
+
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6 6 6-6 6" />
+                            </svg>
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
         </div>
 
     </div>
@@ -244,28 +288,25 @@
 
         <article class="metric-card">
 
-        <div class="metric-card-top">
-            <span class="metric-label">
-                Stripe fees
-            </span>
+            <div class="metric-card-top">
+                <span class="metric-label">
+                    Stripe fees
+                </span>
 
-            <div class="metric-icon metric-icon-orange">
-                %
+                <div class="metric-icon metric-icon-orange">
+                    %
+                </div>
             </div>
-        </div>
 
-        <div
-            class="metric-value"
-            style="{{ ($processingFees ?? 0) != 0 ? 'color: #ff4747;' : '' }}"
-        >
-            {{ ($processingFees ?? 0) != 0 ? '-' : '' }}{{ $processingFeesDisplay }}
-        </div>
+            <div class="metric-value" style="{{ ($processingFees ?? 0) != 0 ? 'color: #ff4747;' : '' }}">
+                {{ ($processingFees ?? 0) != 0 ? '-' : '' }}{{ $processingFeesDisplay }}
+            </div>
 
-        <div class="metric-description">
-            Payment processing costs
-        </div>
+            <div class="metric-description">
+                Payment processing costs
+            </div>
 
-    </article>
+        </article>
 
 
         <article class="metric-card">
@@ -312,7 +353,7 @@
             </div>
 
             <div class="metric-description">
-              (NET) Monthly recurring revenue
+                (NET) Monthly recurring revenue
             </div>
 
         </article>
@@ -337,7 +378,7 @@
             </div>
 
             <div class="metric-description">
-              (NET)  Annualized recurring revenue
+                (NET) Annualized recurring revenue
             </div>
 
         </article>
@@ -433,10 +474,7 @@
             </div>
 
             <div class="secondary-value">
-                ${{ number_format(
-                    ($averageInvoiceValue ?? 0) / 100,
-                    2
-                ) }}
+                ${{ number_format(($averageInvoiceValue ?? 0) / 100, 2) }}
             </div>
 
         </article>
@@ -449,10 +487,7 @@
             </div>
 
             <div class="secondary-value">
-                ${{ number_format(
-                    ($subscriptionRevenue ?? 0) / 100,
-                    2
-                ) }}
+                ${{ number_format(($subscriptionRevenue ?? 0) / 100, 2) }}
             </div>
 
         </article>
@@ -465,10 +500,7 @@
             </div>
 
             <div class="secondary-value">
-                ${{ number_format(
-                    ($oneTimeRevenue ?? 0) / 100,
-                    2
-                ) }}
+                ${{ number_format(($oneTimeRevenue ?? 0) / 100, 2) }}
             </div>
 
         </article>
@@ -594,13 +626,9 @@
                 <div class="distribution-recipient-rule">
 
                     @if (($grossProfit ?? 0) < 200000)
-
                         Gross revenue below $2,000
-
                     @else
-
                         Gross revenue of $2,000 or more
-
                     @endif
 
                 </div>
@@ -727,11 +755,7 @@
 
             </div>
 
-            <div
-                id="revenueChart"
-                class="chart-container"
-                wire:ignore
-            ></div>
+            <div id="revenueChart" class="chart-container" wire:ignore></div>
 
         </article>
 
@@ -759,8 +783,7 @@
             </div>
 
 
-            @if(empty($customerRevenue))
-
+            @if (empty($customerRevenue))
                 <div class="chart-empty">
 
                     <div class="empty-icon">
@@ -776,15 +799,8 @@
                     </span>
 
                 </div>
-
             @else
-
-                <div
-                    id="customerChart"
-                    class="chart-container"
-                    wire:ignore
-                ></div>
-
+                <div id="customerChart" class="chart-container" wire:ignore></div>
             @endif
 
         </article>
@@ -821,11 +837,7 @@
 
         <div class="donut-layout">
 
-            <div
-                id="donutChart"
-                class="donut-chart"
-                wire:ignore
-            ></div>
+            <div id="donutChart" class="donut-chart" wire:ignore></div>
 
 
             <div class="donut-legend">
@@ -841,10 +853,7 @@
                         </strong>
 
                         <span>
-                            ${{ number_format(
-                                ($subscriptionRevenue ?? 0) / 100,
-                                2
-                            ) }}
+                            ${{ number_format(($subscriptionRevenue ?? 0) / 100, 2) }}
                         </span>
 
                     </div>
@@ -863,10 +872,7 @@
                         </strong>
 
                         <span>
-                            ${{ number_format(
-                                ($oneTimeRevenue ?? 0) / 100,
-                                2
-                            ) }}
+                            ${{ number_format(($oneTimeRevenue ?? 0) / 100, 2) }}
                         </span>
 
                     </div>
@@ -885,7 +891,6 @@
     ========================================================== --}}
 
     <style>
-
         .dashboard-shell {
             --dashboard-bg: #f5f7fb;
             --dashboard-surface: #ffffff;
@@ -1038,6 +1043,451 @@
             font-weight: 700;
             letter-spacing: 0.05em;
             text-transform: uppercase;
+        }
+
+        /* ==========================================================================
+   Dashboard Reporting Period
+   ========================================================================== */
+
+        .dashboard-filter-wrap {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .dashboard-filter-label {
+            color: var(--text-secondary, #8b8f98);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .dashboard-filter-control {
+            position: relative;
+        }
+
+        .dashboard-select-shell {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+
+        .dashboard-period-select {
+            width: 100%;
+            height: 46px;
+            padding: 0 42px 0 42px;
+
+            appearance: none;
+            -webkit-appearance: none;
+
+            border: 1px solid rgba(139, 92, 246, 0.25);
+            border-radius: 13px;
+
+            background:
+                linear-gradient(135deg,
+                    rgba(139, 92, 246, 0.08),
+                    rgba(139, 92, 246, 0.025));
+
+            color: var(--text-primary, #f5f5f5);
+
+            font-size: 14px;
+            font-weight: 600;
+
+            outline: none;
+
+            cursor: pointer;
+
+            transition:
+                border-color 180ms ease,
+                box-shadow 180ms ease,
+                background 180ms ease;
+        }
+
+        .dashboard-period-select:hover {
+            border-color: rgba(139, 92, 246, 0.5);
+        }
+
+        .dashboard-period-select:focus {
+            border-color: #8b5cf6;
+
+            box-shadow:
+                0 0 0 3px rgba(139, 92, 246, 0.12),
+                0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .dashboard-select-chevron {
+            position: absolute;
+            right: 14px;
+            width: 16px;
+            height: 16px;
+            color: #8b8f98;
+            pointer-events: none;
+        }
+
+
+        /* ==========================================================================
+   Custom Range Panel
+   ========================================================================== */
+
+        .custom-range-panel {
+            position: absolute;
+            z-index: 100;
+
+            top: calc(100% + 10px);
+            right: 0;
+
+            width: min(460px, calc(100vw - 32px));
+
+            padding: 20px;
+
+            border: 1px solid rgba(139, 92, 246, 0.22);
+            border-radius: 20px;
+
+            background:
+                linear-gradient(145deg,
+                    rgba(25, 25, 32, 0.98),
+                    rgba(16, 16, 21, 0.98));
+
+            box-shadow:
+                0 25px 70px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.025),
+                0 0 45px rgba(139, 92, 246, 0.08);
+
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+        }
+
+        .custom-range-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+
+            margin-bottom: 20px;
+        }
+
+        .custom-range-eyebrow {
+            display: block;
+
+            margin-bottom: 5px;
+
+            color: #8b5cf6;
+
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+        }
+
+        .custom-range-header h4 {
+            margin: 0;
+
+            color: #fff;
+
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        .custom-range-close {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            width: 32px;
+            height: 32px;
+
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+
+            background: rgba(255, 255, 255, 0.035);
+
+            color: #8b8f98;
+
+            cursor: pointer;
+
+            transition:
+                background 160ms ease,
+                color 160ms ease,
+                border-color 160ms ease;
+        }
+
+        .custom-range-close svg {
+            width: 15px;
+            height: 15px;
+        }
+
+        .custom-range-close:hover {
+            border-color: rgba(139, 92, 246, 0.35);
+
+            background: rgba(139, 92, 246, 0.1);
+
+            color: #fff;
+        }
+
+
+        /* ==========================================================================
+   Date Fields
+   ========================================================================== */
+
+        .custom-range-fields {
+            display: grid;
+
+            grid-template-columns:
+                minmax(0, 1fr) auto minmax(0, 1fr);
+
+            align-items: center;
+
+            gap: 10px;
+        }
+
+        .custom-date-field {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .custom-date-field>span {
+            color: #777b85;
+
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+        }
+
+        .custom-date-field input {
+            width: 100%;
+            height: 45px;
+
+            padding: 0 11px;
+
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-radius: 11px;
+
+            background: rgba(255, 255, 255, 0.045);
+
+            color: #fff;
+
+            font-size: 13px;
+            font-weight: 600;
+
+            outline: none;
+
+            color-scheme: dark;
+
+            transition:
+                border-color 160ms ease,
+                background 160ms ease,
+                box-shadow 160ms ease;
+        }
+
+        .custom-date-field input:hover {
+            border-color: rgba(139, 92, 246, 0.35);
+        }
+
+        .custom-date-field input:focus {
+            border-color: #8b5cf6;
+
+            background: rgba(139, 92, 246, 0.06);
+
+            box-shadow:
+                0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+
+        .custom-range-arrow {
+            margin-top: 19px;
+
+            color: #676b75;
+
+            font-size: 18px;
+        }
+
+
+        /* ==========================================================================
+   Error
+   ========================================================================== */
+
+        .custom-range-error {
+            margin-top: 10px;
+
+            padding: 9px 11px;
+
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 9px;
+
+            background: rgba(239, 68, 68, 0.06);
+
+            color: #f87171;
+
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+
+        /* ==========================================================================
+   Footer
+   ========================================================================== */
+
+        .custom-range-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 14px;
+
+            margin-top: 20px;
+            padding-top: 16px;
+
+            border-top: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .custom-range-preview {
+            display: flex;
+            align-items: center;
+
+            min-width: 0;
+
+            gap: 8px;
+
+            color: #8f939d;
+
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .custom-range-preview svg {
+            flex: 0 0 auto;
+
+            width: 16px;
+            height: 16px;
+
+            color: #8b5cf6;
+        }
+
+        .custom-range-preview span {
+            overflow: hidden;
+
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .custom-range-apply {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            flex: 0 0 auto;
+
+            gap: 7px;
+
+            height: 39px;
+
+            padding: 0 14px;
+
+            border: 0;
+            border-radius: 10px;
+
+            background:
+                linear-gradient(135deg,
+                    #8b5cf6,
+                    #7c3aed);
+
+            color: #fff;
+
+            font-size: 12px;
+            font-weight: 700;
+
+            cursor: pointer;
+
+            box-shadow:
+                0 7px 20px rgba(124, 58, 237, 0.2);
+
+            transition:
+                transform 160ms ease,
+                box-shadow 160ms ease,
+                opacity 160ms ease;
+        }
+
+        .custom-range-apply svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .custom-range-apply:hover:not(:disabled) {
+            transform: translateY(-1px);
+
+            box-shadow:
+                0 10px 26px rgba(124, 58, 237, 0.3);
+        }
+
+        .custom-range-apply:disabled {
+            opacity: 0.4;
+
+            cursor: not-allowed;
+
+            box-shadow: none;
+        }
+
+
+        /* ==========================================================================
+   Animation
+   ========================================================================== */
+
+        .custom-range-enter {
+            transition:
+                opacity 180ms ease,
+                transform 180ms ease;
+        }
+
+        .custom-range-enter-start {
+            opacity: 0;
+
+            transform: translateY(-7px) scale(0.98);
+        }
+
+        .custom-range-enter-end {
+            opacity: 1;
+
+            transform: translateY(0) scale(1);
+        }
+
+
+        /* ==========================================================================
+   Mobile
+   ========================================================================== */
+
+        @media (max-width: 640px) {
+            .dashboard-period-select {
+                min-width: 180px;
+            }
+
+            .custom-range-panel {
+                position: fixed;
+
+                top: auto;
+                right: 16px;
+                bottom: 16px;
+                left: 16px;
+
+                width: auto;
+            }
+
+            .custom-range-fields {
+                grid-template-columns: 1fr;
+            }
+
+            .custom-range-arrow {
+                display: none;
+            }
+
+            .custom-range-footer {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .custom-range-apply {
+                width: 100%;
+            }
         }
 
 
@@ -1354,8 +1804,7 @@
             display: grid;
 
             grid-template-columns:
-                minmax(0, 1.35fr)
-                minmax(0, 1fr);
+                minmax(0, 1.35fr) minmax(0, 1fr);
 
             gap: 14px;
 
@@ -1497,8 +1946,7 @@
             display: grid;
 
             grid-template-columns:
-                minmax(240px, 1fr)
-                minmax(220px, 0.8fr);
+                minmax(240px, 1fr) minmax(220px, 0.8fr);
 
             align-items: center;
 
@@ -1624,9 +2072,7 @@
             display: grid;
 
             grid-template-columns:
-                minmax(0, 1fr)
-                auto
-                minmax(0, 1fr);
+                minmax(0, 1fr) auto minmax(0, 1fr);
 
             align-items: center;
 
@@ -1813,22 +2259,19 @@
         }
 
 
-        .distribution-recipient-pablo
-            .distribution-recipient-icon {
+        .distribution-recipient-pablo .distribution-recipient-icon {
             background: var(--dashboard-warning-soft);
             color: var(--dashboard-warning);
         }
 
 
-        .distribution-recipient-khaled
-            .distribution-recipient-icon {
+        .distribution-recipient-khaled .distribution-recipient-icon {
             background: var(--dashboard-primary-soft);
             color: var(--dashboard-primary);
         }
 
 
-        .distribution-recipient-karam
-            .distribution-recipient-icon {
+        .distribution-recipient-karam .distribution-recipient-icon {
             background: var(--dashboard-blue-soft);
             color: var(--dashboard-blue);
         }
@@ -1977,7 +2420,6 @@
             }
 
         }
-
     </style>
 
 
@@ -2056,30 +2498,30 @@
 
 
                     function chartTheme() {
-                        return isDarkMode()
-                            ? 'dark'
-                            : 'light';
+                        return isDarkMode() ?
+                            'dark' :
+                            'light';
                     }
 
 
                     function chartTextColor() {
-                        return isDarkMode()
-                            ? '#94a3b8'
-                            : '#64748b';
+                        return isDarkMode() ?
+                            '#94a3b8' :
+                            '#64748b';
                     }
 
 
                     function chartPrimaryTextColor() {
-                        return isDarkMode()
-                            ? '#f1f5f9'
-                            : '#0f172a';
+                        return isDarkMode() ?
+                            '#f1f5f9' :
+                            '#0f172a';
                     }
 
 
                     function chartGridColor() {
-                        return isDarkMode()
-                            ? 'rgba(148, 163, 184, 0.14)'
-                            : '#e5e7eb';
+                        return isDarkMode() ?
+                            'rgba(148, 163, 184, 0.14)' :
+                            '#e5e7eb';
                     }
 
 
@@ -2092,8 +2534,8 @@
                     function ensureApexCharts() {
 
                         if (
-                            typeof window.ApexCharts
-                            !== 'undefined'
+                            typeof window.ApexCharts !==
+                            'undefined'
                         ) {
                             return Promise.resolve();
                         }
@@ -2178,53 +2620,43 @@
                         dashboardData = {
 
                             revenue: {
-                                labels:
-                                    Array.isArray(
+                                labels: Array.isArray(
                                         data.revenue?.labels
-                                    )
-                                        ? data.revenue.labels
-                                        : [],
+                                    ) ?
+                                    data.revenue.labels : [],
 
-                                values:
-                                    Array.isArray(
+                                values: Array.isArray(
                                         data.revenue?.values
-                                    )
-                                        ? data.revenue.values
-                                        : [],
+                                    ) ?
+                                    data.revenue.values : [],
                             },
 
 
                             customers: {
-                                labels:
-                                    Array.isArray(
+                                labels: Array.isArray(
                                         data.customers?.labels
-                                    )
-                                        ? data.customers.labels
-                                        : [],
+                                    ) ?
+                                    data.customers.labels : [],
 
-                                values:
-                                    Array.isArray(
+                                values: Array.isArray(
                                         data.customers?.values
-                                    )
-                                        ? data.customers.values
-                                        : [],
+                                    ) ?
+                                    data.customers.values : [],
                             },
 
 
                             donut: {
-                                subscription:
-                                    Number(
-                                        data.donut
-                                            ?.subscription
-                                            ?? 0
-                                    ),
+                                subscription: Number(
+                                    data.donut
+                                    ?.subscription ??
+                                    0
+                                ),
 
-                                oneTime:
-                                    Number(
-                                        data.donut
-                                            ?.oneTime
-                                            ?? 0
-                                    ),
+                                oneTime: Number(
+                                    data.donut
+                                    ?.oneTime ??
+                                    0
+                                ),
                             },
 
                         };
@@ -2282,9 +2714,9 @@
 
 
                         if (
-                            !element
-                            || typeof window.ApexCharts
-                                === 'undefined'
+                            !element ||
+                            typeof window.ApexCharts ===
+                            'undefined'
                         ) {
                             return;
                         }
@@ -2297,14 +2729,12 @@
 
                         const labels =
                             dashboardData.revenue
-                                ?.labels
-                                ?? [];
+                            ?.labels ?? [];
 
 
                         const values =
                             dashboardData.revenue
-                                ?.values
-                                ?? [];
+                            ?.values ?? [];
 
 
                         const textColor =
@@ -2317,8 +2747,7 @@
 
                         const chart =
                             new window.ApexCharts(
-                                element,
-                                {
+                                element, {
 
                                     chart: {
                                         type: 'area',
@@ -2332,11 +2761,9 @@
                                             enabled: false,
                                         },
 
-                                        fontFamily:
-                                            'inherit',
+                                        fontFamily: 'inherit',
 
-                                        background:
-                                            'transparent',
+                                        background: 'transparent',
 
                                         animations: {
                                             enabled: true,
@@ -2345,40 +2772,32 @@
 
 
                                     theme: {
-                                        mode:
-                                            chartTheme(),
+                                        mode: chartTheme(),
                                     },
 
 
-                                    series: [
-                                        {
-                                            name:
-                                                'Revenue',
+                                    series: [{
+                                        name: 'Revenue',
 
-                                            data:
-                                                values.map(
-                                                    value =>
-                                                        Number(
-                                                            value
-                                                        ) / 100
-                                                ),
-                                        },
-                                    ],
+                                        data: values.map(
+                                            value =>
+                                            Number(
+                                                value
+                                            ) / 100
+                                        ),
+                                    }, ],
 
 
                                     xaxis: {
 
-                                        categories:
-                                            labels,
+                                        categories: labels,
 
                                         labels: {
 
                                             style: {
-                                                colors:
-                                                    textColor,
+                                                colors: textColor,
 
-                                                fontSize:
-                                                    '11px',
+                                                fontSize: '11px',
                                             },
 
                                         },
@@ -2398,25 +2817,20 @@
 
                                         labels: {
 
-                                            formatter:
-                                                value =>
-                                                    '$' +
-                                                    Number(
-                                                        value
-                                                    ).toLocaleString(
-                                                        undefined,
-                                                        {
-                                                            maximumFractionDigits:
-                                                                0,
-                                                        }
-                                                    ),
+                                            formatter: value =>
+                                                '$' +
+                                                Number(
+                                                    value
+                                                ).toLocaleString(
+                                                    undefined, {
+                                                        maximumFractionDigits: 0,
+                                                    }
+                                                ),
 
                                             style: {
-                                                colors:
-                                                    textColor,
+                                                colors: textColor,
 
-                                                fontSize:
-                                                    '11px',
+                                                fontSize: '11px',
                                             },
 
                                         },
@@ -2425,16 +2839,15 @@
 
 
                                     colors: [
-                                        isDarkMode()
-                                            ? '#a78bfa'
-                                            : '#7c3aed',
+                                        isDarkMode() ?
+                                        '#a78bfa' :
+                                        '#7c3aed',
                                     ],
 
 
                                     stroke: {
 
-                                        curve:
-                                            'smooth',
+                                        curve: 'smooth',
 
                                         width: 3,
 
@@ -2443,21 +2856,16 @@
 
                                     fill: {
 
-                                        type:
-                                            'gradient',
+                                        type: 'gradient',
 
                                         gradient: {
 
-                                            shadeIntensity:
-                                                1,
+                                            shadeIntensity: 1,
 
-                                            opacityFrom:
-                                                isDarkMode()
-                                                    ? 0.24
-                                                    : 0.28,
+                                            opacityFrom: isDarkMode() ?
+                                                0.24 : 0.28,
 
-                                            opacityTo:
-                                                0.03,
+                                            opacityTo: 0.03,
 
                                             stops: [
                                                 0,
@@ -2471,11 +2879,9 @@
 
                                     grid: {
 
-                                        borderColor:
-                                            gridColor,
+                                        borderColor: gridColor,
 
-                                        strokeDashArray:
-                                            4,
+                                        strokeDashArray: 4,
 
                                         xaxis: {
 
@@ -2495,26 +2901,21 @@
 
                                     tooltip: {
 
-                                        theme:
-                                            chartTheme(),
+                                        theme: chartTheme(),
 
                                         y: {
 
-                                            formatter:
-                                                value =>
-                                                    '$' +
-                                                    Number(
-                                                        value
-                                                    ).toLocaleString(
-                                                        undefined,
-                                                        {
-                                                            minimumFractionDigits:
-                                                                2,
+                                            formatter: value =>
+                                                '$' +
+                                                Number(
+                                                    value
+                                                ).toLocaleString(
+                                                    undefined, {
+                                                        minimumFractionDigits: 2,
 
-                                                            maximumFractionDigits:
-                                                                2,
-                                                        }
-                                                    ),
+                                                        maximumFractionDigits: 2,
+                                                    }
+                                                ),
 
                                         },
 
@@ -2522,8 +2923,7 @@
 
 
                                     noData: {
-                                        text:
-                                            'No revenue data',
+                                        text: 'No revenue data',
                                     },
 
                                 }
@@ -2552,9 +2952,9 @@
 
 
                         if (
-                            !element
-                            || typeof window.ApexCharts
-                                === 'undefined'
+                            !element ||
+                            typeof window.ApexCharts ===
+                            'undefined'
                         ) {
                             return;
                         }
@@ -2567,22 +2967,20 @@
 
                         const categories =
                             dashboardData.customers
-                                ?.labels
-                                ?? [];
+                            ?.labels ?? [];
 
 
                         const values =
                             dashboardData.customers
-                                ?.values
-                                ?? [];
+                            ?.values ?? [];
 
 
                         const chartValues =
                             values.map(
                                 value =>
-                                    Number(
-                                        value
-                                    ) / 100
+                                Number(
+                                    value
+                                ) / 100
                             );
 
 
@@ -2596,26 +2994,21 @@
 
                         const chart =
                             new window.ApexCharts(
-                                element,
-                                {
+                                element, {
 
                                     chart: {
 
-                                        type:
-                                            'bar',
+                                        type: 'bar',
 
-                                        height:
-                                            320,
+                                        height: 320,
 
                                         toolbar: {
                                             show: false,
                                         },
 
-                                        fontFamily:
-                                            'inherit',
+                                        fontFamily: 'inherit',
 
-                                        background:
-                                            'transparent',
+                                        background: 'transparent',
 
                                         animations: {
                                             enabled: true,
@@ -2625,34 +3018,26 @@
 
 
                                     theme: {
-                                        mode:
-                                            chartTheme(),
+                                        mode: chartTheme(),
                                     },
 
 
-                                    series: [
-                                        {
-                                            name:
-                                                'Revenue',
+                                    series: [{
+                                        name: 'Revenue',
 
-                                            data:
-                                                chartValues,
-                                        },
-                                    ],
+                                        data: chartValues,
+                                    }, ],
 
 
                                     plotOptions: {
 
                                         bar: {
 
-                                            borderRadius:
-                                                7,
+                                            borderRadius: 7,
 
-                                            horizontal:
-                                                true,
+                                            horizontal: true,
 
-                                            barHeight:
-                                                '55%',
+                                            barHeight: '55%',
 
                                         },
 
@@ -2661,39 +3046,33 @@
 
                                     colors: [
 
-                                        isDarkMode()
-                                            ? '#60a5fa'
-                                            : '#2563eb',
+                                        isDarkMode() ?
+                                        '#60a5fa' :
+                                        '#2563eb',
 
                                     ],
 
 
                                     xaxis: {
 
-                                        categories:
-                                            categories,
+                                        categories: categories,
 
                                         labels: {
 
-                                            formatter:
-                                                value =>
-                                                    '$' +
-                                                    Number(
-                                                        value
-                                                    ).toLocaleString(
-                                                        undefined,
-                                                        {
-                                                            maximumFractionDigits:
-                                                                0,
-                                                        }
-                                                    ),
+                                            formatter: value =>
+                                                '$' +
+                                                Number(
+                                                    value
+                                                ).toLocaleString(
+                                                    undefined, {
+                                                        maximumFractionDigits: 0,
+                                                    }
+                                                ),
 
                                             style: {
-                                                colors:
-                                                    textColor,
+                                                colors: textColor,
 
-                                                fontSize:
-                                                    '11px',
+                                                fontSize: '11px',
                                             },
 
                                         },
@@ -2715,11 +3094,9 @@
 
                                             style: {
 
-                                                colors:
-                                                    textColor,
+                                                colors: textColor,
 
-                                                fontSize:
-                                                    '11px',
+                                                fontSize: '11px',
 
                                             },
 
@@ -2730,11 +3107,9 @@
 
                                     grid: {
 
-                                        borderColor:
-                                            gridColor,
+                                        borderColor: gridColor,
 
-                                        strokeDashArray:
-                                            4,
+                                        strokeDashArray: 4,
 
                                     },
 
@@ -2746,26 +3121,21 @@
 
                                     tooltip: {
 
-                                        theme:
-                                            chartTheme(),
+                                        theme: chartTheme(),
 
                                         y: {
 
-                                            formatter:
-                                                value =>
-                                                    '$' +
-                                                    Number(
-                                                        value
-                                                    ).toLocaleString(
-                                                        undefined,
-                                                        {
-                                                            minimumFractionDigits:
-                                                                2,
+                                            formatter: value =>
+                                                '$' +
+                                                Number(
+                                                    value
+                                                ).toLocaleString(
+                                                    undefined, {
+                                                        minimumFractionDigits: 2,
 
-                                                            maximumFractionDigits:
-                                                                2,
-                                                        }
-                                                    ),
+                                                        maximumFractionDigits: 2,
+                                                    }
+                                                ),
 
                                         },
 
@@ -2773,8 +3143,7 @@
 
 
                                     noData: {
-                                        text:
-                                            'No customer data',
+                                        text: 'No customer data',
                                     },
 
                                 }
@@ -2803,9 +3172,9 @@
 
 
                         if (
-                            !element
-                            || typeof window.ApexCharts
-                                === 'undefined'
+                            !element ||
+                            typeof window.ApexCharts ===
+                            'undefined'
                         ) {
                             return;
                         }
@@ -2819,16 +3188,16 @@
                         const subscriptionRevenue =
                             Number(
                                 dashboardData.donut
-                                    ?.subscription
-                                    ?? 0
+                                ?.subscription ??
+                                0
                             ) / 100;
 
 
                         const oneTimeRevenue =
                             Number(
                                 dashboardData.donut
-                                    ?.oneTime
-                                    ?? 0
+                                ?.oneTime ??
+                                0
                             ) / 100;
 
 
@@ -2842,22 +3211,17 @@
 
                         const chart =
                             new window.ApexCharts(
-                                element,
-                                {
+                                element, {
 
                                     chart: {
 
-                                        type:
-                                            'donut',
+                                        type: 'donut',
 
-                                        height:
-                                            300,
+                                        height: 300,
 
-                                        fontFamily:
-                                            'inherit',
+                                        fontFamily: 'inherit',
 
-                                        background:
-                                            'transparent',
+                                        background: 'transparent',
 
                                         animations: {
                                             enabled: true,
@@ -2867,8 +3231,7 @@
 
 
                                     theme: {
-                                        mode:
-                                            chartTheme(),
+                                        mode: chartTheme(),
                                     },
 
 
@@ -2892,13 +3255,13 @@
 
                                     colors: [
 
-                                        isDarkMode()
-                                            ? '#a78bfa'
-                                            : '#7c3aed',
+                                        isDarkMode() ?
+                                        '#a78bfa' :
+                                        '#7c3aed',
 
-                                        isDarkMode()
-                                            ? '#38bdf8'
-                                            : '#0ea5e9',
+                                        isDarkMode() ?
+                                        '#38bdf8' :
+                                        '#0ea5e9',
 
                                     ],
 
@@ -2909,9 +3272,9 @@
 
                                         colors: [
 
-                                            isDarkMode()
-                                                ? '#0f172a'
-                                                : '#ffffff',
+                                            isDarkMode() ?
+                                            '#0f172a' :
+                                            '#ffffff',
 
                                         ],
 
@@ -2934,101 +3297,83 @@
 
                                             donut: {
 
-                                                size:
-                                                    '72%',
+                                                size: '72%',
 
 
                                                 labels: {
 
-                                                    show:
-                                                        true,
+                                                    show: true,
 
 
                                                     name: {
 
-                                                        show:
-                                                            true,
+                                                        show: true,
 
-                                                        color:
-                                                            textColor,
+                                                        color: textColor,
 
-                                                        fontSize:
-                                                            '12px',
+                                                        fontSize: '12px',
 
                                                     },
 
 
                                                     value: {
 
-                                                        show:
-                                                            true,
+                                                        show: true,
 
-                                                        color:
-                                                            primaryTextColor,
+                                                        color: primaryTextColor,
 
-                                                        fontSize:
-                                                            '20px',
+                                                        fontSize: '20px',
 
-                                                        fontWeight:
-                                                            700,
+                                                        fontWeight: 700,
 
 
-                                                        formatter:
-                                                            value =>
-                                                                '$' +
-                                                                Number(
-                                                                    value
-                                                                ).toLocaleString(
-                                                                    undefined,
-                                                                    {
-                                                                        maximumFractionDigits:
-                                                                            0,
-                                                                    }
-                                                                ),
+                                                        formatter: value =>
+                                                            '$' +
+                                                            Number(
+                                                                value
+                                                            ).toLocaleString(
+                                                                undefined, {
+                                                                    maximumFractionDigits: 0,
+                                                                }
+                                                            ),
 
                                                     },
 
 
                                                     total: {
 
-                                                        show:
-                                                            true,
+                                                        show: true,
 
-                                                        label:
-                                                            'Total',
+                                                        label: 'Total',
 
-                                                        color:
-                                                            textColor,
+                                                        color: textColor,
 
 
-                                                        formatter:
-                                                            w => {
+                                                        formatter: w => {
 
-                                                                const total =
-                                                                    w
-                                                                        .globals
-                                                                        .seriesTotals
-                                                                        .reduce(
-                                                                            (
-                                                                                a,
-                                                                                b
-                                                                            ) =>
-                                                                                a + b,
-                                                                            0
-                                                                        );
+                                                            const total =
+                                                                w
+                                                                .globals
+                                                                .seriesTotals
+                                                                .reduce(
+                                                                    (
+                                                                        a,
+                                                                        b
+                                                                    ) =>
+                                                                    a + b,
+                                                                    0
+                                                                );
 
 
-                                                                return '$' +
-                                                                    Number(
-                                                                        total
-                                                                    ).toLocaleString(
-                                                                        undefined,
-                                                                        {
-                                                                            maximumFractionDigits:
-                                                                                0,
-                                                                        }
-                                                                    );
-                                                            },
+                                                            return '$' +
+                                                                Number(
+                                                                    total
+                                                                ).toLocaleString(
+                                                                    undefined, {
+                                                                        maximumFractionDigits: 0,
+                                                                    }
+                                                                );
+                                                        },
 
                                                     },
 
@@ -3043,26 +3388,21 @@
 
                                     tooltip: {
 
-                                        theme:
-                                            chartTheme(),
+                                        theme: chartTheme(),
 
                                         y: {
 
-                                            formatter:
-                                                value =>
-                                                    '$' +
-                                                    Number(
-                                                        value
-                                                    ).toLocaleString(
-                                                        undefined,
-                                                        {
-                                                            minimumFractionDigits:
-                                                                2,
+                                            formatter: value =>
+                                                '$' +
+                                                Number(
+                                                    value
+                                                ).toLocaleString(
+                                                    undefined, {
+                                                        minimumFractionDigits: 2,
 
-                                                            maximumFractionDigits:
-                                                                2,
-                                                        }
-                                                    ),
+                                                        maximumFractionDigits: 2,
+                                                    }
+                                                ),
 
                                         },
 
@@ -3070,8 +3410,7 @@
 
 
                                     noData: {
-                                        text:
-                                            'No revenue data',
+                                        text: 'No revenue data',
                                     },
 
                                 }
@@ -3205,7 +3544,7 @@
             */
 
             if (
-                ! window.__teamDashboardFilterListener
+                !window.__teamDashboardFilterListener
             ) {
 
                 window.__teamDashboardFilterListener =
@@ -3217,11 +3556,11 @@
                     event => {
 
                         const data =
-                            event.detail?.data
-                            ?? null;
+                            event.detail?.data ??
+                            null;
 
 
-                        if (! data) {
+                        if (!data) {
                             return;
                         }
 
@@ -3246,7 +3585,7 @@
             */
 
             if (
-                ! window.__teamDashboardThemeObserver
+                !window.__teamDashboardThemeObserver
             ) {
 
                 window.__teamDashboardThemeObserver =
@@ -3270,8 +3609,7 @@
 
                 window.__teamDashboardThemeObserver
                     .observe(
-                        document.documentElement,
-                        {
+                        document.documentElement, {
                             attributes: true,
 
                             attributeFilter: [
@@ -3294,6 +3632,124 @@
                 .initialize();
 
         })();
+    </script>
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('dashboardDatePicker', () => ({
+                showCustom: @js($filter === 'custom'),
+
+                startDate: @js($customStartDate),
+
+                endDate: @js($customEndDate),
+
+                dateError: false,
+
+                init() {
+                    this.$watch('startDate', () => {
+                        this.validateDates();
+                    });
+
+                    this.$watch('endDate', () => {
+                        this.validateDates();
+                    });
+                },
+
+                handleFilterChange(value) {
+                    this.showCustom = value === 'custom';
+
+                    if (value !== 'custom') {
+                        this.dateError = false;
+                    }
+                },
+
+                closeCustom() {
+                    this.showCustom = false;
+
+                    const select = document.getElementById(
+                        'dashboard-filter'
+                    );
+
+                    if (select) {
+                        select.value = @js($filter);
+                    }
+                },
+
+                datesChanged() {
+                    this.validateDates();
+                },
+
+                validateDates() {
+                    this.dateError = false;
+
+                    if (!this.startDate || !this.endDate) {
+                        return false;
+                    }
+
+                    if (
+                        new Date(this.startDate) >
+                        new Date(this.endDate)
+                    ) {
+                        this.dateError = true;
+
+                        return false;
+                    }
+
+                    return true;
+                },
+
+                get canApply() {
+                    return (
+                        this.startDate &&
+                        this.endDate &&
+                        !this.dateError
+                    );
+                },
+
+                get formattedRange() {
+                    if (!this.startDate || !this.endDate) {
+                        return 'Select your dates';
+                    }
+
+                    const start = new Date(
+                        this.startDate + 'T00:00:00'
+                    );
+
+                    const end = new Date(
+                        this.endDate + 'T00:00:00'
+                    );
+
+                    const options = {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                    };
+
+                    return (
+                        start.toLocaleDateString(
+                            'en-US',
+                            options
+                        ) +
+                        ' – ' +
+                        end.toLocaleDateString(
+                            'en-US',
+                            options
+                        )
+                    );
+                },
+
+                applyRange() {
+                    if (!this.validateDates()) {
+                        return;
+                    }
+                    this.showCustom = false; // close dialog once we apply filter
+                    this.$wire.setCustomRange(
+                        this.startDate,
+                        this.endDate
+                    );
+                }
+            }));
+        });
     </script>
 
 </div>

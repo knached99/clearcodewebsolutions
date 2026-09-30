@@ -77,23 +77,47 @@ class TeamDashboardService
     {
         return in_array(
             $filter,
-            ['max', 'mtd', 'ytd'],
+            ['max', 'mtd', '3m', '6m', 'ytd', 'custom'],
             true
         )
             ? $filter
             : 'max';
     }
 
-    protected function filterDateRange(string $filter): ?array
+    protected function filterDateRange(string $filter, ?string $customStartDate = null, ?string $customEndDate = null): ?array
     {
         $filter = $this->normalizeFilter($filter);
+
+        if ($filter === 'custom') {
+            $customStartDate = $customStartDate
+                ? Carbon::parse($customStartDate)->format('Y-m-d')
+                : null;
+
+            $customEndDate = $customEndDate
+                ? Carbon::parse($customEndDate)->format('Y-m-d')
+                : null;
+        }
 
         $now = now();
 
         return match ($filter) {
+
+          // month to date
             'mtd' => [
                 $now->copy()->startOfMonth(),
                 $now->copy(),
+            ],
+
+            // last 3 months
+            '3m' => [
+                $now->copy()->startOfMonth()->submonths(2),
+                $now->copy()->endOfDay(),
+            ],
+
+            // last 6 months 
+            '6m' => [
+                $now->copy()->startOfMonth()->subMonths(5),
+                $now->copy()->endOfDay(),
             ],
 
             'ytd' => [
@@ -101,18 +125,55 @@ class TeamDashboardService
                 $now->copy(),
             ],
 
+            // custom date range 
+            'custom' => $this->customDateRange($customStartDate, $customEndDate),
+
+            // all time data
             default => null,
         };
+    }
+
+    protected function customDateRange(?string $startDate, ?string $endDate): ?array 
+    {
+        if (!$startDate || !$endDate) {
+            return null;
+        }
+
+        try {
+            $start = Carbon::createFromFormat('Y-m-d', $startDate)->startOfDay();
+            $end = Carbon::createFromFormat('Y-m-d', $endDate)->endOfDay();
+
+            // start cannot be greater than end so we return null 
+            if ($start->gt($end)) {
+                return null;
+            }
+            return [$start, $end];
+        }
+        catch (Throwable) {
+            return null;
+        }
     }
 
     protected function applyDateFilter(
         Collection|EloquentCollection $collection,
         string $filter,
-        string $dateColumn = 'created_at'
+        string $dateColumn = 'created_at',
+        ?string $customStartDate = null, 
+        ?string $customEndDate = NULL
     ): Collection|EloquentCollection {
         $startedAt = microtime(true);
 
         $filter = $this->normalizeFilter($filter);
+
+        if ($filter === 'custom') {
+            $customStartDate = $customStartDate
+                ? Carbon::parse($customStartDate)->format('Y-m-d')
+                : null;
+
+            $customEndDate = $customEndDate
+                ? Carbon::parse($customEndDate)->format('Y-m-d')
+                : null;
+        }
 
         Log::debug(
             'TeamDashboardService: applyDateFilter START',
@@ -137,7 +198,11 @@ class TeamDashboardService
             return $result;
         }
 
-        $dateRange = $this->filterDateRange($filter);
+        $dateRange = $this->filterDateRange(
+            $filter,
+            $customStartDate,
+            $customEndDate
+        );
 
         if (! $dateRange) {
             $result = $collection->values();
@@ -213,7 +278,9 @@ class TeamDashboardService
 
     public function dashboardData(
         Team $team,
-        string $filter = 'max'
+        string $filter = 'max',
+        ?string $customStartDate = null, 
+        ?string $customEndDate = null,
     ): array {
         $startedAt = microtime(true);
 
@@ -237,6 +304,16 @@ class TeamDashboardService
 
             $filter = $this->normalizeFilter($filter);
 
+            if ($filter === 'custom') {
+                $customStartDate = $customStartDate
+                    ? Carbon::parse($customStartDate)->format('Y-m-d')
+                    : null;
+
+                $customEndDate = $customEndDate
+                    ? Carbon::parse($customEndDate)->format('Y-m-d')
+                    : null;
+            }
+
             $this->logComplete(
                 'normalizeFilter',
                 $stepStartedAt,
@@ -252,7 +329,11 @@ class TeamDashboardService
             |--------------------------------------------------------------------------
             */
 
-            $dateRange = $this->filterDateRange($filter);
+            $dateRange = $this->filterDateRange(
+            $filter,
+            $customStartDate,
+            $customEndDate
+        );
 
             if ($dateRange) {
                 [$rangeStart, $rangeEnd] = $dateRange;
@@ -330,7 +411,9 @@ class TeamDashboardService
             $failedTransactions = $this->applyDateFilter(
                 $allFailedTransactions,
                 $filter,
-                'created_at'
+                'created_at',
+                $customStartDate, 
+                $customEndDate
             );
 
             $this->logComplete(
@@ -373,7 +456,9 @@ class TeamDashboardService
             $paidInvoices = $this->applyDateFilter(
                 $allPaidInvoices,
                 $filter,
-                'updated_at'
+                'updated_at',
+                $customStartDate, 
+                $customEndDate
             );
 
             $this->logComplete(
@@ -404,7 +489,9 @@ class TeamDashboardService
                 $this->applyDateFilter(
                     $allCollectedInvoices,
                     $filter,
-                    'updated_at'
+                    'updated_at',
+                    $customStartDate, 
+                    $customEndDate
                 );
 
             $this->logComplete(
@@ -489,7 +576,9 @@ class TeamDashboardService
             $successfulTransactions = $this->applyDateFilter(
                 $allSuccessfulTransactions,
                 $filter,
-                'paid_at'
+                'paid_at',
+                $customStartDate,
+                $customEndDate
             );
 
             $this->logComplete(
@@ -919,7 +1008,9 @@ class TeamDashboardService
 
             $monthlyRevenue = $this->monthlyRevenue(
                 $successfulTransactions,
-                $filter
+                $filter,
+                $customStartDate, 
+                $customEndDate
             );
 
             $this->logComplete(
@@ -1085,7 +1176,11 @@ class TeamDashboardService
                     InvoiceStatus::Paid->value
                 );
 
-            $dateRange = $this->filterDateRange($filter);
+            $dateRange = $this->filterDateRange(
+            $filter,
+            $customStartDate,
+            $customEndDate
+        );
 
             if ($dateRange) {
                 [$start, $end] = $dateRange;
@@ -1883,7 +1978,9 @@ class TeamDashboardService
 
     protected function monthlyRevenue(
         Collection $successfulTransactions,
-        string $filter = 'max'
+        string $filter = 'max',
+        ?string $customStartDate = null, 
+        ?string $customEndDate = null
     ): Collection {
         $startedAt = microtime(true);
 
@@ -1927,6 +2024,72 @@ class TeamDashboardService
             return $date->format('Y-m');
         };
 
+            /*
+|--------------------------------------------------------------------------
+| Custom / Rolling Range
+|--------------------------------------------------------------------------
+|
+| For 3m, 6m, and custom ranges, generate exactly the months
+| represented by the selected reporting period.
+|--------------------------------------------------------------------------
+*/
+
+        if (
+            in_array(
+                $filter,
+                ['3m', '6m', 'custom'],
+                true
+            )
+        ) {
+            $dateRange = $this->filterDateRange(
+                $filter,
+                $customStartDate,
+                $customEndDate
+            );
+
+            if ($dateRange) {
+                [$rangeStart, $rangeEnd] = $dateRange;
+
+                $grouped = $successfulTransactions
+                    ->groupBy($transactionMonth);
+
+                $months = collect();
+
+                $current = $rangeStart
+                    ->copy()
+                    ->startOfMonth();
+
+                $endMonth = $rangeEnd
+                    ->copy()
+                    ->startOfMonth();
+
+                while ($current->lte($endMonth)) {
+                    $monthKey = $current->format('Y-m');
+
+                    $amount = $grouped
+                        ->get(
+                            $monthKey,
+                            collect()
+                        )
+                        ->sum('amount');
+
+                    $months->push([
+                        'month' => $current->format('M Y'),
+
+                        'month_key' => $monthKey,
+
+                        'value' => (int) $amount,
+                    ]);
+
+                    $current = $current
+                        ->copy()
+                        ->addMonth()
+                        ->startOfMonth();
+                }
+
+                return $months;
+            }
+        }
         /*
         |--------------------------------------------------------------------------
         | Month To Date

@@ -1,150 +1,146 @@
-<div
-    x-data="{
-        lightbox: false,
-        lightboxSrc: '',
-        lightboxName: '',
+<div x-data="{
+    lightbox: false,
+    lightboxSrc: '',
+    lightboxName: '',
 
-        highlightMessageId: @js(request()->integer('message') ?: null),
+    highlightMessageId: @js(request()->integer('message') ?: null),
 
-        openLightbox(src, name = '') {
-            this.lightboxSrc = src
-            this.lightboxName = name
-            this.lightbox = true
-            document.body.classList.add('overflow-hidden')
-        },
+    openLightbox(src, name = '') {
+        this.lightboxSrc = src
+        this.lightboxName = name
+        this.lightbox = true
+        document.body.classList.add('overflow-hidden')
+    },
 
-        closeLightbox() {
-            this.lightbox = false
-            this.lightboxSrc = ''
-            this.lightboxName = ''
-            document.body.classList.remove('overflow-hidden')
-        },
+    closeLightbox() {
+        this.lightbox = false
+        this.lightboxSrc = ''
+        this.lightboxName = ''
+        document.body.classList.remove('overflow-hidden')
+    },
 
-        getScrollableParents(element) {
-            const parents = []
-            let parent = element?.parentElement
+    getScrollableParents(element) {
+        const parents = []
+        let parent = element?.parentElement
 
-            while (parent) {
-                const style = window.getComputedStyle(parent)
-                const overflowY = style.overflowY
+        while (parent) {
+            const style = window.getComputedStyle(parent)
+            const overflowY = style.overflowY
 
-                const isScrollable =
-                    (
-                        overflowY === 'auto' ||
-                        overflowY === 'scroll' ||
-                        overflowY === 'overlay'
-                    ) &&
-                    parent.scrollHeight > parent.clientHeight
+            const isScrollable =
+                (
+                    overflowY === 'auto' ||
+                    overflowY === 'scroll' ||
+                    overflowY === 'overlay'
+                ) &&
+                parent.scrollHeight > parent.clientHeight
 
-                if (isScrollable) {
-                    parents.push(parent)
-                }
-
-                parent = parent.parentElement
+            if (isScrollable) {
+                parents.push(parent)
             }
 
-            return parents
-        },
+            parent = parent.parentElement
+        }
 
-        scrollContainerToBottom(container) {
-            container.scrollTo({
-                top: container.scrollHeight,
-                behavior: 'smooth',
-            })
-        },
+        return parents
+    },
 
-        scrollToBottom() {
-            const containers = this.getScrollableParents(this.$root)
+    scrollContainerToBottom(container) {
+        container.scrollTo({
+            top: container.scrollHeight,
+            behavior: 'smooth',
+        })
+    },
 
-            if (containers.length) {
-                const container = containers[0]
+    scrollToBottom() {
+        const containers = this.getScrollableParents(this.$root)
 
-                this.scrollContainerToBottom(container)
+        if (containers.length) {
+            const container = containers[0]
 
-                requestAnimationFrame(() => {
-                    this.scrollContainerToBottom(container)
-                })
-
-                setTimeout(() => {
-                    this.scrollContainerToBottom(container)
-                }, 300)
-
-                return
-            }
-
-            const scrollingElement =
-                document.scrollingElement || document.documentElement
-
-            const scrollToDocumentBottom = () => {
-                scrollingElement.scrollTo({
-                    top: scrollingElement.scrollHeight,
-                    behavior: 'smooth',
-                })
-            }
-
-            scrollToDocumentBottom()
+            this.scrollContainerToBottom(container)
 
             requestAnimationFrame(() => {
-                scrollToDocumentBottom()
+                this.scrollContainerToBottom(container)
             })
 
             setTimeout(() => {
-                scrollToDocumentBottom()
+                this.scrollContainerToBottom(container)
             }, 300)
-        },
 
-        scrollToMessage(element) {
-            if (!element) {
-                return
-            }
+            return
+        }
 
-            element.scrollIntoView({
+        const scrollingElement =
+            document.scrollingElement || document.documentElement
+
+        const scrollToDocumentBottom = () => {
+            scrollingElement.scrollTo({
+                top: scrollingElement.scrollHeight,
                 behavior: 'smooth',
-                block: 'center',
-                inline: 'nearest',
             })
+        }
 
+        scrollToDocumentBottom()
+
+        requestAnimationFrame(() => {
+            scrollToDocumentBottom()
+        })
+
+        setTimeout(() => {
+            scrollToDocumentBottom()
+        }, 300)
+    },
+
+    scrollToMessage(element) {
+        if (!element) {
+            return
+        }
+
+        element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+            inline: 'nearest',
+        })
+
+        element.classList.remove('message-highlight')
+
+        void element.offsetWidth
+
+        element.classList.add('message-highlight')
+
+        setTimeout(() => {
             element.classList.remove('message-highlight')
+        }, 5000)
+    },
 
-            void element.offsetWidth
-
-            element.classList.add('message-highlight')
-
-            setTimeout(() => {
-                element.classList.remove('message-highlight')
-            }, 5000)
-        },
-
-        navigateToMessage() {
-            this.$nextTick(() => {
+    navigateToMessage() {
+        this.$nextTick(() => {
+            requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
-                        setTimeout(() => {
-                            if (this.highlightMessageId) {
-                                const element = document.getElementById(
-                                    `ticket-message-${this.highlightMessageId}`
-                                )
+                    setTimeout(() => {
+                        if (this.highlightMessageId) {
+                            const element = document.getElementById(
+                                `ticket-message-${this.highlightMessageId}`
+                            )
 
-                                if (!element) {
-                                    return
-                                }
-
-                                this.scrollToMessage(element)
-
+                            if (!element) {
                                 return
                             }
 
-                            this.scrollToBottom()
-                        }, 150)
-                    })
+                            this.scrollToMessage(element)
+
+                            return
+                        }
+
+                        this.scrollToBottom()
+                    }, 150)
                 })
             })
-        },
-    }"
-    x-init="navigateToMessage()"
-    x-on:keydown.escape.window="closeLightbox()"
-    class="min-h-screen w-full overflow-x-hidden bg-[#f6f4fa] text-zinc-900 antialiased selection:bg-violet-200 selection:text-violet-950 dark:bg-[#09080d] dark:text-white dark:selection:bg-violet-500/30 dark:selection:text-white"
->
+        })
+    },
+}" x-init="navigateToMessage()" x-on:keydown.escape.window="closeLightbox()"
+    class="min-h-screen w-full overflow-x-hidden bg-[#f6f4fa] text-zinc-900 antialiased selection:bg-violet-200 selection:text-violet-950 dark:bg-[#09080d] dark:text-white dark:selection:bg-violet-500/30 dark:selection:text-white">
     @php
         $user = auth()->user();
         $team = $user?->currentTeam;
@@ -153,44 +149,30 @@
         $canCharge = false;
 
         if ($team) {
-            $canCharge =
-                $team->roleFor($user)?->hasPermission(
-                    \App\Enums\TeamPermission::ChargeCustomer
-                ) ?? false;
+            $canCharge = $team->roleFor($user)?->hasPermission(\App\Enums\TeamPermission::ChargeCustomer) ?? false;
 
             if ($team->owner()?->id === $user?->id) {
                 $canCharge = true;
             }
         }
 
-        $showChargeSection =
-            in_array($status, ['resolved', 'closed'], true)
-            && $canCharge;
+        $showChargeSection = in_array($status, ['resolved', 'closed'], true) && $canCharge;
 
-        $isPaid =
-            $invoice?->isPaid() ?? false;
+        $isPaid = $invoice?->isPaid() ?? false;
 
-        $transaction =
-            $invoice?->successfulTransaction();
+        $transaction = $invoice?->successfulTransaction();
 
         /*
          * Your invoice signature is stored as:
          *
          * data:image/png;base64,...
          */
-        $signatureData = trim(
-            (string) ($invoice?->signature_data ?? '')
-        );
+        $signatureData = trim((string) ($invoice?->signature_data ?? ''));
 
         $hasSignature =
-            $signatureData !== ''
-            && preg_match(
-                '/^data:image\/(?:png|jpe?g|webp);base64,/i',
-                $signatureData
-            );
+            $signatureData !== '' && preg_match('/^data:image\/(?:png|jpe?g|webp);base64,/i', $signatureData);
 
-        $messageCount =
-            $ticket->messages->count();
+        $messageCount = $ticket->messages->count();
 
         $statusDot = match ($ticket->status) {
             'open' => 'bg-emerald-500',
@@ -201,9 +183,12 @@
         };
 
         $statusBadge = match ($ticket->status) {
-            'open' => 'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/20',
-            'pending' => 'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/20',
-            'resolved' => 'bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-500/20',
+            'open'
+                => 'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/20',
+            'pending'
+                => 'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/20',
+            'resolved'
+                => 'bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-500/20',
             'closed' => 'bg-zinc-100 text-zinc-600 ring-zinc-200 dark:bg-white/5 dark:text-zinc-300 dark:ring-white/10',
             default => 'bg-zinc-100 text-zinc-600 ring-zinc-200 dark:bg-white/5 dark:text-zinc-300 dark:ring-white/10',
         };
@@ -243,6 +228,7 @@
         }
 
         @keyframes soft-glow {
+
             0%,
             100% {
                 opacity: .35;
@@ -286,45 +272,28 @@
         LIGHTBOX
     ================================================================= --}}
     <template x-teleport="body">
-        <div
-            x-show="lightbox"
-            x-cloak
-            x-transition.opacity.duration.250ms
+        <div x-show="lightbox" x-cloak x-transition.opacity.duration.250ms
             class="fixed inset-0 z-[9999] flex items-center justify-center bg-[#06050a]/92 p-3 backdrop-blur-2xl sm:p-6"
-            role="dialog"
-            aria-modal="true"
-        >
-            <button
-                type="button"
-                x-on:click="closeLightbox()"
+            role="dialog" aria-modal="true">
+            <button type="button" x-on:click="closeLightbox()"
                 class="absolute right-3 top-3 z-30 flex size-11 items-center justify-center rounded-2xl border border-white/10 bg-white/10 text-white shadow-2xl backdrop-blur-xl transition hover:scale-105 hover:bg-white/15 sm:right-6 sm:top-6"
-                aria-label="Close image viewer"
-            >
+                aria-label="Close image viewer">
                 <flux:icon.x-mark class="size-5" />
             </button>
 
-            <button
-                type="button"
-                x-on:click="closeLightbox()"
-                class="absolute inset-0 cursor-default"
-                aria-label="Close image"
-            ></button>
+            <button type="button" x-on:click="closeLightbox()" class="absolute inset-0 cursor-default"
+                aria-label="Close image"></button>
 
             <div class="relative z-10 flex max-h-[92vh] max-w-[96vw] flex-col items-center">
-                <div class="relative overflow-hidden rounded-[28px] border border-white/10 bg-white p-2 shadow-[0_30px_120px_-40px_rgba(0,0,0,.8)] sm:rounded-[32px] sm:p-3">
-                    <img
-                        :src="lightboxSrc"
-                        :alt="lightboxName"
-                        x-on:click.stop
-                        class="max-h-[82vh] max-w-[96vw] rounded-[22px] bg-white object-contain sm:max-h-[86vh] sm:rounded-[26px]"
-                    />
+                <div
+                    class="relative overflow-hidden rounded-[28px] border border-white/10 bg-white p-2 shadow-[0_30px_120px_-40px_rgba(0,0,0,.8)] sm:rounded-[32px] sm:p-3">
+                    <img :src="lightboxSrc" :alt="lightboxName" x-on:click.stop
+                        class="max-h-[82vh] max-w-[96vw] rounded-[22px] bg-white object-contain sm:max-h-[86vh] sm:rounded-[26px]" />
                 </div>
 
                 <div class="mt-4 rounded-full border border-white/10 bg-white/10 px-4 py-2 backdrop-blur-xl">
-                    <span
-                        x-text="lightboxName"
-                        class="block truncate text-xs font-medium text-white/80 sm:text-sm"
-                    ></span>
+                    <span x-text="lightboxName"
+                        class="block truncate text-xs font-medium text-white/80 sm:text-sm"></span>
                 </div>
             </div>
         </div>
@@ -333,17 +302,17 @@
     {{-- ================================================================
         TOP HEADER
     ================================================================= --}}
-    <header class="sticky top-0 z-50 border-b border-zinc-200/70 bg-[#f6f4fa]/85 backdrop-blur-2xl dark:border-white/[0.06] dark:bg-[#09080d]/80">
-        <div class="mx-auto flex min-h-[76px] w-full max-w-[1840px] items-center justify-between gap-3 px-3 sm:px-5 lg:px-7 2xl:px-9">
+    <header
+        class="sticky top-0 z-50 border-b border-zinc-200/70 bg-[#f6f4fa]/85 backdrop-blur-2xl dark:border-white/[0.06] dark:bg-[#09080d]/80">
+        <div
+            class="mx-auto flex min-h-[76px] w-full max-w-[1840px] items-center justify-between gap-3 px-3 sm:px-5 lg:px-7 2xl:px-9">
             <div class="flex min-w-0 items-center gap-3">
-                <a
-                    href="{{ auth()->check() && auth()->user()->currentTeam
-                        ? route('dashboard', ['current_team' => auth()->user()->currentTeam])
-                        : route('onboarding') }}"
+                <a href="{{ auth()->check() && auth()->user()->currentTeam
+                    ? route('dashboard', ['current_team' => auth()->user()->currentTeam])
+                    : route('onboarding') }}"
                     wire:navigate
                     class="group flex size-11 shrink-0 items-center justify-center rounded-2xl border border-zinc-200/80 bg-white/90 text-zinc-500 shadow-[0_10px_30px_-20px_rgba(50,35,75,.45)] backdrop-blur transition duration-200 hover:-translate-x-0.5 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/55 dark:hover:border-violet-400/20 dark:hover:bg-violet-500/10 dark:hover:text-white"
-                    aria-label="Back to dashboard"
-                >
+                    aria-label="Back to dashboard">
                     <flux:icon.arrow-left class="size-4 transition-transform group-hover:-translate-x-0.5" />
                 </a>
 
@@ -351,11 +320,13 @@
 
                 <div class="min-w-0">
                     <div class="flex min-w-0 items-center gap-2.5">
-                        <h1 class="min-w-0 truncate text-[15px] font-semibold tracking-[-0.02em] text-zinc-950 sm:text-base lg:text-lg dark:text-white">
+                        <h1
+                            class="min-w-0 truncate text-[15px] font-semibold tracking-[-0.02em] text-zinc-950 sm:text-base lg:text-lg dark:text-white">
                             {{ $ticket->subject }}
                         </h1>
 
-                        <span class="hidden rounded-lg bg-violet-50 px-2 py-1 font-mono text-[10px] font-semibold text-violet-600 ring-1 ring-inset ring-violet-100 md:inline-flex dark:bg-violet-500/10 dark:text-violet-300 dark:ring-violet-500/20">
+                        <span
+                            class="hidden rounded-lg bg-violet-50 px-2 py-1 font-mono text-[10px] font-semibold text-violet-600 ring-1 ring-inset ring-violet-100 md:inline-flex dark:bg-violet-500/10 dark:text-violet-300 dark:ring-violet-500/20">
                             {{ $ticket->ticket_number }}
                         </span>
                     </div>
@@ -368,8 +339,7 @@
 
             <div class="shrink-0">
                 <span
-                    class="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold shadow-sm ring-1 ring-inset sm:px-3.5 sm:py-2 sm:text-sm {{ $statusBadge }}"
-                >
+                    class="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold shadow-sm ring-1 ring-inset sm:px-3.5 sm:py-2 sm:text-sm {{ $statusBadge }}">
                     <span class="size-2 rounded-full {{ $statusDot }}"></span>
                     <span>{{ ucfirst($ticket->status) }}</span>
                 </span>
@@ -391,23 +361,29 @@
                 {{-- ========================================================
                     CONVERSATION HEADER
                 ========================================================= --}}
-                <div class="relative overflow-hidden rounded-[30px] border border-violet-200/70 bg-gradient-to-br from-white via-white to-violet-50/70 px-5 py-5 shadow-[0_20px_70px_-45px_rgba(85,65,120,.35)] sm:px-7 sm:py-6 dark:border-white/[0.07] dark:from-[#15121b] dark:via-[#15121b] dark:to-violet-500/[0.04]">
-                    <div class="pointer-events-none absolute -right-12 -top-16 size-48 rounded-full bg-violet-300/20 blur-3xl dark:bg-violet-400/10"></div>
+                <div
+                    class="relative overflow-hidden rounded-[30px] border border-violet-200/70 bg-gradient-to-br from-white via-white to-violet-50/70 px-5 py-5 shadow-[0_20px_70px_-45px_rgba(85,65,120,.35)] sm:px-7 sm:py-6 dark:border-white/[0.07] dark:from-[#15121b] dark:via-[#15121b] dark:to-violet-500/[0.04]">
+                    <div
+                        class="pointer-events-none absolute -right-12 -top-16 size-48 rounded-full bg-violet-300/20 blur-3xl dark:bg-violet-400/10">
+                    </div>
 
                     <div class="relative flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
                         <div class="min-w-0">
                             <div class="mb-3 flex items-center gap-2.5">
-                                <span class="flex size-9 items-center justify-center rounded-xl bg-violet-100 text-violet-600 shadow-sm dark:bg-violet-500/10 dark:text-violet-300">
+                                <span
+                                    class="flex size-9 items-center justify-center rounded-xl bg-violet-100 text-violet-600 shadow-sm dark:bg-violet-500/10 dark:text-violet-300">
                                     <flux:icon.chat-bubble-left-right class="size-4" />
                                 </span>
 
-                                <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-violet-600 dark:text-violet-300">
+                                <span
+                                    class="text-[10px] font-bold uppercase tracking-[0.2em] text-violet-600 dark:text-violet-300">
                                     Conversation
                                 </span>
                             </div>
 
                             <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                                <h2 class="text-4xl font-bold tracking-[-0.055em] text-zinc-950 sm:text-5xl dark:text-white">
+                                <h2
+                                    class="text-4xl font-bold tracking-[-0.055em] text-zinc-950 sm:text-5xl dark:text-white">
                                     {{ $messageCount }}
                                 </h2>
 
@@ -417,7 +393,8 @@
                             </div>
                         </div>
 
-                        <div class="rounded-2xl border border-zinc-200/80 bg-white/80 px-4 py-3 shadow-sm backdrop-blur md:min-w-[180px] md:text-right dark:border-white/10 dark:bg-white/[0.03]">
+                        <div
+                            class="rounded-2xl border border-zinc-200/80 bg-white/80 px-4 py-3 shadow-sm backdrop-blur md:min-w-[180px] md:text-right dark:border-white/10 dark:bg-white/[0.03]">
                             <div class="text-[10px] font-bold uppercase tracking-[0.17em] text-zinc-400">
                                 Last activity
                             </div>
@@ -432,7 +409,8 @@
                 {{-- ========================================================
                     CONVERSATION
                 ========================================================= --}}
-                <section class="overflow-hidden rounded-[30px] border border-zinc-200/80 bg-white shadow-[0_30px_90px_-55px_rgba(35,25,55,.45)] dark:border-white/[0.07] dark:bg-[#141218]">
+                <section
+                    class="overflow-hidden rounded-[30px] border border-zinc-200/80 bg-white shadow-[0_30px_90px_-55px_rgba(35,25,55,.45)] dark:border-white/[0.07] dark:bg-[#141218]">
                     <div class="divide-y divide-zinc-100 dark:divide-white/[0.05]">
 
                         @php
@@ -441,80 +419,75 @@
 
                         @forelse ($ticket->messages as $message)
                             @php
-                                $isCustomer =
-                                    in_array(
-                                        $message->author_type,
-                                        ['guest', 'customer'],
-                                        true
-                                    );
+                                $isCustomer = in_array($message->author_type, ['guest', 'customer'], true);
 
-                                $authorName =
-                                    trim(
-                                        (string) ($message->author_name ?? 'Unknown')
-                                    );
+                                $authorName = trim((string) ($message->author_name ?? 'Unknown'));
 
-                                $initial =
-                                    strtoupper(
-                                        substr(
-                                            $authorName !== ''
-                                                ? $authorName
-                                                : 'U',
-                                            0,
-                                            1
-                                        )
-                                    );
+                                $initial = strtoupper(substr($authorName !== '' ? $authorName : 'U', 0, 1));
 
-                                $messageDate =
-                                    $message->created_at?->format('Y-m-d');
+                                $messageDate = $message->created_at?->format('Y-m-d');
 
-                                $showDateDivider =
-                                    $previousMessageDate !== $messageDate;
+                                $showDateDivider = $previousMessageDate !== $messageDate;
 
-                                $previousMessageDate =
-                                    $messageDate;
+                                $previousMessageDate = $messageDate;
 
-                                $isHighlighted =
-                                    request()->integer('message')
-                                    === (int) $message->id;
+                                $isHighlighted = request()->integer('message') === (int) $message->id;
                             @endphp
 
                             {{-- Date divider --}}
                             @if ($showDateDivider)
                                 <div class="flex items-center gap-3 px-4 py-5 sm:px-7 sm:py-6">
-                                    <div class="h-px flex-1 bg-gradient-to-r from-transparent via-zinc-200 to-transparent dark:via-white/[0.08]"></div>
+                                    <div
+                                        class="h-px flex-1 bg-gradient-to-r from-transparent via-zinc-200 to-transparent dark:via-white/[0.08]">
+                                    </div>
 
-                                    <span class="rounded-full border border-zinc-200 bg-zinc-50 px-3.5 py-1.5 text-[10px] font-bold text-zinc-500 shadow-sm dark:border-white/10 dark:bg-white/[0.03] dark:text-zinc-400">
-                                        {{ $message->created_at?->format('M j, Y') ?? '—' }}
+                                    <span
+                                        class="rounded-full border border-zinc-200 bg-zinc-50 px-3.5 py-1.5 text-[10px] font-bold text-zinc-500 shadow-sm dark:border-white/10 dark:bg-white/[0.03] dark:text-zinc-400">
+                                        <time datetime="{{ $message->created_at?->utc()->toIso8601String() }}" x-data
+                                            x-init="const date = new Date($el.dateTime);
+                                            
+                                            $el.textContent = new Intl.DateTimeFormat(undefined, {
+                                                year: 'numeric',
+                                                month: 'short',
+                                                day: 'numeric',
+                                                hour: 'numeric',
+                                                minute: '2-digit'
+                                            }).format(date);">
+                                            {{ $message->created_at?->format('M j, Y g:i A') ?? '—' }}
                                     </span>
 
-                                    <div class="h-px flex-1 bg-gradient-to-r from-transparent via-zinc-200 to-transparent dark:via-white/[0.08]"></div>
+
+                                    <div
+                                        class="h-px flex-1 bg-gradient-to-r from-transparent via-zinc-200 to-transparent dark:via-white/[0.08]">
+                                    </div>
                                 </div>
                             @endif
 
                             {{-- Message --}}
-                            <article
-                                id="ticket-message-{{ $message->id }}"
+                            <article id="ticket-message-{{ $message->id }}"
                                 wire:key="ticket-message-{{ $message->id }}"
-                                class="scroll-mt-28 px-4 py-6 sm:px-7 sm:py-7 {{ $isHighlighted ? 'message-highlight' : '' }}"
-                            >
+                                class="scroll-mt-28 px-4 py-6 sm:px-7 sm:py-7 {{ $isHighlighted ? 'message-highlight' : '' }}">
                                 <div class="flex items-start gap-3 sm:gap-4 {{ $isCustomer ? '' : 'justify-end' }}">
 
                                     @if ($isCustomer)
                                         {{-- Customer avatar --}}
-                                        <div class="relative flex size-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-100 to-fuchsia-100 text-sm font-bold text-violet-700 shadow-sm ring-1 ring-violet-200/50 dark:from-violet-500/10 dark:to-fuchsia-500/10 dark:text-violet-200 dark:ring-white/5 sm:size-11">
+                                        <div
+                                            class="relative flex size-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-100 to-fuchsia-100 text-sm font-bold text-violet-700 shadow-sm ring-1 ring-violet-200/50 dark:from-violet-500/10 dark:to-fuchsia-500/10 dark:text-violet-200 dark:ring-white/5 sm:size-11">
                                             {{ $initial }}
                                         </div>
                                     @endif
 
                                     <div class="min-w-0 max-w-[calc(100%-52px)] sm:max-w-[78%] lg:max-w-[72%]">
                                         {{-- Meta --}}
-                                        <div class="mb-2 flex flex-wrap items-center gap-2 {{ $isCustomer ? '' : 'justify-end' }}">
+                                        <div
+                                            class="mb-2 flex flex-wrap items-center gap-2 {{ $isCustomer ? '' : 'justify-end' }}">
                                             <span class="text-sm font-semibold text-zinc-800 dark:text-white">
                                                 {{ $authorName }}
                                             </span>
 
-                                            @if (! $isCustomer)
-                                                <span class="rounded-full bg-violet-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-violet-600 ring-1 ring-inset ring-violet-100 dark:bg-violet-500/10 dark:text-violet-300 dark:ring-violet-500/15">
+                                            @if (!$isCustomer)
+                                                <span
+                                                    class="rounded-full bg-violet-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-violet-600 ring-1 ring-inset ring-violet-100 dark:bg-violet-500/10 dark:text-violet-300 dark:ring-violet-500/15">
                                                     Team
                                                 </span>
                                             @endif
@@ -530,8 +503,7 @@
                                                 class="w-fit max-w-full rounded-[24px] px-4 py-3.5 text-[14px] leading-7 shadow-[0_14px_35px_-25px_rgba(40,30,60,.25)] sm:px-5 sm:py-4 sm:text-[15px]
                                                 {{ $isCustomer
                                                     ? 'rounded-tl-md border border-zinc-200 bg-zinc-50 text-zinc-700 dark:border-white/[0.07] dark:bg-white/[0.04] dark:text-zinc-200'
-                                                    : 'rounded-tr-md bg-gradient-to-br from-[#8e78be] via-[#8069b0] to-[#70589f] text-white shadow-[0_18px_38px_-22px_rgba(106,82,155,.95)]' }}"
-                                            >
+                                                    : 'rounded-tr-md bg-gradient-to-br from-[#8e78be] via-[#8069b0] to-[#70589f] text-white shadow-[0_18px_38px_-22px_rgba(106,82,155,.95)]' }}">
                                                 <div class="whitespace-pre-wrap break-words">
                                                     {{ $message->message }}
                                                 </div>
@@ -543,106 +515,92 @@
                                             <div class="mt-3 space-y-3">
                                                 @foreach ($message->attachments as $attachment)
                                                     @php
-                                                        $mime = strtolower(
-                                                            (string) ($attachment->mime_type ?? '')
-                                                        );
+                                                        $mime = strtolower((string) ($attachment->mime_type ?? ''));
 
-                                                        $isImage =
-                                                            str_starts_with(
-                                                                $mime,
-                                                                'image/'
-                                                            );
+                                                        $isImage = str_starts_with($mime, 'image/');
 
-                                                        $isPdf =
-                                                            $mime === 'application/pdf';
+                                                        $isPdf = $mime === 'application/pdf';
 
-                                                        $previewUrl = route(
-                                                            'ticket.attachments.preview',
-                                                            [
-                                                                'current_team' =>
-                                                                    request()->route('current_team'),
-                                                                'attachment' =>
-                                                                    $attachment->id,
-                                                            ]
-                                                        );
+                                                        $previewUrl = route('ticket.attachments.preview', [
+                                                            'current_team' => request()->route('current_team'),
+                                                            'attachment' => $attachment->id,
+                                                        ]);
 
-                                                        $downloadUrl = route(
-                                                            'ticket.attachments.download',
-                                                            [
-                                                                'current_team' =>
-                                                                    request()->route('current_team'),
-                                                                'attachment' =>
-                                                                    $attachment->id,
-                                                            ]
-                                                        );
+                                                        $downloadUrl = route('ticket.attachments.download', [
+                                                            'current_team' => request()->route('current_team'),
+                                                            'attachment' => $attachment->id,
+                                                        ]);
                                                     @endphp
 
                                                     @if ($isImage)
-                                                        <div class="group/image overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-50 shadow-sm dark:border-white/[0.07] dark:bg-white/[0.03]">
-                                                            <button
-                                                                type="button"
+                                                        <div
+                                                            class="group/image overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-50 shadow-sm dark:border-white/[0.07] dark:bg-white/[0.03]">
+                                                            <button type="button"
                                                                 x-on:click="openLightbox(
                                                                     @js($previewUrl),
                                                                     @js($attachment->original_name)
                                                                 )"
-                                                                class="relative block w-full cursor-zoom-in"
-                                                            >
-                                                                <div class="max-h-[520px] overflow-hidden bg-zinc-100 dark:bg-zinc-900">
-                                                                    <img
-                                                                        src="{{ $previewUrl }}"
+                                                                class="relative block w-full cursor-zoom-in">
+                                                                <div
+                                                                    class="max-h-[520px] overflow-hidden bg-zinc-100 dark:bg-zinc-900">
+                                                                    <img src="{{ $previewUrl }}"
                                                                         alt="{{ $attachment->original_name }}"
-                                                                        loading="lazy"
-                                                                        decoding="async"
-                                                                        class="block max-h-[520px] w-full object-contain transition duration-500 group-hover/image:scale-[1.015]"
-                                                                    />
+                                                                        loading="lazy" decoding="async"
+                                                                        class="block max-h-[520px] w-full object-contain transition duration-500 group-hover/image:scale-[1.015]" />
                                                                 </div>
 
-                                                                <div class="pointer-events-none absolute inset-0 flex items-center justify-center bg-violet-900/0 transition duration-300 group-hover/image:bg-violet-900/10">
-                                                                    <span class="flex size-12 scale-90 items-center justify-center rounded-2xl bg-white text-violet-600 opacity-0 shadow-2xl transition duration-300 group-hover/image:scale-100 group-hover/image:opacity-100">
+                                                                <div
+                                                                    class="pointer-events-none absolute inset-0 flex items-center justify-center bg-violet-900/0 transition duration-300 group-hover/image:bg-violet-900/10">
+                                                                    <span
+                                                                        class="flex size-12 scale-90 items-center justify-center rounded-2xl bg-white text-violet-600 opacity-0 shadow-2xl transition duration-300 group-hover/image:scale-100 group-hover/image:opacity-100">
                                                                         <flux:icon.arrows-pointing-out class="size-5" />
                                                                     </span>
                                                                 </div>
                                                             </button>
 
-                                                            <div class="flex items-center gap-3 border-t border-zinc-200 bg-white px-3.5 py-3 dark:border-white/[0.05] dark:bg-[#17141c]">
-                                                                <div class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-300">
+                                                            <div
+                                                                class="flex items-center gap-3 border-t border-zinc-200 bg-white px-3.5 py-3 dark:border-white/[0.05] dark:bg-[#17141c]">
+                                                                <div
+                                                                    class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-300">
                                                                     <flux:icon.photo class="size-4" />
                                                                 </div>
 
                                                                 <div class="min-w-0 flex-1">
-                                                                    <div class="truncate text-xs font-semibold text-zinc-700 dark:text-zinc-200">
+                                                                    <div
+                                                                        class="truncate text-xs font-semibold text-zinc-700 dark:text-zinc-200">
                                                                         {{ $attachment->original_name }}
                                                                     </div>
 
                                                                     <div class="mt-0.5 text-[10px] text-zinc-400">
-                                                                        {{ number_format($attachment->size / 1024, 1) }} KB
+                                                                        {{ number_format($attachment->size / 1024, 1) }}
+                                                                        KB
                                                                     </div>
                                                                 </div>
 
-                                                                <a
-                                                                    href="{{ $downloadUrl }}"
+                                                                <a href="{{ $downloadUrl }}"
                                                                     class="flex size-9 shrink-0 items-center justify-center rounded-xl text-zinc-400 transition hover:bg-violet-50 hover:text-violet-600 dark:hover:bg-white/5 dark:hover:text-violet-300"
-                                                                    title="Download"
-                                                                >
+                                                                    title="Download">
                                                                     <flux:icon.arrow-down-tray class="size-4" />
                                                                 </a>
                                                             </div>
                                                         </div>
                                                     @else
-                                                        <a
-                                                            href="{{ $downloadUrl }}"
-                                                            class="group/file flex w-full max-w-xl items-center gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-3.5 transition duration-200 hover:-translate-y-0.5 hover:border-violet-200 hover:bg-white hover:shadow-lg dark:border-white/[0.07] dark:bg-white/[0.03] dark:hover:border-white/10 dark:hover:bg-white/[0.05]"
-                                                        >
-                                                            <div class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm dark:bg-white/10">
+                                                        <a href="{{ $downloadUrl }}"
+                                                            class="group/file flex w-full max-w-xl items-center gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-3.5 transition duration-200 hover:-translate-y-0.5 hover:border-violet-200 hover:bg-white hover:shadow-lg dark:border-white/[0.07] dark:bg-white/[0.03] dark:hover:border-white/10 dark:hover:bg-white/[0.05]">
+                                                            <div
+                                                                class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm dark:bg-white/10">
                                                                 @if ($isPdf)
-                                                                    <flux:icon.document-text class="size-5 text-red-500" />
+                                                                    <flux:icon.document-text
+                                                                        class="size-5 text-red-500" />
                                                                 @else
-                                                                    <flux:icon.paper-clip class="size-5 text-violet-500 dark:text-violet-300" />
+                                                                    <flux:icon.paper-clip
+                                                                        class="size-5 text-violet-500 dark:text-violet-300" />
                                                                 @endif
                                                             </div>
 
                                                             <div class="min-w-0 flex-1">
-                                                                <div class="truncate text-sm font-semibold text-zinc-700 dark:text-zinc-200">
+                                                                <div
+                                                                    class="truncate text-sm font-semibold text-zinc-700 dark:text-zinc-200">
                                                                     {{ $attachment->original_name }}
                                                                 </div>
 
@@ -653,7 +611,8 @@
                                                                 </div>
                                                             </div>
 
-                                                            <div class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600 transition group-hover/file:bg-violet-600 group-hover/file:text-white dark:bg-violet-500/10 dark:text-violet-300">
+                                                            <div
+                                                                class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600 transition group-hover/file:bg-violet-600 group-hover/file:text-white dark:bg-violet-500/10 dark:text-violet-300">
                                                                 <flux:icon.arrow-down-tray class="size-4" />
                                                             </div>
                                                         </a>
@@ -667,19 +626,22 @@
                                         </div>
                                     </div>
 
-                                    @if (! $isCustomer)
+                                    @if (!$isCustomer)
                                         {{-- Team avatar --}}
-                                        <div class="relative flex size-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#8e78be] to-[#6f579f] text-sm font-bold text-white shadow-[0_14px_30px_-12px_rgba(109,83,157,.85)] sm:size-11">
+                                        <div
+                                            class="relative flex size-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#8e78be] to-[#6f579f] text-sm font-bold text-white shadow-[0_14px_30px_-12px_rgba(109,83,157,.85)] sm:size-11">
                                             {{ $initial }}
 
-                                            <span class="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-white bg-emerald-500 dark:border-[#141218]"></span>
+                                            <span
+                                                class="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-white bg-emerald-500 dark:border-[#141218]"></span>
                                         </div>
                                     @endif
                                 </div>
                             </article>
                         @empty
                             <div class="px-6 py-24 text-center">
-                                <div class="mx-auto mb-5 flex size-16 items-center justify-center rounded-3xl bg-violet-100 text-violet-600 shadow-sm dark:bg-violet-500/10 dark:text-violet-300">
+                                <div
+                                    class="mx-auto mb-5 flex size-16 items-center justify-center rounded-3xl bg-violet-100 text-violet-600 shadow-sm dark:bg-violet-500/10 dark:text-violet-300">
                                     <flux:icon.chat-bubble-left-right class="size-7" />
                                 </div>
 
@@ -697,20 +659,19 @@
                     {{-- ====================================================
                         COMPOSER
                     ===================================================== --}}
-                    <div class="border-t border-zinc-200 bg-gradient-to-b from-zinc-50 to-white p-3 sm:p-5 dark:border-white/[0.06] dark:from-[#100f14] dark:to-[#0e0d12]">
-                        <div class="overflow-hidden rounded-[26px] border border-zinc-200/90 bg-white shadow-[0_20px_60px_-42px_rgba(45,35,65,.4)] transition duration-200 focus-within:border-violet-300 focus-within:ring-4 focus-within:ring-violet-100 dark:border-white/[0.08] dark:bg-[#17141c] dark:focus-within:border-violet-500/30 dark:focus-within:ring-violet-500/10">
+                    <div
+                        class="border-t border-zinc-200 bg-gradient-to-b from-zinc-50 to-white p-3 sm:p-5 dark:border-white/[0.06] dark:from-[#100f14] dark:to-[#0e0d12]">
+                        <div
+                            class="overflow-hidden rounded-[26px] border border-zinc-200/90 bg-white shadow-[0_20px_60px_-42px_rgba(45,35,65,.4)] transition duration-200 focus-within:border-violet-300 focus-within:ring-4 focus-within:ring-violet-100 dark:border-white/[0.08] dark:bg-[#17141c] dark:focus-within:border-violet-500/30 dark:focus-within:ring-violet-500/10">
 
-                            <textarea
-                                wire:model="newMessage"
-                                rows="4"
-                                placeholder="Write a reply to {{ $ticket->name }}..."
-                                class="block min-h-[125px] w-full resize-none border-0 bg-transparent px-4 py-4 text-[15px] leading-7 text-zinc-800 outline-none placeholder:text-zinc-400 focus:border-0 focus:ring-0 sm:px-5 sm:py-5 dark:text-white"
-                            ></textarea>
+                            <textarea wire:model="newMessage" rows="4" placeholder="Write a reply to {{ $ticket->name }}..."
+                                class="block min-h-[125px] w-full resize-none border-0 bg-transparent px-4 py-4 text-[15px] leading-7 text-zinc-800 outline-none placeholder:text-zinc-400 focus:border-0 focus:ring-0 sm:px-5 sm:py-5 dark:text-white"></textarea>
 
                             @if (count($attachments))
                                 <div class="border-t border-zinc-100 px-4 py-4 dark:border-white/[0.05]">
                                     <div class="mb-3 flex items-center justify-between gap-3">
-                                        <div class="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-600 dark:text-violet-300">
+                                        <div
+                                            class="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-600 dark:text-violet-300">
                                             Ready to send
                                         </div>
 
@@ -724,55 +685,51 @@
                                         @foreach ($attachments as $index => $attachment)
                                             @if ($attachment)
                                                 @php
-                                                    $uploadMime =
-                                                        strtolower(
-                                                            (string) $attachment->getMimeType()
-                                                        );
+                                                    $uploadMime = strtolower((string) $attachment->getMimeType());
 
-                                                    $uploadIsImage =
-                                                        str_starts_with(
-                                                            $uploadMime,
-                                                            'image/'
-                                                        );
+                                                    $uploadIsImage = str_starts_with($uploadMime, 'image/');
                                                 @endphp
 
-                                                <div class="group relative overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-50 dark:border-white/[0.07] dark:bg-white/[0.03]">
+                                                <div
+                                                    class="group relative overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-50 dark:border-white/[0.07] dark:bg-white/[0.03]">
                                                     @if ($uploadIsImage)
-                                                        <div class="aspect-[16/10] overflow-hidden bg-zinc-100 dark:bg-zinc-900">
-                                                            <img
-                                                                src="{{ $attachment->temporaryUrl() }}"
+                                                        <div
+                                                            class="aspect-[16/10] overflow-hidden bg-zinc-100 dark:bg-zinc-900">
+                                                            <img src="{{ $attachment->temporaryUrl() }}"
                                                                 alt="{{ $attachment->getClientOriginalName() }}"
-                                                                class="h-full w-full object-cover"
-                                                            />
+                                                                class="h-full w-full object-cover" />
                                                         </div>
                                                     @else
                                                         <div class="flex min-h-[82px] items-center gap-3 px-3">
-                                                            <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm dark:bg-white/10">
+                                                            <div
+                                                                class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm dark:bg-white/10">
                                                                 @if ($uploadMime === 'application/pdf')
-                                                                    <flux:icon.document-text class="size-5 text-red-500" />
+                                                                    <flux:icon.document-text
+                                                                        class="size-5 text-red-500" />
                                                                 @else
-                                                                    <flux:icon.paper-clip class="size-5 text-violet-500 dark:text-violet-300" />
+                                                                    <flux:icon.paper-clip
+                                                                        class="size-5 text-violet-500 dark:text-violet-300" />
                                                                 @endif
                                                             </div>
 
                                                             <div class="min-w-0">
-                                                                <div class="truncate text-xs font-semibold text-zinc-700 dark:text-zinc-200">
+                                                                <div
+                                                                    class="truncate text-xs font-semibold text-zinc-700 dark:text-zinc-200">
                                                                     {{ $attachment->getClientOriginalName() }}
                                                                 </div>
 
                                                                 <div class="mt-1 text-[10px] text-zinc-400">
-                                                                    {{ number_format($attachment->getSize() / 1024, 1) }} KB
+                                                                    {{ number_format($attachment->getSize() / 1024, 1) }}
+                                                                    KB
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     @endif
 
-                                                    <button
-                                                        type="button"
+                                                    <button type="button"
                                                         wire:click="removeAttachment({{ $index }})"
                                                         class="absolute right-2 top-2 flex size-8 items-center justify-center rounded-xl bg-black/70 text-white opacity-0 shadow-lg transition group-hover:opacity-100 hover:bg-red-500"
-                                                        title="Remove attachment"
-                                                    >
+                                                        title="Remove attachment">
                                                         <flux:icon.x-mark class="size-3.5" />
                                                     </button>
                                                 </div>
@@ -783,34 +740,30 @@
                             @endif
 
                             {{-- Upload state --}}
-                            <div
-                                wire:loading
-                                wire:target="attachments"
-                                class="border-t border-zinc-100 px-4 py-3 dark:border-white/[0.05]"
-                            >
-                                <div class="flex items-center gap-2 text-xs font-medium text-violet-600 dark:text-violet-300">
+                            <div wire:loading wire:target="attachments"
+                                class="border-t border-zinc-100 px-4 py-3 dark:border-white/[0.05]">
+                                <div
+                                    class="flex items-center gap-2 text-xs font-medium text-violet-600 dark:text-violet-300">
                                     <flux:icon.arrow-path class="size-4 animate-spin" />
                                     Uploading attachments…
                                 </div>
                             </div>
 
                             {{-- Composer footer --}}
-                            <div class="flex flex-col gap-3 border-t border-zinc-100 px-3 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-white/[0.05]">
+                            <div
+                                class="flex flex-col gap-3 border-t border-zinc-100 px-3 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-white/[0.05]">
                                 <div class="flex min-w-0 items-center justify-between gap-2 sm:justify-start">
-                                    <label class="group flex cursor-pointer items-center gap-2 rounded-xl px-2 py-1.5 text-sm font-semibold text-zinc-500 transition hover:bg-violet-50 hover:text-violet-600 dark:hover:bg-white/5 dark:hover:text-violet-300">
-                                        <span class="flex size-9 items-center justify-center rounded-xl bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-300">
+                                    <label
+                                        class="group flex cursor-pointer items-center gap-2 rounded-xl px-2 py-1.5 text-sm font-semibold text-zinc-500 transition hover:bg-violet-50 hover:text-violet-600 dark:hover:bg-white/5 dark:hover:text-violet-300">
+                                        <span
+                                            class="flex size-9 items-center justify-center rounded-xl bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-300">
                                             <flux:icon.paper-clip class="size-4" />
                                         </span>
 
                                         <span>Attach</span>
 
-                                        <input
-                                            type="file"
-                                            wire:model="attachments"
-                                            multiple
-                                            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip"
-                                            class="hidden"
-                                        />
+                                        <input type="file" wire:model="attachments" multiple
+                                            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip" class="hidden" />
                                     </label>
 
                                     <span class="hidden text-xs text-zinc-400 sm:inline">
@@ -818,24 +771,14 @@
                                     </span>
                                 </div>
 
-                                <flux:button
-                                    wire:click="sendMessage"
-                                    wire:loading.attr="disabled"
-                                    wire:target="sendMessage"
-                                    variant="primary"
-                                    class="min-h-11 w-full cursor-pointer rounded-xl bg-gradient-to-r from-[#8e78be] to-[#71599f]! px-5 text-sm font-semibold text-white shadow-[0_14px_30px_-15px_rgba(104,78,150,.9)] transition hover:from-[#8069b0]! hover:to-[#664e95]! disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-                                >
-                                    <flux:icon.paper-airplane
-                                        wire:loading.remove
-                                        wire:target="sendMessage"
-                                        class="size-4"
-                                    />
+                                <flux:button wire:click="sendMessage" wire:loading.attr="disabled"
+                                    wire:target="sendMessage" variant="primary"
+                                    class="min-h-11 w-full cursor-pointer rounded-xl bg-gradient-to-r from-[#8e78be] to-[#71599f]! px-5 text-sm font-semibold text-white shadow-[0_14px_30px_-15px_rgba(104,78,150,.9)] transition hover:from-[#8069b0]! hover:to-[#664e95]! disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto">
+                                    <flux:icon.paper-airplane wire:loading.remove wire:target="sendMessage"
+                                        class="size-4" />
 
-                                    <flux:icon.arrow-path
-                                        wire:loading
-                                        wire:target="sendMessage"
-                                        class="size-4 animate-spin"
-                                    />
+                                    <flux:icon.arrow-path wire:loading wire:target="sendMessage"
+                                        class="size-4 animate-spin" />
 
                                     <span wire:loading.remove wire:target="sendMessage">
                                         Send reply
@@ -872,42 +815,57 @@
                             PAID CARD
                         =================================================== --}}
                         @if ($isPaid && $invoice)
-                            <div class="overflow-hidden rounded-[30px] border border-emerald-200/80 bg-white shadow-[0_28px_90px_-48px_rgba(16,185,129,.35)] dark:border-emerald-500/15 dark:bg-[#141218]">
+                            <div
+                                class="overflow-hidden rounded-[30px] border border-emerald-200/80 bg-white shadow-[0_28px_90px_-48px_rgba(16,185,129,.35)] dark:border-emerald-500/15 dark:bg-[#141218]">
 
-                                <div class="relative overflow-hidden border-b border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-teal-50 px-5 py-7 sm:px-7 sm:py-8 dark:border-emerald-500/10 dark:from-emerald-500/10 dark:via-[#141218] dark:to-teal-500/5">
-                                    <div class="pointer-events-none absolute -right-20 -top-20 size-64 rounded-full bg-emerald-200/35 blur-3xl dark:bg-emerald-400/10"></div>
-                                    <div class="pointer-events-none absolute -bottom-20 -left-16 size-52 rounded-full bg-teal-200/25 blur-3xl dark:bg-teal-400/5"></div>
+                                <div
+                                    class="relative overflow-hidden border-b border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-teal-50 px-5 py-7 sm:px-7 sm:py-8 dark:border-emerald-500/10 dark:from-emerald-500/10 dark:via-[#141218] dark:to-teal-500/5">
+                                    <div
+                                        class="pointer-events-none absolute -right-20 -top-20 size-64 rounded-full bg-emerald-200/35 blur-3xl dark:bg-emerald-400/10">
+                                    </div>
+                                    <div
+                                        class="pointer-events-none absolute -bottom-20 -left-16 size-52 rounded-full bg-teal-200/25 blur-3xl dark:bg-teal-400/5">
+                                    </div>
 
-                                    <div class="relative flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                                    <div
+                                        class="relative flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                                         <div class="flex min-w-0 items-start gap-4">
-                                            <div class="flex size-13 shrink-0 items-center justify-center rounded-[18px] bg-emerald-100 text-emerald-700 shadow-sm dark:bg-emerald-500/15 dark:text-emerald-300">
+                                            <div
+                                                class="flex size-13 shrink-0 items-center justify-center rounded-[18px] bg-emerald-100 text-emerald-700 shadow-sm dark:bg-emerald-500/15 dark:text-emerald-300">
                                                 <flux:icon.check class="size-6" />
                                             </div>
 
                                             <div class="min-w-0">
                                                 <div class="flex flex-wrap items-center gap-2">
-                                                    <h3 class="text-xl font-bold tracking-tight text-zinc-950 sm:text-2xl dark:text-white">
+                                                    <h3
+                                                        class="text-xl font-bold tracking-tight text-zinc-950 sm:text-2xl dark:text-white">
                                                         Payment complete
                                                     </h3>
 
-                                                    <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+                                                    <span
+                                                        class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
                                                         <span class="size-1.5 rounded-full bg-emerald-500"></span>
                                                         Paid
                                                     </span>
                                                 </div>
 
-                                                <p class="mt-1.5 max-w-2xl text-sm leading-6 text-emerald-800/80 dark:text-emerald-200/80">
-                                                    This ticket has been billed and the customer payment was successfully received.
+                                                <p
+                                                    class="mt-1.5 max-w-2xl text-sm leading-6 text-emerald-800/80 dark:text-emerald-200/80">
+                                                    This ticket has been billed and the customer payment was
+                                                    successfully received.
                                                 </p>
                                             </div>
                                         </div>
 
-                                        <div class="w-full rounded-2xl border border-emerald-200/70 bg-white/85 px-4 py-3 shadow-sm backdrop-blur lg:w-auto lg:min-w-[190px] dark:border-emerald-500/10 dark:bg-zinc-900/60">
-                                            <div class="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400">
+                                        <div
+                                            class="w-full rounded-2xl border border-emerald-200/70 bg-white/85 px-4 py-3 shadow-sm backdrop-blur lg:w-auto lg:min-w-[190px] dark:border-emerald-500/10 dark:bg-zinc-900/60">
+                                            <div
+                                                class="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400">
                                                 Total billed
                                             </div>
 
-                                            <div class="mt-1 text-2xl font-bold tabular-nums tracking-tight text-zinc-950 dark:text-white">
+                                            <div
+                                                class="mt-1 text-2xl font-bold tabular-nums tracking-tight text-zinc-950 dark:text-white">
                                                 ${{ number_format($invoice->total_amount / 100, 2) }}
                                             </div>
                                         </div>
@@ -918,7 +876,8 @@
                                     <div class="grid gap-5 lg:grid-cols-2">
 
                                         {{-- Services --}}
-                                        <div class="rounded-[22px] border border-zinc-200 bg-zinc-50/80 p-4 sm:p-5 dark:border-zinc-800 dark:bg-zinc-950/40">
+                                        <div
+                                            class="rounded-[22px] border border-zinc-200 bg-zinc-50/80 p-4 sm:p-5 dark:border-zinc-800 dark:bg-zinc-950/40">
                                             <div class="mb-4 flex items-start justify-between gap-4">
                                                 <div>
                                                     <div class="text-sm font-semibold text-zinc-900 dark:text-white">
@@ -930,7 +889,8 @@
                                                     </div>
                                                 </div>
 
-                                                <span class="rounded-xl bg-white px-3 py-1.5 text-xs font-semibold text-zinc-500 ring-1 ring-zinc-200 dark:bg-zinc-900 dark:text-zinc-300 dark:ring-zinc-800">
+                                                <span
+                                                    class="rounded-xl bg-white px-3 py-1.5 text-xs font-semibold text-zinc-500 ring-1 ring-zinc-200 dark:bg-zinc-900 dark:text-zinc-300 dark:ring-zinc-800">
                                                     {{ $invoice->items->count() }}
                                                     {{ $invoice->items->count() === 1 ? 'item' : 'items' }}
                                                 </span>
@@ -938,40 +898,48 @@
 
                                             <div class="divide-y divide-zinc-200/80 dark:divide-zinc-800">
                                                 @foreach ($invoice->items as $item)
-                                                    <div class="flex items-start justify-between gap-4 py-3.5 first:pt-0 last:pb-0">
+                                                    <div
+                                                        class="flex items-start justify-between gap-4 py-3.5 first:pt-0 last:pb-0">
                                                         <div class="min-w-0">
-                                                            <div class="break-words text-sm font-medium text-zinc-800 dark:text-white">
+                                                            <div
+                                                                class="break-words text-sm font-medium text-zinc-800 dark:text-white">
                                                                 {{ $item->description }}
                                                             </div>
 
                                                             @if ($item->is_subscription)
-                                                                <span class="mt-2 inline-flex items-center gap-1.5 rounded-full bg-violet-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-violet-700 dark:bg-violet-500/15 dark:text-violet-300">
-                                                                    <flux:icon.arrow-path-rounded-square class="size-3" />
+                                                                <span
+                                                                    class="mt-2 inline-flex items-center gap-1.5 rounded-full bg-violet-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-violet-700 dark:bg-violet-500/15 dark:text-violet-300">
+                                                                    <flux:icon.arrow-path-rounded-square
+                                                                        class="size-3" />
                                                                     Recurring monthly
                                                                 </span>
                                                             @endif
                                                         </div>
 
-                                                        <span class="shrink-0 text-sm font-semibold tabular-nums text-zinc-900 dark:text-white">
+                                                        <span
+                                                            class="shrink-0 text-sm font-semibold tabular-nums text-zinc-900 dark:text-white">
                                                             ${{ number_format($item->amount / 100, 2) }}
                                                         </span>
                                                     </div>
                                                 @endforeach
                                             </div>
 
-                                            <div class="mt-4 flex items-center justify-between gap-4 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+                                            <div
+                                                class="mt-4 flex items-center justify-between gap-4 border-t border-zinc-200 pt-4 dark:border-zinc-800">
                                                 <span class="text-sm font-semibold text-zinc-600 dark:text-zinc-400">
                                                     Total billed today
                                                 </span>
 
-                                                <span class="text-base font-bold tabular-nums text-zinc-950 dark:text-white">
+                                                <span
+                                                    class="text-base font-bold tabular-nums text-zinc-950 dark:text-white">
                                                     ${{ number_format($invoice->total_amount / 100, 2) }}
                                                 </span>
                                             </div>
                                         </div>
 
                                         {{-- Payment economics --}}
-                                        <div class="rounded-[22px] border border-zinc-200 bg-zinc-50/80 p-4 sm:p-5 dark:border-zinc-800 dark:bg-zinc-950/40">
+                                        <div
+                                            class="rounded-[22px] border border-zinc-200 bg-zinc-50/80 p-4 sm:p-5 dark:border-zinc-800 dark:bg-zinc-950/40">
                                             <div class="mb-4">
                                                 <div class="text-sm font-semibold text-zinc-900 dark:text-white">
                                                     Payment breakdown
@@ -988,7 +956,8 @@
                                                         Gross
                                                     </span>
 
-                                                    <span class="font-medium tabular-nums text-zinc-900 dark:text-white">
+                                                    <span
+                                                        class="font-medium tabular-nums text-zinc-900 dark:text-white">
                                                         ${{ number_format($invoice->total_amount / 100, 2) }}
                                                     </span>
                                                 </div>
@@ -998,18 +967,22 @@
                                                         Stripe fees
                                                     </span>
 
-                                                    <span class="font-medium tabular-nums text-zinc-900 dark:text-white">
+                                                    <span
+                                                        class="font-medium tabular-nums text-zinc-900 dark:text-white">
                                                         ${{ number_format($invoice->stripeProcessingFeeInCents() / 100, 2) }}
                                                     </span>
                                                 </div>
 
-                                                <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+                                                <div
+                                                    class="rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 dark:border-emerald-500/20 dark:bg-emerald-500/10">
                                                     <div class="flex items-center justify-between gap-4">
-                                                        <span class="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
+                                                        <span
+                                                            class="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
                                                             Net profit
                                                         </span>
 
-                                                        <span class="text-base font-bold tabular-nums text-emerald-900 dark:text-emerald-200">
+                                                        <span
+                                                            class="text-base font-bold tabular-nums text-emerald-900 dark:text-emerald-200">
                                                             ${{ number_format($invoice->netAmountInCents() / 100, 2) }}
                                                         </span>
                                                     </div>
@@ -1021,14 +994,13 @@
                                                     <span class="text-zinc-500 dark:text-zinc-400">
                                                         Pablo commission
                                                         ({{ number_format(
-                                                            $invoice->total_amount > 0
-                                                                ? ($invoice->pabloCommissionInCents() / $invoice->total_amount) * 100
-                                                                : 0,
-                                                            0
+                                                            $invoice->total_amount > 0 ? ($invoice->pabloCommissionInCents() / $invoice->total_amount) * 100 : 0,
+                                                            0,
                                                         ) }}%)
                                                     </span>
 
-                                                    <span class="font-medium tabular-nums text-zinc-900 dark:text-white">
+                                                    <span
+                                                        class="font-medium tabular-nums text-zinc-900 dark:text-white">
                                                         ${{ number_format($invoice->pabloCommissionInCents() / 100, 2) }}
                                                     </span>
                                                 </div>
@@ -1038,7 +1010,8 @@
                                                         Owner share
                                                     </span>
 
-                                                    <span class="font-medium tabular-nums text-zinc-900 dark:text-white">
+                                                    <span
+                                                        class="font-medium tabular-nums text-zinc-900 dark:text-white">
                                                         ${{ number_format($invoice->ownerShareInCents() / 100, 2) }}
                                                     </span>
                                                 </div>
@@ -1048,7 +1021,8 @@
                                                         Partner share
                                                     </span>
 
-                                                    <span class="font-medium tabular-nums text-zinc-900 dark:text-white">
+                                                    <span
+                                                        class="font-medium tabular-nums text-zinc-900 dark:text-white">
                                                         ${{ number_format($invoice->partnerShareInCents() / 100, 2) }}
                                                     </span>
                                                 </div>
@@ -1057,24 +1031,33 @@
 
                                         {{-- Single signature display --}}
                                         @if ($hasSignature)
-                                            <div class="relative overflow-hidden rounded-[24px] border border-sky-200/80 bg-white lg:col-span-2 dark:border-sky-500/15 dark:bg-zinc-950">
-                                                <div class="pointer-events-none absolute -right-16 -top-16 size-48 rounded-full bg-sky-200/30 blur-3xl dark:bg-sky-400/10"></div>
+                                            <div
+                                                class="relative overflow-hidden rounded-[24px] border border-sky-200/80 bg-white lg:col-span-2 dark:border-sky-500/15 dark:bg-zinc-950">
+                                                <div
+                                                    class="pointer-events-none absolute -right-16 -top-16 size-48 rounded-full bg-sky-200/30 blur-3xl dark:bg-sky-400/10">
+                                                </div>
 
-                                                <div class="relative flex flex-col gap-4 border-b border-sky-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 dark:border-sky-500/10">
+                                                <div
+                                                    class="relative flex flex-col gap-4 border-b border-sky-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 dark:border-sky-500/10">
                                                     <div class="flex min-w-0 items-center gap-3">
-                                                        <div class="relative flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-700 shadow-sm dark:bg-sky-500/15 dark:text-sky-300">
-                                                            <span class="signature-glow pointer-events-none absolute inset-0 rounded-2xl bg-sky-300/20 blur-md dark:bg-sky-400/10"></span>
+                                                        <div
+                                                            class="relative flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-700 shadow-sm dark:bg-sky-500/15 dark:text-sky-300">
+                                                            <span
+                                                                class="signature-glow pointer-events-none absolute inset-0 rounded-2xl bg-sky-300/20 blur-md dark:bg-sky-400/10"></span>
                                                             <flux:icon.pencil class="relative size-5" />
                                                         </div>
 
                                                         <div class="min-w-0">
                                                             <div class="flex flex-wrap items-center gap-2">
-                                                                <h4 class="text-sm font-semibold text-zinc-900 dark:text-white">
+                                                                <h4
+                                                                    class="text-sm font-semibold text-zinc-900 dark:text-white">
                                                                     Customer signature
                                                                 </h4>
 
-                                                                <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
-                                                                    <span class="size-1.5 rounded-full bg-emerald-500"></span>
+                                                                <span
+                                                                    class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                                                                    <span
+                                                                        class="size-1.5 rounded-full bg-emerald-500"></span>
                                                                     Signed
                                                                 </span>
                                                             </div>
@@ -1085,32 +1068,27 @@
                                                         </div>
                                                     </div>
 
-                                                    <button
-                                                        type="button"
+                                                    <button type="button"
                                                         x-on:click="openLightbox(@js($signatureData), 'Customer signature')"
-                                                        class="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-3.5 py-2 text-xs font-semibold text-zinc-600 shadow-sm transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-white/5 dark:hover:text-violet-300"
-                                                    >
+                                                        class="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-3.5 py-2 text-xs font-semibold text-zinc-600 shadow-sm transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-white/5 dark:hover:text-violet-300">
                                                         <flux:icon.arrows-pointing-out class="size-4" />
                                                         View full signature
                                                     </button>
                                                 </div>
 
-                                                <div class="relative bg-gradient-to-br from-sky-50/80 via-white to-violet-50/50 p-4 sm:p-6 dark:from-sky-500/[0.03] dark:via-zinc-950 dark:to-violet-500/[0.03]">
-                                                    <button
-                                                        type="button"
+                                                <div
+                                                    class="relative bg-gradient-to-br from-sky-50/80 via-white to-violet-50/50 p-4 sm:p-6 dark:from-sky-500/[0.03] dark:via-zinc-950 dark:to-violet-500/[0.03]">
+                                                    <button type="button"
                                                         x-on:click="openLightbox(@js($signatureData), 'Customer signature')"
-                                                        class="group flex min-h-[190px] w-full items-center justify-center overflow-hidden rounded-[22px] border border-dashed border-sky-200 bg-white/90 p-6 shadow-inner transition duration-200 hover:border-violet-300 hover:bg-white dark:border-sky-500/20 dark:bg-zinc-900 dark:hover:border-violet-500/40"
-                                                    >
-                                                        <img
-                                                            src="{{ $signatureData }}"
+                                                        class="group flex min-h-[190px] w-full items-center justify-center overflow-hidden rounded-[22px] border border-dashed border-sky-200 bg-white/90 p-6 shadow-inner transition duration-200 hover:border-violet-300 hover:bg-white dark:border-sky-500/20 dark:bg-zinc-900 dark:hover:border-violet-500/40">
+                                                        <img src="{{ $signatureData }}"
                                                             alt="Captured customer signature"
                                                             class="block max-h-56 max-w-full object-contain transition duration-300 group-hover:scale-[1.015]"
-                                                            loading="lazy"
-                                                            decoding="async"
-                                                        />
+                                                            loading="lazy" decoding="async" />
                                                     </button>
 
-                                                    <div class="mt-3 text-center text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-400">
+                                                    <div
+                                                        class="mt-3 text-center text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-400">
                                                         Click signature to enlarge
                                                     </div>
                                                 </div>
@@ -1119,14 +1097,17 @@
 
                                         {{-- Transaction --}}
                                         @if ($transaction)
-                                            <div class="rounded-[22px] border border-zinc-200 bg-white p-4 sm:p-5 lg:col-span-2 dark:border-zinc-800 dark:bg-zinc-950">
+                                            <div
+                                                class="rounded-[22px] border border-zinc-200 bg-white p-4 sm:p-5 lg:col-span-2 dark:border-zinc-800 dark:bg-zinc-950">
                                                 <div class="mb-4 flex items-center gap-3">
-                                                    <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                                                    <div
+                                                        class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
                                                         <flux:icon.credit-card class="size-5" />
                                                     </div>
 
                                                     <div>
-                                                        <h4 class="text-sm font-semibold text-zinc-900 dark:text-white">
+                                                        <h4
+                                                            class="text-sm font-semibold text-zinc-900 dark:text-white">
                                                             Payment details
                                                         </h4>
 
@@ -1138,38 +1119,38 @@
 
                                                 <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                                                     <div class="rounded-xl bg-zinc-50 px-3.5 py-3 dark:bg-zinc-900">
-                                                        <div class="text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-400">
+                                                        <div
+                                                            class="text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-400">
                                                             Paid on
                                                         </div>
 
-                                                        <div class="mt-1 text-sm font-medium text-zinc-900 dark:text-white">
+                                                        <div
+                                                            class="mt-1 text-sm font-medium text-zinc-900 dark:text-white">
                                                             <time
-                                                            datetime="{{ $transaction->created_at?->utc()->toIso8601String() }}"
-                                                            x-data
-                                                            x-init="
-                                                                const date = new Date($el.dateTime);
-
+                                                                datetime="{{ $transaction->created_at?->utc()->toIso8601String() }}"
+                                                                x-data x-init="const date = new Date($el.dateTime);
+                                                                
                                                                 $el.textContent = new Intl.DateTimeFormat(undefined, {
                                                                     year: 'numeric',
                                                                     month: 'short',
                                                                     day: 'numeric',
                                                                     hour: 'numeric',
                                                                     minute: '2-digit'
-                                                                }).format(date);
-                                                            "
-                                                        >
-                                                            {{ $transaction->created_at?->format('M j, Y g:i A') ?? '—' }}
-</time>
+                                                                }).format(date);">
+                                                                {{ $transaction->created_at?->format('M j, Y g:i A') ?? '—' }}
+                                                            </time>
                                                         </div>
                                                     </div>
 
                                                     <div class="rounded-xl bg-zinc-50 px-3.5 py-3 dark:bg-zinc-900">
-                                                        <div class="text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-400">
+                                                        <div
+                                                            class="text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-400">
                                                             Payment method
                                                         </div>
 
-                                                        <div class="mt-1 text-sm font-medium text-zinc-900 dark:text-white">
-                                                            {{ ucfirst($transaction->brand ?? $transaction->payment_method_type ?? 'Card') }}
+                                                        <div
+                                                            class="mt-1 text-sm font-medium text-zinc-900 dark:text-white">
+                                                            {{ ucfirst($transaction->brand ?? ($transaction->payment_method_type ?? 'Card')) }}
 
                                                             @if ($transaction->last4)
                                                                 <span class="text-zinc-400">
@@ -1180,11 +1161,13 @@
                                                     </div>
 
                                                     <div class="rounded-xl bg-zinc-50 px-3.5 py-3 dark:bg-zinc-900">
-                                                        <div class="text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-400">
+                                                        <div
+                                                            class="text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-400">
                                                             Net received
                                                         </div>
 
-                                                        <div class="mt-1 text-sm font-semibold tabular-nums text-emerald-700 dark:text-emerald-300">
+                                                        <div
+                                                            class="mt-1 text-sm font-semibold tabular-nums text-emerald-700 dark:text-emerald-300">
                                                             ${{ number_format($transaction->net_amount / 100, 2) }}
                                                         </div>
                                                     </div>
@@ -1195,19 +1178,24 @@
 
                                     {{-- Recurring --}}
                                     @if ($invoice->hasRecurringBilling())
-                                        <div class="mt-5 rounded-[22px] border border-violet-200/80 bg-gradient-to-br from-violet-50 to-fuchsia-50/50 p-4 sm:p-5 dark:border-violet-500/15 dark:from-violet-500/10 dark:to-fuchsia-500/5">
-                                            <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                        <div
+                                            class="mt-5 rounded-[22px] border border-violet-200/80 bg-gradient-to-br from-violet-50 to-fuchsia-50/50 p-4 sm:p-5 dark:border-violet-500/15 dark:from-violet-500/10 dark:to-fuchsia-500/5">
+                                            <div
+                                                class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                                                 <div>
-                                                    <div class="text-sm font-semibold text-violet-950 dark:text-violet-100">
+                                                    <div
+                                                        class="text-sm font-semibold text-violet-950 dark:text-violet-100">
                                                         Monthly recurring
                                                     </div>
 
-                                                    <div class="mt-0.5 text-xs text-violet-700/70 dark:text-violet-300/70">
+                                                    <div
+                                                        class="mt-0.5 text-xs text-violet-700/70 dark:text-violet-300/70">
                                                         Ongoing subscription economics
                                                     </div>
                                                 </div>
 
-                                                <span class="inline-flex w-fit items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+                                                <span
+                                                    class="inline-flex w-fit items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
                                                     <span class="size-1.5 rounded-full bg-emerald-500"></span>
                                                     Stripe auto-pay active
                                                 </span>
@@ -1215,94 +1203,114 @@
 
                                             <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                                                 <div class="rounded-xl bg-white/70 p-3.5 dark:bg-zinc-900/40">
-                                                    <div class="text-[10px] font-bold uppercase tracking-[0.14em] text-violet-700/70 dark:text-violet-300/70">
+                                                    <div
+                                                        class="text-[10px] font-bold uppercase tracking-[0.14em] text-violet-700/70 dark:text-violet-300/70">
                                                         Gross monthly
                                                     </div>
 
-                                                    <div class="mt-1 text-base font-semibold tabular-nums text-violet-950 dark:text-white">
+                                                    <div
+                                                        class="mt-1 text-base font-semibold tabular-nums text-violet-950 dark:text-white">
                                                         ${{ number_format($invoice->monthlyRecurringAmountInCents() / 100, 2) }}
                                                     </div>
                                                 </div>
 
                                                 <div class="rounded-xl bg-white/70 p-3.5 dark:bg-zinc-900/40">
-                                                    <div class="text-[10px] font-bold uppercase tracking-[0.14em] text-violet-700/70 dark:text-violet-300/70">
+                                                    <div
+                                                        class="text-[10px] font-bold uppercase tracking-[0.14em] text-violet-700/70 dark:text-violet-300/70">
                                                         Stripe fees (est.)
                                                     </div>
 
-                                                    <div class="mt-1 text-base font-semibold tabular-nums text-violet-950 dark:text-white">
+                                                    <div
+                                                        class="mt-1 text-base font-semibold tabular-nums text-violet-950 dark:text-white">
                                                         ${{ number_format($invoice->estimatedMonthlyStripeFeeInCents() / 100, 2) }}
                                                     </div>
                                                 </div>
 
-                                                <div class="rounded-xl border border-violet-200 bg-white/80 p-3.5 dark:border-violet-500/15 dark:bg-zinc-900/50">
-                                                    <div class="text-[10px] font-bold uppercase tracking-[0.14em] text-violet-700/70 dark:text-violet-300/70">
+                                                <div
+                                                    class="rounded-xl border border-violet-200 bg-white/80 p-3.5 dark:border-violet-500/15 dark:bg-zinc-900/50">
+                                                    <div
+                                                        class="text-[10px] font-bold uppercase tracking-[0.14em] text-violet-700/70 dark:text-violet-300/70">
                                                         Net profit
                                                     </div>
 
-                                                    <div class="mt-1 text-base font-bold tabular-nums text-violet-950 dark:text-white">
+                                                    <div
+                                                        class="mt-1 text-base font-bold tabular-nums text-violet-950 dark:text-white">
                                                         ${{ number_format($invoice->monthlyNetAmountInCents() / 100, 2) }}
                                                     </div>
                                                 </div>
 
                                                 <div class="rounded-xl bg-white/70 p-3.5 dark:bg-zinc-900/40">
-                                                    <div class="text-[10px] font-bold uppercase tracking-[0.14em] text-violet-700/70 dark:text-violet-300/70">
+                                                    <div
+                                                        class="text-[10px] font-bold uppercase tracking-[0.14em] text-violet-700/70 dark:text-violet-300/70">
                                                         Pablo commission
                                                     </div>
 
-                                                    <div class="mt-1 text-sm font-semibold tabular-nums text-violet-950 dark:text-white">
+                                                    <div
+                                                        class="mt-1 text-sm font-semibold tabular-nums text-violet-950 dark:text-white">
                                                         ${{ number_format($invoice->monthlyPabloCommissionInCents() / 100, 2) }}
                                                     </div>
                                                 </div>
 
                                                 <div class="rounded-xl bg-white/70 p-3.5 dark:bg-zinc-900/40">
-                                                    <div class="text-[10px] font-bold uppercase tracking-[0.14em] text-violet-700/70 dark:text-violet-300/70">
+                                                    <div
+                                                        class="text-[10px] font-bold uppercase tracking-[0.14em] text-violet-700/70 dark:text-violet-300/70">
                                                         Owner share
                                                     </div>
 
-                                                    <div class="mt-1 text-sm font-semibold tabular-nums text-violet-950 dark:text-white">
+                                                    <div
+                                                        class="mt-1 text-sm font-semibold tabular-nums text-violet-950 dark:text-white">
                                                         ${{ number_format($invoice->monthlyOwnerShareInCents() / 100, 2) }}
                                                     </div>
                                                 </div>
 
                                                 <div class="rounded-xl bg-white/70 p-3.5 dark:bg-zinc-900/40">
-                                                    <div class="text-[10px] font-bold uppercase tracking-[0.14em] text-violet-700/70 dark:text-violet-300/70">
+                                                    <div
+                                                        class="text-[10px] font-bold uppercase tracking-[0.14em] text-violet-700/70 dark:text-violet-300/70">
                                                         Partner share
                                                     </div>
 
-                                                    <div class="mt-1 text-sm font-semibold tabular-nums text-violet-950 dark:text-white">
+                                                    <div
+                                                        class="mt-1 text-sm font-semibold tabular-nums text-violet-950 dark:text-white">
                                                         ${{ number_format($invoice->monthlyPartnerShareInCents() / 100, 2) }}
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <div class="mt-4 border-t border-violet-200/70 pt-4 dark:border-violet-500/15">
+                                            <div
+                                                class="mt-4 border-t border-violet-200/70 pt-4 dark:border-violet-500/15">
                                                 <div class="grid gap-3 sm:grid-cols-3">
                                                     <div>
-                                                        <div class="text-[10px] font-bold uppercase tracking-[0.14em] text-violet-700/70 dark:text-violet-300/70">
+                                                        <div
+                                                            class="text-[10px] font-bold uppercase tracking-[0.14em] text-violet-700/70 dark:text-violet-300/70">
                                                             Recurring term
                                                         </div>
 
-                                                        <div class="mt-1 text-sm font-semibold text-violet-950 dark:text-white">
+                                                        <div
+                                                            class="mt-1 text-sm font-semibold text-violet-950 dark:text-white">
                                                             {{ $invoice->subscription_months ?? 12 }} months minimum
                                                         </div>
                                                     </div>
 
                                                     <div>
-                                                        <div class="text-[10px] font-bold uppercase tracking-[0.14em] text-violet-700/70 dark:text-violet-300/70">
+                                                        <div
+                                                            class="text-[10px] font-bold uppercase tracking-[0.14em] text-violet-700/70 dark:text-violet-300/70">
                                                             Next payment
                                                         </div>
 
-                                                        <div class="mt-1 text-sm font-semibold text-violet-950 dark:text-white">
+                                                        <div
+                                                            class="mt-1 text-sm font-semibold text-violet-950 dark:text-white">
                                                             {{ $invoice->recurringChargeNextDueAt()?->format('M j, Y') ?? '—' }}
                                                         </div>
                                                     </div>
 
                                                     <div>
-                                                        <div class="text-[10px] font-bold uppercase tracking-[0.14em] text-violet-700/70 dark:text-violet-300/70">
+                                                        <div
+                                                            class="text-[10px] font-bold uppercase tracking-[0.14em] text-violet-700/70 dark:text-violet-300/70">
                                                             Renews / expires
                                                         </div>
 
-                                                        <div class="mt-1 text-sm font-semibold text-violet-950 dark:text-white">
+                                                        <div
+                                                            class="mt-1 text-sm font-semibold text-violet-950 dark:text-white">
                                                             {{ $invoice->recurringChargeExpiresAt()?->format('M j, Y') ?? '—' }}
                                                         </div>
                                                     </div>
@@ -1316,45 +1324,60 @@
                             {{-- =================================================
                                 READY TO CHARGE
                             ================================================== --}}
-                            <div class="overflow-hidden rounded-[30px] border border-indigo-200/80 bg-white shadow-[0_28px_90px_-48px_rgba(99,102,241,.35)] dark:border-indigo-500/15 dark:bg-[#141218]">
+                            <div
+                                class="overflow-hidden rounded-[30px] border border-indigo-200/80 bg-white shadow-[0_28px_90px_-48px_rgba(99,102,241,.35)] dark:border-indigo-500/15 dark:bg-[#141218]">
 
-                                <div class="relative overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-blue-50 px-5 py-7 sm:px-7 sm:py-8 dark:from-indigo-500/10 dark:via-[#141218] dark:to-blue-500/5">
-                                    <div class="pointer-events-none absolute -right-20 -top-20 size-64 rounded-full bg-indigo-200/30 blur-3xl dark:bg-indigo-400/10"></div>
-                                    <div class="pointer-events-none absolute -bottom-20 -left-20 size-56 rounded-full bg-blue-200/25 blur-3xl dark:bg-blue-400/5"></div>
+                                <div
+                                    class="relative overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-blue-50 px-5 py-7 sm:px-7 sm:py-8 dark:from-indigo-500/10 dark:via-[#141218] dark:to-blue-500/5">
+                                    <div
+                                        class="pointer-events-none absolute -right-20 -top-20 size-64 rounded-full bg-indigo-200/30 blur-3xl dark:bg-indigo-400/10">
+                                    </div>
+                                    <div
+                                        class="pointer-events-none absolute -bottom-20 -left-20 size-56 rounded-full bg-blue-200/25 blur-3xl dark:bg-blue-400/5">
+                                    </div>
 
-                                    <div class="relative flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                                    <div
+                                        class="relative flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                                         <div class="flex min-w-0 items-start gap-4">
-                                            <div class="flex size-13 shrink-0 items-center justify-center rounded-[18px] bg-indigo-100 text-indigo-700 shadow-sm dark:bg-indigo-500/15 dark:text-indigo-300">
+                                            <div
+                                                class="flex size-13 shrink-0 items-center justify-center rounded-[18px] bg-indigo-100 text-indigo-700 shadow-sm dark:bg-indigo-500/15 dark:text-indigo-300">
                                                 <flux:icon.check-circle class="size-6" />
                                             </div>
 
                                             <div class="min-w-0">
                                                 <div class="flex flex-wrap items-center gap-2">
-                                                    <h3 class="text-xl font-bold tracking-tight text-zinc-950 sm:text-2xl dark:text-white">
+                                                    <h3
+                                                        class="text-xl font-bold tracking-tight text-zinc-950 sm:text-2xl dark:text-white">
                                                         Ticket resolved
                                                     </h3>
 
                                                     @if ($hasSignature)
-                                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                                                        <span
+                                                            class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
                                                             <span class="size-1.5 rounded-full bg-emerald-500"></span>
                                                             Signature captured
                                                         </span>
                                                     @endif
                                                 </div>
 
-                                                <p class="mt-1.5 max-w-2xl text-sm leading-6 text-indigo-800/80 dark:text-indigo-200/80">
-                                                    The work is complete and the customer is ready to be billed securely.
+                                                <p
+                                                    class="mt-1.5 max-w-2xl text-sm leading-6 text-indigo-800/80 dark:text-indigo-200/80">
+                                                    The work is complete and the customer is ready to be billed
+                                                    securely.
                                                 </p>
                                             </div>
                                         </div>
 
                                         @if ($invoice)
-                                            <div class="w-full rounded-2xl border border-indigo-200/80 bg-white/85 px-4 py-3 shadow-sm backdrop-blur lg:w-auto lg:min-w-[190px] dark:border-indigo-500/10 dark:bg-zinc-900/60">
-                                                <div class="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400">
+                                            <div
+                                                class="w-full rounded-2xl border border-indigo-200/80 bg-white/85 px-4 py-3 shadow-sm backdrop-blur lg:w-auto lg:min-w-[190px] dark:border-indigo-500/10 dark:bg-zinc-900/60">
+                                                <div
+                                                    class="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400">
                                                     Amount due
                                                 </div>
 
-                                                <div class="mt-1 text-2xl font-bold tabular-nums tracking-tight text-zinc-950 dark:text-white">
+                                                <div
+                                                    class="mt-1 text-2xl font-bold tabular-nums tracking-tight text-zinc-950 dark:text-white">
                                                     ${{ number_format($invoice->total_amount / 100, 2) }}
                                                 </div>
                                             </div>
@@ -1362,37 +1385,46 @@
                                     </div>
 
                                     <div class="relative mt-6 grid gap-3 md:grid-cols-2">
-                                        <div class="rounded-2xl border border-indigo-200/70 bg-white/75 p-4 shadow-sm dark:border-indigo-500/10 dark:bg-zinc-900/50">
+                                        <div
+                                            class="rounded-2xl border border-indigo-200/70 bg-white/75 p-4 shadow-sm dark:border-indigo-500/10 dark:bg-zinc-900/50">
                                             <div class="flex items-start gap-3">
-                                                <div class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-300">
+                                                <div
+                                                    class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-300">
                                                     <flux:icon.shield-check class="size-4.5" />
                                                 </div>
 
                                                 <div>
-                                                    <div class="text-sm font-semibold text-indigo-950 dark:text-indigo-100">
+                                                    <div
+                                                        class="text-sm font-semibold text-indigo-950 dark:text-indigo-100">
                                                         Secure Stripe billing
                                                     </div>
 
-                                                    <div class="mt-1 text-xs leading-5 text-indigo-900/70 dark:text-indigo-200/70">
-                                                        Payment processing is handled through Stripe's secure payment infrastructure.
+                                                    <div
+                                                        class="mt-1 text-xs leading-5 text-indigo-900/70 dark:text-indigo-200/70">
+                                                        Payment processing is handled through Stripe's secure payment
+                                                        infrastructure.
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
 
                                         @if ($hasSignature)
-                                            <div class="rounded-2xl border border-emerald-200/70 bg-emerald-50/70 p-4 shadow-sm dark:border-emerald-500/10 dark:bg-emerald-500/[0.05]">
+                                            <div
+                                                class="rounded-2xl border border-emerald-200/70 bg-emerald-50/70 p-4 shadow-sm dark:border-emerald-500/10 dark:bg-emerald-500/[0.05]">
                                                 <div class="flex items-center gap-3">
-                                                    <div class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                                                    <div
+                                                        class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
                                                         <flux:icon.check class="size-4.5" />
                                                     </div>
 
                                                     <div class="min-w-0">
-                                                        <div class="text-sm font-semibold text-emerald-950 dark:text-emerald-100">
+                                                        <div
+                                                            class="text-sm font-semibold text-emerald-950 dark:text-emerald-100">
                                                             Signed agreement on file
                                                         </div>
 
-                                                        <div class="mt-1 text-xs text-emerald-800/70 dark:text-emerald-200/70">
+                                                        <div
+                                                            class="mt-1 text-xs text-emerald-800/70 dark:text-emerald-200/70">
                                                             Customer signature is ready to review below.
                                                         </div>
                                                     </div>
@@ -1405,77 +1437,77 @@
                                 {{-- Single signature display --}}
                                 @if ($invoice && $hasSignature)
                                     <div class="border-t border-zinc-200 p-4 sm:p-6 dark:border-zinc-800">
-                                        <div class="relative overflow-hidden rounded-[24px] border border-sky-200/80 bg-white dark:border-sky-500/15 dark:bg-zinc-950">
-                                            <div class="pointer-events-none absolute -right-16 -top-16 size-48 rounded-full bg-sky-200/25 blur-3xl dark:bg-sky-400/10"></div>
+                                        <div
+                                            class="relative overflow-hidden rounded-[24px] border border-sky-200/80 bg-white dark:border-sky-500/15 dark:bg-zinc-950">
+                                            <div
+                                                class="pointer-events-none absolute -right-16 -top-16 size-48 rounded-full bg-sky-200/25 blur-3xl dark:bg-sky-400/10">
+                                            </div>
 
-                                            <div class="relative flex flex-col gap-4 border-b border-sky-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 dark:border-sky-500/10">
+                                            <div
+                                                class="relative flex flex-col gap-4 border-b border-sky-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 dark:border-sky-500/10">
                                                 <div class="flex min-w-0 items-center gap-3">
-                                                    <div class="relative flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-700 shadow-sm dark:bg-sky-500/15 dark:text-sky-300">
-                                                        <span class="signature-glow pointer-events-none absolute inset-0 rounded-2xl bg-sky-300/20 blur-md dark:bg-sky-400/10"></span>
+                                                    <div
+                                                        class="relative flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-700 shadow-sm dark:bg-sky-500/15 dark:text-sky-300">
+                                                        <span
+                                                            class="signature-glow pointer-events-none absolute inset-0 rounded-2xl bg-sky-300/20 blur-md dark:bg-sky-400/10"></span>
                                                         <flux:icon.pencil class="relative size-5" />
                                                     </div>
 
                                                     <div class="min-w-0">
                                                         <div class="flex flex-wrap items-center gap-2">
-                                                            <div class="text-sm font-semibold text-zinc-900 dark:text-white">
+                                                            <div
+                                                                class="text-sm font-semibold text-zinc-900 dark:text-white">
                                                                 Customer signature
                                                             </div>
 
-                                                            <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
-                                                                <span class="size-1.5 rounded-full bg-emerald-500"></span>
+                                                            <span
+                                                                class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                                                                <span
+                                                                    class="size-1.5 rounded-full bg-emerald-500"></span>
                                                                 Signed
                                                             </span>
                                                         </div>
 
-                                                        <div class="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-zinc-400 dark:text-zinc-500">
+                                                        <div
+                                                            class="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-zinc-400 dark:text-zinc-500">
                                                             <flux:icon.calendar-days class="size-3.5 shrink-0" />
 
                                                             <span>Signed</span>
 
                                                             <time
                                                                 datetime="{{ $invoice->signature_signed_at?->utc()->toIso8601String() }}"
-                                                                x-data
-                                                                x-init="
-                                                                    const date = new Date($el.dateTime);
-
-                                                                    $el.textContent = new Intl.DateTimeFormat(undefined, {
-                                                                        dateStyle: 'long',
-                                                                        timeStyle: 'short'
-                                                                    }).format(date);
-                                                                "
-                                                            >
+                                                                x-data x-init="const date = new Date($el.dateTime);
+                                                                
+                                                                $el.textContent = new Intl.DateTimeFormat(undefined, {
+                                                                    dateStyle: 'long',
+                                                                    timeStyle: 'short'
+                                                                }).format(date);">
                                                                 {{ $invoice->signature_signed_at?->format('F j, Y g:i A') }}
                                                             </time>
                                                         </div>
                                                     </div>
                                                 </div>
 
-                                                <button
-                                                    type="button"
+                                                <button type="button"
                                                     x-on:click="openLightbox(@js($signatureData), 'Customer signature')"
-                                                    class="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-3.5 py-2 text-xs font-semibold text-zinc-600 shadow-sm transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-white/5 dark:hover:text-violet-300"
-                                                >
+                                                    class="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-3.5 py-2 text-xs font-semibold text-zinc-600 shadow-sm transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-white/5 dark:hover:text-violet-300">
                                                     <flux:icon.arrows-pointing-out class="size-4" />
                                                     View full signature
                                                 </button>
                                             </div>
 
-                                            <div class="relative bg-gradient-to-br from-sky-50/80 via-white to-violet-50/50 p-4 sm:p-6 dark:from-sky-500/[0.03] dark:via-zinc-950 dark:to-violet-500/[0.03]">
-                                                <button
-                                                    type="button"
+                                            <div
+                                                class="relative bg-gradient-to-br from-sky-50/80 via-white to-violet-50/50 p-4 sm:p-6 dark:from-sky-500/[0.03] dark:via-zinc-950 dark:to-violet-500/[0.03]">
+                                                <button type="button"
                                                     x-on:click="openLightbox(@js($signatureData), 'Customer signature')"
-                                                    class="group flex min-h-[180px] w-full items-center justify-center overflow-hidden rounded-[22px] border border-dashed border-sky-200 bg-white/90 p-6 shadow-inner transition duration-200 hover:border-violet-300 hover:bg-white dark:border-sky-500/20 dark:bg-zinc-900 dark:hover:border-violet-500/40"
-                                                >
-                                                    <img
-                                                        src="{{ $signatureData }}"
-                                                        alt="Captured customer signature"
+                                                    class="group flex min-h-[180px] w-full items-center justify-center overflow-hidden rounded-[22px] border border-dashed border-sky-200 bg-white/90 p-6 shadow-inner transition duration-200 hover:border-violet-300 hover:bg-white dark:border-sky-500/20 dark:bg-zinc-900 dark:hover:border-violet-500/40">
+                                                    <img src="{{ $signatureData }}" alt="Captured customer signature"
                                                         class="block max-h-52 max-w-full object-contain transition duration-300 group-hover:scale-[1.015]"
-                                                        loading="lazy"
-                                                        decoding="async"
-                                                    />
+                                                        loading="lazy" decoding="async" />
                                                 </button>
 
-                                                <div class="mt-3 text-center text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-400">
+                                                <div
+                                                    class="mt-3 text-center text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-400">
                                                     Click signature to enlarge
                                                 </div>
                                             </div>
@@ -1484,12 +1516,11 @@
                                 @endif
 
                                 <div class="border-t border-zinc-200 p-4 sm:p-6 dark:border-zinc-800">
-                                    <button
-                                        type="button"
+                                    <button type="button"
                                         x-on:click="$dispatch('open-charge-modal', { ticketId: {{ $ticket->id }} })"
-                                        class="group flex min-h-14 w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-4 text-sm font-semibold text-white shadow-[0_18px_40px_-18px_rgba(79,70,229,.85)] transition hover:-translate-y-0.5 hover:from-indigo-500 hover:to-violet-500 hover:shadow-[0_22px_45px_-18px_rgba(79,70,229,.9)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 active:translate-y-0 dark:focus-visible:ring-offset-[#141218]"
-                                    >
-                                        <flux:icon.credit-card class="size-5 transition-transform group-hover:scale-105" />
+                                        class="group flex min-h-14 w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-4 text-sm font-semibold text-white shadow-[0_18px_40px_-18px_rgba(79,70,229,.85)] transition hover:-translate-y-0.5 hover:from-indigo-500 hover:to-violet-500 hover:shadow-[0_22px_45px_-18px_rgba(79,70,229,.9)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 active:translate-y-0 dark:focus-visible:ring-offset-[#141218]">
+                                        <flux:icon.credit-card
+                                            class="size-5 transition-transform group-hover:scale-105" />
                                         <span>Charge Customer</span>
                                     </button>
                                 </div>
@@ -1507,9 +1538,12 @@
                 {{-- ========================================================
                     CUSTOMER
                 ========================================================= --}}
-                <section class="overflow-hidden rounded-[28px] border border-zinc-200/80 bg-white shadow-[0_20px_60px_-42px_rgba(40,30,60,.38)] dark:border-white/[0.07] dark:bg-[#141218]">
+                <section
+                    class="overflow-hidden rounded-[28px] border border-zinc-200/80 bg-white shadow-[0_20px_60px_-42px_rgba(40,30,60,.38)] dark:border-white/[0.07] dark:bg-[#141218]">
                     <div class="relative overflow-hidden border-b border-zinc-100 p-5 dark:border-white/[0.05]">
-                        <div class="pointer-events-none absolute -right-12 -top-12 size-32 rounded-full bg-violet-200/30 blur-3xl dark:bg-violet-400/10"></div>
+                        <div
+                            class="pointer-events-none absolute -right-12 -top-12 size-32 rounded-full bg-violet-200/30 blur-3xl dark:bg-violet-400/10">
+                        </div>
 
                         <div class="relative">
                             <div class="mb-4 text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-400">
@@ -1517,7 +1551,8 @@
                             </div>
 
                             <div class="flex items-center gap-3">
-                                <div class="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-100 to-fuchsia-100 text-lg font-bold text-violet-700 shadow-sm dark:from-violet-500/10 dark:to-fuchsia-500/10 dark:text-violet-200">
+                                <div
+                                    class="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-100 to-fuchsia-100 text-lg font-bold text-violet-700 shadow-sm dark:from-violet-500/10 dark:to-fuchsia-500/10 dark:text-violet-200">
                                     {{ strtoupper(substr($ticket->name, 0, 1)) }}
                                 </div>
 
@@ -1540,7 +1575,8 @@
                                 Ticket
                             </div>
 
-                            <div class="mt-1 truncate font-mono text-xs font-semibold text-zinc-800 dark:text-zinc-200">
+                            <div
+                                class="mt-1 truncate font-mono text-xs font-semibold text-zinc-800 dark:text-zinc-200">
                                 {{ $ticket->ticket_number }}
                             </div>
                         </div>
@@ -1560,7 +1596,8 @@
                 {{-- ========================================================
                     TICKET DETAILS
                 ========================================================= --}}
-                <section class="rounded-[28px] border border-zinc-200/80 bg-white p-5 shadow-[0_20px_60px_-42px_rgba(40,30,60,.38)] dark:border-white/[0.07] dark:bg-[#141218]">
+                <section
+                    class="rounded-[28px] border border-zinc-200/80 bg-white p-5 shadow-[0_20px_60px_-42px_rgba(40,30,60,.38)] dark:border-white/[0.07] dark:bg-[#141218]">
                     <div class="mb-6 flex items-center justify-between gap-3">
                         <div>
                             <div class="text-base font-semibold text-zinc-900 dark:text-white">
@@ -1572,7 +1609,8 @@
                             </div>
                         </div>
 
-                        <div class="flex size-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600 ring-1 ring-inset ring-violet-100 dark:bg-violet-500/10 dark:text-violet-300 dark:ring-violet-500/15">
+                        <div
+                            class="flex size-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600 ring-1 ring-inset ring-violet-100 dark:bg-violet-500/10 dark:text-violet-300 dark:ring-violet-500/15">
                             <flux:icon.ticket class="size-5" />
                         </div>
                     </div>
@@ -1585,47 +1623,30 @@
                                 Status
                             </div>
 
-                            <div
-                                x-data="{ open: false }"
-                                x-on:click.outside="open = false"
-                                class="relative"
-                            >
-                                <button
-                                    type="button"
-                                    x-on:click="open = !open"
-                                    class="flex min-h-12 w-full items-center justify-between rounded-2xl border border-zinc-200 bg-zinc-50 px-4 text-sm font-semibold text-zinc-700 transition hover:border-violet-200 hover:bg-white focus:outline-none focus:ring-4 focus:ring-violet-100 dark:border-white/10 dark:bg-white/[0.03] dark:text-white dark:hover:border-white/15 dark:hover:bg-white/[0.05] dark:focus:ring-violet-500/10"
-                                >
+                            <div x-data="{ open: false }" x-on:click.outside="open = false" class="relative">
+                                <button type="button" x-on:click="open = !open"
+                                    class="flex min-h-12 w-full items-center justify-between rounded-2xl border border-zinc-200 bg-zinc-50 px-4 text-sm font-semibold text-zinc-700 transition hover:border-violet-200 hover:bg-white focus:outline-none focus:ring-4 focus:ring-violet-100 dark:border-white/10 dark:bg-white/[0.03] dark:text-white dark:hover:border-white/15 dark:hover:bg-white/[0.05] dark:focus:ring-violet-500/10">
                                     <span class="flex items-center gap-3">
                                         <span class="size-2.5 rounded-full {{ $statusDot }}"></span>
                                         {{ ucfirst($status) }}
                                     </span>
 
-                                    <flux:icon.chevron-down
-                                        class="size-4 text-zinc-400 transition"
-                                        x-bind:class="open && 'rotate-180'"
-                                    />
+                                    <flux:icon.chevron-down class="size-4 text-zinc-400 transition"
+                                        x-bind:class="open && 'rotate-180'" />
                                 </button>
 
-                                <div
-                                    x-show="open"
-                                    x-cloak
-                                    x-transition.origin.top
-                                    class="absolute left-0 right-0 z-50 mt-2 overflow-hidden rounded-2xl border border-zinc-200 bg-white p-1.5 shadow-[0_22px_60px_-25px_rgba(40,30,60,.35)] dark:border-white/10 dark:bg-[#1c1821]"
-                                >
+                                <div x-show="open" x-cloak x-transition.origin.top
+                                    class="absolute left-0 right-0 z-50 mt-2 overflow-hidden rounded-2xl border border-zinc-200 bg-white p-1.5 shadow-[0_22px_60px_-25px_rgba(40,30,60,.35)] dark:border-white/10 dark:bg-[#1c1821]">
                                     @foreach ([
-                                        'open' => 'Open',
-                                        'pending' => 'Pending',
-                                        'resolved' => 'Resolved',
-                                        'closed' => 'Closed',
-                                    ] as $value => $label)
-                                        <button
-                                            type="button"
-                                            wire:click="updateStatus('{{ $value }}')"
-                                            x-on:click="open = false"
-                                            wire:loading.attr="disabled"
+        'open' => 'Open',
+        'pending' => 'Pending',
+        'resolved' => 'Resolved',
+        'closed' => 'Closed',
+    ] as $value => $label)
+                                        <button type="button" wire:click="updateStatus('{{ $value }}')"
+                                            x-on:click="open = false" wire:loading.attr="disabled"
                                             wire:target="updateStatus('{{ $value }}')"
-                                            class="flex w-full items-center justify-between rounded-xl px-3.5 py-3 text-left text-sm font-medium transition hover:bg-zinc-50 dark:hover:bg-white/5"
-                                        >
+                                            class="flex w-full items-center justify-between rounded-xl px-3.5 py-3 text-left text-sm font-medium transition hover:bg-zinc-50 dark:hover:bg-white/5">
                                             <span class="flex items-center gap-3">
                                                 <span
                                                     class="size-2.5 rounded-full {{ match ($value) {
@@ -1634,8 +1655,7 @@
                                                         'resolved' => 'bg-blue-500',
                                                         'closed' => 'bg-zinc-400',
                                                         default => 'bg-zinc-400',
-                                                    } }}"
-                                                ></span>
+                                                    } }}"></span>
 
                                                 {{ $label }}
                                             </span>
@@ -1655,27 +1675,24 @@
                                 Priority
                             </div>
 
-                            <div
-                                x-data="{ open: false }"
-                                x-on:click.outside="open = false"
-                                class="relative"
-                            >
-                                <button
-                                    type="button"
-                                    x-on:click="open = !open"
-                                    class="flex min-h-12 w-full items-center justify-between rounded-2xl border border-zinc-200 bg-zinc-50 px-4 text-sm font-semibold text-zinc-700 transition hover:border-violet-200 hover:bg-white focus:outline-none focus:ring-4 focus:ring-violet-100 dark:border-white/10 dark:bg-white/[0.03] dark:text-white dark:hover:border-white/15 dark:hover:bg-white/[0.05] dark:focus:ring-violet-500/10"
-                                >
+                            <div x-data="{ open: false }" x-on:click.outside="open = false" class="relative">
+                                <button type="button" x-on:click="open = !open"
+                                    class="flex min-h-12 w-full items-center justify-between rounded-2xl border border-zinc-200 bg-zinc-50 px-4 text-sm font-semibold text-zinc-700 transition hover:border-violet-200 hover:bg-white focus:outline-none focus:ring-4 focus:ring-violet-100 dark:border-white/10 dark:bg-white/[0.03] dark:text-white dark:hover:border-white/15 dark:hover:bg-white/[0.05] dark:focus:ring-violet-500/10">
                                     <span class="flex items-center gap-3">
                                         <span
                                             class="flex size-8 items-center justify-center rounded-xl
                                             {{ match ($priority ?: 'normal') {
-                                                'low' => 'bg-slate-100 text-slate-500 ring-1 ring-inset ring-slate-200 dark:bg-slate-500/10 dark:text-slate-300 dark:ring-slate-400/10',
-                                                'normal' => 'bg-violet-50 text-violet-600 ring-1 ring-inset ring-violet-100 dark:bg-violet-500/10 dark:text-violet-300 dark:ring-violet-500/20',
-                                                'high' => 'bg-orange-50 text-orange-600 ring-1 ring-inset ring-orange-100 dark:bg-orange-500/10 dark:text-orange-300 dark:ring-orange-500/20',
-                                                'urgent' => 'bg-red-50 text-red-600 ring-1 ring-inset ring-red-100 dark:bg-red-500/10 dark:text-red-300 dark:ring-red-500/20',
-                                                default => 'bg-violet-50 text-violet-600 ring-1 ring-inset ring-violet-100 dark:bg-violet-500/10 dark:text-violet-300 dark:ring-violet-500/20',
-                                            } }}"
-                                        >
+                                                'low'
+                                                    => 'bg-slate-100 text-slate-500 ring-1 ring-inset ring-slate-200 dark:bg-slate-500/10 dark:text-slate-300 dark:ring-slate-400/10',
+                                                'normal'
+                                                    => 'bg-violet-50 text-violet-600 ring-1 ring-inset ring-violet-100 dark:bg-violet-500/10 dark:text-violet-300 dark:ring-violet-500/20',
+                                                'high'
+                                                    => 'bg-orange-50 text-orange-600 ring-1 ring-inset ring-orange-100 dark:bg-orange-500/10 dark:text-orange-300 dark:ring-orange-500/20',
+                                                'urgent'
+                                                    => 'bg-red-50 text-red-600 ring-1 ring-inset ring-red-100 dark:bg-red-500/10 dark:text-red-300 dark:ring-red-500/20',
+                                                default
+                                                    => 'bg-violet-50 text-violet-600 ring-1 ring-inset ring-violet-100 dark:bg-violet-500/10 dark:text-violet-300 dark:ring-violet-500/20',
+                                            } }}">
                                             @if (($priority ?: 'normal') === 'low')
                                                 <flux:icon.arrow-down class="size-4" />
                                             @elseif (($priority ?: 'normal') === 'normal')
@@ -1690,49 +1707,40 @@
                                         <span>{{ ucfirst($priority ?: 'normal') }}</span>
                                     </span>
 
-                                    <flux:icon.chevron-down
-                                        class="size-4 text-zinc-400 transition"
-                                        x-bind:class="open && 'rotate-180'"
-                                    />
+                                    <flux:icon.chevron-down class="size-4 text-zinc-400 transition"
+                                        x-bind:class="open && 'rotate-180'" />
                                 </button>
 
-                                <div
-                                    x-show="open"
-                                    x-cloak
-                                    x-transition.origin.top
-                                    class="absolute left-0 right-0 z-50 mt-2 overflow-hidden rounded-2xl border border-zinc-200 bg-white p-1.5 shadow-[0_22px_60px_-25px_rgba(40,30,60,.35)] dark:border-white/10 dark:bg-[#1c1821]"
-                                >
+                                <div x-show="open" x-cloak x-transition.origin.top
+                                    class="absolute left-0 right-0 z-50 mt-2 overflow-hidden rounded-2xl border border-zinc-200 bg-white p-1.5 shadow-[0_22px_60px_-25px_rgba(40,30,60,.35)] dark:border-white/10 dark:bg-[#1c1821]">
                                     @foreach ([
-                                        'low' => [
-                                            'label' => 'Low',
-                                            'description' => 'Can wait',
-                                            'class' => 'bg-slate-100 text-slate-500 ring-1 ring-inset ring-slate-200 dark:bg-slate-500/10 dark:text-slate-300 dark:ring-slate-400/10',
-                                        ],
-                                        'normal' => [
-                                            'label' => 'Normal',
-                                            'description' => 'Standard request',
-                                            'class' => 'bg-violet-50 text-violet-600 ring-1 ring-inset ring-violet-100 dark:bg-violet-500/10 dark:text-violet-300 dark:ring-violet-500/20',
-                                        ],
-                                        'high' => [
-                                            'label' => 'High',
-                                            'description' => 'Needs attention',
-                                            'class' => 'bg-orange-50 text-orange-600 ring-1 ring-inset ring-orange-100 dark:bg-orange-500/10 dark:text-orange-300 dark:ring-orange-500/20',
-                                        ],
-                                        'urgent' => [
-                                            'label' => 'Urgent',
-                                            'description' => 'Needs immediate action',
-                                            'class' => 'bg-red-50 text-red-600 ring-1 ring-inset ring-red-100 dark:bg-red-500/10 dark:text-red-300 dark:ring-red-500/20',
-                                        ],
-                                    ] as $value => $option)
-                                        <button
-                                            type="button"
-                                            wire:click="updatePriority('{{ $value }}')"
-                                            x-on:click="open = false"
-                                            wire:loading.attr="disabled"
+        'low' => [
+            'label' => 'Low',
+            'description' => 'Can wait',
+            'class' => 'bg-slate-100 text-slate-500 ring-1 ring-inset ring-slate-200 dark:bg-slate-500/10 dark:text-slate-300 dark:ring-slate-400/10',
+        ],
+        'normal' => [
+            'label' => 'Normal',
+            'description' => 'Standard request',
+            'class' => 'bg-violet-50 text-violet-600 ring-1 ring-inset ring-violet-100 dark:bg-violet-500/10 dark:text-violet-300 dark:ring-violet-500/20',
+        ],
+        'high' => [
+            'label' => 'High',
+            'description' => 'Needs attention',
+            'class' => 'bg-orange-50 text-orange-600 ring-1 ring-inset ring-orange-100 dark:bg-orange-500/10 dark:text-orange-300 dark:ring-orange-500/20',
+        ],
+        'urgent' => [
+            'label' => 'Urgent',
+            'description' => 'Needs immediate action',
+            'class' => 'bg-red-50 text-red-600 ring-1 ring-inset ring-red-100 dark:bg-red-500/10 dark:text-red-300 dark:ring-red-500/20',
+        ],
+    ] as $value => $option)
+                                        <button type="button" wire:click="updatePriority('{{ $value }}')"
+                                            x-on:click="open = false" wire:loading.attr="disabled"
                                             wire:target="updatePriority('{{ $value }}')"
-                                            class="group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-zinc-50 dark:hover:bg-white/5"
-                                        >
-                                            <span class="flex size-9 shrink-0 items-center justify-center rounded-xl {{ $option['class'] }}">
+                                            class="group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-zinc-50 dark:hover:bg-white/5">
+                                            <span
+                                                class="flex size-9 shrink-0 items-center justify-center rounded-xl {{ $option['class'] }}">
                                                 @if ($value === 'low')
                                                     <flux:icon.arrow-down class="size-4" />
                                                 @elseif ($value === 'normal')
@@ -1745,7 +1753,8 @@
                                             </span>
 
                                             <span class="min-w-0 flex-1">
-                                                <span class="block text-sm font-semibold text-zinc-800 dark:text-white/90">
+                                                <span
+                                                    class="block text-sm font-semibold text-zinc-800 dark:text-white/90">
                                                     {{ $option['label'] }}
                                                 </span>
 
@@ -1755,7 +1764,8 @@
                                             </span>
 
                                             @if (($priority ?: 'normal') === $value)
-                                                <span class="flex size-7 items-center justify-center rounded-lg bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-300">
+                                                <span
+                                                    class="flex size-7 items-center justify-center rounded-lg bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-300">
                                                     <flux:icon.check class="size-3.5" />
                                                 </span>
                                             @endif
@@ -1771,7 +1781,8 @@
                                 Ticket number
                             </div>
 
-                            <div class="mt-2 break-all font-mono text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                            <div
+                                class="mt-2 break-all font-mono text-sm font-semibold text-zinc-800 dark:text-zinc-200">
                                 {{ $ticket->ticket_number }}
                             </div>
                         </div>
@@ -1783,23 +1794,18 @@
                             </div>
 
                             <div class="mt-2 text-sm font-semibold text-zinc-800 dark:text-zinc-200">
-                                <time
-                                datetime="{{ $ticket->created_at?->utc()->toIso8601String() }}"
-                                x-data
-                                x-init="
-                                    const date = new Date($el.dateTime);
-
+                                <time datetime="{{ $ticket->created_at?->utc()->toIso8601String() }}" x-data
+                                    x-init="const date = new Date($el.dateTime);
+                                    
                                     $el.textContent = new Intl.DateTimeFormat(undefined, {
                                         year: 'numeric',
                                         month: 'short',
                                         day: 'numeric',
                                         hour: 'numeric',
                                         minute: '2-digit'
-                                    }).format(date);
-                                "
-                            >
-                                {{ $ticket->created_at?->format('M j, Y g:i A') ?? '—' }}
-                            </time>
+                                    }).format(date);">
+                                    {{ $ticket->created_at?->format('M j, Y g:i A') ?? '—' }}
+                                </time>
                             </div>
                         </div>
 
@@ -1810,23 +1816,18 @@
                             </div>
 
                             <div class="mt-2 text-sm font-semibold text-zinc-800 dark:text-zinc-200">
-                                <time
-                                datetime="{{ $transaction->created_at?->utc()->toIso8601String() }}"
-                                x-data
-                                x-init="
-                                    const date = new Date($el.dateTime);
-
+                                <time datetime="{{ $ticket->updated_at?->utc()->toIso8601String() }}" x-data
+                                    x-init="const date = new Date($el.dateTime);
+                                    
                                     $el.textContent = new Intl.DateTimeFormat(undefined, {
                                         year: 'numeric',
                                         month: 'short',
                                         day: 'numeric',
                                         hour: 'numeric',
                                         minute: '2-digit'
-                                    }).format(date);
-                                "
-                            >
-                                {{ $transaction->created_at?->diffForHumans() ?? '—' }}
-                            </time>
+                                    }).format(date);">
+                                    {{ $ticket->updated_at?->diffForHumans() ?? '—' }}
+                                </time>
                             </div>
                         </div>
                     </div>
@@ -1838,12 +1839,16 @@
                     once in the billing section above.
                 ========================================================= --}}
                 @if ($hasSignature)
-                    <section class="overflow-hidden rounded-[28px] border border-sky-200/80 bg-white shadow-[0_20px_60px_-42px_rgba(14,165,233,.28)] dark:border-sky-500/15 dark:bg-[#141218]">
+                    <section
+                        class="overflow-hidden rounded-[28px] border border-sky-200/80 bg-white shadow-[0_20px_60px_-42px_rgba(14,165,233,.28)] dark:border-sky-500/15 dark:bg-[#141218]">
                         <div class="relative overflow-hidden p-5">
-                            <div class="pointer-events-none absolute -right-12 -top-12 size-32 rounded-full bg-sky-200/25 blur-3xl dark:bg-sky-400/10"></div>
+                            <div
+                                class="pointer-events-none absolute -right-12 -top-12 size-32 rounded-full bg-sky-200/25 blur-3xl dark:bg-sky-400/10">
+                            </div>
 
                             <div class="relative flex items-center gap-3">
-                                <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-700 ring-1 ring-inset ring-sky-200/70 dark:bg-sky-500/15 dark:text-sky-300 dark:ring-sky-500/10">
+                                <div
+                                    class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-700 ring-1 ring-inset ring-sky-200/70 dark:bg-sky-500/15 dark:text-sky-300 dark:ring-sky-500/10">
                                     <flux:icon.pencil class="size-5" />
                                 </div>
 
@@ -1853,37 +1858,37 @@
                                             Signature captured
                                         </div>
 
-                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                                        <span
+                                            class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
                                             <span class="size-1.5 rounded-full bg-emerald-500"></span>
                                             Signed
                                         </span>
                                     </div>
 
-                                    <div class="mt-1 flex items-center gap-1.5 text-xs text-zinc-400 dark:text-zinc-500">
+                                    <div
+                                        class="mt-1 flex items-center gap-1.5 text-xs text-zinc-400 dark:text-zinc-500">
                                         <flux:icon.calendar-days class="size-3.5 shrink-0" />
 
                                         <span>Signed</span>
 
                                         <time class="text-white"
                                             datetime="{{ $invoice->signature_signed_at?->utc()->toIso8601String() }}"
-                                            x-data
-                                            x-init="
-                                                const date = new Date($el.dateTime);
-
-                                                $el.textContent = new Intl.DateTimeFormat(undefined, {
-                                                    dateStyle: 'long',
-                                                    timeStyle: 'short'
-                                                }).format(date);
-                                            "
-                                        >
+                                            x-data x-init="const date = new Date($el.dateTime);
+                                            
+                                            $el.textContent = new Intl.DateTimeFormat(undefined, {
+                                                dateStyle: 'long',
+                                                timeStyle: 'short'
+                                            }).format(date);">
                                             {{ $invoice->signature_signed_at?->format('F j, Y g:i A') }}
                                         </time>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="mt-4 rounded-2xl border border-sky-100 bg-sky-50/70 px-3.5 py-3 text-xs leading-5 text-sky-800/75 dark:border-sky-500/10 dark:bg-sky-500/[0.05] dark:text-sky-200/70">
-                                Customer signature is securely captured on the invoice and available in the billing section.
+                            <div
+                                class="mt-4 rounded-2xl border border-sky-100 bg-sky-50/70 px-3.5 py-3 text-xs leading-5 text-sky-800/75 dark:border-sky-500/10 dark:bg-sky-500/[0.05] dark:text-sky-200/70">
+                                Customer signature is securely captured on the invoice and available in the billing
+                                section.
                             </div>
                         </div>
                     </section>
@@ -1892,9 +1897,14 @@
                 {{-- ========================================================
                     ACTIVITY
                 ========================================================= --}}
-                <section class="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#665783] via-[#5d4e79] to-[#4e4167] p-6 text-white shadow-[0_26px_70px_-36px_rgba(80,60,110,.8)]">
-                    <div class="pointer-events-none absolute -right-16 -top-20 size-56 rounded-full bg-white/[0.08] blur-3xl"></div>
-                    <div class="pointer-events-none absolute -bottom-20 -left-16 size-48 rounded-full bg-violet-300/[0.08] blur-3xl"></div>
+                <section
+                    class="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#665783] via-[#5d4e79] to-[#4e4167] p-6 text-white shadow-[0_26px_70px_-36px_rgba(80,60,110,.8)]">
+                    <div
+                        class="pointer-events-none absolute -right-16 -top-20 size-56 rounded-full bg-white/[0.08] blur-3xl">
+                    </div>
+                    <div
+                        class="pointer-events-none absolute -bottom-20 -left-16 size-48 rounded-full bg-violet-300/[0.08] blur-3xl">
+                    </div>
 
                     <div class="relative">
                         <div class="flex items-center justify-between">
@@ -1908,7 +1918,8 @@
                                 </div>
                             </div>
 
-                            <div class="flex size-10 items-center justify-center rounded-xl bg-white/10 ring-1 ring-inset ring-white/10">
+                            <div
+                                class="flex size-10 items-center justify-center rounded-xl bg-white/10 ring-1 ring-inset ring-white/10">
                                 <flux:icon.bolt class="size-4" />
                             </div>
                         </div>

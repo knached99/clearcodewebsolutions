@@ -5,6 +5,7 @@ namespace App\Livewire\Teams;
 use App\Models\Team;
 use App\Services\TeamDashboardService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -16,6 +17,10 @@ class TeamDashboard extends Component
     public Team $team;
 
     public string $filter = 'max';
+
+    public ?string $customStartDate = null;
+
+    public ?string $customEndDate = null;
 
     public array $dashboard = [];
 
@@ -56,22 +61,21 @@ class TeamDashboard extends Component
         }
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Filter
+    |--------------------------------------------------------------------------
+    */
+
     public function setFilter(string $filter): void
     {
-        Log::info('TeamDashboard: setFilter START', [
-            'team_id' => $this->team->id ?? null,
-            'team_slug' => $this->team->slug ?? null,
-            'old_filter' => $this->filter,
-            'requested_filter' => $filter,
-        ]);
-
         $filter = strtolower(trim($filter));
 
-        Log::debug('TeamDashboard: filter normalized', [
-            'filter' => $filter,
-        ]);
-
-        if (! in_array($filter, ['max', 'mtd', 'ytd'], true)) {
+        if (! in_array(
+            $filter,
+            ['max', 'mtd', '3m', '6m', 'ytd', 'custom'],
+            true
+        )) {
             Log::warning('TeamDashboard: invalid filter', [
                 'filter' => $filter,
             ]);
@@ -79,53 +83,176 @@ class TeamDashboard extends Component
             return;
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | Custom range requires dates.
+        |--------------------------------------------------------------------------
+        */
+
+        if ($filter === 'custom') {
+            if (
+                ! $this->customStartDate
+                || ! $this->customEndDate
+            ) {
+                return;
+            }
+
+            if (
+                ! $this->validCustomDateRange()
+            ) {
+                return;
+            }
+        }
+
         try {
             $this->filter = $filter;
 
-            Log::info('TeamDashboard: filter assigned', [
-                'team_id' => $this->team->id,
-                'filter' => $this->filter,
-            ]);
-
-            $startedAt = microtime(true);
+            /*
+            |--------------------------------------------------------------------------
+            | If switching away from custom, retain the dates internally.
+            |
+            | This allows the user to switch back to Custom without
+            | immediately losing their previous selection.
+            |--------------------------------------------------------------------------
+            */
 
             $this->loadDashboard();
 
-
-            $chartData = $this->chartData();
-
-          
             $this->dispatch(
                 'dashboard-updated',
-                data: $chartData
+                data: $this->chartData()
             );
-        
         } catch (Throwable $e) {
-         
+            Log::error('TeamDashboard: setFilter FAILED', [
+                'team_id' => $this->team->id ?? null,
+                'filter' => $filter,
+                'message' => $e->getMessage(),
+            ]);
+
             throw $e;
         }
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Custom Date Range
+    |--------------------------------------------------------------------------
+    */
+
+    public function setCustomRange(
+        ?string $startDate,
+        ?string $endDate
+    ): void {
+        $this->customStartDate = $this->normalizeDate(
+            $startDate
+        );
+
+        $this->customEndDate = $this->normalizeDate(
+            $endDate
+        );
+
+        if (
+            ! $this->customStartDate
+            || ! $this->customEndDate
+        ) {
+            return;
+        }
+
+        if (! $this->validCustomDateRange()) {
+            Log::warning(
+                'TeamDashboard: invalid custom date range',
+                [
+                    'start' => $this->customStartDate,
+                    'end' => $this->customEndDate,
+                ]
+            );
+
+            return;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Automatically switch to Custom.
+        |--------------------------------------------------------------------------
+        */
+
+        $this->filter = 'custom';
+
+        $this->loadDashboard();
+
+        $this->dispatch(
+            'dashboard-updated',
+            data: $this->chartData()
+        );
+    }
+
+    protected function normalizeDate(
+        ?string $date
+    ): ?string {
+        if (! $date) {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($date)->format('Y-m-d');
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
+    protected function validCustomDateRange(): bool
+    {
+        if (
+            ! $this->customStartDate
+            || ! $this->customEndDate
+        ) {
+            return false;
+        }
+
+        try {
+            $start = Carbon::createFromFormat(
+                'Y-m-d',
+                $this->customStartDate
+            )->startOfDay();
+
+            $end = Carbon::createFromFormat(
+                'Y-m-d',
+                $this->customEndDate
+            )->endOfDay();
+
+            return $start->lte($end);
+        } catch (Throwable) {
+            return false;
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Dashboard
+    |--------------------------------------------------------------------------
+    */
 
     protected function loadDashboard(): void
     {
-        $startedAt = microtime(true);
-
-        try {
-            $this->dashboard = app(TeamDashboardService::class)
-                ->dashboardData(
-                    $this->team,
-                    $this->filter
-                );
-        
-        } catch (Throwable $e) {
-        
-            throw $e;
-        }
+        $this->dashboard = app(
+            TeamDashboardService::class
+        )->dashboardData(
+            team: $this->team,
+            filter: $this->filter,
+            customStartDate: $this->customStartDate,
+            customEndDate: $this->customEndDate,
+        );
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Chart Data
+    |--------------------------------------------------------------------------
+    */
 
     protected function chartData(): array
     {
-        $data = [
+        return [
             'revenue' => [
                 'labels' => collect(
                     $this->dashboard['monthlyRevenue'] ?? []
@@ -174,17 +301,17 @@ class TeamDashboard extends Component
                 ),
             ],
         ];
-
-
-        return $data;
     }
 
     public function render(): View
     {
-        return view('livewire.teams.team-dashboard', [
-            ...$this->dashboard,
+        return view(
+            'livewire.teams.team-dashboard',
+            [
+                ...$this->dashboard,
 
-            'chartData' => $this->chartData(),
-        ]);
+                'chartData' => $this->chartData(),
+            ]
+        );
     }
 }
