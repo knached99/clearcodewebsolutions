@@ -143,7 +143,7 @@
     }"
     x-init="navigateToMessage()"
     x-on:keydown.escape.window="closeLightbox()"
-    class="min-h-screen w-full overflow-x-hidden bg-[#f7f5fa] text-zinc-900 antialiased dark:bg-[#0b0a0f] dark:text-white"
+    class="min-h-screen w-full overflow-x-hidden bg-[#f6f4fa] text-zinc-900 antialiased selection:bg-violet-200 selection:text-violet-950 dark:bg-[#09080d] dark:text-white dark:selection:bg-violet-500/30 dark:selection:text-white"
 >
     @php
         $user = auth()->user();
@@ -242,9 +242,26 @@
             }
         }
 
+        @keyframes soft-glow {
+            0%,
+            100% {
+                opacity: .35;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: .65;
+                transform: scale(1.04);
+            }
+        }
+
         .message-highlight {
             animation: ticket-message-highlight 5s ease-out both;
             border-radius: 24px;
+        }
+
+        .signature-glow {
+            animation: soft-glow 5s ease-in-out infinite;
         }
 
         [x-cloak] {
@@ -258,6 +275,10 @@
                     inset 0 0 0 2px rgba(139, 120, 185, 0.55),
                     0 0 0 5px rgba(139, 120, 185, 0.12);
             }
+
+            .signature-glow {
+                animation: none;
+            }
         }
     </style>
 
@@ -268,15 +289,15 @@
         <div
             x-show="lightbox"
             x-cloak
-            x-transition.opacity
-            class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-3 backdrop-blur-xl sm:p-6"
+            x-transition.opacity.duration.250ms
+            class="fixed inset-0 z-[9999] flex items-center justify-center bg-[#06050a]/92 p-3 backdrop-blur-2xl sm:p-6"
             role="dialog"
             aria-modal="true"
         >
             <button
                 type="button"
                 x-on:click="closeLightbox()"
-                class="absolute right-3 top-3 z-30 flex size-11 items-center justify-center rounded-2xl border border-white/10 bg-white/10 text-white backdrop-blur-xl transition hover:bg-white/20 sm:right-5 sm:top-5"
+                class="absolute right-3 top-3 z-30 flex size-11 items-center justify-center rounded-2xl border border-white/10 bg-white/10 text-white shadow-2xl backdrop-blur-xl transition hover:scale-105 hover:bg-white/15 sm:right-6 sm:top-6"
                 aria-label="Close image viewer"
             >
                 <flux:icon.x-mark class="size-5" />
@@ -290,14 +311,16 @@
             ></button>
 
             <div class="relative z-10 flex max-h-[92vh] max-w-[96vw] flex-col items-center">
-                <img
-                    :src="lightboxSrc"
-                    :alt="lightboxName"
-                    x-on:click.stop
-                    class="max-h-[82vh] max-w-[96vw] rounded-2xl bg-white object-contain shadow-2xl sm:max-h-[86vh] sm:rounded-3xl"
-                />
+                <div class="relative overflow-hidden rounded-[28px] border border-white/10 bg-white p-2 shadow-[0_30px_120px_-40px_rgba(0,0,0,.8)] sm:rounded-[32px] sm:p-3">
+                    <img
+                        :src="lightboxSrc"
+                        :alt="lightboxName"
+                        x-on:click.stop
+                        class="max-h-[82vh] max-w-[96vw] rounded-[22px] bg-white object-contain sm:max-h-[86vh] sm:rounded-[26px]"
+                    />
+                </div>
 
-                <div class="mt-3 max-w-[90vw] rounded-full border border-white/10 bg-white/10 px-4 py-2 backdrop-blur-xl">
+                <div class="mt-4 rounded-full border border-white/10 bg-white/10 px-4 py-2 backdrop-blur-xl">
                     <span
                         x-text="lightboxName"
                         class="block truncate text-xs font-medium text-white/80 sm:text-sm"
@@ -310,17 +333,15 @@
     {{-- ================================================================
         TOP HEADER
     ================================================================= --}}
-    <header
-        class="sticky top-0 z-50 border-b border-zinc-200/80 bg-[#f7f5fa]/92 backdrop-blur-2xl dark:border-white/[0.06] dark:bg-[#0b0a0f]/92"
-    >
-        <div class="mx-auto flex min-h-[72px] w-full max-w-[1840px] items-center justify-between gap-3 px-3 sm:px-5 lg:px-7 2xl:px-9">
+    <header class="sticky top-0 z-50 border-b border-zinc-200/70 bg-[#f6f4fa]/85 backdrop-blur-2xl dark:border-white/[0.06] dark:bg-[#09080d]/80">
+        <div class="mx-auto flex min-h-[76px] w-full max-w-[1840px] items-center justify-between gap-3 px-3 sm:px-5 lg:px-7 2xl:px-9">
             <div class="flex min-w-0 items-center gap-3">
                 <a
                     href="{{ auth()->check() && auth()->user()->currentTeam
                         ? route('dashboard', ['current_team' => auth()->user()->currentTeam])
                         : route('onboarding') }}"
                     wire:navigate
-                    class="group flex size-10 shrink-0 items-center justify-center rounded-2xl border border-zinc-200 bg-white text-zinc-500 shadow-sm transition hover:-translate-x-0.5 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-600 dark:border-white/10 dark:bg-white/5 dark:text-white/50 dark:hover:border-white/15 dark:hover:bg-white/10 dark:hover:text-white"
+                    class="group flex size-11 shrink-0 items-center justify-center rounded-2xl border border-zinc-200/80 bg-white/90 text-zinc-500 shadow-[0_10px_30px_-20px_rgba(50,35,75,.45)] backdrop-blur transition duration-200 hover:-translate-x-0.5 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/55 dark:hover:border-violet-400/20 dark:hover:bg-violet-500/10 dark:hover:text-white"
                     aria-label="Back to dashboard"
                 >
                     <flux:icon.arrow-left class="size-4 transition-transform group-hover:-translate-x-0.5" />
@@ -329,8 +350,8 @@
                 <div class="hidden h-8 w-px bg-zinc-200 sm:block dark:bg-white/10"></div>
 
                 <div class="min-w-0">
-                    <div class="flex min-w-0 items-center gap-2">
-                        <h1 class="min-w-0 truncate text-[15px] font-semibold tracking-tight text-zinc-900 sm:text-base lg:text-lg dark:text-white">
+                    <div class="flex min-w-0 items-center gap-2.5">
+                        <h1 class="min-w-0 truncate text-[15px] font-semibold tracking-[-0.02em] text-zinc-950 sm:text-base lg:text-lg dark:text-white">
                             {{ $ticket->subject }}
                         </h1>
 
@@ -347,7 +368,7 @@
 
             <div class="shrink-0">
                 <span
-                    class="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ring-inset sm:px-3.5 sm:py-2 sm:text-sm {{ $statusBadge }}"
+                    class="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold shadow-sm ring-1 ring-inset sm:px-3.5 sm:py-2 sm:text-sm {{ $statusBadge }}"
                 >
                     <span class="size-2 rounded-full {{ $statusDot }}"></span>
                     <span>{{ ucfirst($ticket->status) }}</span>
@@ -360,7 +381,7 @@
         PAGE
     ================================================================= --}}
     <main class="mx-auto w-full max-w-[1840px] px-3 py-5 sm:px-5 sm:py-7 lg:px-7 lg:py-8 2xl:px-9">
-        <div class="grid min-w-0 items-start gap-6 2xl:grid-cols-[minmax(0,1fr)_380px] 2xl:gap-8">
+        <div class="grid min-w-0 items-start gap-6 2xl:grid-cols-[minmax(0,1fr)_390px] 2xl:gap-8">
 
             {{-- ============================================================
                 MAIN CONTENT
@@ -370,36 +391,40 @@
                 {{-- ========================================================
                     CONVERSATION HEADER
                 ========================================================= --}}
-                <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-                    <div class="min-w-0">
-                        <div class="mb-2.5 flex items-center gap-2">
-                            <span class="flex size-8 items-center justify-center rounded-xl bg-violet-100 text-violet-600 dark:bg-violet-500/10 dark:text-violet-300">
-                                <flux:icon.chat-bubble-left class="size-4" />
-                            </span>
+                <div class="relative overflow-hidden rounded-[30px] border border-violet-200/70 bg-gradient-to-br from-white via-white to-violet-50/70 px-5 py-5 shadow-[0_20px_70px_-45px_rgba(85,65,120,.35)] sm:px-7 sm:py-6 dark:border-white/[0.07] dark:from-[#15121b] dark:via-[#15121b] dark:to-violet-500/[0.04]">
+                    <div class="pointer-events-none absolute -right-12 -top-16 size-48 rounded-full bg-violet-300/20 blur-3xl dark:bg-violet-400/10"></div>
 
-                            <span class="text-[10px] font-bold uppercase tracking-[0.18em] text-violet-600 dark:text-violet-300">
-                                Conversation
-                            </span>
+                    <div class="relative flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+                        <div class="min-w-0">
+                            <div class="mb-3 flex items-center gap-2.5">
+                                <span class="flex size-9 items-center justify-center rounded-xl bg-violet-100 text-violet-600 shadow-sm dark:bg-violet-500/10 dark:text-violet-300">
+                                    <flux:icon.chat-bubble-left-right class="size-4" />
+                                </span>
+
+                                <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-violet-600 dark:text-violet-300">
+                                    Conversation
+                                </span>
+                            </div>
+
+                            <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                                <h2 class="text-4xl font-bold tracking-[-0.055em] text-zinc-950 sm:text-5xl dark:text-white">
+                                    {{ $messageCount }}
+                                </h2>
+
+                                <span class="text-base text-zinc-400 sm:text-lg">
+                                    {{ Str::plural('message', $messageCount) }}
+                                </span>
+                            </div>
                         </div>
 
-                        <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                            <h2 class="text-3xl font-bold tracking-[-0.045em] text-zinc-950 sm:text-4xl dark:text-white">
-                                {{ $messageCount }}
-                            </h2>
+                        <div class="rounded-2xl border border-zinc-200/80 bg-white/80 px-4 py-3 shadow-sm backdrop-blur md:min-w-[180px] md:text-right dark:border-white/10 dark:bg-white/[0.03]">
+                            <div class="text-[10px] font-bold uppercase tracking-[0.17em] text-zinc-400">
+                                Last activity
+                            </div>
 
-                            <span class="text-base text-zinc-400 sm:text-lg">
-                                {{ Str::plural('message', $messageCount) }}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div class="shrink-0 md:text-right">
-                        <div class="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-400">
-                            Last activity
-                        </div>
-
-                        <div class="mt-1 text-sm font-medium text-zinc-600 dark:text-zinc-300">
-                            {{ $ticket->last_activity_at?->diffForHumans() ?? '—' }}
+                            <div class="mt-1 text-sm font-semibold text-zinc-700 dark:text-zinc-200">
+                                {{ $ticket->last_activity_at?->diffForHumans() ?? '—' }}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -407,9 +432,7 @@
                 {{-- ========================================================
                     CONVERSATION
                 ========================================================= --}}
-                <section
-                    class="overflow-hidden rounded-[28px] border border-zinc-200/90 bg-white shadow-[0_24px_80px_-50px_rgba(35,25,55,.35)] dark:border-white/[0.07] dark:bg-[#141218]"
-                >
+                <section class="overflow-hidden rounded-[30px] border border-zinc-200/80 bg-white shadow-[0_30px_90px_-55px_rgba(35,25,55,.45)] dark:border-white/[0.07] dark:bg-[#141218]">
                     <div class="divide-y divide-zinc-100 dark:divide-white/[0.05]">
 
                         @php
@@ -458,13 +481,13 @@
                             {{-- Date divider --}}
                             @if ($showDateDivider)
                                 <div class="flex items-center gap-3 px-4 py-5 sm:px-7 sm:py-6">
-                                    <div class="h-px flex-1 bg-zinc-100 dark:bg-white/[0.05]"></div>
+                                    <div class="h-px flex-1 bg-gradient-to-r from-transparent via-zinc-200 to-transparent dark:via-white/[0.08]"></div>
 
-                                    <span class="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-[10px] font-semibold text-zinc-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-zinc-400">
+                                    <span class="rounded-full border border-zinc-200 bg-zinc-50 px-3.5 py-1.5 text-[10px] font-bold text-zinc-500 shadow-sm dark:border-white/10 dark:bg-white/[0.03] dark:text-zinc-400">
                                         {{ $message->created_at?->format('M j, Y') ?? '—' }}
                                     </span>
 
-                                    <div class="h-px flex-1 bg-zinc-100 dark:bg-white/[0.05]"></div>
+                                    <div class="h-px flex-1 bg-gradient-to-r from-transparent via-zinc-200 to-transparent dark:via-white/[0.08]"></div>
                                 </div>
                             @endif
 
@@ -478,7 +501,7 @@
 
                                     @if ($isCustomer)
                                         {{-- Customer avatar --}}
-                                        <div class="relative flex size-10 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-sm font-bold text-violet-700 dark:bg-violet-500/10 dark:text-violet-200 sm:size-11">
+                                        <div class="relative flex size-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-100 to-fuchsia-100 text-sm font-bold text-violet-700 shadow-sm ring-1 ring-violet-200/50 dark:from-violet-500/10 dark:to-fuchsia-500/10 dark:text-violet-200 dark:ring-white/5 sm:size-11">
                                             {{ $initial }}
                                         </div>
                                     @endif
@@ -491,7 +514,7 @@
                                             </span>
 
                                             @if (! $isCustomer)
-                                                <span class="rounded-full bg-violet-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-violet-600 dark:bg-violet-500/10 dark:text-violet-300">
+                                                <span class="rounded-full bg-violet-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-violet-600 ring-1 ring-inset ring-violet-100 dark:bg-violet-500/10 dark:text-violet-300 dark:ring-violet-500/15">
                                                     Team
                                                 </span>
                                             @endif
@@ -504,10 +527,10 @@
                                         {{-- Text --}}
                                         @if (filled($message->message))
                                             <div
-                                                class="w-fit max-w-full rounded-[22px] px-4 py-3.5 text-[14px] leading-7 sm:px-5 sm:py-4 sm:text-[15px]
+                                                class="w-fit max-w-full rounded-[24px] px-4 py-3.5 text-[14px] leading-7 shadow-[0_14px_35px_-25px_rgba(40,30,60,.25)] sm:px-5 sm:py-4 sm:text-[15px]
                                                 {{ $isCustomer
                                                     ? 'rounded-tl-md border border-zinc-200 bg-zinc-50 text-zinc-700 dark:border-white/[0.07] dark:bg-white/[0.04] dark:text-zinc-200'
-                                                    : 'rounded-tr-md bg-[#8069b0] text-white shadow-[0_14px_35px_-22px_rgba(106,82,155,.9)]' }}"
+                                                    : 'rounded-tr-md bg-gradient-to-br from-[#8e78be] via-[#8069b0] to-[#70589f] text-white shadow-[0_18px_38px_-22px_rgba(106,82,155,.95)]' }}"
                                             >
                                                 <div class="whitespace-pre-wrap break-words">
                                                     {{ $message->message }}
@@ -555,7 +578,7 @@
                                                     @endphp
 
                                                     @if ($isImage)
-                                                        <div class="group/image overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-50 dark:border-white/[0.07] dark:bg-white/[0.03]">
+                                                        <div class="group/image overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-50 shadow-sm dark:border-white/[0.07] dark:bg-white/[0.03]">
                                                             <button
                                                                 type="button"
                                                                 x-on:click="openLightbox(
@@ -570,12 +593,12 @@
                                                                         alt="{{ $attachment->original_name }}"
                                                                         loading="lazy"
                                                                         decoding="async"
-                                                                        class="block max-h-[520px] w-full object-contain transition duration-500 group-hover/image:scale-[1.01]"
+                                                                        class="block max-h-[520px] w-full object-contain transition duration-500 group-hover/image:scale-[1.015]"
                                                                     />
                                                                 </div>
 
-                                                                <div class="pointer-events-none absolute inset-0 flex items-center justify-center bg-violet-900/0 transition group-hover/image:bg-violet-900/10">
-                                                                    <span class="flex size-12 scale-90 items-center justify-center rounded-2xl bg-white text-violet-600 opacity-0 shadow-2xl transition group-hover/image:scale-100 group-hover/image:opacity-100">
+                                                                <div class="pointer-events-none absolute inset-0 flex items-center justify-center bg-violet-900/0 transition duration-300 group-hover/image:bg-violet-900/10">
+                                                                    <span class="flex size-12 scale-90 items-center justify-center rounded-2xl bg-white text-violet-600 opacity-0 shadow-2xl transition duration-300 group-hover/image:scale-100 group-hover/image:opacity-100">
                                                                         <flux:icon.arrows-pointing-out class="size-5" />
                                                                     </span>
                                                                 </div>
@@ -608,7 +631,7 @@
                                                     @else
                                                         <a
                                                             href="{{ $downloadUrl }}"
-                                                            class="group/file flex w-full max-w-xl items-center gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-3.5 transition hover:-translate-y-0.5 hover:border-violet-200 hover:bg-white hover:shadow-lg dark:border-white/[0.07] dark:bg-white/[0.03] dark:hover:border-white/10 dark:hover:bg-white/[0.05]"
+                                                            class="group/file flex w-full max-w-xl items-center gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-3.5 transition duration-200 hover:-translate-y-0.5 hover:border-violet-200 hover:bg-white hover:shadow-lg dark:border-white/[0.07] dark:bg-white/[0.03] dark:hover:border-white/10 dark:hover:bg-white/[0.05]"
                                                         >
                                                             <div class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm dark:bg-white/10">
                                                                 @if ($isPdf)
@@ -625,9 +648,7 @@
 
                                                                 <div class="mt-1 text-xs text-zinc-400">
                                                                     {{ number_format($attachment->size / 1024, 1) }} KB
-
                                                                     <span class="mx-1">·</span>
-
                                                                     {{ strtoupper(pathinfo($attachment->original_name, PATHINFO_EXTENSION)) }}
                                                                 </div>
                                                             </div>
@@ -648,7 +669,7 @@
 
                                     @if (! $isCustomer)
                                         {{-- Team avatar --}}
-                                        <div class="relative flex size-10 shrink-0 items-center justify-center rounded-2xl bg-[#8069b0] text-sm font-bold text-white shadow-[0_10px_24px_-10px_rgba(109,83,157,.8)] sm:size-11">
+                                        <div class="relative flex size-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#8e78be] to-[#6f579f] text-sm font-bold text-white shadow-[0_14px_30px_-12px_rgba(109,83,157,.85)] sm:size-11">
                                             {{ $initial }}
 
                                             <span class="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-white bg-emerald-500 dark:border-[#141218]"></span>
@@ -658,7 +679,7 @@
                             </article>
                         @empty
                             <div class="px-6 py-24 text-center">
-                                <div class="mx-auto mb-5 flex size-16 items-center justify-center rounded-3xl bg-violet-100 text-violet-600 dark:bg-violet-500/10 dark:text-violet-300">
+                                <div class="mx-auto mb-5 flex size-16 items-center justify-center rounded-3xl bg-violet-100 text-violet-600 shadow-sm dark:bg-violet-500/10 dark:text-violet-300">
                                     <flux:icon.chat-bubble-left-right class="size-7" />
                                 </div>
 
@@ -676,8 +697,8 @@
                     {{-- ====================================================
                         COMPOSER
                     ===================================================== --}}
-                    <div class="border-t border-zinc-200 bg-zinc-50/80 p-3 sm:p-5 dark:border-white/[0.06] dark:bg-[#100f14]">
-                        <div class="overflow-hidden rounded-[24px] border border-zinc-200 bg-white shadow-[0_14px_50px_-35px_rgba(45,35,65,.4)] transition focus-within:border-violet-300 focus-within:ring-4 focus-within:ring-violet-100 dark:border-white/[0.08] dark:bg-[#17141c] dark:focus-within:border-violet-500/30 dark:focus-within:ring-violet-500/10">
+                    <div class="border-t border-zinc-200 bg-gradient-to-b from-zinc-50 to-white p-3 sm:p-5 dark:border-white/[0.06] dark:from-[#100f14] dark:to-[#0e0d12]">
+                        <div class="overflow-hidden rounded-[26px] border border-zinc-200/90 bg-white shadow-[0_20px_60px_-42px_rgba(45,35,65,.4)] transition duration-200 focus-within:border-violet-300 focus-within:ring-4 focus-within:ring-violet-100 dark:border-white/[0.08] dark:bg-[#17141c] dark:focus-within:border-violet-500/30 dark:focus-within:ring-violet-500/10">
 
                             <textarea
                                 wire:model="newMessage"
@@ -802,7 +823,7 @@
                                     wire:loading.attr="disabled"
                                     wire:target="sendMessage"
                                     variant="primary"
-                                    class="min-h-11 w-full cursor-pointer rounded-xl bg-[#8069b0]! px-5 text-sm font-semibold text-white shadow-[0_12px_28px_-15px_rgba(104,78,150,.85)] transition hover:bg-[#71569f]! disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                                    class="min-h-11 w-full cursor-pointer rounded-xl bg-gradient-to-r from-[#8e78be] to-[#71599f]! px-5 text-sm font-semibold text-white shadow-[0_14px_30px_-15px_rgba(104,78,150,.9)] transition hover:from-[#8069b0]! hover:to-[#664e95]! disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                                 >
                                     <flux:icon.paper-airplane
                                         wire:loading.remove
@@ -847,24 +868,25 @@
                 @if ($showChargeSection)
                     <section class="space-y-5">
 
-                        {{-- ====================================================
+                        {{-- ==================================================
                             PAID CARD
-                        ===================================================== --}}
+                        =================================================== --}}
                         @if ($isPaid && $invoice)
-                            <div class="overflow-hidden rounded-[28px] border border-emerald-200/80 bg-white shadow-[0_24px_70px_-40px_rgba(16,185,129,.3)] dark:border-emerald-500/15 dark:bg-[#141218]">
+                            <div class="overflow-hidden rounded-[30px] border border-emerald-200/80 bg-white shadow-[0_28px_90px_-48px_rgba(16,185,129,.35)] dark:border-emerald-500/15 dark:bg-[#141218]">
 
-                                <div class="relative overflow-hidden border-b border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-teal-50 px-5 py-6 sm:px-7 sm:py-7 dark:border-emerald-500/10 dark:from-emerald-500/10 dark:via-[#141218] dark:to-teal-500/5">
-                                    <div class="pointer-events-none absolute -right-16 -top-16 size-52 rounded-full bg-emerald-200/30 blur-3xl dark:bg-emerald-400/10"></div>
+                                <div class="relative overflow-hidden border-b border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-teal-50 px-5 py-7 sm:px-7 sm:py-8 dark:border-emerald-500/10 dark:from-emerald-500/10 dark:via-[#141218] dark:to-teal-500/5">
+                                    <div class="pointer-events-none absolute -right-20 -top-20 size-64 rounded-full bg-emerald-200/35 blur-3xl dark:bg-emerald-400/10"></div>
+                                    <div class="pointer-events-none absolute -bottom-20 -left-16 size-52 rounded-full bg-teal-200/25 blur-3xl dark:bg-teal-400/5"></div>
 
                                     <div class="relative flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                                         <div class="flex min-w-0 items-start gap-4">
-                                            <div class="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 shadow-sm dark:bg-emerald-500/15 dark:text-emerald-300">
+                                            <div class="flex size-13 shrink-0 items-center justify-center rounded-[18px] bg-emerald-100 text-emerald-700 shadow-sm dark:bg-emerald-500/15 dark:text-emerald-300">
                                                 <flux:icon.check class="size-6" />
                                             </div>
 
                                             <div class="min-w-0">
                                                 <div class="flex flex-wrap items-center gap-2">
-                                                    <h3 class="text-lg font-bold tracking-tight text-zinc-950 sm:text-xl dark:text-white">
+                                                    <h3 class="text-xl font-bold tracking-tight text-zinc-950 sm:text-2xl dark:text-white">
                                                         Payment complete
                                                     </h3>
 
@@ -880,7 +902,7 @@
                                             </div>
                                         </div>
 
-                                        <div class="w-full rounded-2xl border border-emerald-200/70 bg-white/80 px-4 py-3 backdrop-blur lg:w-auto lg:min-w-[180px] dark:border-emerald-500/10 dark:bg-zinc-900/60">
+                                        <div class="w-full rounded-2xl border border-emerald-200/70 bg-white/85 px-4 py-3 shadow-sm backdrop-blur lg:w-auto lg:min-w-[190px] dark:border-emerald-500/10 dark:bg-zinc-900/60">
                                             <div class="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400">
                                                 Total billed
                                             </div>
@@ -896,7 +918,7 @@
                                     <div class="grid gap-5 lg:grid-cols-2">
 
                                         {{-- Services --}}
-                                        <div class="rounded-2xl border border-zinc-200 bg-zinc-50/70 p-4 sm:p-5 dark:border-zinc-800 dark:bg-zinc-950/40">
+                                        <div class="rounded-[22px] border border-zinc-200 bg-zinc-50/80 p-4 sm:p-5 dark:border-zinc-800 dark:bg-zinc-950/40">
                                             <div class="mb-4 flex items-start justify-between gap-4">
                                                 <div>
                                                     <div class="text-sm font-semibold text-zinc-900 dark:text-white">
@@ -949,7 +971,7 @@
                                         </div>
 
                                         {{-- Payment economics --}}
-                                        <div class="rounded-2xl border border-zinc-200 bg-zinc-50/70 p-4 sm:p-5 dark:border-zinc-800 dark:bg-zinc-950/40">
+                                        <div class="rounded-[22px] border border-zinc-200 bg-zinc-50/80 p-4 sm:p-5 dark:border-zinc-800 dark:bg-zinc-950/40">
                                             <div class="mb-4">
                                                 <div class="text-sm font-semibold text-zinc-900 dark:text-white">
                                                     Payment breakdown
@@ -1033,19 +1055,29 @@
                                             </div>
                                         </div>
 
-                                        {{-- Signature --}}
+                                        {{-- Single signature display --}}
                                         @if ($hasSignature)
-                                            <div class="overflow-hidden rounded-2xl border border-zinc-200 bg-white lg:col-span-2 dark:border-zinc-800 dark:bg-zinc-950">
-                                                <div class="flex flex-col gap-4 border-b border-zinc-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 dark:border-zinc-800">
-                                                    <div class="flex items-center gap-3">
-                                                        <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300">
-                                                            <flux:icon.pencil class="size-5" />
+                                            <div class="relative overflow-hidden rounded-[24px] border border-sky-200/80 bg-white lg:col-span-2 dark:border-sky-500/15 dark:bg-zinc-950">
+                                                <div class="pointer-events-none absolute -right-16 -top-16 size-48 rounded-full bg-sky-200/30 blur-3xl dark:bg-sky-400/10"></div>
+
+                                                <div class="relative flex flex-col gap-4 border-b border-sky-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 dark:border-sky-500/10">
+                                                    <div class="flex min-w-0 items-center gap-3">
+                                                        <div class="relative flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-700 shadow-sm dark:bg-sky-500/15 dark:text-sky-300">
+                                                            <span class="signature-glow pointer-events-none absolute inset-0 rounded-2xl bg-sky-300/20 blur-md dark:bg-sky-400/10"></span>
+                                                            <flux:icon.pencil class="relative size-5" />
                                                         </div>
 
-                                                        <div>
-                                                            <h4 class="text-sm font-semibold text-zinc-900 dark:text-white">
-                                                                Captured customer signature
-                                                            </h4>
+                                                        <div class="min-w-0">
+                                                            <div class="flex flex-wrap items-center gap-2">
+                                                                <h4 class="text-sm font-semibold text-zinc-900 dark:text-white">
+                                                                    Customer signature
+                                                                </h4>
+
+                                                                <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                                                                    <span class="size-1.5 rounded-full bg-emerald-500"></span>
+                                                                    Signed
+                                                                </span>
+                                                            </div>
 
                                                             <p class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
                                                                 Signature recorded on the invoice agreement.
@@ -1056,18 +1088,18 @@
                                                     <button
                                                         type="button"
                                                         x-on:click="openLightbox(@js($signatureData), 'Customer signature')"
-                                                        class="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-3.5 py-2 text-xs font-semibold text-zinc-600 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-white/5 dark:hover:text-violet-300"
+                                                        class="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-3.5 py-2 text-xs font-semibold text-zinc-600 shadow-sm transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-white/5 dark:hover:text-violet-300"
                                                     >
                                                         <flux:icon.arrows-pointing-out class="size-4" />
-                                                        View signature
+                                                        View full signature
                                                     </button>
                                                 </div>
 
-                                                <div class="bg-zinc-50 p-4 sm:p-5 dark:bg-zinc-950/60">
+                                                <div class="relative bg-gradient-to-br from-sky-50/80 via-white to-violet-50/50 p-4 sm:p-6 dark:from-sky-500/[0.03] dark:via-zinc-950 dark:to-violet-500/[0.03]">
                                                     <button
                                                         type="button"
                                                         x-on:click="openLightbox(@js($signatureData), 'Customer signature')"
-                                                        class="group flex min-h-[180px] w-full items-center justify-center overflow-hidden rounded-2xl border border-dashed border-zinc-300 bg-white p-5 transition hover:border-violet-300 hover:bg-violet-50/20 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-violet-500/40"
+                                                        class="group flex min-h-[190px] w-full items-center justify-center overflow-hidden rounded-[22px] border border-dashed border-sky-200 bg-white/90 p-6 shadow-inner transition duration-200 hover:border-violet-300 hover:bg-white dark:border-sky-500/20 dark:bg-zinc-900 dark:hover:border-violet-500/40"
                                                     >
                                                         <img
                                                             src="{{ $signatureData }}"
@@ -1077,13 +1109,17 @@
                                                             decoding="async"
                                                         />
                                                     </button>
+
+                                                    <div class="mt-3 text-center text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-400">
+                                                        Click signature to enlarge
+                                                    </div>
                                                 </div>
                                             </div>
                                         @endif
 
                                         {{-- Transaction --}}
                                         @if ($transaction)
-                                            <div class="rounded-2xl border border-zinc-200 bg-white p-4 sm:p-5 lg:col-span-2 dark:border-zinc-800 dark:bg-zinc-950">
+                                            <div class="rounded-[22px] border border-zinc-200 bg-white p-4 sm:p-5 lg:col-span-2 dark:border-zinc-800 dark:bg-zinc-950">
                                                 <div class="mb-4 flex items-center gap-3">
                                                     <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
                                                         <flux:icon.credit-card class="size-5" />
@@ -1107,7 +1143,23 @@
                                                         </div>
 
                                                         <div class="mt-1 text-sm font-medium text-zinc-900 dark:text-white">
+                                                            <time
+                                                            datetime="{{ $transaction->created_at?->utc()->toIso8601String() }}"
+                                                            x-data
+                                                            x-init="
+                                                                const date = new Date($el.dateTime);
+
+                                                                $el.textContent = new Intl.DateTimeFormat(undefined, {
+                                                                    year: 'numeric',
+                                                                    month: 'short',
+                                                                    day: 'numeric',
+                                                                    hour: 'numeric',
+                                                                    minute: '2-digit'
+                                                                }).format(date);
+                                                            "
+                                                        >
                                                             {{ $transaction->created_at?->format('M j, Y g:i A') ?? '—' }}
+</time>
                                                         </div>
                                                     </div>
 
@@ -1143,7 +1195,7 @@
 
                                     {{-- Recurring --}}
                                     @if ($invoice->hasRecurringBilling())
-                                        <div class="mt-5 rounded-2xl border border-violet-200/80 bg-gradient-to-br from-violet-50 to-fuchsia-50/50 p-4 sm:p-5 dark:border-violet-500/15 dark:from-violet-500/10 dark:to-fuchsia-500/5">
+                                        <div class="mt-5 rounded-[22px] border border-violet-200/80 bg-gradient-to-br from-violet-50 to-fuchsia-50/50 p-4 sm:p-5 dark:border-violet-500/15 dark:from-violet-500/10 dark:to-fuchsia-500/5">
                                             <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                                                 <div>
                                                     <div class="text-sm font-semibold text-violet-950 dark:text-violet-100">
@@ -1259,27 +1311,36 @@
                                         </div>
                                     @endif
                                 </div>
-
                             </div>
                         @else
                             {{-- =================================================
                                 READY TO CHARGE
                             ================================================== --}}
-                            <div class="overflow-hidden rounded-[28px] border border-indigo-200/80 bg-white shadow-[0_24px_70px_-40px_rgba(99,102,241,.3)] dark:border-indigo-500/15 dark:bg-[#141218]">
+                            <div class="overflow-hidden rounded-[30px] border border-indigo-200/80 bg-white shadow-[0_28px_90px_-48px_rgba(99,102,241,.35)] dark:border-indigo-500/15 dark:bg-[#141218]">
 
-                                <div class="relative overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-blue-50 px-5 py-6 sm:px-7 sm:py-7 dark:from-indigo-500/10 dark:via-[#141218] dark:to-blue-500/5">
-                                    <div class="pointer-events-none absolute -right-16 -top-16 size-52 rounded-full bg-indigo-200/30 blur-3xl dark:bg-indigo-400/10"></div>
+                                <div class="relative overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-blue-50 px-5 py-7 sm:px-7 sm:py-8 dark:from-indigo-500/10 dark:via-[#141218] dark:to-blue-500/5">
+                                    <div class="pointer-events-none absolute -right-20 -top-20 size-64 rounded-full bg-indigo-200/30 blur-3xl dark:bg-indigo-400/10"></div>
+                                    <div class="pointer-events-none absolute -bottom-20 -left-20 size-56 rounded-full bg-blue-200/25 blur-3xl dark:bg-blue-400/5"></div>
 
                                     <div class="relative flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                                         <div class="flex min-w-0 items-start gap-4">
-                                            <div class="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300">
+                                            <div class="flex size-13 shrink-0 items-center justify-center rounded-[18px] bg-indigo-100 text-indigo-700 shadow-sm dark:bg-indigo-500/15 dark:text-indigo-300">
                                                 <flux:icon.check-circle class="size-6" />
                                             </div>
 
                                             <div class="min-w-0">
-                                                <h3 class="text-lg font-bold tracking-tight text-zinc-950 sm:text-xl dark:text-white">
-                                                    Ticket resolved
-                                                </h3>
+                                                <div class="flex flex-wrap items-center gap-2">
+                                                    <h3 class="text-xl font-bold tracking-tight text-zinc-950 sm:text-2xl dark:text-white">
+                                                        Ticket resolved
+                                                    </h3>
+
+                                                    @if ($hasSignature)
+                                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                                                            <span class="size-1.5 rounded-full bg-emerald-500"></span>
+                                                            Signature captured
+                                                        </span>
+                                                    @endif
+                                                </div>
 
                                                 <p class="mt-1.5 max-w-2xl text-sm leading-6 text-indigo-800/80 dark:text-indigo-200/80">
                                                     The work is complete and the customer is ready to be billed securely.
@@ -1288,7 +1349,7 @@
                                         </div>
 
                                         @if ($invoice)
-                                            <div class="w-full rounded-2xl border border-indigo-200/80 bg-white/80 px-4 py-3 backdrop-blur lg:w-auto lg:min-w-[180px] dark:border-indigo-500/10 dark:bg-zinc-900/60">
+                                            <div class="w-full rounded-2xl border border-indigo-200/80 bg-white/85 px-4 py-3 shadow-sm backdrop-blur lg:w-auto lg:min-w-[190px] dark:border-indigo-500/10 dark:bg-zinc-900/60">
                                                 <div class="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400">
                                                     Amount due
                                                 </div>
@@ -1301,9 +1362,11 @@
                                     </div>
 
                                     <div class="relative mt-6 grid gap-3 md:grid-cols-2">
-                                        <div class="rounded-2xl border border-indigo-200/70 bg-white/75 p-4 dark:border-indigo-500/10 dark:bg-zinc-900/50">
+                                        <div class="rounded-2xl border border-indigo-200/70 bg-white/75 p-4 shadow-sm dark:border-indigo-500/10 dark:bg-zinc-900/50">
                                             <div class="flex items-start gap-3">
-                                                <flux:icon.shield-check class="mt-0.5 size-5 shrink-0 text-indigo-600 dark:text-indigo-300" />
+                                                <div class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-300">
+                                                    <flux:icon.shield-check class="size-4.5" />
+                                                </div>
 
                                                 <div>
                                                     <div class="text-sm font-semibold text-indigo-950 dark:text-indigo-100">
@@ -1318,74 +1381,104 @@
                                         </div>
 
                                         @if ($hasSignature)
-                                            <button
-                                                type="button"
-                                                x-on:click="openLightbox(@js($signatureData), 'Customer signature')"
-                                                class="group rounded-2xl border border-indigo-200/70 bg-white/75 p-4 text-left transition hover:border-indigo-300 hover:bg-white dark:border-indigo-500/10 dark:bg-zinc-900/50 dark:hover:border-indigo-500/30"
-                                            >
+                                            <div class="rounded-2xl border border-emerald-200/70 bg-emerald-50/70 p-4 shadow-sm dark:border-emerald-500/10 dark:bg-emerald-500/[0.05]">
                                                 <div class="flex items-center gap-3">
-                                                    <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300">
-                                                        <flux:icon.pencil class="size-5" />
+                                                    <div class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                                                        <flux:icon.check class="size-4.5" />
                                                     </div>
 
                                                     <div class="min-w-0">
-                                                        <div class="flex items-center gap-2">
-                                                            <span class="text-sm font-semibold text-indigo-950 dark:text-indigo-100">
-                                                                Signature captured
-                                                            </span>
-
-                                                            <flux:icon.arrows-pointing-out class="size-3.5 text-indigo-500" />
+                                                        <div class="text-sm font-semibold text-emerald-950 dark:text-emerald-100">
+                                                            Signed agreement on file
                                                         </div>
 
-                                                        <div class="mt-1 text-xs text-indigo-900/70 dark:text-indigo-200/70">
-                                                            Click to view the signed agreement.
+                                                        <div class="mt-1 text-xs text-emerald-800/70 dark:text-emerald-200/70">
+                                                            Customer signature is ready to review below.
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </button>
+                                            </div>
                                         @endif
                                     </div>
                                 </div>
 
+                                {{-- Single signature display --}}
                                 @if ($invoice && $hasSignature)
                                     <div class="border-t border-zinc-200 p-4 sm:p-6 dark:border-zinc-800">
-                                        <div class="overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-700! dark:border-zinc-800 dark:bg-zinc-950/50!">
-                                            <div class="border-b border-zinc-200 px-4 py-3.5 dark:border-zinc-800">
-                                                <div class="flex items-center justify-between gap-3 bg-gray-950">
-                                                    <div>
-                                                        <div class="text-sm font-semibold text-zinc-900 dark:text-white">
-                                                            Customer signature
-                                                        </div>
+                                        <div class="relative overflow-hidden rounded-[24px] border border-sky-200/80 bg-white dark:border-sky-500/15 dark:bg-zinc-950">
+                                            <div class="pointer-events-none absolute -right-16 -top-16 size-48 rounded-full bg-sky-200/25 blur-3xl dark:bg-sky-400/10"></div>
 
-                                                        <div class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
-                                                            Captured on the invoice
-                                                        </div>
+                                            <div class="relative flex flex-col gap-4 border-b border-sky-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 dark:border-sky-500/10">
+                                                <div class="flex min-w-0 items-center gap-3">
+                                                    <div class="relative flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-700 shadow-sm dark:bg-sky-500/15 dark:text-sky-300">
+                                                        <span class="signature-glow pointer-events-none absolute inset-0 rounded-2xl bg-sky-300/20 blur-md dark:bg-sky-400/10"></span>
+                                                        <flux:icon.pencil class="relative size-5" />
                                                     </div>
 
-                                                    <button
-                                                        type="button"
-                                                        x-on:click="openLightbox(@js($signatureData), 'Customer signature')"
-                                                        class="rounded-xl p-2 text-zinc-400 transition hover:bg-white hover:text-violet-600 dark:hover:bg-white/5 dark:hover:text-violet-300"
-                                                        title="View signature"
-                                                    >
-                                                        <flux:icon.arrows-pointing-out class="size-4" />
-                                                    </button>
+                                                    <div class="min-w-0">
+                                                        <div class="flex flex-wrap items-center gap-2">
+                                                            <div class="text-sm font-semibold text-zinc-900 dark:text-white">
+                                                                Customer signature
+                                                            </div>
+
+                                                            <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                                                                <span class="size-1.5 rounded-full bg-emerald-500"></span>
+                                                                Signed
+                                                            </span>
+                                                        </div>
+
+                                                        <div class="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-zinc-400 dark:text-zinc-500">
+                                                            <flux:icon.calendar-days class="size-3.5 shrink-0" />
+
+                                                            <span>Signed</span>
+
+                                                            <time
+                                                                datetime="{{ $invoice->signature_signed_at?->utc()->toIso8601String() }}"
+                                                                x-data
+                                                                x-init="
+                                                                    const date = new Date($el.dateTime);
+
+                                                                    $el.textContent = new Intl.DateTimeFormat(undefined, {
+                                                                        dateStyle: 'long',
+                                                                        timeStyle: 'short'
+                                                                    }).format(date);
+                                                                "
+                                                            >
+                                                                {{ $invoice->signature_signed_at?->format('F j, Y g:i A') }}
+                                                            </time>
+                                                        </div>
+                                                    </div>
                                                 </div>
+
+                                                <button
+                                                    type="button"
+                                                    x-on:click="openLightbox(@js($signatureData), 'Customer signature')"
+                                                    class="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-3.5 py-2 text-xs font-semibold text-zinc-600 shadow-sm transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-white/5 dark:hover:text-violet-300"
+                                                >
+                                                    <flux:icon.arrows-pointing-out class="size-4" />
+                                                    View full signature
+                                                </button>
                                             </div>
 
-                                            <button
-                                                type="button"
-                                                x-on:click="openLightbox(@js($signatureData), 'Customer signature')"
-                                                class="flex min-h-[160px] w-full items-center justify-center bg-white p-5 dark:bg-zinc-900"
-                                            >
-                                                <img
-                                                    src="{{ $signatureData }}"
-                                                    alt="Captured customer signature"
-                                                    class="block max-h-52 max-w-full object-contain"
-                                                    loading="lazy"
-                                                    decoding="async"
-                                                />
-                                            </button>
+                                            <div class="relative bg-gradient-to-br from-sky-50/80 via-white to-violet-50/50 p-4 sm:p-6 dark:from-sky-500/[0.03] dark:via-zinc-950 dark:to-violet-500/[0.03]">
+                                                <button
+                                                    type="button"
+                                                    x-on:click="openLightbox(@js($signatureData), 'Customer signature')"
+                                                    class="group flex min-h-[180px] w-full items-center justify-center overflow-hidden rounded-[22px] border border-dashed border-sky-200 bg-white/90 p-6 shadow-inner transition duration-200 hover:border-violet-300 hover:bg-white dark:border-sky-500/20 dark:bg-zinc-900 dark:hover:border-violet-500/40"
+                                                >
+                                                    <img
+                                                        src="{{ $signatureData }}"
+                                                        alt="Captured customer signature"
+                                                        class="block max-h-52 max-w-full object-contain transition duration-300 group-hover:scale-[1.015]"
+                                                        loading="lazy"
+                                                        decoding="async"
+                                                    />
+                                                </button>
+
+                                                <div class="mt-3 text-center text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-400">
+                                                    Click signature to enlarge
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 @endif
@@ -1394,7 +1487,7 @@
                                     <button
                                         type="button"
                                         x-on:click="$dispatch('open-charge-modal', { ticketId: {{ $ticket->id }} })"
-                                        class="group flex min-h-14 w-full items-center justify-center gap-2.5 rounded-2xl bg-indigo-600 px-5 py-4 text-sm font-semibold text-white shadow-[0_15px_35px_-18px_rgba(79,70,229,.85)] transition hover:-translate-y-0.5 hover:bg-indigo-500 hover:shadow-[0_18px_40px_-18px_rgba(79,70,229,.9)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 active:translate-y-0 dark:focus-visible:ring-offset-[#141218]"
+                                        class="group flex min-h-14 w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-4 text-sm font-semibold text-white shadow-[0_18px_40px_-18px_rgba(79,70,229,.85)] transition hover:-translate-y-0.5 hover:from-indigo-500 hover:to-violet-500 hover:shadow-[0_22px_45px_-18px_rgba(79,70,229,.9)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 active:translate-y-0 dark:focus-visible:ring-offset-[#141218]"
                                     >
                                         <flux:icon.credit-card class="size-5 transition-transform group-hover:scale-105" />
                                         <span>Charge Customer</span>
@@ -1414,24 +1507,28 @@
                 {{-- ========================================================
                     CUSTOMER
                 ========================================================= --}}
-                <section class="overflow-hidden rounded-[26px] border border-zinc-200 bg-white shadow-[0_18px_50px_-35px_rgba(40,30,60,.35)] dark:border-white/[0.07] dark:bg-[#141218]">
-                    <div class="border-b border-zinc-100 p-5 dark:border-white/[0.05]">
-                        <div class="mb-4 text-[10px] font-bold uppercase tracking-[0.17em] text-zinc-400">
-                            Customer
-                        </div>
+                <section class="overflow-hidden rounded-[28px] border border-zinc-200/80 bg-white shadow-[0_20px_60px_-42px_rgba(40,30,60,.38)] dark:border-white/[0.07] dark:bg-[#141218]">
+                    <div class="relative overflow-hidden border-b border-zinc-100 p-5 dark:border-white/[0.05]">
+                        <div class="pointer-events-none absolute -right-12 -top-12 size-32 rounded-full bg-violet-200/30 blur-3xl dark:bg-violet-400/10"></div>
 
-                        <div class="flex items-center gap-3">
-                            <div class="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-lg font-bold text-violet-700 dark:bg-violet-500/10 dark:text-violet-200">
-                                {{ strtoupper(substr($ticket->name, 0, 1)) }}
+                        <div class="relative">
+                            <div class="mb-4 text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-400">
+                                Customer
                             </div>
 
-                            <div class="min-w-0">
-                                <div class="truncate text-base font-semibold text-zinc-900 dark:text-white">
-                                    {{ $ticket->name }}
+                            <div class="flex items-center gap-3">
+                                <div class="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-100 to-fuchsia-100 text-lg font-bold text-violet-700 shadow-sm dark:from-violet-500/10 dark:to-fuchsia-500/10 dark:text-violet-200">
+                                    {{ strtoupper(substr($ticket->name, 0, 1)) }}
                                 </div>
 
-                                <div class="mt-1 truncate text-sm text-zinc-400">
-                                    {{ $ticket->email }}
+                                <div class="min-w-0">
+                                    <div class="truncate text-base font-semibold text-zinc-900 dark:text-white">
+                                        {{ $ticket->name }}
+                                    </div>
+
+                                    <div class="mt-1 truncate text-sm text-zinc-400">
+                                        {{ $ticket->email }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1463,7 +1560,7 @@
                 {{-- ========================================================
                     TICKET DETAILS
                 ========================================================= --}}
-                <section class="rounded-[26px] border border-zinc-200 bg-white p-5 shadow-[0_18px_50px_-35px_rgba(40,30,60,.35)] dark:border-white/[0.07] dark:bg-[#141218]">
+                <section class="rounded-[28px] border border-zinc-200/80 bg-white p-5 shadow-[0_20px_60px_-42px_rgba(40,30,60,.38)] dark:border-white/[0.07] dark:bg-[#141218]">
                     <div class="mb-6 flex items-center justify-between gap-3">
                         <div>
                             <div class="text-base font-semibold text-zinc-900 dark:text-white">
@@ -1475,7 +1572,7 @@
                             </div>
                         </div>
 
-                        <div class="flex size-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-300">
+                        <div class="flex size-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600 ring-1 ring-inset ring-violet-100 dark:bg-violet-500/10 dark:text-violet-300 dark:ring-violet-500/15">
                             <flux:icon.ticket class="size-5" />
                         </div>
                     </div>
@@ -1500,7 +1597,6 @@
                                 >
                                     <span class="flex items-center gap-3">
                                         <span class="size-2.5 rounded-full {{ $statusDot }}"></span>
-
                                         {{ ucfirst($status) }}
                                     </span>
 
@@ -1687,7 +1783,23 @@
                             </div>
 
                             <div class="mt-2 text-sm font-semibold text-zinc-800 dark:text-zinc-200">
-                                {{ $ticket->created_at?->format('M j, Y · g:i A') ?? '—' }}
+                                <time
+                                datetime="{{ $ticket->created_at?->utc()->toIso8601String() }}"
+                                x-data
+                                x-init="
+                                    const date = new Date($el.dateTime);
+
+                                    $el.textContent = new Intl.DateTimeFormat(undefined, {
+                                        year: 'numeric',
+                                        month: 'short',
+                                        day: 'numeric',
+                                        hour: 'numeric',
+                                        minute: '2-digit'
+                                    }).format(date);
+                                "
+                            >
+                                {{ $ticket->created_at?->format('M j, Y g:i A') ?? '—' }}
+                            </time>
                             </div>
                         </div>
 
@@ -1698,7 +1810,23 @@
                             </div>
 
                             <div class="mt-2 text-sm font-semibold text-zinc-800 dark:text-zinc-200">
-                                {{ $ticket->last_activity_at?->diffForHumans() ?? '—' }}
+                                <time
+                                datetime="{{ $transaction->created_at?->utc()->toIso8601String() }}"
+                                x-data
+                                x-init="
+                                    const date = new Date($el.dateTime);
+
+                                    $el.textContent = new Intl.DateTimeFormat(undefined, {
+                                        year: 'numeric',
+                                        month: 'short',
+                                        day: 'numeric',
+                                        hour: 'numeric',
+                                        minute: '2-digit'
+                                    }).format(date);
+                                "
+                            >
+                                {{ $transaction->created_at?->diffForHumans() ?? '—' }}
+                            </time>
                             </div>
                         </div>
                     </div>
@@ -1706,105 +1834,72 @@
 
                 {{-- ========================================================
                     SIGNATURE SUMMARY
+                    Compact status only — the signature image is rendered
+                    once in the billing section above.
                 ========================================================= --}}
                 @if ($hasSignature)
+                    <section class="overflow-hidden rounded-[28px] border border-sky-200/80 bg-white shadow-[0_20px_60px_-42px_rgba(14,165,233,.28)] dark:border-sky-500/15 dark:bg-[#141218]">
+                        <div class="relative overflow-hidden p-5">
+                            <div class="pointer-events-none absolute -right-12 -top-12 size-32 rounded-full bg-sky-200/25 blur-3xl dark:bg-sky-400/10"></div>
 
-                <section class="overflow-hidden rounded-[26px] border border-sky-200/80 bg-white shadow-[0_18px_50px_-35px_rgba(14,165,233,.25)] dark:border-sky-500/15 dark:bg-[#141218]">
+                            <div class="relative flex items-center gap-3">
+                                <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-700 ring-1 ring-inset ring-sky-200/70 dark:bg-sky-500/15 dark:text-sky-300 dark:ring-sky-500/10">
+                                    <flux:icon.pencil class="size-5" />
+                                </div>
 
-                    <div class="border-b border-sky-100 px-5 py-4 dark:border-sky-500/10">
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <div class="text-sm font-semibold text-zinc-900 dark:text-white">
+                                            Signature captured
+                                        </div>
 
-                        <div class="flex items-center gap-3">
-
-                            <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300">
-                                <flux:icon.pencil class="size-5" />
-                            </div>
-
-                            <div class="min-w-0 flex-1">
-
-                                <div class="flex flex-wrap items-center gap-2">
-
-                                    <div class="text-sm font-semibold text-zinc-900 dark:text-white">
-                                        Signature captured
+                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                                            <span class="size-1.5 rounded-full bg-emerald-500"></span>
+                                            Signed
+                                        </span>
                                     </div>
 
-                                    <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
-                                        <span class="size-1.5 rounded-full bg-emerald-500"></span>
-                                        Signed
-                                    </span>
+                                    <div class="mt-1 flex items-center gap-1.5 text-xs text-zinc-400 dark:text-zinc-500">
+                                        <flux:icon.calendar-days class="size-3.5 shrink-0" />
 
+                                        <span>Signed</span>
+
+                                        <time class="text-white"
+                                            datetime="{{ $invoice->signature_signed_at?->utc()->toIso8601String() }}"
+                                            x-data
+                                            x-init="
+                                                const date = new Date($el.dateTime);
+
+                                                $el.textContent = new Intl.DateTimeFormat(undefined, {
+                                                    dateStyle: 'long',
+                                                    timeStyle: 'short'
+                                                }).format(date);
+                                            "
+                                        >
+                                            {{ $invoice->signature_signed_at?->format('F j, Y g:i A') }}
+                                        </time>
+                                    </div>
                                 </div>
-
-                                <div class="mt-1 flex items-center gap-1.5 text-xs text-zinc-400 dark:text-zinc-500">
-
-                                    <flux:icon.calendar-days class="size-3.5 shrink-0" />
-
-                                    <span>Signed</span>
-
-                                    <time
-                                        datetime="{{ $invoice->signature_signed_at?->utc()->toIso8601String() }}"
-                                        x-data
-                                        x-init="
-                                            const date = new Date($el.dateTime);
-
-                                            $el.textContent = new Intl.DateTimeFormat(undefined, {
-                                                dateStyle: 'long',
-                                                timeStyle: 'short'
-                                            }).format(date);
-                                        "
-                                    >
-                                        {{ $invoice->signature_signed_at?->format('F j, Y g:i A') }}
-                                    </time>
-
-                                </div>
-
                             </div>
 
+                            <div class="mt-4 rounded-2xl border border-sky-100 bg-sky-50/70 px-3.5 py-3 text-xs leading-5 text-sky-800/75 dark:border-sky-500/10 dark:bg-sky-500/[0.05] dark:text-sky-200/70">
+                                Customer signature is securely captured on the invoice and available in the billing section.
+                            </div>
                         </div>
-
-                    </div>
-
-                    <div class="p-4">
-
-                        <button
-                            type="button"
-                            x-on:click="openLightbox(@js($signatureData), 'Customer signature')"
-                            class="group flex min-h-[135px] w-full items-center justify-center overflow-hidden rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-4 transition hover:border-violet-300 hover:bg-violet-50/20 dark:border-zinc-700 dark:bg-zinc-950/50 dark:hover:border-violet-500/40"
-                        >
-                            <img
-                                src="{{ $signatureData }}"
-                                alt="Captured customer signature"
-                                class="block max-h-40 max-w-full object-contain transition duration-300 group-hover:scale-[1.015]"
-                                loading="lazy"
-                                decoding="async"
-                            />
-                        </button>
-
-                        <button
-                            type="button"
-                            x-on:click="openLightbox(@js($signatureData), 'Customer signature')"
-                            class="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs font-semibold text-zinc-600 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:text-violet-300"
-                        >
-                            <flux:icon.arrows-pointing-out class="size-4" />
-                            View full signature
-                        </button>
-
-                    </div>
-
-                </section>
-
-            @endif
+                    </section>
+                @endif
 
                 {{-- ========================================================
                     ACTIVITY
                 ========================================================= --}}
-                <section class="relative overflow-hidden rounded-[26px] bg-[#5f517b] p-6 text-white shadow-[0_22px_60px_-35px_rgba(80,60,110,.75)]">
-                    <div class="pointer-events-none absolute -right-16 -top-20 size-52 rounded-full bg-white/[0.07] blur-3xl"></div>
-                    <div class="pointer-events-none absolute -bottom-20 -left-16 size-44 rounded-full bg-white/[0.05] blur-3xl"></div>
+                <section class="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#665783] via-[#5d4e79] to-[#4e4167] p-6 text-white shadow-[0_26px_70px_-36px_rgba(80,60,110,.8)]">
+                    <div class="pointer-events-none absolute -right-16 -top-20 size-56 rounded-full bg-white/[0.08] blur-3xl"></div>
+                    <div class="pointer-events-none absolute -bottom-20 -left-16 size-48 rounded-full bg-violet-300/[0.08] blur-3xl"></div>
 
                     <div class="relative">
                         <div class="flex items-center justify-between">
                             <div>
-                                <div class="text-[10px] font-bold uppercase tracking-[0.17em] text-white/55">
+                                <div class="text-[10px] font-bold uppercase tracking-[0.18em] text-white/55">
                                     Activity
                                 </div>
 
@@ -1813,7 +1908,7 @@
                                 </div>
                             </div>
 
-                            <div class="flex size-10 items-center justify-center rounded-xl bg-white/10">
+                            <div class="flex size-10 items-center justify-center rounded-xl bg-white/10 ring-1 ring-inset ring-white/10">
                                 <flux:icon.bolt class="size-4" />
                             </div>
                         </div>
@@ -1827,7 +1922,7 @@
                         </div>
 
                         <div class="mt-7 grid grid-cols-2 gap-3">
-                            <div class="rounded-2xl bg-white/[0.08] p-3">
+                            <div class="rounded-2xl bg-white/[0.08] p-3.5 ring-1 ring-inset ring-white/[0.05]">
                                 <div class="text-[10px] uppercase tracking-[0.13em] text-white/45">
                                     Status
                                 </div>
@@ -1837,7 +1932,7 @@
                                 </div>
                             </div>
 
-                            <div class="rounded-2xl bg-white/[0.08] p-3">
+                            <div class="rounded-2xl bg-white/[0.08] p-3.5 ring-1 ring-inset ring-white/[0.05]">
                                 <div class="text-[10px] uppercase tracking-[0.13em] text-white/45">
                                     Priority
                                 </div>

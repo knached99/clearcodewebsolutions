@@ -51,5 +51,27 @@ document.addEventListener('livewire:init', () => {
     });
 });
 </script>
+<script>
+    (() => {
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+        if (!timezone) {
+            return;
+        }
+
+        const current = document.cookie
+            .split('; ')
+            .find(row => row.startsWith('client_timezone='))
+            ?.split('=')[1];
+
+        if (decodeURIComponent(current ?? '') !== timezone) {
+            document.cookie =
+                `client_timezone=${encodeURIComponent(timezone)}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+
+            window.location.reload();
+        }
+    })();
+</script>
+
 @endpush
 </x-layouts::app.sidebar>
