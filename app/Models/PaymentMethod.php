@@ -39,13 +39,13 @@ class PaymentMethod extends Model
 
     public function isExpired(): bool
     {
-        if (! $this->exp_month || ! $this->exp_year) {
+       if (empty($this->exp_month) || empty($this->exp_year)) { 
             return false;
-        }
+       }
 
-        return now()->startOfMonth()->greaterThan(
-            now()->setDate((int) $this->exp_year, (int) $this->exp_month, 1)->endOfMonth()
-        );
+        $expiration = now()->setDate((int) $this->exp_year, (int) $this->exp_month, 1)->endOfMonth();
+
+        return now()->startOfMonth()->greaterThan($expiration);
     }
 
     /**
@@ -53,7 +53,11 @@ class PaymentMethod extends Model
      */
     public function makeDefault(): void
     {
-        $this->customer->paymentMethods()->where('id', '!=', $this->id)->update(['is_default' => false]);
-        $this->update(['is_default' => true]);
+        if (!$this->customer) {
+            return;
+        }
+        $this->customer->paymentMethods()->where('id', '!=', $this->id)->update(['is_default' => false],);
+
+        $this->update(['is_default' => true],);
     }
 }

@@ -3,11 +3,10 @@
 namespace App\Console\Commands;
 
 use App\Enums\PaymentType;
-use App\Http\Controllers\StripeWebhookController;
 use App\Models\Customer;
 use App\Models\Invoice;
+use App\Services\StripeWebhookService;
 use Illuminate\Console\Command;
-use ReflectionMethod;
 
 class TestWebhookSimulationCommand extends Command
 {
@@ -27,100 +26,245 @@ class TestWebhookSimulationCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Simulate Stripe webhook payloads for invoice.upcoming and invoice.payment_succeeded without making live Stripe calls.';
+    protected $description =
+        'Simulate Stripe webhook payloads for invoice.upcoming and invoice.payment_succeeded without making live Stripe calls.';
+
+    public function __construct(
+        protected StripeWebhookService $stripeWebhookService
+    ) {
+        parent::__construct();
+    }
 
     /**
      * Execute the console command.
      */
     public function handle(): int
     {
-        $eventType = $this->argument('event');
-        $email = trim((string) $this->option('customer-email')) ?: 'customer@example.com';
-        $subscriptionId = trim((string) $this->option('subscription-id')) ?: 'sub_test_webhook';
+        $eventType =
+            trim(
+                (string) $this->argument('event')
+            );
 
-        $customer = Customer::firstOrCreate(
-            ['email' => $email],
-            ['name' => 'Webhook Test Customer']
-        );
+        $email =
+            trim(
+                (string) $this->option('customer-email')
+            )
+            ?: 'customer@example.com';
 
-        $invoice = Invoice::query()->firstOrCreate(
-            ['checkout_token' => 'webhook-test-'.bin2hex(random_bytes(8))],
-            [
-                'customer_id' => $customer->id,
-                'ticket_id' => null,
-                'total_amount' => 2500,
-                'status' => 'paid',
-                'payment_type' => PaymentType::Subscription,
-                'subscription_months' => 12,
-            ]
-        );
+        $subscriptionId =
+            trim(
+                (string) $this->option('subscription-id')
+            )
+            ?: 'sub_test_webhook';
 
-        $invoice->stripe_id = $subscriptionId;
-        $invoice->save();
+        /*
+        |--------------------------------------------------------------------------
+        | Resolve / Create Customer
+        |--------------------------------------------------------------------------
+        */
+
+        $customer =
+            Customer::query()
+                ->firstOrCreate(
+                    ['email' => $email],
+                    ['name' => 'Webhook Test Customer']
+                );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Resolve / Create Invoice
+        |--------------------------------------------------------------------------
+        */
+
+        $invoiceId =
+            $this->option('invoice-id');
+
+        if ($invoiceId) {
+            $invoice =
+                Invoice::query()
+                    ->with([
+                        'customer',
+                        'items',
+                        'transactions',
+                    ])
+                    ->find($invoiceId);
+
+            if (!$invoice) {
+                $this->error(
+                    "Invoice {$invoiceId} was not found."
+                );
+
+                return self::FAILURE;
+            }
+        } else {
+            $invoice =
+                Invoice::query()
+                    ->create([
+                        'customer_id' =>
+                            $customer->id,
+
+                        'ticket_id' =>
+                            null,
+
+                        'stripe_invoice_id' =>
+                            null,
+
+                        'stripe_subscription_id' =>
+                            $subscriptionId,
+
+                        'total_amount' =>
+                            2500,
+
+                        'total_paid' =>
+                            2500,
+
+                        'status' =>
+                            'paid',
+
+                        'payment_type' =>
+                            PaymentType::Subscription,
+
+                        'subscription_months' =>
+                            12,
+                    ]);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Store Stripe Subscription ID
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $invoice->stripe_subscription_id
+            !== $subscriptionId
+        ) {
+            $invoice->update([
+                'stripe_subscription_id' =>
+                    $subscriptionId,
+            ]);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Test Invoice Items
+        |--------------------------------------------------------------------------
+        */
 
         $invoice->items()->delete();
+
         $invoice->items()->create([
-            'description' => 'Base recurring plan',
-            'amount' => 2000,
-            'is_subscription' => true,
-            'stripe_price_id' => 'price_base_test',
+            'description' =>
+                'Base recurring plan',
+
+            'amount' =>
+                2000,
+
+            'is_subscription' =>
+                true,
+
+            'is_addon' =>
+                false,
+
+            'stripe_price_id' =>
+                'price_base_test',
+
+            'stripe_subscription_item_id' =>
+                null,
         ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Event
+        |--------------------------------------------------------------------------
+        */
 
         switch ($eventType) {
             case 'invoice.upcoming':
-                $this->simulateUpcoming($invoice, $email, $subscriptionId);
+
+                $this->simulateUpcoming(
+                    $invoice,
+                    $email,
+                    $subscriptionId
+                );
+
                 break;
 
             case 'invoice.payment_succeeded':
-                $this->simulatePaymentSucceeded($invoice, $email, $subscriptionId);
+
+                $this->simulatePaymentSucceeded(
+                    $invoice,
+                    $email,
+                    $subscriptionId
+                );
+
                 break;
 
             default:
-                $this->error("Unsupported event type: {$eventType}. Use invoice.upcoming or invoice.payment_succeeded.");
+                $this->error(
+                    "Unsupported event type: {$eventType}. "
+                    . 'Use invoice.upcoming or invoice.payment_succeeded.'
+                );
 
                 return self::FAILURE;
         }
 
-        $this->info('Webhook event simulated: '.$eventType);
-        $this->info('Invoice ID: '.$invoice->id);
+        /*
+        |--------------------------------------------------------------------------
+        | Output
+        |--------------------------------------------------------------------------
+        */
+
+        $this->info(
+            'Webhook event simulated: '
+            . $eventType
+        );
+
+        $this->info(
+            'Invoice ID: '
+            . $invoice->id
+        );
+
+        $this->info(
+            'Stripe subscription ID: '
+            . (
+                $invoice->stripe_subscription_id
+                ?? 'none'
+            )
+        );
 
         return self::SUCCESS;
     }
 
-    protected function simulateUpcoming(Invoice $invoice, string $email, string $subscriptionId): void
-    {
-        $controller = app(StripeWebhookController::class);
-        $method = new ReflectionMethod(StripeWebhookController::class, 'handleInvoiceUpcoming');
-        $method->setAccessible(true);
-
-        $method->invoke($controller, (object) [
-            'id' => 'in_upcoming_test',
-            'customer_email' => $email,
-            'subscription' => $subscriptionId,
-            'metadata' => (object) [
-                'invoice_id' => $invoice->id,
-            ],
-        ]);
+    /**
+     * Simulate invoice.upcoming without a real Stripe request.
+     */
+    protected function simulateUpcoming(
+        Invoice $invoice,
+        string $email,
+        string $subscriptionId
+    ): void {
+        $this->stripeWebhookService
+            ->simulateInvoiceUpcoming(
+                invoice: $invoice,
+                customerEmail: $email,
+                subscriptionId: $subscriptionId
+            );
     }
 
-    protected function simulatePaymentSucceeded(Invoice $invoice, string $email, string $subscriptionId): void
-    {
-        $controller = app(StripeWebhookController::class);
-        $method = new ReflectionMethod(StripeWebhookController::class, 'handleInvoicePaymentSucceeded');
-        $method->setAccessible(true);
-
-        $method->invoke($controller, (object) [
-            'id' => 'in_paid_test',
-            'customer_email' => $email,
-            'customer' => $invoice->customer?->stripe_id ?? 'cus_test_webhook',
-            'subscription' => $subscriptionId,
-            'amount_paid' => 2500,
-            'total' => 2500,
-            'payment_intent' => 'pi_test_webhook',
-            'charge' => 'ch_test_webhook',
-            'metadata' => (object) [
-                'invoice_id' => $invoice->id,
-            ],
-        ]);
+    /**
+     * Simulate invoice.payment_succeeded without a real Stripe request.
+     */
+    protected function simulatePaymentSucceeded(
+        Invoice $invoice,
+        string $email,
+        string $subscriptionId
+    ): void {
+        $this->stripeWebhookService
+            ->simulateInvoicePaymentSucceeded(
+                invoice: $invoice,
+                customerEmail: $email,
+                subscriptionId: $subscriptionId
+            );
     }
 }

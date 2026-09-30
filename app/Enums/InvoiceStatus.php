@@ -13,6 +13,7 @@ enum InvoiceStatus: string
     {
         return match ($this) {
             self::Pending => 'Pending',
+            self::Partial => 'Partial',
             self::Paid => 'Paid',
             self::Failed => 'Failed',
             self::Void => 'Void',

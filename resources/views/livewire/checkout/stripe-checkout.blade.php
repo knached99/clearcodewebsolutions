@@ -1636,7 +1636,7 @@
                         submitButton.disabled = true;
 
                         submitButton.textContent =
-                            'Saving signature...';
+                            'Capturing signature...';
                     }
 
                     try {
@@ -1650,7 +1650,7 @@
                         );
                     } catch (error) {
                         console.error(
-                            'Signature submission failed:',
+                            'Signature capture failed:',
                             error
                         );
 
@@ -1663,7 +1663,7 @@
 
                         alert(
                             error?.message
-                            || 'The signature could not be saved.'
+                            || 'The signature could not be captured.'
                         );
                     }
                 }

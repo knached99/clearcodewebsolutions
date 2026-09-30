@@ -3,13 +3,12 @@
 namespace App\Console\Commands;
 
 use App\Enums\PaymentType;
-use App\Http\Controllers\StripeWebhookController;
 use App\Mail\SubscriptionRenewalDecisionMail;
 use App\Models\Customer;
 use App\Models\Invoice;
+use App\Services\StripeWebhookService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
-use ReflectionMethod;
 
 class TestRenewalReminderCommand extends Command
 {
@@ -24,7 +23,14 @@ class TestRenewalReminderCommand extends Command
     /**
      * The console command description.
      */
-    protected $description = 'Simulate the renewal notification and verify the renewal decision email branch.';
+    protected $description =
+        'Simulate the renewal notification and verify the renewal decision email branch.';
+
+    public function __construct(
+        protected StripeWebhookService $stripeWebhookService
+    ) {
+        parent::__construct();
+    }
 
     /**
      * Execute the console command.
@@ -37,8 +43,19 @@ class TestRenewalReminderCommand extends Command
 
         $invoiceId = $this->option('invoice-id');
 
+        /*
+        |--------------------------------------------------------------------------
+        | Existing Invoice
+        |--------------------------------------------------------------------------
+        */
+
         if ($invoiceId) {
-            $invoice = Invoice::find($invoiceId);
+            $invoice = Invoice::query()
+                ->with([
+                    'customer',
+                    'items',
+                ])
+                ->find($invoiceId);
 
             if (!$invoice) {
                 $this->error(
@@ -60,27 +77,42 @@ class TestRenewalReminderCommand extends Command
 
             $email = $customer->email;
         } else {
-            $customer = Customer::firstOrCreate(
-                ['email' => $email],
-                ['name' => 'Test Customer']
-            );
+            /*
+            |--------------------------------------------------------------------------
+            | Create Test Customer
+            |--------------------------------------------------------------------------
+            */
 
-            $invoice = Invoice::query()->firstOrCreate(
-                [
-                    'checkout_token' => 'renewal-test-' . bin2hex(random_bytes(8)),
-                ],
-                [
+            $customer = Customer::query()
+                ->firstOrCreate(
+                    ['email' => $email],
+                    ['name' => 'Test Customer']
+                );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Create Test Invoice
+            |--------------------------------------------------------------------------
+            */
+
+            $invoice = Invoice::query()
+                ->create([
                     'customer_id' => $customer->id,
                     'ticket_id' => null,
+                    'stripe_invoice_id' => null,
+                    'stripe_subscription_id' => 'sub_test_renewal',
                     'total_amount' => 2500,
+                    'total_paid' => 2500,
                     'status' => 'paid',
                     'payment_type' => PaymentType::Subscription,
                     'subscription_months' => 12,
-                ]
-            );
+                ]);
 
-            $invoice->stripe_id = 'sub_test_renewal';
-            $invoice->save();
+            /*
+            |--------------------------------------------------------------------------
+            | Test Items
+            |--------------------------------------------------------------------------
+            */
 
             $invoice->items()->delete();
 
@@ -88,43 +120,76 @@ class TestRenewalReminderCommand extends Command
                 'description' => 'Base plan',
                 'amount' => 2000,
                 'is_subscription' => true,
+                'is_addon' => false,
                 'stripe_price_id' => 'price_base_test',
+                'stripe_subscription_item_id' => null,
             ]);
 
             $invoice->items()->create([
                 'description' => 'Addon',
                 'amount' => 500,
                 'is_subscription' => true,
+                'is_addon' => true,
                 'stripe_price_id' => 'price_addon_test',
+                'stripe_subscription_item_id' => null,
             ]);
         }
 
         $invoice->refresh();
+        $invoice->load([
+            'customer',
+            'items',
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Output Test Information
+        |--------------------------------------------------------------------------
+        */
 
         $this->newLine();
 
         $this->info(
-            'Testing renewal reminder for invoice: ' . $invoice->id
+            'Testing renewal reminder for invoice: '
+            . $invoice->id
         );
 
         $this->info(
-            'Customer: ' . ($invoice->customer?->email ?? $email)
+            'Customer: '
+            . (
+                $invoice->customer?->email
+                ?? $email
+            )
         );
 
         $this->info(
-            'Monthly recurring total: $' .
-            number_format(
+            'Stripe subscription ID: '
+            . (
+                $invoice->stripe_subscription_id
+                ?? 'none'
+            )
+        );
+
+        $this->info(
+            'Monthly recurring total: $'
+            . number_format(
                 $invoice->monthlyRecurringAmountInCents() / 100,
                 2
             )
         );
 
         $this->info(
-            '12-month minimum reached: ' .
-            ($invoice->hasCompletedTwelveMonthMinimum() ? 'yes' : 'no')
+            '12-month minimum reached: '
+            . (
+                $invoice->hasCompletedTwelveMonthMinimum()
+                    ? 'yes'
+                    : 'no'
+            )
         );
 
-        if (!$invoice->hasCompletedTwelveMonthMinimum()) {
+        if (
+            !$invoice->hasCompletedTwelveMonthMinimum()
+        ) {
             $this->error(
                 'The invoice does not meet the 12-month minimum requirement.'
             );
@@ -132,35 +197,38 @@ class TestRenewalReminderCommand extends Command
             return self::FAILURE;
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | Mail Fake
+        |--------------------------------------------------------------------------
+        */
+
         if (!$this->option('send-mail')) {
             Mail::fake();
         }
 
-        $controller = app(StripeWebhookController::class);
+        /*
+        |--------------------------------------------------------------------------
+        | Simulate invoice.upcoming
+        |--------------------------------------------------------------------------
+        */
 
-        $method = new ReflectionMethod(
-            StripeWebhookController::class,
-            'handleInvoiceUpcoming'
-        );
+        $this->stripeWebhookService
+            ->simulateInvoiceUpcoming(
+                invoice: $invoice,
+                customerEmail: $email
+            );
 
-        $method->setAccessible(true);
-
-        $method->invoke(
-            $controller,
-            (object) [
-                'id' => 'in_test_renewal',
-                'customer_email' => $email,
-                'subscription' => $invoice->stripe_id ?: 'sub_test_renewal',
-                'metadata' => (object) [
-                    'invoice_id' => $invoice->id,
-                ],
-            ]
-        );
+        /*
+        |--------------------------------------------------------------------------
+        | Verify Mail
+        |--------------------------------------------------------------------------
+        */
 
         if (!$this->option('send-mail')) {
             Mail::assertSent(
                 SubscriptionRenewalDecisionMail::class,
-                function ($mail) use ($invoice) {
+                function ($mail) use ($invoice): bool {
                     return $mail->invoice->id === $invoice->id;
                 }
             );
@@ -176,7 +244,9 @@ class TestRenewalReminderCommand extends Command
 
         $this->newLine();
 
-        $this->info('Renewal reminder test: PASS');
+        $this->info(
+            'Renewal reminder test: PASS'
+        );
 
         return self::SUCCESS;
     }
