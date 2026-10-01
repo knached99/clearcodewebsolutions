@@ -217,17 +217,25 @@ class StripeCheckout extends Component
             $email = trim($this->billingEmail);
             $customerId = $this->resolveStripeCustomerId($stripe);
 
+             $checkoutIp = request()->ip();
+
+            Log::info('Checkout IP captured before Stripe PaymentIntent creation.', [
+                'invoice_id' => $this->invoice->id,
+                'ip' => $checkoutIp,
+                'user_agent' => request()->userAgent(),
+            ]);
+
             $paymentIntentData = [
-                'amount' => $this->totalInCents,
-                'currency' => 'usd',
-                'automatic_payment_methods' => ['enabled' => true],
-                'description' => 'Invoice #'.$this->invoice->id,
-                'metadata' => [
-                    'invoice_id' => (string) $this->invoice->id,
-                    'checkout_token' => (string) $this->invoice->checkout_token,
-                    'checkout_ip' => request()->ip(),
-                ],
-            ];
+            'amount' => $this->totalInCents,
+            'currency' => 'usd',
+            'automatic_payment_methods' => ['enabled' => true],
+            'description' => 'Invoice #'.$this->invoice->id,
+            'metadata' => [
+                'invoice_id' => (string) $this->invoice->id,
+                'checkout_token' => (string) $this->invoice->checkout_token,
+                'checkout_ip' => $checkoutIp,
+            ],
+        ];
 
             if ($this->invoice->payment_type === PaymentType::Subscription) {
                 $paymentIntentData['setup_future_usage'] = 'off_session';
@@ -247,6 +255,15 @@ class StripeCheckout extends Component
                     'idempotency_key' => 'checkout-payment-intent-v2-'.$this->invoice->id,
                 ]
             );
+            
+            Log::info('Stripe PaymentIntent metadata verified.', [
+            'payment_intent_id' => $paymentIntent->id,
+            'invoice_id' => $this->invoice->id,
+            'checkout_ip' => data_get(
+                $paymentIntent,
+                'metadata.checkout_ip'
+            ),
+        ]);
 
             $this->paymentIntentId = (string) ($paymentIntent->id ?? '');
             $this->clientSecret = (string) ($paymentIntent->client_secret ?? '');

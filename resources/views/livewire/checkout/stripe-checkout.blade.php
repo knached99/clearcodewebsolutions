@@ -875,8 +875,16 @@
     let initializingStripe = false;
     let stripePaymentId = @js($paymentIntentId);
     let currentClientSecret = @js($clientSecret);
+    let initializedClientSecret = null;
+    let stripeLoaderPromise = null;
 
     const initialPaymentStatus = @js($paymentStatus);
+
+    /*
+     * -------------------------------------------------------------
+     * Helpers
+     * -------------------------------------------------------------
+     */
 
     const waitForDom = () => {
         return new Promise((resolve) => {
@@ -960,8 +968,178 @@
         }
     };
 
+    /*
+     * -------------------------------------------------------------
+     * Stripe.js loader
+     *
+     * Do not assume Stripe.js has finished loading merely because
+     * the <script> tag exists in the document.
+     * -------------------------------------------------------------
+     */
+
+    const loadStripeJs = () => {
+        if (window.Stripe) {
+            return Promise.resolve(window.Stripe);
+        }
+
+        if (stripeLoaderPromise) {
+            return stripeLoaderPromise;
+        }
+
+        stripeLoaderPromise = new Promise((resolve, reject) => {
+            let settled = false;
+
+            const finishSuccess = () => {
+                if (settled) {
+                    return;
+                }
+
+                if (window.Stripe) {
+                    settled = true;
+                    resolve(window.Stripe);
+                }
+            };
+
+            const finishError = (message) => {
+                if (settled) {
+                    return;
+                }
+
+                settled = true;
+                reject(
+                    new Error(
+                        message || 'Stripe.js failed to load.'
+                    )
+                );
+            };
+
+            /*
+             * Stripe.js may already have been inserted by the page
+             * assets. Reuse that script instead of creating another.
+             */
+            let script = document.querySelector(
+                'script[src="https://js.stripe.com/v3/"]'
+            );
+
+            if (script) {
+                script.addEventListener(
+                    'load',
+                    finishSuccess,
+                    { once: true }
+                );
+
+                script.addEventListener(
+                    'error',
+                    () => {
+                        finishError('Stripe.js failed to load.');
+                    },
+                    { once: true }
+                );
+
+                /*
+                 * It may have loaded between our first check and the
+                 * event listener registration.
+                 */
+                finishSuccess();
+
+                /*
+                 * As an additional safeguard, poll briefly for
+                 * window.Stripe. This handles environments where the
+                 * script was already loading before our listeners
+                 * were attached.
+                 */
+                const startedAt = Date.now();
+
+                const check = () => {
+                    if (settled) {
+                        return;
+                    }
+
+                    if (window.Stripe) {
+                        finishSuccess();
+                        return;
+                    }
+
+                    if (Date.now() - startedAt >= 15000) {
+                        finishError('Stripe.js failed to load.');
+                        return;
+                    }
+
+                    requestAnimationFrame(check);
+                };
+
+                requestAnimationFrame(check);
+
+                return;
+            }
+
+            /*
+             * Fallback: inject Stripe.js ourselves if the page asset
+             * has not been inserted yet.
+             */
+            script = document.createElement('script');
+
+            script.src = 'https://js.stripe.com/v3/';
+            script.async = true;
+
+            script.onload = () => {
+                if (window.Stripe) {
+                    finishSuccess();
+                } else {
+                    finishError(
+                        'Stripe.js loaded but Stripe is unavailable.'
+                    );
+                }
+            };
+
+            script.onerror = () => {
+                finishError('Stripe.js failed to load.');
+            };
+
+            document.head.appendChild(script);
+
+            const startedAt = Date.now();
+
+            const check = () => {
+                if (settled) {
+                    return;
+                }
+
+                if (window.Stripe) {
+                    finishSuccess();
+                    return;
+                }
+
+                if (Date.now() - startedAt >= 15000) {
+                    finishError('Stripe.js failed to load.');
+                    return;
+                }
+
+                requestAnimationFrame(check);
+            };
+
+            requestAnimationFrame(check);
+        });
+
+        /*
+         * Allow a subsequent attempt after a failed network load.
+         */
+        stripeLoaderPromise.catch(() => {
+            stripeLoaderPromise = null;
+        });
+
+        return stripeLoaderPromise;
+    };
+
+    /*
+     * -------------------------------------------------------------
+     * Stripe Element lifecycle
+     * -------------------------------------------------------------
+     */
+
     const destroyStripeElement = () => {
         paymentElementReady = false;
+        initializedClientSecret = null;
 
         if (paymentElement) {
             try {
@@ -976,6 +1154,12 @@
         elements = null;
     };
 
+    /*
+     * -------------------------------------------------------------
+     * Initialize Stripe Payment Element
+     * -------------------------------------------------------------
+     */
+
     const initializeStripe = async (clientSecret) => {
         if (!clientSecret) {
             return;
@@ -987,18 +1171,26 @@
             return;
         }
 
+        /*
+         * Already initialized for this exact client secret.
+         */
         if (
-            initializingStripe
-            && currentClientSecret === clientSecret
+            initializedClientSecret === clientSecret
+            && paymentElementReady
             && paymentElement
+            && elements
+            && stripe
         ) {
             return;
         }
 
+        /*
+         * Prevent duplicate concurrent initialization for the same
+         * client secret.
+         */
         if (
-            currentClientSecret === clientSecret
-            && paymentElementReady
-            && paymentElement
+            initializingStripe
+            && currentClientSecret === clientSecret
         ) {
             return;
         }
@@ -1007,16 +1199,25 @@
         currentClientSecret = clientSecret;
 
         clearStripeError();
+
         setPaymentButtonState(
             true,
             'Loading secure payment form...'
         );
+
         setStripeStatus(
             'Loading secure payment form...'
         );
 
         try {
             await waitForDom();
+
+            /*
+             * IMPORTANT:
+             * Wait for Stripe.js itself instead of assuming
+             * window.Stripe already exists.
+             */
+            const Stripe = await loadStripeJs();
 
             const paymentMount =
                 root.querySelector('#payment-element');
@@ -1033,33 +1234,37 @@
                 );
             }
 
-            if (!window.Stripe) {
-                throw new Error(
-                    'Stripe.js failed to load.'
-                );
-            }
-
-            if (stripePaymentId) {
-                // Existing Stripe instance can be reused.
-            } else {
-                stripe = stripe || window.Stripe(
-                    publishableKey
-                );
-            }
-
+            /*
+             * Create the Stripe instance once.
+             */
             if (!stripe) {
-                stripe = window.Stripe(
-                    publishableKey
-                );
+                stripe = Stripe(publishableKey);
             }
 
-            destroyStripeElement();
+            /*
+             * If Livewire changed the client secret, destroy the
+             * previous Payment Element before creating a new one.
+             */
+            if (
+                initializedClientSecret
+                && initializedClientSecret !== clientSecret
+            ) {
+                destroyStripeElement();
+            }
 
-            const billingName =
-                billingNameInput()?.value?.trim() || '';
+            /*
+             * Clean up an old unready element before retrying.
+             */
+            if (paymentElement && !paymentElementReady) {
+                try {
+                    paymentElement.unmount();
+                } catch (e) {
+                    // Ignore.
+                }
 
-            const billingEmail =
-                billingEmailInput()?.value?.trim() || '';
+                paymentElement = null;
+                elements = null;
+            }
 
             elements = stripe.elements({
                 clientSecret,
@@ -1084,6 +1289,12 @@
              * Stripe does NOT accept billingDetails.email = "always".
              * Valid values for email here are "never" or "auto".
              */
+            const billingName =
+                billingNameInput()?.value?.trim() || '';
+
+            const billingEmail =
+                billingEmailInput()?.value?.trim() || '';
+
             paymentElement = elements.create(
                 'payment',
                 {
@@ -1127,6 +1338,7 @@
                 'ready',
                 () => {
                     paymentElementReady = true;
+                    initializedClientSecret = clientSecret;
 
                     if (loading) {
                         loading.hidden = true;
@@ -1165,6 +1377,8 @@
                         event?.error?.message
                         || 'Stripe could not load the payment form.';
 
+                    paymentElementReady = false;
+
                     showStripeError(message);
 
                     setPaymentButtonState(
@@ -1178,6 +1392,9 @@
                 }
             );
 
+            /*
+             * Mount only after Stripe.js and the DOM are both ready.
+             */
             paymentElement.mount(paymentMount);
         } catch (error) {
             console.error(
@@ -1186,13 +1403,24 @@
             );
 
             paymentElementReady = false;
+            initializedClientSecret = null;
+
+            if (paymentElement) {
+                try {
+                    paymentElement.unmount();
+                } catch (e) {
+                    // Ignore.
+                }
+            }
+
             paymentElement = null;
             elements = null;
 
-            showStripeError(
+            const message =
                 error?.message
-                || 'Unable to initialize Stripe payment form.'
-            );
+                || 'Unable to initialize Stripe payment form.';
+
+            showStripeError(message);
 
             setPaymentButtonState(
                 true,
@@ -1206,6 +1434,12 @@
             initializingStripe = false;
         }
     };
+
+    /*
+     * -------------------------------------------------------------
+     * Payment submission
+     * -------------------------------------------------------------
+     */
 
     const submitPayment = async () => {
         if (
@@ -1250,13 +1484,12 @@
 
             /*
              * This calls the Livewire backend validation method.
-             * No $wire.$nextTick() is used.
              */
             await $wire.validateBilling();
 
             /*
-             * Stripe requires Elements submission before confirmation
-             * when using the Payment Element.
+             * Stripe requires Elements submission before
+             * confirmation when using the Payment Element.
              */
             const submitResult =
                 await elements.submit();
@@ -1439,8 +1672,11 @@
     };
 
     /*
+     * -------------------------------------------------------------
      * Signature pad
+     * -------------------------------------------------------------
      */
+
     const setupSignaturePad = () => {
         const canvas =
             root.querySelector(
@@ -1671,9 +1907,12 @@
     };
 
     /*
+     * -------------------------------------------------------------
      * Payment button event delegation.
      * This survives Livewire DOM morphs.
+     * -------------------------------------------------------------
      */
+
     root.addEventListener(
         'click',
         (event) => {
@@ -1696,9 +1935,11 @@
     );
 
     /*
-     * Watch Livewire's clientSecret property.
-     * This replaces all fragile DOMContentLoaded / Livewire.find logic.
+     * -------------------------------------------------------------
+     * Watch Livewire clientSecret.
+     * -------------------------------------------------------------
      */
+
     $wire.$watch(
         'clientSecret',
         async (clientSecret) => {
@@ -1714,6 +1955,12 @@
         }
     );
 
+    /*
+     * -------------------------------------------------------------
+     * Watch PaymentIntent ID.
+     * -------------------------------------------------------------
+     */
+
     $wire.$watch(
         'paymentIntentId',
         (paymentIntentId) => {
@@ -1725,8 +1972,11 @@
     );
 
     /*
+     * -------------------------------------------------------------
      * Initial state.
+     * -------------------------------------------------------------
      */
+
     (async () => {
         await waitForDom();
 
