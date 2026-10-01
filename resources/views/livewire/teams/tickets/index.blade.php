@@ -67,8 +67,15 @@
             border: 1px solid rgba(255, 255, 255, 0.05);
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
             /* REMOVED: backdrop-filter: blur(4px) */
-            transition: border-color 0.3s ease, background 0.3s ease;
+             transition:
+            border-color 0.3s ease,
+            background 0.3s ease,
+            height 0.25s ease;
         }
+
+        .cc-tickets .kanban-column button {
+    -webkit-tap-highlight-color: transparent;
+}
 
         .cc-tickets .kanban-column.drag-over {
             background: rgba(150, 60, 150, 0.08);
@@ -263,85 +270,151 @@
         }
     </style>
 
-    <div x-data="{
+    <div <div
+    x-data="{
         htmlIsDark: document.documentElement.classList.contains('dark'),
         observer: null,
-    
+
         dragging: false,
         draggingTicket: null,
         dragColumn: null,
         moving: false,
-    
+
+        collapsedColumns: {},
+
+        storageKey: 'cc-kanban-collapsed-{{ $team->slug }}',
+
         init() {
             this.observer = new MutationObserver(() => {
                 this.htmlIsDark = document.documentElement.classList.contains('dark');
             });
+
             this.observer.observe(document.documentElement, {
                 attributes: true,
                 attributeFilter: ['class'],
             });
+
+            // Restore minimized column state
+            try {
+                const saved = localStorage.getItem(this.storageKey);
+
+                if (saved) {
+                    this.collapsedColumns = JSON.parse(saved) || {};
+                }
+            } catch (error) {
+                console.warn('Unable to restore Kanban column state:', error);
+                this.collapsedColumns = {};
+            }
+
             this.$nextTick(() => {
                 this.htmlIsDark = document.documentElement.classList.contains('dark');
             });
         },
-    
+
         get isLightMode() {
             return !this.htmlIsDark;
         },
-    
+
+        isColumnCollapsed(column) {
+            return this.collapsedColumns[column] === true;
+        },
+
+        toggleColumn(column) {
+            this.collapsedColumns[column] = !this.isColumnCollapsed(column);
+            this.saveColumnState();
+        },
+
+        saveColumnState() {
+            try {
+                localStorage.setItem(
+                    this.storageKey,
+                    JSON.stringify(this.collapsedColumns)
+                );
+            } catch (error) {
+                console.warn('Unable to save Kanban column state:', error);
+            }
+        },
+
         startDrag(event, ticketId) {
             this.dragging = true;
             this.draggingTicket = String(ticketId);
+
             event.dataTransfer.effectAllowed = 'move';
             event.dataTransfer.setData('text/plain', String(ticketId));
             event.dataTransfer.setData('ticket-id', String(ticketId));
-    
-            // Use a slight delay to allow the drag image to capture the normal state before visually dimming
+
             setTimeout(() => {
                 event.target.classList.add('is-dragging');
             }, 10);
         },
-    
+
         endDrag(event) {
             this.dragging = false;
             this.draggingTicket = null;
             this.dragColumn = null;
+
             event.target.classList.remove('is-dragging');
         },
-    
+
         dragOver(event, column) {
             event.preventDefault();
-            if (!this.dragging || this.moving) return;
+
+            if (!this.dragging || this.moving) {
+                return;
+            }
+
             event.dataTransfer.dropEffect = 'move';
             this.dragColumn = column;
         },
-    
+
         dragEnter(event, column) {
             event.preventDefault();
-            if (!this.dragging || this.moving) return;
+
+            if (!this.dragging || this.moving) {
+                return;
+            }
+
             this.dragColumn = column;
         },
-    
+
         dragLeave(event) {
-            if (event.relatedTarget && event.currentTarget.contains(event.relatedTarget)) return;
+            if (
+                event.relatedTarget &&
+                event.currentTarget.contains(event.relatedTarget)
+            ) {
+                return;
+            }
+
             this.dragColumn = null;
         },
-    
+
         async drop(event, column) {
             event.preventDefault();
             event.stopPropagation();
-    
-            if (this.moving || !this.dragging) return;
-    
-            const ticketId = event.dataTransfer.getData('ticket-id') || event.dataTransfer.getData('text/plain');
-            if (!ticketId) return;
-    
+
+            if (this.moving || !this.dragging) {
+                return;
+            }
+
+            const ticketId =
+                event.dataTransfer.getData('ticket-id') ||
+                event.dataTransfer.getData('text/plain');
+
+            if (!ticketId) {
+                return;
+            }
+
             this.moving = true;
             this.dragging = false;
             this.dragColumn = null;
-    
+
             try {
-                await $wire.call('moveTicket', Number(ticketId), column);
+                await $wire.call(
+                    'moveTicket',
+                    Number(ticketId),
+                    column
+                );
+
                 this.$dispatch('ticket-moved');
             } catch (error) {
                 console.error('Unable to move ticket:', error);
@@ -349,12 +422,16 @@
                 this.moving = false;
                 this.draggingTicket = null;
                 this.dragColumn = null;
-                // Cleanup any stuck dragging classes
-                document.querySelectorAll('.is-dragging').forEach(el => el.classList.remove('is-dragging'));
+
+                document
+                    .querySelectorAll('.is-dragging')
+                    .forEach(el => el.classList.remove('is-dragging'));
             }
         }
-    }" x-on:ticket-moved.window="moving = false" :class="{ 'light': isLightMode }"
-        class="cc-tickets relative min-h-screen w-full overflow-hidden transition-colors duration-500 flex flex-col">
+    }"
+    x-on:ticket-moved.window="moving = false"
+    :class="{ 'light': isLightMode }"
+    class="cc-tickets relative min-h-screen w-full overflow-hidden transition-colors duration-500 flex flex-col">
 
         <!-- Noise Texture -->
         <div class="noise"></div>
@@ -476,40 +553,94 @@
                 ];
             @endphp
 
-            <div class="flex min-w-[1000px] gap-6 xl:grid xl:min-w-0 xl:grid-cols-4 h-full">
+            <div class="flex min-w-[1000px] gap-6 xl:grid xl:min-w-0 xl:grid-cols-4 h-full items-start">
                 @foreach ($columns as $column => $meta)
                     @php
                         $columnTickets = $tickets->where('status', $column)->values();
                     @endphp
-                    <section wire:key="kanban-column-{{ $column }}"
-                        class="kanban-column flex w-80 shrink-0 flex-col overflow-hidden rounded-2xl xl:w-auto h-full max-h-full"
-                        :class="{ 'drag-over': dragColumn === '{{ $column }}' }">
+                    <section
+                    wire:key="kanban-column-{{ $column }}"
+                    class="kanban-column flex w-80 shrink-0 flex-col overflow-hidden rounded-2xl xl:w-auto max-h-full"
+                    :class="{
+                        'h-full': !isColumnCollapsed('{{ $column }}'),
+                        'h-auto': isColumnCollapsed('{{ $column }}'),
+                        'drag-over': dragColumn === '{{ $column }}'
+                    }"
+                    x-on:dragover.prevent="dragOver($event, '{{ $column }}')"
+                    x-on:dragenter.prevent="dragEnter($event, '{{ $column }}')"
+                    x-on:dragleave="dragLeave($event)"
+                    x-on:drop.prevent.stop="drop($event, '{{ $column }}')"
+                >
 
                         {{-- Column header --}}
                         <div class="border-b border-white/5 px-5 py-4">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-3">
-                                    <span class="size-2.5 rounded-full {{ $meta['dot'] }}"></span>
-                                    <h2 class="text-sm font-semibold tracking-wide text-white uppercase">
-                                        {{ $meta['label'] }}
-                                    </h2>
+                        <button
+                            type="button"
+                            class="group flex w-full items-center justify-between text-left"
+                            @click="toggleColumn('{{ $column }}')"
+                            :aria-expanded="!isColumnCollapsed('{{ $column }}')"
+                            aria-controls="kanban-column-body-{{ $column }}"
+                        >
+                            <div class="flex min-w-0 items-center gap-3">
+                                <span class="size-2.5 shrink-0 rounded-full {{ $meta['dot'] }}"></span>
+
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <h2 class="text-sm font-semibold tracking-wide text-white uppercase">
+                                            {{ $meta['label'] }}
+                                        </h2>
+
+                                        <span
+                                            class="rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-medium text-white/70"
+                                        >
+                                            {{ $columnTickets->count() }}
+                                        </span>
+                                    </div>
+
+                                    <p
+                                        class="mt-1.5 text-xs text-white/40 transition-opacity duration-200"
+                                        x-show="!isColumnCollapsed('{{ $column }}')"
+                                        x-transition.opacity
+                                    >
+                                        {{ $meta['description'] }}
+                                    </p>
                                 </div>
-                                <span
-                                    class="rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-medium text-white/70 backdrop-blur-md">
-                                    {{ $columnTickets->count() }}
-                                </span>
                             </div>
-                            <p class="mt-1.5 text-xs text-white/40">
-                                {{ $meta['description'] }}
-                            </p>
-                        </div>
+
+                            <span
+                                class="ml-3 flex size-7 shrink-0 items-center justify-center rounded-lg bg-white/5 text-white/40 ring-1 ring-white/10 transition-all duration-200 group-hover:bg-white/10 group-hover:text-white/80"
+                                :class="{
+                                    'rotate-180': !isColumnCollapsed('{{ $column }}')
+                                }"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    class="size-4"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <path d="m6 9 6 6 6-6" />
+                                </svg>
+                            </span>
+                        </button>
+                    </div>
 
                         {{-- Drop zone / Cards container --}}
-                        <div class="cc-scrollbar relative flex flex-1 flex-col gap-4 overflow-y-auto p-4 transition-colors"
-                            x-on:dragover.prevent="dragOver($event, '{{ $column }}')"
-                            x-on:dragenter.prevent="dragEnter($event, '{{ $column }}')"
-                            x-on:dragleave="dragLeave($event)"
-                            x-on:drop.prevent.stop="drop($event, '{{ $column }}')">
+                        <div
+                        id="kanban-column-body-{{ $column }}"
+                        x-show="!isColumnCollapsed('{{ $column }}')"
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 -translate-y-2"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 -translate-y-2"
+                        class="cc-scrollbar relative flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4 transition-colors"
+                    >
 
                             @forelse($columnTickets as $ticket)
                                 <div wire:key="ticket-{{ $ticket->id }}" draggable="true"

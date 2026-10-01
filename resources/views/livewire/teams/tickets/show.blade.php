@@ -464,15 +464,16 @@
                             @endif
 
                             {{-- Message --}}
-                            <article id="ticket-message-{{ $message->id }}"
-                                wire:key="ticket-message-{{ $message->id }}"
-                                class="scroll-mt-28 px-4 py-6 sm:px-7 sm:py-7 {{ $isHighlighted ? 'message-highlight' : '' }}">
-                                <div class="flex items-start gap-3 sm:gap-4 {{ $isCustomer ? '' : 'justify-end' }}">
+                            <article
+                            id="ticket-message-{{ $message->id }}"
+                            wire:key="ticket-message-{{ $message->id }}"
+                            class="scroll-mt-28 px-3 py-3 sm:px-5 sm:py-4 {{ $isHighlighted ? 'message-highlight' : '' }}">
+                                <div class="relative flex items-start {{ $isCustomer ? 'pr-8 sm:pr-10' : 'pl-8 sm:pl-10 justify-end' }}">
 
                                     @if ($isCustomer)
                                         {{-- Customer avatar --}}
                                         <div
-                                            class="relative flex size-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-100 to-fuchsia-100 text-sm font-bold text-violet-700 shadow-sm ring-1 ring-violet-200/50 dark:from-violet-500/10 dark:to-fuchsia-500/10 dark:text-violet-200 dark:ring-white/5 sm:size-11">
+                                            class="relative flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-100 to-fuchsia-100 text-sm font-bold text-violet-700 shadow-sm ring-1 ring-violet-200/50 dark:from-violet-500/10 dark:to-fuchsia-500/10 dark:text-violet-200 dark:ring-white/5 sm:size-10">
                                             {{ $initial }}
                                         </div>
                                     @endif
@@ -480,7 +481,7 @@
                                     <div class="min-w-0 max-w-[calc(100%-52px)] sm:max-w-[78%] lg:max-w-[72%]">
                                         {{-- Meta --}}
                                         <div
-                                            class="mb-2 flex flex-wrap items-center gap-2 {{ $isCustomer ? '' : 'justify-end' }}">
+                                        class="mb-1 flex flex-wrap items-center gap-1.5 {{ $isCustomer ? '' : 'justify-end' }}">
                                             <span class="text-sm font-semibold text-zinc-800 dark:text-white">
                                                 {{ $authorName }}
                                             </span>
@@ -500,15 +501,14 @@
                                         {{-- Text --}}
                                         @if (filled($message->message))
                                             <div
-                                                class="w-fit max-w-full rounded-[24px] px-4 py-3.5 text-[14px] leading-7 shadow-[0_14px_35px_-25px_rgba(40,30,60,.25)] sm:px-5 sm:py-4 sm:text-[15px]
-                                                {{ $isCustomer
-                                                    ? 'rounded-tl-md border border-zinc-200 bg-zinc-50 text-zinc-700 dark:border-white/[0.07] dark:bg-white/[0.04] dark:text-zinc-200'
-                                                    : 'rounded-tr-md bg-gradient-to-br from-[#8e78be] via-[#8069b0] to-[#70589f] text-white shadow-[0_18px_38px_-22px_rgba(106,82,155,.95)]' }}">
-                                                <div class="whitespace-pre-wrap break-words">
-                                                    {{ $message->message }}
-                                                </div>
-                                            </div>
-                                        @endif
+                                            class="w-fit max-w-full rounded-[16px] px-2.5 py-1.5 text-[14px] leading-5 shadow-[0_8px_24px_-20px_rgba(40,30,60,.25)] sm:px-3 sm:py-2 sm:text-[14px]
+                                            {{ $isCustomer
+                                                ? 'rounded-tl-md border border-zinc-200 bg-zinc-50 text-zinc-700 dark:border-white/[0.07] dark:bg-white/[0.04] dark:text-zinc-200'
+                                                : 'rounded-tr-md bg-gradient-to-br from-[#8e78be] via-[#8069b0] to-[#70589f] text-white shadow-[0_12px_28px_-20px_rgba(106,82,155,.85)]' }}"
+                                        >
+                                            <div class="whitespace-pre-wrap break-words">{{ trim($message->message) }}</div>
+                                        </div>
+                                       @endif
 
                                         {{-- Attachments --}}
                                         @if ($message->attachments->isNotEmpty())
@@ -629,8 +629,8 @@
                                     @if (!$isCustomer)
                                         {{-- Team avatar --}}
                                         <div
-                                            class="relative flex size-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#8e78be] to-[#6f579f] text-sm font-bold text-white shadow-[0_14px_30px_-12px_rgba(109,83,157,.85)] sm:size-11">
-                                            {{ $initial }}
+                                        class="relative flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#8e78be] to-[#6f579f] text-sm font-bold text-white shadow-[0_14px_30px_-12px_rgba(109,83,157,.85)] sm:size-10">                                            
+                                        {{ $initial }}
 
                                             <span
                                                 class="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-white bg-emerald-500 dark:border-[#141218]"></span>

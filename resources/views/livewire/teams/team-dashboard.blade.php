@@ -88,7 +88,14 @@
         </div>
 
 
-        <div class="dashboard-filter-wrap" x-data="dashboardDatePicker()" x-init="init()">
+         <div
+            class="dashboard-filter-wrap"
+            x-data="dashboardDatePicker({
+                showCustom: @js($filter === 'custom'),
+                startDate: @js($customStartDate),
+                endDate: @js($customEndDate),
+            })"
+        >
             <label for="dashboard-filter" class="dashboard-filter-label">
                 Reporting period
             </label>
@@ -2432,1308 +2439,1334 @@
         }
     </style>
 
+{{-- =========================================================
+     APEXCHARTS / LIVEWIRE BRIDGE
 
-    {{-- =========================================================
-         APEXCHARTS / LIVEWIRE BRIDGE
-         
-         IMPORTANT:
-         This is a normal script inside the ONE root element.
-         There is intentionally no @script or @assets directive.
-    ========================================================== --}}
+     Designed for:
+     - Livewire 3/4
+     - wire:navigate
+     - Alpine
+     - Livewire component updates
+     - Dark/light mode
+     - ApexCharts loaded once per page
 
-    <script>
-        (() => {
-            const initialData = {
-                revenue: {
-                    labels: @js($revenueLabels),
-                    values: @js($revenueValues),
-                },
+     IMPORTANT:
+     - Do not wrap this in alpine:init.
+     - Do not use DOMContentLoaded here.
+     - Do not add another copy of this script elsewhere.
+========================================================== --}}
 
-                customers: {
-                    labels: @js($customerChartLabels),
-                    values: @js($customerChartValues),
-                },
-
-                donut: {
-                    subscription: {{ (int) ($subscriptionRevenue ?? 0) }},
-                    oneTime: {{ (int) ($oneTimeRevenue ?? 0) }},
-                },
-            };
+@assets
+<script
+    src="https://cdn.jsdelivr.net/npm/apexcharts"
+    defer
+></script>
+@endassets
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | Create Chart Manager Once
-            |--------------------------------------------------------------------------
-            */
+{{-- =========================================================
+     APEXCHARTS
+========================================================== --}}
 
-            if (!window.TeamDashboardCharts) {
+@script
+<script>
+    (() => {
+        const initialData = {
+            revenue: {
+                labels: @js($revenueLabels),
+                values: @js($revenueValues),
+            },
 
-                window.TeamDashboardCharts = (() => {
+            customers: {
+                labels: @js($customerChartLabels),
+                values: @js($customerChartValues),
+            },
 
-                    let dashboardData = {
+            donut: {
+                subscription: {{ (int) ($subscriptionRevenue ?? 0) }},
+                oneTime: {{ (int) ($oneTimeRevenue ?? 0) }},
+            },
+        };
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Create the global chart manager once
+        |--------------------------------------------------------------------------
+        */
+
+        if (!window.TeamDashboardCharts) {
+
+            window.TeamDashboardCharts = (() => {
+
+                let dashboardData = {
+                    revenue: {
+                        labels: [],
+                        values: [],
+                    },
+
+                    customers: {
+                        labels: [],
+                        values: [],
+                    },
+
+                    donut: {
+                        subscription: 0,
+                        oneTime: 0,
+                    },
+                };
+
+
+                let renderFrameOne = null;
+
+                let renderFrameTwo = null;
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Theme
+                |--------------------------------------------------------------------------
+                */
+
+                function isDarkMode() {
+                    return document.documentElement
+                        .classList
+                        .contains('dark');
+                }
+
+
+                function chartTheme() {
+                    return isDarkMode()
+                        ? 'dark'
+                        : 'light';
+                }
+
+
+                function chartTextColor() {
+                    return isDarkMode()
+                        ? '#94a3b8'
+                        : '#64748b';
+                }
+
+
+                function chartPrimaryTextColor() {
+                    return isDarkMode()
+                        ? '#f1f5f9'
+                        : '#0f172a';
+                }
+
+
+                function chartGridColor() {
+                    return isDarkMode()
+                        ? 'rgba(148, 163, 184, 0.14)'
+                        : '#e5e7eb';
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Data
+                |--------------------------------------------------------------------------
+                */
+
+                function setData(data) {
+
+                    if (!data) {
+                        return;
+                    }
+
+
+                    dashboardData = {
+
                         revenue: {
-                            labels: [],
-                            values: [],
+
+                            labels: Array.isArray(
+                                data.revenue?.labels
+                            )
+                                ? data.revenue.labels
+                                : [],
+
+                            values: Array.isArray(
+                                data.revenue?.values
+                            )
+                                ? data.revenue.values
+                                : [],
                         },
+
 
                         customers: {
-                            labels: [],
-                            values: [],
+
+                            labels: Array.isArray(
+                                data.customers?.labels
+                            )
+                                ? data.customers.labels
+                                : [],
+
+                            values: Array.isArray(
+                                data.customers?.values
+                            )
+                                ? data.customers.values
+                                : [],
                         },
+
 
                         donut: {
-                            subscription: 0,
-                            oneTime: 0,
+
+                            subscription: Number(
+                                data.donut?.subscription ?? 0
+                            ),
+
+                            oneTime: Number(
+                                data.donut?.oneTime ?? 0
+                            ),
                         },
                     };
+                }
 
 
-                    let initialized = false;
+                /*
+                |--------------------------------------------------------------------------
+                | Destroy one ApexChart
+                |--------------------------------------------------------------------------
+                */
 
-                    let apexLoadPromise = null;
+                function destroyChart(id) {
+
+                    const element =
+                        document.getElementById(id);
 
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Theme
-                    |--------------------------------------------------------------------------
-                    */
-
-                    function isDarkMode() {
-                        return document.documentElement
-                            .classList
-                            .contains('dark');
+                    if (!element) {
+                        return;
                     }
 
 
-                    function chartTheme() {
-                        return isDarkMode() ?
-                            'dark' :
-                            'light';
-                    }
+                    if (element.__apexChart) {
 
+                        try {
 
-                    function chartTextColor() {
-                        return isDarkMode() ?
-                            '#94a3b8' :
-                            '#64748b';
-                    }
+                            element.__apexChart.destroy();
 
+                        } catch (error) {
 
-                    function chartPrimaryTextColor() {
-                        return isDarkMode() ?
-                            '#f1f5f9' :
-                            '#0f172a';
-                    }
-
-
-                    function chartGridColor() {
-                        return isDarkMode() ?
-                            'rgba(148, 163, 184, 0.14)' :
-                            '#e5e7eb';
-                    }
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | ApexCharts Loader
-                    |--------------------------------------------------------------------------
-                    */
-
-                    function ensureApexCharts() {
-
-                        if (
-                            typeof window.ApexCharts !==
-                            'undefined'
-                        ) {
-                            return Promise.resolve();
-                        }
-
-
-                        if (apexLoadPromise) {
-                            return apexLoadPromise;
-                        }
-
-
-                        apexLoadPromise =
-                            new Promise(
-                                (
-                                    resolve,
-                                    reject
-                                ) => {
-
-                                    const existing =
-                                        document.querySelector(
-                                            'script[data-team-dashboard-apexcharts]'
-                                        );
-
-
-                                    if (existing) {
-
-                                        existing.addEventListener(
-                                            'load',
-                                            () => resolve()
-                                        );
-
-                                        existing.addEventListener(
-                                            'error',
-                                            reject
-                                        );
-
-                                        return;
-                                    }
-
-
-                                    const script =
-                                        document.createElement(
-                                            'script'
-                                        );
-
-                                    script.src =
-                                        'https://cdn.jsdelivr.net/npm/apexcharts';
-
-                                    script.dataset
-                                        .teamDashboardApexcharts =
-                                        'true';
-
-                                    script.onload = () =>
-                                        resolve();
-
-                                    script.onerror =
-                                        reject;
-
-                                    document.head.appendChild(
-                                        script
-                                    );
-
-                                }
+                            console.warn(
+                                `Unable to destroy ${id}`,
+                                error
                             );
+                        }
 
-                        return apexLoadPromise;
+
+                        element.__apexChart = null;
                     }
 
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Data
-                    |--------------------------------------------------------------------------
-                    */
-
-                    function setData(data) {
-
-                        if (!data) {
-                            return;
-                        }
+                    element.innerHTML = '';
+                }
 
 
-                        dashboardData = {
+                /*
+                |--------------------------------------------------------------------------
+                | Revenue Chart
+                |--------------------------------------------------------------------------
+                */
 
-                            revenue: {
-                                labels: Array.isArray(
-                                        data.revenue?.labels
-                                    ) ?
-                                    data.revenue.labels : [],
+                function renderRevenueChart() {
 
-                                values: Array.isArray(
-                                        data.revenue?.values
-                                    ) ?
-                                    data.revenue.values : [],
-                            },
-
-
-                            customers: {
-                                labels: Array.isArray(
-                                        data.customers?.labels
-                                    ) ?
-                                    data.customers.labels : [],
-
-                                values: Array.isArray(
-                                        data.customers?.values
-                                    ) ?
-                                    data.customers.values : [],
-                            },
-
-
-                            donut: {
-                                subscription: Number(
-                                    data.donut
-                                    ?.subscription ??
-                                    0
-                                ),
-
-                                oneTime: Number(
-                                    data.donut
-                                    ?.oneTime ??
-                                    0
-                                ),
-                            },
-
-                        };
-                    }
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Destroy Chart
-                    |--------------------------------------------------------------------------
-                    */
-
-                    function destroyChart(id) {
-
-                        const element =
-                            document.getElementById(id);
-
-
-                        if (!element) {
-                            return;
-                        }
-
-
-                        if (element.__apexChart) {
-
-                            try {
-                                element.__apexChart.destroy();
-                            } catch (error) {
-                                console.warn(
-                                    `Unable to destroy ${id}`,
-                                    error
-                                );
-                            }
-
-                            element.__apexChart = null;
-                        }
-
-
-                        element.innerHTML = '';
-                    }
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Revenue Chart
-                    |--------------------------------------------------------------------------
-                    */
-
-                    function renderRevenueChart() {
-
-                        const element =
-                            document.getElementById(
-                                'revenueChart'
-                            );
-
-
-                        if (
-                            !element ||
-                            typeof window.ApexCharts ===
-                            'undefined'
-                        ) {
-                            return;
-                        }
-
-
-                        destroyChart(
+                    const element =
+                        document.getElementById(
                             'revenueChart'
                         );
 
 
-                        const labels =
-                            dashboardData.revenue
-                            ?.labels ?? [];
+                    if (
+                        !element ||
+                        typeof window.ApexCharts === 'undefined'
+                    ) {
+                        return;
+                    }
 
 
-                        const values =
-                            dashboardData.revenue
-                            ?.values ?? [];
+                    destroyChart('revenueChart');
 
 
-                        const textColor =
-                            chartTextColor();
+                    const labels =
+                        dashboardData.revenue?.labels ?? [];
 
 
-                        const gridColor =
-                            chartGridColor();
+                    const values =
+                        dashboardData.revenue?.values ?? [];
 
 
-                        const chart =
-                            new window.ApexCharts(
-                                element, {
+                    const textColor =
+                        chartTextColor();
 
-                                    chart: {
-                                        type: 'area',
-                                        height: 320,
 
-                                        toolbar: {
-                                            show: false,
-                                        },
+                    const gridColor =
+                        chartGridColor();
 
-                                        zoom: {
-                                            enabled: false,
-                                        },
 
-                                        fontFamily: 'inherit',
+                    const chart =
+                        new window.ApexCharts(
+                            element,
+                            {
 
-                                        background: 'transparent',
+                                chart: {
+                                    type: 'area',
 
-                                        animations: {
-                                            enabled: true,
-                                        },
+                                    height: 320,
+
+                                    toolbar: {
+                                        show: false,
                                     },
 
-
-                                    theme: {
-                                        mode: chartTheme(),
+                                    zoom: {
+                                        enabled: false,
                                     },
 
+                                    fontFamily: 'inherit',
 
-                                    series: [{
+                                    background: 'transparent',
+
+                                    animations: {
+                                        enabled: true,
+                                    },
+                                },
+
+
+                                theme: {
+                                    mode: chartTheme(),
+                                },
+
+
+                                series: [
+                                    {
                                         name: 'Revenue',
 
                                         data: values.map(
                                             value =>
-                                            Number(
-                                                value
-                                            ) / 100
+                                                Number(value) / 100
                                         ),
-                                    }, ],
+                                    },
+                                ],
 
+
+                                xaxis: {
+
+                                    categories: labels,
+
+                                    labels: {
+                                        style: {
+                                            colors: textColor,
+                                            fontSize: '11px',
+                                        },
+                                    },
+
+                                    axisBorder: {
+                                        show: false,
+                                    },
+
+                                    axisTicks: {
+                                        show: false,
+                                    },
+                                },
+
+
+                                yaxis: {
+
+                                    labels: {
+
+                                        formatter: value =>
+                                            '$' +
+                                            Number(value).toLocaleString(
+                                                undefined,
+                                                {
+                                                    maximumFractionDigits: 0,
+                                                }
+                                            ),
+
+                                        style: {
+                                            colors: textColor,
+                                            fontSize: '11px',
+                                        },
+                                    },
+                                },
+
+
+                                colors: [
+                                    isDarkMode()
+                                        ? '#a78bfa'
+                                        : '#7c3aed',
+                                ],
+
+
+                                stroke: {
+
+                                    curve: 'smooth',
+
+                                    width: 3,
+                                },
+
+
+                                fill: {
+
+                                    type: 'gradient',
+
+                                    gradient: {
+
+                                        shadeIntensity: 1,
+
+                                        opacityFrom:
+                                            isDarkMode()
+                                                ? 0.24
+                                                : 0.28,
+
+                                        opacityTo: 0.03,
+
+                                        stops: [
+                                            0,
+                                            100,
+                                        ],
+                                    },
+                                },
+
+
+                                grid: {
+
+                                    borderColor: gridColor,
+
+                                    strokeDashArray: 4,
 
                                     xaxis: {
-
-                                        categories: labels,
-
-                                        labels: {
-
-                                            style: {
-                                                colors: textColor,
-
-                                                fontSize: '11px',
-                                            },
-
-                                        },
-
-                                        axisBorder: {
+                                        lines: {
                                             show: false,
                                         },
-
-                                        axisTicks: {
-                                            show: false,
-                                        },
-
                                     },
+                                },
 
 
-                                    yaxis: {
+                                dataLabels: {
+                                    enabled: false,
+                                },
 
-                                        labels: {
 
-                                            formatter: value =>
-                                                '$' +
-                                                Number(
-                                                    value
-                                                ).toLocaleString(
-                                                    undefined, {
-                                                        maximumFractionDigits: 0,
-                                                    }
-                                                ),
+                                tooltip: {
 
-                                            style: {
-                                                colors: textColor,
+                                    theme: chartTheme(),
 
-                                                fontSize: '11px',
-                                            },
+                                    y: {
 
-                                        },
-
+                                        formatter: value =>
+                                            '$' +
+                                            Number(value).toLocaleString(
+                                                undefined,
+                                                {
+                                                    minimumFractionDigits: 2,
+                                                    maximumFractionDigits: 2,
+                                                }
+                                            ),
                                     },
+                                },
 
 
-                                    colors: [
-                                        isDarkMode() ?
-                                        '#a78bfa' :
-                                        '#7c3aed',
-                                    ],
+                                noData: {
+                                    text: 'No revenue data',
+                                },
+                            }
+                        );
 
 
-                                    stroke: {
-
-                                        curve: 'smooth',
-
-                                        width: 3,
-
-                                    },
+                    chart.render();
 
 
-                                    fill: {
-
-                                        type: 'gradient',
-
-                                        gradient: {
-
-                                            shadeIntensity: 1,
-
-                                            opacityFrom: isDarkMode() ?
-                                                0.24 : 0.28,
-
-                                            opacityTo: 0.03,
-
-                                            stops: [
-                                                0,
-                                                100,
-                                            ],
-
-                                        },
-
-                                    },
+                    element.__apexChart = chart;
+                }
 
 
-                                    grid: {
+                /*
+                |--------------------------------------------------------------------------
+                | Customer Chart
+                |--------------------------------------------------------------------------
+                */
 
-                                        borderColor: gridColor,
+                function renderCustomerChart() {
 
-                                        strokeDashArray: 4,
-
-                                        xaxis: {
-
-                                            lines: {
-                                                show: false,
-                                            },
-
-                                        },
-
-                                    },
-
-
-                                    dataLabels: {
-                                        enabled: false,
-                                    },
-
-
-                                    tooltip: {
-
-                                        theme: chartTheme(),
-
-                                        y: {
-
-                                            formatter: value =>
-                                                '$' +
-                                                Number(
-                                                    value
-                                                ).toLocaleString(
-                                                    undefined, {
-                                                        minimumFractionDigits: 2,
-
-                                                        maximumFractionDigits: 2,
-                                                    }
-                                                ),
-
-                                        },
-
-                                    },
-
-
-                                    noData: {
-                                        text: 'No revenue data',
-                                    },
-
-                                }
-                            );
-
-
-                        chart.render();
-
-                        element.__apexChart =
-                            chart;
-                    }
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Customer Chart
-                    |--------------------------------------------------------------------------
-                    */
-
-                    function renderCustomerChart() {
-
-                        const element =
-                            document.getElementById(
-                                'customerChart'
-                            );
-
-
-                        if (
-                            !element ||
-                            typeof window.ApexCharts ===
-                            'undefined'
-                        ) {
-                            return;
-                        }
-
-
-                        destroyChart(
+                    const element =
+                        document.getElementById(
                             'customerChart'
                         );
 
 
-                        const categories =
-                            dashboardData.customers
-                            ?.labels ?? [];
-
-
-                        const values =
-                            dashboardData.customers
-                            ?.values ?? [];
-
-
-                        const chartValues =
-                            values.map(
-                                value =>
-                                Number(
-                                    value
-                                ) / 100
-                            );
-
-
-                        const textColor =
-                            chartTextColor();
-
-
-                        const gridColor =
-                            chartGridColor();
-
-
-                        const chart =
-                            new window.ApexCharts(
-                                element, {
-
-                                    chart: {
-
-                                        type: 'bar',
-
-                                        height: 320,
-
-                                        toolbar: {
-                                            show: false,
-                                        },
-
-                                        fontFamily: 'inherit',
-
-                                        background: 'transparent',
-
-                                        animations: {
-                                            enabled: true,
-                                        },
-
-                                    },
-
-
-                                    theme: {
-                                        mode: chartTheme(),
-                                    },
-
-
-                                    series: [{
-                                        name: 'Revenue',
-
-                                        data: chartValues,
-                                    }, ],
-
-
-                                    plotOptions: {
-
-                                        bar: {
-
-                                            borderRadius: 7,
-
-                                            horizontal: true,
-
-                                            barHeight: '55%',
-
-                                        },
-
-                                    },
-
-
-                                    colors: [
-
-                                        isDarkMode() ?
-                                        '#60a5fa' :
-                                        '#2563eb',
-
-                                    ],
-
-
-                                    xaxis: {
-
-                                        categories: categories,
-
-                                        labels: {
-
-                                            formatter: value =>
-                                                '$' +
-                                                Number(
-                                                    value
-                                                ).toLocaleString(
-                                                    undefined, {
-                                                        maximumFractionDigits: 0,
-                                                    }
-                                                ),
-
-                                            style: {
-                                                colors: textColor,
-
-                                                fontSize: '11px',
-                                            },
-
-                                        },
-
-                                        axisBorder: {
-                                            show: false,
-                                        },
-
-                                        axisTicks: {
-                                            show: false,
-                                        },
-
-                                    },
-
-
-                                    yaxis: {
-
-                                        labels: {
-
-                                            style: {
-
-                                                colors: textColor,
-
-                                                fontSize: '11px',
-
-                                            },
-
-                                        },
-
-                                    },
-
-
-                                    grid: {
-
-                                        borderColor: gridColor,
-
-                                        strokeDashArray: 4,
-
-                                    },
-
-
-                                    dataLabels: {
-                                        enabled: false,
-                                    },
-
-
-                                    tooltip: {
-
-                                        theme: chartTheme(),
-
-                                        y: {
-
-                                            formatter: value =>
-                                                '$' +
-                                                Number(
-                                                    value
-                                                ).toLocaleString(
-                                                    undefined, {
-                                                        minimumFractionDigits: 2,
-
-                                                        maximumFractionDigits: 2,
-                                                    }
-                                                ),
-
-                                        },
-
-                                    },
-
-
-                                    noData: {
-                                        text: 'No customer data',
-                                    },
-
-                                }
-                            );
-
-
-                        chart.render();
-
-                        element.__apexChart =
-                            chart;
+                    if (
+                        !element ||
+                        typeof window.ApexCharts === 'undefined'
+                    ) {
+                        return;
                     }
 
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Donut Chart
-                    |--------------------------------------------------------------------------
-                    */
-
-                    function renderDonutChart() {
-
-                        const element =
-                            document.getElementById(
-                                'donutChart'
-                            );
+                    destroyChart('customerChart');
 
 
-                        if (
-                            !element ||
-                            typeof window.ApexCharts ===
-                            'undefined'
-                        ) {
-                            return;
-                        }
+                    const categories =
+                        dashboardData.customers?.labels ?? [];
 
 
-                        destroyChart(
+                    const values =
+                        dashboardData.customers?.values ?? [];
+
+
+                    const chartValues =
+                        values.map(
+                            value =>
+                                Number(value) / 100
+                        );
+
+
+                    const textColor =
+                        chartTextColor();
+
+
+                    const gridColor =
+                        chartGridColor();
+
+
+                    const chart =
+                        new window.ApexCharts(
+                            element,
+                            {
+
+                                chart: {
+
+                                    type: 'bar',
+
+                                    height: 320,
+
+                                    toolbar: {
+                                        show: false,
+                                    },
+
+                                    fontFamily: 'inherit',
+
+                                    background: 'transparent',
+
+                                    animations: {
+                                        enabled: true,
+                                    },
+                                },
+
+
+                                theme: {
+                                    mode: chartTheme(),
+                                },
+
+
+                                series: [
+                                    {
+                                        name: 'Revenue',
+
+                                        data: chartValues,
+                                    },
+                                ],
+
+
+                                plotOptions: {
+
+                                    bar: {
+
+                                        borderRadius: 7,
+
+                                        horizontal: true,
+
+                                        barHeight: '55%',
+                                    },
+                                },
+
+
+                                colors: [
+                                    isDarkMode()
+                                        ? '#60a5fa'
+                                        : '#2563eb',
+                                ],
+
+
+                                xaxis: {
+
+                                    categories: categories,
+
+                                    labels: {
+
+                                        formatter: value =>
+                                            '$' +
+                                            Number(value).toLocaleString(
+                                                undefined,
+                                                {
+                                                    maximumFractionDigits: 0,
+                                                }
+                                            ),
+
+                                        style: {
+                                            colors: textColor,
+                                            fontSize: '11px',
+                                        },
+                                    },
+
+                                    axisBorder: {
+                                        show: false,
+                                    },
+
+                                    axisTicks: {
+                                        show: false,
+                                    },
+                                },
+
+
+                                yaxis: {
+
+                                    labels: {
+
+                                        style: {
+                                            colors: textColor,
+                                            fontSize: '11px',
+                                        },
+                                    },
+                                },
+
+
+                                grid: {
+
+                                    borderColor: gridColor,
+
+                                    strokeDashArray: 4,
+                                },
+
+
+                                dataLabels: {
+                                    enabled: false,
+                                },
+
+
+                                tooltip: {
+
+                                    theme: chartTheme(),
+
+                                    y: {
+
+                                        formatter: value =>
+                                            '$' +
+                                            Number(value).toLocaleString(
+                                                undefined,
+                                                {
+                                                    minimumFractionDigits: 2,
+                                                    maximumFractionDigits: 2,
+                                                }
+                                            ),
+                                    },
+                                },
+
+
+                                noData: {
+                                    text: 'No customer data',
+                                },
+                            }
+                        );
+
+
+                    chart.render();
+
+
+                    element.__apexChart = chart;
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Donut Chart
+                |--------------------------------------------------------------------------
+                */
+
+                function renderDonutChart() {
+
+                    const element =
+                        document.getElementById(
                             'donutChart'
                         );
 
 
-                        const subscriptionRevenue =
-                            Number(
-                                dashboardData.donut
-                                ?.subscription ??
-                                0
-                            ) / 100;
+                    if (
+                        !element ||
+                        typeof window.ApexCharts === 'undefined'
+                    ) {
+                        return;
+                    }
 
 
-                        const oneTimeRevenue =
-                            Number(
-                                dashboardData.donut
-                                ?.oneTime ??
-                                0
-                            ) / 100;
+                    destroyChart('donutChart');
 
 
-                        const textColor =
-                            chartTextColor();
+                    const subscriptionRevenue =
+                        Number(
+                            dashboardData.donut?.subscription ?? 0
+                        ) / 100;
 
 
-                        const primaryTextColor =
-                            chartPrimaryTextColor();
+                    const oneTimeRevenue =
+                        Number(
+                            dashboardData.donut?.oneTime ?? 0
+                        ) / 100;
 
 
-                        const chart =
-                            new window.ApexCharts(
-                                element, {
+                    const textColor =
+                        chartTextColor();
 
-                                    chart: {
 
-                                        type: 'donut',
+                    const primaryTextColor =
+                        chartPrimaryTextColor();
 
-                                        height: 300,
 
-                                        fontFamily: 'inherit',
+                    const chart =
+                        new window.ApexCharts(
+                            element,
+                            {
 
-                                        background: 'transparent',
+                                chart: {
 
-                                        animations: {
-                                            enabled: true,
-                                        },
+                                    type: 'donut',
 
+                                    height: 300,
+
+                                    fontFamily: 'inherit',
+
+                                    background: 'transparent',
+
+                                    animations: {
+                                        enabled: true,
                                     },
+                                },
 
 
-                                    theme: {
-                                        mode: chartTheme(),
-                                    },
+                                theme: {
+                                    mode: chartTheme(),
+                                },
 
 
-                                    series: [
-
-                                        subscriptionRevenue,
-
-                                        oneTimeRevenue,
-
-                                    ],
+                                series: [
+                                    subscriptionRevenue,
+                                    oneTimeRevenue,
+                                ],
 
 
-                                    labels: [
+                                labels: [
+                                    'Subscription',
+                                    'One-time',
+                                ],
 
-                                        'Subscription',
 
-                                        'One-time',
+                                colors: [
 
-                                    ],
+                                    isDarkMode()
+                                        ? '#a78bfa'
+                                        : '#7c3aed',
 
+                                    isDarkMode()
+                                        ? '#38bdf8'
+                                        : '#0ea5e9',
+                                ],
+
+
+                                stroke: {
+
+                                    width: 4,
 
                                     colors: [
-
-                                        isDarkMode() ?
-                                        '#a78bfa' :
-                                        '#7c3aed',
-
-                                        isDarkMode() ?
-                                        '#38bdf8' :
-                                        '#0ea5e9',
-
+                                        isDarkMode()
+                                            ? '#0f172a'
+                                            : '#ffffff',
                                     ],
+                                },
 
 
-                                    stroke: {
-
-                                        width: 4,
-
-                                        colors: [
-
-                                            isDarkMode() ?
-                                            '#0f172a' :
-                                            '#ffffff',
-
-                                        ],
-
-                                    },
+                                legend: {
+                                    show: false,
+                                },
 
 
-                                    legend: {
-                                        show: false,
-                                    },
+                                dataLabels: {
+                                    enabled: false,
+                                },
 
 
-                                    dataLabels: {
-                                        enabled: false,
-                                    },
+                                plotOptions: {
+
+                                    pie: {
+
+                                        donut: {
+
+                                            size: '72%',
 
 
-                                    plotOptions: {
+                                            labels: {
 
-                                        pie: {
-
-                                            donut: {
-
-                                                size: '72%',
+                                                show: true,
 
 
-                                                labels: {
+                                                name: {
 
                                                     show: true,
 
+                                                    color: textColor,
 
-                                                    name: {
-
-                                                        show: true,
-
-                                                        color: textColor,
-
-                                                        fontSize: '12px',
-
-                                                    },
+                                                    fontSize: '12px',
+                                                },
 
 
-                                                    value: {
+                                                value: {
 
-                                                        show: true,
+                                                    show: true,
 
-                                                        color: primaryTextColor,
+                                                    color: primaryTextColor,
 
-                                                        fontSize: '20px',
+                                                    fontSize: '20px',
 
-                                                        fontWeight: 700,
-
-
-                                                        formatter: value =>
-                                                            '$' +
-                                                            Number(
-                                                                value
-                                                            ).toLocaleString(
-                                                                undefined, {
-                                                                    maximumFractionDigits: 0,
-                                                                }
-                                                            ),
-
-                                                    },
+                                                    fontWeight: 700,
 
 
-                                                    total: {
+                                                    formatter: value =>
+                                                        '$' +
+                                                        Number(value).toLocaleString(
+                                                            undefined,
+                                                            {
+                                                                maximumFractionDigits: 0,
+                                                            }
+                                                        ),
+                                                },
 
-                                                        show: true,
 
-                                                        label: 'Total',
+                                                total: {
 
-                                                        color: textColor,
+                                                    show: true,
+
+                                                    label: 'Total',
+
+                                                    color: textColor,
 
 
-                                                        formatter: w => {
+                                                    formatter: w => {
 
-                                                            const total =
-                                                                w
-                                                                .globals
+                                                        const total =
+                                                            w.globals
                                                                 .seriesTotals
                                                                 .reduce(
                                                                     (
                                                                         a,
                                                                         b
                                                                     ) =>
-                                                                    a + b,
+                                                                        a + b,
                                                                     0
                                                                 );
 
 
-                                                            return '$' +
-                                                                Number(
-                                                                    total
-                                                                ).toLocaleString(
-                                                                    undefined, {
-                                                                        maximumFractionDigits: 0,
-                                                                    }
-                                                                );
-                                                        },
-
+                                                        return '$' +
+                                                            Number(total).toLocaleString(
+                                                                undefined,
+                                                                {
+                                                                    maximumFractionDigits: 0,
+                                                                }
+                                                            );
                                                     },
-
                                                 },
-
                                             },
-
                                         },
-
                                     },
+                                },
 
 
-                                    tooltip: {
+                                tooltip: {
 
-                                        theme: chartTheme(),
+                                    theme: chartTheme(),
 
-                                        y: {
+                                    y: {
 
-                                            formatter: value =>
-                                                '$' +
-                                                Number(
-                                                    value
-                                                ).toLocaleString(
-                                                    undefined, {
-                                                        minimumFractionDigits: 2,
-
-                                                        maximumFractionDigits: 2,
-                                                    }
-                                                ),
-
-                                        },
-
+                                        formatter: value =>
+                                            '$' +
+                                            Number(value).toLocaleString(
+                                                undefined,
+                                                {
+                                                    minimumFractionDigits: 2,
+                                                    maximumFractionDigits: 2,
+                                                }
+                                            ),
                                     },
+                                },
 
 
-                                    noData: {
-                                        text: 'No revenue data',
-                                    },
-
-                                }
-                            );
-
-
-                        chart.render();
-
-                        element.__apexChart =
-                            chart;
-                    }
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Render Everything
-                    |--------------------------------------------------------------------------
-                    */
-
-                    function renderAll() {
-
-                        ensureApexCharts()
-                            .then(() => {
-
-                                requestAnimationFrame(
-                                    () => {
-
-                                        renderRevenueChart();
-
-                                        renderCustomerChart();
-
-                                        renderDonutChart();
-
-                                    }
-                                );
-
-                            })
-                            .catch(
-                                error => {
-                                    console.error(
-                                        'Unable to load ApexCharts.',
-                                        error
-                                    );
-                                }
-                            );
-                    }
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Refresh After Livewire Morph
-                    |--------------------------------------------------------------------------
-                    */
-
-                    function refreshAfterLivewire() {
-
-                        requestAnimationFrame(() => {
-
-                            requestAnimationFrame(() => {
-
-                                renderAll();
-
-                            });
-
-                        });
-                    }
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Initial Start
-                    |--------------------------------------------------------------------------
-                    */
-
-                    function initialize() {
-
-                        if (initialized) {
-                            return;
-                        }
-
-                        initialized = true;
-
-                        renderAll();
-                    }
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Public API
-                    |--------------------------------------------------------------------------
-                    */
-
-                    return {
-
-                        setData,
-
-                        initialize,
-
-                        refreshAfterLivewire,
-
-                    };
-
-                })();
-
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Set Initial Data
-            |--------------------------------------------------------------------------
-            */
-
-            window.TeamDashboardCharts
-                .setData(initialData);
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Dashboard Update Event
-            |--------------------------------------------------------------------------
-            |
-            | Livewire dispatches:
-            |
-            | $this->dispatch(
-            |     'dashboard-updated',
-            |     data: $this->chartData()
-            | );
-            |
-            |--------------------------------------------------------------------------
-            */
-
-            if (
-                !window.__teamDashboardFilterListener
-            ) {
-
-                window.__teamDashboardFilterListener =
-                    true;
-
-
-                window.addEventListener(
-                    'dashboard-updated',
-                    event => {
-
-                        const data =
-                            event.detail?.data ??
-                            null;
-
-
-                        if (!data) {
-                            return;
-                        }
-
-
-                        window.TeamDashboardCharts
-                            .setData(data);
-
-
-                        window.TeamDashboardCharts
-                            .refreshAfterLivewire();
-
-                    }
-                );
-
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Theme Observer
-            |--------------------------------------------------------------------------
-            */
-
-            if (
-                !window.__teamDashboardThemeObserver
-            ) {
-
-                window.__teamDashboardThemeObserver =
-                    new MutationObserver(() => {
-
-                        clearTimeout(
-                            window.__teamDashboardThemeTimeout
+                                noData: {
+                                    text: 'No revenue data',
+                                },
+                            }
                         );
 
 
-                        window.__teamDashboardThemeTimeout =
-                            setTimeout(() => {
+                    chart.render();
+
+
+                    element.__apexChart = chart;
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Render all charts
+                |--------------------------------------------------------------------------
+                */
+
+                function renderAll() {
+
+                    if (
+                        typeof window.ApexCharts ===
+                        'undefined'
+                    ) {
+                        console.warn(
+                            'ApexCharts is not available.'
+                        );
+
+                        return;
+                    }
+
+
+                    renderRevenueChart();
+
+                    renderCustomerChart();
+
+                    renderDonutChart();
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Schedule render safely
+                |
+                | Two animation frames give Livewire/DOM time to finish
+                | navigation/morphing before ApexCharts touches the elements.
+                |--------------------------------------------------------------------------
+                */
+
+                function refreshAfterLivewire() {
+
+                    if (renderFrameOne !== null) {
+                        cancelAnimationFrame(
+                            renderFrameOne
+                        );
+                    }
+
+
+                    if (renderFrameTwo !== null) {
+                        cancelAnimationFrame(
+                            renderFrameTwo
+                        );
+                    }
+
+
+                    renderFrameOne =
+                        requestAnimationFrame(() => {
+
+                            renderFrameTwo =
+                                requestAnimationFrame(() => {
+
+                                    renderAll();
+
+                                });
+
+                        });
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Public API
+                |--------------------------------------------------------------------------
+                */
+
+                return {
+
+                    setData,
+
+                    refreshAfterLivewire,
+
+                };
+
+            })();
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Update chart data for this dashboard instance
+        |--------------------------------------------------------------------------
+        */
+
+        window.TeamDashboardCharts
+            .setData(initialData);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Livewire dashboard-updated event
+        |--------------------------------------------------------------------------
+        */
+
+        if (!window.__teamDashboardFilterListener) {
+
+            window.__teamDashboardFilterListener = true;
+
+
+            window.addEventListener(
+                'dashboard-updated',
+                event => {
+
+                    const data =
+                        event.detail?.data ?? null;
+
+
+                    if (!data) {
+                        return;
+                    }
+
+
+                    if (!window.TeamDashboardCharts) {
+                        return;
+                    }
+
+
+                    window.TeamDashboardCharts
+                        .setData(data);
+
+
+                    window.TeamDashboardCharts
+                        .refreshAfterLivewire();
+
+                }
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Dark mode observer
+        |--------------------------------------------------------------------------
+        */
+
+        if (!window.__teamDashboardThemeObserver) {
+
+            window.__teamDashboardThemeObserver =
+                new MutationObserver(() => {
+
+                    clearTimeout(
+                        window.__teamDashboardThemeTimeout
+                    );
+
+
+                    window.__teamDashboardThemeTimeout =
+                        setTimeout(() => {
+
+                            if (
+                                window.TeamDashboardCharts
+                            ) {
 
                                 window.TeamDashboardCharts
                                     .refreshAfterLivewire();
 
-                            }, 50);
+                            }
 
-                    });
+                        }, 50);
 
-
-                window.__teamDashboardThemeObserver
-                    .observe(
-                        document.documentElement, {
-                            attributes: true,
-
-                            attributeFilter: [
-                                'class',
-                                'data-theme',
-                            ],
-                        }
-                    );
-
-            }
+                });
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | Initialize Once
-            |--------------------------------------------------------------------------
-            */
+            window.__teamDashboardThemeObserver
+                .observe(
+                    document.documentElement,
+                    {
+                        attributes: true,
 
-            window.TeamDashboardCharts
-                .initialize();
+                        attributeFilter: [
+                            'class',
+                            'data-theme',
+                        ],
+                    }
+                );
+        }
 
-        })();
-    </script>
 
-    <script>
-        document.addEventListener('alpine:init', () => {
-            Alpine.data('dashboardDatePicker', () => ({
-                showCustom: @js($filter === 'custom'),
+        /*
+        |--------------------------------------------------------------------------
+        | Initial render / SPA navigation render
+        |
+        | Unlike the old initialize() function, this ALWAYS schedules a render.
+        | That matters because the global chart manager survives wire:navigate.
+        |--------------------------------------------------------------------------
+        */
 
-                startDate: @js($customStartDate),
+        window.TeamDashboardCharts
+            .refreshAfterLivewire();
 
-                endDate: @js($customEndDate),
+    })();
+</script>
+@endscript
+
+
+{{-- =========================================================
+     ALPINE DATE PICKER
+========================================================== --}}
+
+@script
+<script>
+    /*
+    |--------------------------------------------------------------------------
+    | Register the Alpine component exactly once.
+    |
+    | IMPORTANT:
+    | We intentionally do NOT use:
+    |
+    | document.addEventListener('alpine:init', ...)
+    |
+    | because this Blade can be inserted after Alpine has already initialized
+    | during wire:navigate.
+    |--------------------------------------------------------------------------
+    */
+
+    if (!window.__teamDashboardDatePickerRegistered) {
+
+        Alpine.data(
+            'dashboardDatePicker',
+            (initial = {}) => ({
+
+                showCustom:
+                    Boolean(
+                        initial.showCustom
+                    ),
+
+                startDate:
+                    initial.startDate ?? '',
+
+                endDate:
+                    initial.endDate ?? '',
 
                 dateError: false,
 
+
+                /*
+                |--------------------------------------------------------------------------
+                | Alpine automatically calls init()
+                |--------------------------------------------------------------------------
+                */
+
                 init() {
-                    this.$watch('startDate', () => {
-                        this.validateDates();
-                    });
 
-                    this.$watch('endDate', () => {
-                        this.validateDates();
-                    });
-                },
-
-                handleFilterChange(value) {
-                    this.showCustom = value === 'custom';
-
-                    if (value !== 'custom') {
-                        this.dateError = false;
-                    }
-                },
-
-                closeCustom() {
-                    this.showCustom = false;
-
-                    const select = document.getElementById(
-                        'dashboard-filter'
+                    this.$watch(
+                        'startDate',
+                        () => {
+                            this.validateDates();
+                        }
                     );
 
-                    if (select) {
-                        select.value = @js($filter);
-                    }
-                },
 
-                datesChanged() {
+                    this.$watch(
+                        'endDate',
+                        () => {
+                            this.validateDates();
+                        }
+                    );
+
+
                     this.validateDates();
                 },
 
+
+                /*
+                |--------------------------------------------------------------------------
+                | Standard reporting-period select
+                |--------------------------------------------------------------------------
+                */
+
+                handleFilterChange(value) {
+
+                    this.showCustom =
+                        value === 'custom';
+
+
+                    if (value !== 'custom') {
+
+                        this.dateError = false;
+
+                    }
+                },
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Close custom range
+                |--------------------------------------------------------------------------
+                */
+
+                closeCustom() {
+
+                    this.showCustom = false;
+
+
+                    const select =
+                        document.getElementById(
+                            'dashboard-filter'
+                        );
+
+
+                    if (select) {
+
+                        select.value =
+                            @js($filter);
+
+                    }
+                },
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Date input changed
+                |--------------------------------------------------------------------------
+                */
+
+                datesChanged() {
+
+                    this.validateDates();
+
+                },
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Validate dates
+                |--------------------------------------------------------------------------
+                */
+
                 validateDates() {
+
                     this.dateError = false;
 
-                    if (!this.startDate || !this.endDate) {
+
+                    if (
+                        !this.startDate ||
+                        !this.endDate
+                    ) {
                         return false;
                     }
 
+
+                    const start =
+                        new Date(
+                            this.startDate +
+                            'T00:00:00'
+                        );
+
+
+                    const end =
+                        new Date(
+                            this.endDate +
+                            'T00:00:00'
+                        );
+
+
                     if (
-                        new Date(this.startDate) >
-                        new Date(this.endDate)
+                        Number.isNaN(
+                            start.getTime()
+                        ) ||
+                        Number.isNaN(
+                            end.getTime()
+                        )
                     ) {
+
                         this.dateError = true;
 
                         return false;
                     }
 
+
+                    if (start > end) {
+
+                        this.dateError = true;
+
+                        return false;
+                    }
+
+
                     return true;
                 },
 
+
+                /*
+                |--------------------------------------------------------------------------
+                | Apply button state
+                |--------------------------------------------------------------------------
+                */
+
                 get canApply() {
-                    return (
+
+                    return Boolean(
                         this.startDate &&
                         this.endDate &&
                         !this.dateError
                     );
                 },
 
+
+                /*
+                |--------------------------------------------------------------------------
+                | Human-readable date range
+                |--------------------------------------------------------------------------
+                */
+
                 get formattedRange() {
-                    if (!this.startDate || !this.endDate) {
+
+                    if (
+                        !this.startDate ||
+                        !this.endDate
+                    ) {
+
                         return 'Select your dates';
                     }
 
-                    const start = new Date(
-                        this.startDate + 'T00:00:00'
-                    );
 
-                    const end = new Date(
-                        this.endDate + 'T00:00:00'
-                    );
+                    const start =
+                        new Date(
+                            this.startDate +
+                            'T00:00:00'
+                        );
+
+
+                    const end =
+                        new Date(
+                            this.endDate +
+                            'T00:00:00'
+                        );
+
+
+                    if (
+                        Number.isNaN(
+                            start.getTime()
+                        ) ||
+                        Number.isNaN(
+                            end.getTime()
+                        )
+                    ) {
+
+                        return 'Select your dates';
+                    }
+
 
                     const options = {
                         month: 'short',
                         day: 'numeric',
-                        year: 'numeric'
+                        year: 'numeric',
                     };
+
 
                     return (
                         start.toLocaleDateString(
@@ -3748,18 +3781,39 @@
                     );
                 },
 
-                applyRange() {
-                    if (!this.validateDates()) {
+
+                /*
+                |--------------------------------------------------------------------------
+                | Apply custom range
+                |--------------------------------------------------------------------------
+                */
+
+                async applyRange() {
+
+                    if (
+                        !this.validateDates()
+                    ) {
                         return;
                     }
-                    this.showCustom = false; // close dialog once we apply filter
-                    this.$wire.setCustomRange(
-                        this.startDate,
-                        this.endDate
-                    );
-                }
-            }));
-        });
-    </script>
 
+
+                    this.showCustom = false;
+
+
+                    await this.$wire
+                        .setCustomRange(
+                            this.startDate,
+                            this.endDate
+                        );
+                },
+
+            })
+        );
+
+
+        window.__teamDashboardDatePickerRegistered =
+            true;
+    }
+</script>
+@endscript
 </div>
