@@ -1,3 +1,33 @@
+@php
+    $dashboardUrl = auth()->check() && auth()->user()->currentTeam
+        ? route('dashboard', [
+            'current_team' => auth()->user()->currentTeam,
+        ])
+        : route('onboarding');
+
+    $previousUrl = url()->previous();
+
+    $backUrl = $dashboardUrl;
+
+    if (filled($previousUrl)) {
+        try {
+            $previousHost = parse_url($previousUrl, PHP_URL_HOST);
+            $currentHost = parse_url(url()->current(), PHP_URL_HOST);
+
+            $sameUrl = rtrim($previousUrl, '/') === rtrim(url()->current(), '/');
+
+            $sameHost = $previousHost === null || $previousHost === $currentHost;
+
+            if (!$sameUrl && $sameHost) {
+                $backUrl = $previousUrl;
+            }
+        } catch (\Throwable $e) {
+            // Keep dashboard fallback.
+            $backUrl = $dashboardUrl;
+        }
+    }
+@endphp
+
 <div x-data="{
     lightbox: false,
     lightboxSrc: '',
@@ -307,14 +337,14 @@
         <div
             class="mx-auto flex min-h-[76px] w-full max-w-[1840px] items-center justify-between gap-3 px-3 sm:px-5 lg:px-7 2xl:px-9">
             <div class="flex min-w-0 items-center gap-3">
-                <a href="{{ auth()->check() && auth()->user()->currentTeam
-                    ? route('dashboard', ['current_team' => auth()->user()->currentTeam])
-                    : route('onboarding') }}"
-                    wire:navigate
-                    class="group flex size-11 shrink-0 items-center justify-center rounded-2xl border border-zinc-200/80 bg-white/90 text-zinc-500 shadow-[0_10px_30px_-20px_rgba(50,35,75,.45)] backdrop-blur transition duration-200 hover:-translate-x-0.5 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/55 dark:hover:border-violet-400/20 dark:hover:bg-violet-500/10 dark:hover:text-white"
-                    aria-label="Back to dashboard">
-                    <flux:icon.arrow-left class="size-4 transition-transform group-hover:-translate-x-0.5" />
-                </a>
+               <a
+                href="{{ $backUrl }}"
+                wire:navigate
+                class="group flex size-11 shrink-0 items-center justify-center rounded-2xl border border-zinc-200/80 bg-white/90 text-zinc-500 shadow-[0_10px_30px_-20px_rgba(50,35,75,.45)] backdrop-blur transition duration-200 hover:-translate-x-0.5 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/55 dark:hover:border-violet-400/20 dark:hover:bg-violet-500/10 dark:hover:text-white"
+                aria-label="Go back"
+            >
+                <flux:icon.arrow-left class="size-4 transition-transform group-hover:-translate-x-0.5" />
+            </a>
 
                 <div class="hidden h-8 w-px bg-zinc-200 sm:block dark:bg-white/10"></div>
 
