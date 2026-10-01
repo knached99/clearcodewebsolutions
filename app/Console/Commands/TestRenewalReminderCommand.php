@@ -57,7 +57,7 @@ class TestRenewalReminderCommand extends Command
                 ])
                 ->find($invoiceId);
 
-            if (!$invoice) {
+            if (! $invoice) {
                 $this->error(
                     "Invoice {$invoiceId} was not found."
                 );
@@ -67,7 +67,7 @@ class TestRenewalReminderCommand extends Command
 
             $customer = $invoice->customer;
 
-            if (!$customer) {
+            if (! $customer) {
                 $this->error(
                     "Invoice {$invoiceId} does not have a customer."
                 );
@@ -151,12 +151,12 @@ class TestRenewalReminderCommand extends Command
 
         $this->info(
             'Testing renewal reminder for invoice: '
-            . $invoice->id
+            .$invoice->id
         );
 
         $this->info(
             'Customer: '
-            . (
+            .(
                 $invoice->customer?->email
                 ?? $email
             )
@@ -164,7 +164,7 @@ class TestRenewalReminderCommand extends Command
 
         $this->info(
             'Stripe subscription ID: '
-            . (
+            .(
                 $invoice->stripe_subscription_id
                 ?? 'none'
             )
@@ -172,7 +172,7 @@ class TestRenewalReminderCommand extends Command
 
         $this->info(
             'Monthly recurring total: $'
-            . number_format(
+            .number_format(
                 $invoice->monthlyRecurringAmountInCents() / 100,
                 2
             )
@@ -180,7 +180,7 @@ class TestRenewalReminderCommand extends Command
 
         $this->info(
             '12-month minimum reached: '
-            . (
+            .(
                 $invoice->hasCompletedTwelveMonthMinimum()
                     ? 'yes'
                     : 'no'
@@ -188,7 +188,7 @@ class TestRenewalReminderCommand extends Command
         );
 
         if (
-            !$invoice->hasCompletedTwelveMonthMinimum()
+            ! $invoice->hasCompletedTwelveMonthMinimum()
         ) {
             $this->error(
                 'The invoice does not meet the 12-month minimum requirement.'
@@ -203,7 +203,7 @@ class TestRenewalReminderCommand extends Command
         |--------------------------------------------------------------------------
         */
 
-        if (!$this->option('send-mail')) {
+        if (! $this->option('send-mail')) {
             Mail::fake();
         }
 
@@ -225,7 +225,7 @@ class TestRenewalReminderCommand extends Command
         |--------------------------------------------------------------------------
         */
 
-        if (!$this->option('send-mail')) {
+        if (! $this->option('send-mail')) {
             Mail::assertSent(
                 SubscriptionRenewalDecisionMail::class,
                 function ($mail) use ($invoice): bool {

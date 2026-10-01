@@ -726,6 +726,16 @@
 
     </section>
 
+    {{-- =========================================================
+        PAYMENT MAP
+    ========================================================== --}}
+
+    <livewire:teams.team-dashboard-map
+        :team="$team"
+        :filter="$filter"
+        :custom-start-date="$customStartDate"
+        :custom-end-date="$customEndDate"
+    />
 
     {{-- =========================================================
          CHARTS

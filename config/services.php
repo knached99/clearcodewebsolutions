@@ -46,4 +46,8 @@ return [
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
     ],
 
+    'mapbox' => [
+    'public_token' => env('MAPBOX_PUBLIC_TOKEN'),
+    ],
+
 ];

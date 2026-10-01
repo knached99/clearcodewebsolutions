@@ -16,8 +16,8 @@ class InvoiceSignatureService
 
     public function hasSignedAgreement(Invoice $invoice): bool
     {
-        return !empty($invoice->signature_data)
-            && !empty($invoice->signature_signed_at);
+        return ! empty($invoice->signature_data)
+            && ! empty($invoice->signature_signed_at);
     }
 
     public function saveSignature(

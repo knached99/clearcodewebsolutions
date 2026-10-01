@@ -16,7 +16,7 @@ return new class extends Migration
         | Customers
         |--------------------------------------------------------------------------
         */
-            Schema::create('customers', function (Blueprint $table) {
+        Schema::create('customers', function (Blueprint $table) {
             $table->uuid('id')->primary();
 
             $table->foreignId('user_id')

@@ -9,9 +9,10 @@ use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Team;
 use App\Models\Transaction;
+use App\Models\CustomerPaymentLocation;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -29,7 +30,7 @@ class TeamDashboardService
         array $context = []
     ): void {
         Log::debug(
-            'TeamDashboardService: ' . $step,
+            'TeamDashboardService: '.$step,
             [
                 ...$context,
                 'duration_ms' => round(
@@ -45,7 +46,7 @@ class TeamDashboardService
         array $context = []
     ): void {
         Log::info(
-            'TeamDashboardService: ' . $step . ' START',
+            'TeamDashboardService: '.$step.' START',
             $context
         );
     }
@@ -56,7 +57,7 @@ class TeamDashboardService
         array $context = []
     ): void {
         Log::info(
-            'TeamDashboardService: ' . $step . ' COMPLETE',
+            'TeamDashboardService: '.$step.' COMPLETE',
             [
                 ...$context,
                 'duration_ms' => round(
@@ -102,7 +103,7 @@ class TeamDashboardService
 
         return match ($filter) {
 
-          // month to date
+            // month to date
             'mtd' => [
                 $now->copy()->startOfMonth(),
                 $now->copy(),
@@ -114,7 +115,7 @@ class TeamDashboardService
                 $now->copy()->endOfDay(),
             ],
 
-            // last 6 months 
+            // last 6 months
             '6m' => [
                 $now->copy()->startOfMonth()->subMonths(5),
                 $now->copy()->endOfDay(),
@@ -125,7 +126,7 @@ class TeamDashboardService
                 $now->copy(),
             ],
 
-            // custom date range 
+            // custom date range
             'custom' => $this->customDateRange($customStartDate, $customEndDate),
 
             // all time data
@@ -133,9 +134,9 @@ class TeamDashboardService
         };
     }
 
-    protected function customDateRange(?string $startDate, ?string $endDate): ?array 
+    protected function customDateRange(?string $startDate, ?string $endDate): ?array
     {
-        if (!$startDate || !$endDate) {
+        if (! $startDate || ! $endDate) {
             return null;
         }
 
@@ -143,13 +144,13 @@ class TeamDashboardService
             $start = Carbon::createFromFormat('Y-m-d', $startDate)->startOfDay();
             $end = Carbon::createFromFormat('Y-m-d', $endDate)->endOfDay();
 
-            // start cannot be greater than end so we return null 
+            // start cannot be greater than end so we return null
             if ($start->gt($end)) {
                 return null;
             }
+
             return [$start, $end];
-        }
-        catch (Throwable) {
+        } catch (Throwable) {
             return null;
         }
     }
@@ -158,8 +159,8 @@ class TeamDashboardService
         Collection|EloquentCollection $collection,
         string $filter,
         string $dateColumn = 'created_at',
-        ?string $customStartDate = null, 
-        ?string $customEndDate = NULL
+        ?string $customStartDate = null,
+        ?string $customEndDate = null
     ): Collection|EloquentCollection {
         $startedAt = microtime(true);
 
@@ -279,7 +280,7 @@ class TeamDashboardService
     public function dashboardData(
         Team $team,
         string $filter = 'max',
-        ?string $customStartDate = null, 
+        ?string $customStartDate = null,
         ?string $customEndDate = null,
     ): array {
         $startedAt = microtime(true);
@@ -330,10 +331,10 @@ class TeamDashboardService
             */
 
             $dateRange = $this->filterDateRange(
-            $filter,
-            $customStartDate,
-            $customEndDate
-        );
+                $filter,
+                $customStartDate,
+                $customEndDate
+            );
 
             if ($dateRange) {
                 [$rangeStart, $rangeEnd] = $dateRange;
@@ -412,7 +413,7 @@ class TeamDashboardService
                 $allFailedTransactions,
                 $filter,
                 'created_at',
-                $customStartDate, 
+                $customStartDate,
                 $customEndDate
             );
 
@@ -457,7 +458,7 @@ class TeamDashboardService
                 $allPaidInvoices,
                 $filter,
                 'updated_at',
-                $customStartDate, 
+                $customStartDate,
                 $customEndDate
             );
 
@@ -490,7 +491,7 @@ class TeamDashboardService
                     $allCollectedInvoices,
                     $filter,
                     'updated_at',
-                    $customStartDate, 
+                    $customStartDate,
                     $customEndDate
                 );
 
@@ -536,10 +537,8 @@ class TeamDashboardService
                 [
                     'team_id' => $team->id,
                     'filter' => $filter,
-                    'transaction_count' =>
-                        $stripeData['transactions']->count(),
-                    'revenue' =>
-                        $stripeData['revenue'],
+                    'transaction_count' => $stripeData['transactions']->count(),
+                    'revenue' => $stripeData['revenue'],
                 ]
             );
 
@@ -556,8 +555,7 @@ class TeamDashboardService
                 'TeamDashboardService: successful transactions loaded',
                 [
                     'team_id' => $team->id,
-                    'count' =>
-                        $allSuccessfulTransactions->count(),
+                    'count' => $allSuccessfulTransactions->count(),
                 ]
             );
 
@@ -587,10 +585,8 @@ class TeamDashboardService
                 [
                     'team_id' => $team->id,
                     'filter' => $filter,
-                    'before_count' =>
-                        $allSuccessfulTransactions->count(),
-                    'after_count' =>
-                        $successfulTransactions->count(),
+                    'before_count' => $allSuccessfulTransactions->count(),
+                    'after_count' => $successfulTransactions->count(),
                 ]
             );
 
@@ -754,22 +750,16 @@ class TeamDashboardService
                 $stepStartedAt,
                 [
                     'team_id' => $team->id,
-                    'invoice_count' =>
-                        $successfulTransactions
-                            ->pluck('invoice_id')
-                            ->filter()
-                            ->unique()
-                            ->count(),
-                    'pablo_commission' =>
-                        $pabloCommission,
-                    'pablo_rate' =>
-                        $pabloRate,
-                    'team_share_after_pablo' =>
-                        $teamShareAfterPablo,
-                    'owner_share' =>
-                        $ownerShare,
-                    'partner_share' =>
-                        $partnerShare,
+                    'invoice_count' => $successfulTransactions
+                        ->pluck('invoice_id')
+                        ->filter()
+                        ->unique()
+                        ->count(),
+                    'pablo_commission' => $pabloCommission,
+                    'pablo_rate' => $pabloRate,
+                    'team_share_after_pablo' => $teamShareAfterPablo,
+                    'owner_share' => $ownerShare,
+                    'partner_share' => $partnerShare,
                 ]
             );
 
@@ -781,13 +771,12 @@ class TeamDashboardService
 
             $losses = (int) $failedTransactions
                 ->sum(
-                    fn ($transaction): int =>
-                        max(
-                            (int) (
-                                $transaction->amount ?? 0
-                            ),
-                            0
-                        )
+                    fn ($transaction): int => max(
+                        (int) (
+                            $transaction->amount ?? 0
+                        ),
+                        0
+                    )
                 );
 
             /*
@@ -830,8 +819,7 @@ class TeamDashboardService
             $mrr = 0;
 
             foreach (
-                $allSubscriptionInvoices
-                as $invoice
+                $allSubscriptionInvoices as $invoice
             ) {
                 $recurringAmount =
                     max(
@@ -923,12 +911,9 @@ class TeamDashboardService
                 $stepStartedAt,
                 [
                     'team_id' => $team->id,
-                    'subscription_invoice_count' =>
-                        $allSubscriptionInvoices->count(),
-                    'mrr' =>
-                        $mrr,
-                    'arr' =>
-                        $arr,
+                    'subscription_invoice_count' => $allSubscriptionInvoices->count(),
+                    'mrr' => $mrr,
+                    'arr' => $arr,
                 ]
             );
 
@@ -963,10 +948,8 @@ class TeamDashboardService
                 'TeamDashboardService: customerRevenue START',
                 [
                     'team_id' => $team->id,
-                    'transaction_count' =>
-                        $successfulTransactions->count(),
-                    'paid_invoice_count' =>
-                        $paidInvoices->count(),
+                    'transaction_count' => $successfulTransactions->count(),
+                    'paid_invoice_count' => $paidInvoices->count(),
                 ]
             );
 
@@ -980,8 +963,7 @@ class TeamDashboardService
                 $stepStartedAt,
                 [
                     'team_id' => $team->id,
-                    'customer_count' =>
-                        $customerRevenue->count(),
+                    'customer_count' => $customerRevenue->count(),
                 ]
             );
 
@@ -1001,15 +983,14 @@ class TeamDashboardService
                 [
                     'team_id' => $team->id,
                     'filter' => $filter,
-                    'transaction_count' =>
-                        $successfulTransactions->count(),
+                    'transaction_count' => $successfulTransactions->count(),
                 ]
             );
 
             $monthlyRevenue = $this->monthlyRevenue(
                 $successfulTransactions,
                 $filter,
-                $customStartDate, 
+                $customStartDate,
                 $customEndDate
             );
 
@@ -1019,8 +1000,7 @@ class TeamDashboardService
                 [
                     'team_id' => $team->id,
                     'filter' => $filter,
-                    'result_count' =>
-                        $monthlyRevenue->count(),
+                    'result_count' => $monthlyRevenue->count(),
                 ]
             );
 
@@ -1071,23 +1051,17 @@ class TeamDashboardService
                 Log::warning(
                     'TeamDashboardService: revenue type totals did not exactly reconcile',
                     [
-                        'team_id' =>
-                            $team->id,
+                        'team_id' => $team->id,
 
-                        'gross_profit' =>
-                            $grossProfit,
+                        'gross_profit' => $grossProfit,
 
-                        'subscription_revenue' =>
-                            $subscriptionRevenue,
+                        'subscription_revenue' => $subscriptionRevenue,
 
-                        'one_time_revenue' =>
-                            $oneTimeRevenue,
+                        'one_time_revenue' => $oneTimeRevenue,
 
-                        'revenue_type_total' =>
-                            $revenueTypeTotal,
+                        'revenue_type_total' => $revenueTypeTotal,
 
-                        'difference' =>
-                            $grossProfit
+                        'difference' => $grossProfit
                             - $revenueTypeTotal,
                     ]
                 );
@@ -1110,12 +1084,9 @@ class TeamDashboardService
                 $stepStartedAt,
                 [
                     'team_id' => $team->id,
-                    'gross_profit' =>
-                        $grossProfit,
-                    'subscription_revenue' =>
-                        $subscriptionRevenue,
-                    'one_time_revenue' =>
-                        $oneTimeRevenue,
+                    'gross_profit' => $grossProfit,
+                    'subscription_revenue' => $subscriptionRevenue,
+                    'one_time_revenue' => $oneTimeRevenue,
                 ]
             );
 
@@ -1143,8 +1114,7 @@ class TeamDashboardService
                 'TeamDashboardService: invoice ticket IDs loaded',
                 [
                     'team_id' => $team->id,
-                    'ticket_count' =>
-                        $invoiceTicketIds->count(),
+                    'ticket_count' => $invoiceTicketIds->count(),
                 ]
             );
 
@@ -1177,10 +1147,10 @@ class TeamDashboardService
                 );
 
             $dateRange = $this->filterDateRange(
-            $filter,
-            $customStartDate,
-            $customEndDate
-        );
+                $filter,
+                $customStartDate,
+                $customEndDate
+            );
 
             if ($dateRange) {
                 [$start, $end] = $dateRange;
@@ -1190,10 +1160,8 @@ class TeamDashboardService
                     [
                         'team_id' => $team->id,
                         'filter' => $filter,
-                        'start' =>
-                            $start->toDateTimeString(),
-                        'end' =>
-                            $end->toDateTimeString(),
+                        'start' => $start->toDateTimeString(),
+                        'end' => $end->toDateTimeString(),
                     ]
                 );
 
@@ -1253,10 +1221,8 @@ class TeamDashboardService
                 $stepStartedAt,
                 [
                     'team_id' => $team->id,
-                    'total_invoices' =>
-                        $totalInvoices,
-                    'paid_invoices' =>
-                        $paidInvoicesCount,
+                    'total_invoices' => $totalInvoices,
+                    'paid_invoices' => $paidInvoicesCount,
                 ]
             );
 
@@ -1287,8 +1253,7 @@ class TeamDashboardService
             $activeSubscriptionKeys =
                 $activeSubscriptionInvoices
                     ->map(
-                        fn (Invoice $invoice): string =>
-                            $this->subscriptionKey($invoice)
+                        fn (Invoice $invoice): string => $this->subscriptionKey($invoice)
                     )
                     ->unique()
                     ->values();
@@ -1301,10 +1266,8 @@ class TeamDashboardService
                 $stepStartedAt,
                 [
                     'team_id' => $team->id,
-                    'recurring_invoice_count' =>
-                        $activeSubscriptionInvoices->count(),
-                    'count' =>
-                        $activeSubscriptions,
+                    'recurring_invoice_count' => $activeSubscriptionInvoices->count(),
+                    'count' => $activeSubscriptions,
                 ]
             );
 
@@ -1334,68 +1297,47 @@ class TeamDashboardService
                     'team_slug' => $team->slug,
                     'filter' => $filter,
 
-                    'gross_profit' =>
-                        $grossProfit,
+                    'gross_profit' => $grossProfit,
 
-                    'processing_fees' =>
-                        $processingFees,
+                    'processing_fees' => $processingFees,
 
-                    'net_profit' =>
-                        $netProfit,
+                    'net_profit' => $netProfit,
 
-                    'pablo_rate' =>
-                        $pabloRate,
+                    'pablo_rate' => $pabloRate,
 
-                    'pablo_commission' =>
-                        $pabloCommission,
+                    'pablo_commission' => $pabloCommission,
 
-                    'team_share_after_pablo' =>
-                        $teamShareAfterPablo,
+                    'team_share_after_pablo' => $teamShareAfterPablo,
 
-                    'khaled_share' =>
-                        $khaledShare,
+                    'khaled_share' => $khaledShare,
 
-                    'karam_share' =>
-                        $karamShare,
+                    'karam_share' => $karamShare,
 
-                    'losses' =>
-                        $losses,
+                    'losses' => $losses,
 
-                    'mrr' =>
-                        $mrr,
+                    'mrr' => $mrr,
 
-                    'arr' =>
-                        $arr,
+                    'arr' => $arr,
 
-                    'gross_margin_percentage' =>
-                        $grossMarginPercentage,
+                    'gross_margin_percentage' => $grossMarginPercentage,
 
-                    'monthly_revenue_count' =>
-                        $monthlyRevenue->count(),
+                    'monthly_revenue_count' => $monthlyRevenue->count(),
 
-                    'customer_revenue_count' =>
-                        $customerRevenue->count(),
+                    'customer_revenue_count' => $customerRevenue->count(),
 
-                    'subscription_revenue' =>
-                        $subscriptionRevenue,
+                    'subscription_revenue' => $subscriptionRevenue,
 
-                    'one_time_revenue' =>
-                        $oneTimeRevenue,
+                    'one_time_revenue' => $oneTimeRevenue,
 
-                    'total_invoices' =>
-                        $totalInvoices,
+                    'total_invoices' => $totalInvoices,
 
-                    'paid_invoices' =>
-                        $paidInvoicesCount,
+                    'paid_invoices' => $paidInvoicesCount,
 
-                    'active_subscriptions' =>
-                        $activeSubscriptions,
+                    'active_subscriptions' => $activeSubscriptions,
 
-                    'average_invoice' =>
-                        $averageInvoiceValue,
+                    'average_invoice' => $averageInvoiceValue,
 
-                    'collected_invoice_count' =>
-                        $collectedInvoices->count(),
+                    'collected_invoice_count' => $collectedInvoices->count(),
 
                     'total_duration_ms' => round(
                         (
@@ -1414,90 +1356,64 @@ class TeamDashboardService
             */
 
             return [
-                'team' =>
-                    $team,
+                'team' => $team,
 
-                'grossProfit' =>
-                    $grossProfit,
+                'grossProfit' => $grossProfit,
 
-                'netProfit' =>
-                    $netProfit,
+                'netProfit' => $netProfit,
 
-                'processingFees' =>
-                    $processingFees,
+                'processingFees' => $processingFees,
 
-                'pabloRate' =>
-                    $pabloRate,
+                'pabloRate' => $pabloRate,
 
-                'pabloCommission' =>
-                    $pabloCommission,
+                'pabloCommission' => $pabloCommission,
 
-                'teamShareAfterPablo' =>
-                    $teamShareAfterPablo,
+                'teamShareAfterPablo' => $teamShareAfterPablo,
 
-                'khaledShare' =>
-                    $khaledShare,
+                'khaledShare' => $khaledShare,
 
-                'karamShare' =>
-                    $karamShare,
+                'karamShare' => $karamShare,
 
-                'ownerShare' =>
-                    $ownerShare,
+                'ownerShare' => $ownerShare,
 
-                'partnerShare' =>
-                    $partnerShare,
+                'partnerShare' => $partnerShare,
 
-                'losses' =>
-                    $losses,
+                'losses' => $losses,
 
-                'mrr' =>
-                    $mrr,
+                'mrr' => $mrr,
 
-                'arr' =>
-                    $arr,
+                'arr' => $arr,
 
-                'grossMarginPercentage' =>
-                    $grossMarginPercentage,
+                'grossMarginPercentage' => $grossMarginPercentage,
 
-                'highestProfitingCustomer' =>
-                    $highestProfitingCustomer,
+                'highestProfitingCustomer' => $highestProfitingCustomer,
 
-                'monthlyRevenue' =>
-                    $monthlyRevenue,
+                'monthlyRevenue' => $monthlyRevenue,
 
-                'customerRevenue' =>
-                    $customerRevenue,
+                'customerRevenue' => $customerRevenue,
 
-                'subscriptionRevenue' =>
-                    $subscriptionRevenue,
+                'subscriptionRevenue' => $subscriptionRevenue,
 
-                'oneTimeRevenue' =>
-                    $oneTimeRevenue,
+                'oneTimeRevenue' => $oneTimeRevenue,
 
-                'totalInvoices' =>
-                    $totalInvoices,
+                'totalInvoices' => $totalInvoices,
 
-                'paidInvoices' =>
-                    $paidInvoicesCount,
+                'paidInvoices' => $paidInvoicesCount,
 
-                'activeSubscriptions' =>
-                    $activeSubscriptions,
+                'activeSubscriptions' => $activeSubscriptions,
 
-                'averageInvoiceValue' =>
-                    $averageInvoiceValue,
+                'averageInvoiceValue' => $averageInvoiceValue,
 
                 /*
                  * Backwards-compatible frontend alias.
                  */
-                'averageInvoice' =>
-                    $averageInvoiceValue,
+                'averageInvoice' => $averageInvoiceValue,
 
                 /*
                  * Additional useful value while preserving the
                  * original response shape.
                  */
-                'collectedInvoices' =>
-                    $collectedInvoices,
+                'collectedInvoices' => $collectedInvoices,
             ];
         } catch (Throwable $e) {
             Log::error(
@@ -1507,17 +1423,13 @@ class TeamDashboardService
                     'team_slug' => $team->slug ?? null,
                     'filter' => $filter ?? null,
 
-                    'exception_class' =>
-                        get_class($e),
+                    'exception_class' => get_class($e),
 
-                    'message' =>
-                        $e->getMessage(),
+                    'message' => $e->getMessage(),
 
-                    'file' =>
-                        $e->getFile(),
+                    'file' => $e->getFile(),
 
-                    'line' =>
-                        $e->getLine(),
+                    'line' => $e->getLine(),
 
                     'duration_ms' => round(
                         (
@@ -1527,14 +1439,323 @@ class TeamDashboardService
                         2
                     ),
 
-                    'trace' =>
-                        $e->getTraceAsString(),
+                    'trace' => $e->getTraceAsString(),
                 ]
             );
 
             throw $e;
         }
     }
+
+
+    /*
+|--------------------------------------------------------------------------
+| Payment Location Map Data
+|--------------------------------------------------------------------------
+|
+| Returns sanitized payment-location data for the dashboard map.
+|
+| IMPORTANT:
+|
+| - Only successful transactions are included.
+| - Only transactions belonging to this team are included.
+| - Reporting filters use transaction.paid_at to match financial reporting.
+| - The customer's IP address is NEVER sent to the browser.
+| - GeoIP coordinates are approximate.
+|
+*/
+
+public function paymentLocationMapData(
+    Team $team,
+    string $filter = 'max',
+    ?string $customStartDate = null,
+    ?string $customEndDate = null,
+): array {
+    $startedAt = microtime(true);
+
+    $filter = $this->normalizeFilter($filter);
+
+    $teamInvoiceIds = $this->teamInvoiceIds($team);
+
+    $dateRange = $this->filterDateRange(
+        $filter,
+        $customStartDate,
+        $customEndDate
+    );
+
+    /*
+    |--------------------------------------------------------------------------
+    | Build Query
+    |--------------------------------------------------------------------------
+    */
+
+    $query = CustomerPaymentLocation::query()
+        ->whereNotNull('latitude')
+        ->whereNotNull('longitude')
+
+        ->whereHas(
+            'transaction',
+            function ($transactionQuery) use (
+                $teamInvoiceIds,
+                $dateRange
+            ): void {
+                $transactionQuery
+                    ->whereIn(
+                        'invoice_id',
+                        $teamInvoiceIds
+                    )
+                    ->where(
+                        'status',
+                        TransactionStatus::Succeeded->value
+                    )
+                    ->whereNotNull('paid_at');
+
+                if ($dateRange) {
+                    [$start, $end] = $dateRange;
+
+                    $transactionQuery->whereBetween(
+                        'paid_at',
+                        [$start, $end]
+                    );
+                }
+            }
+        )
+
+        ->with([
+            'customer',
+            'transaction',
+        ])
+
+        ->orderByDesc('captured_at');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Custom Range Without Valid Dates
+    |--------------------------------------------------------------------------
+    |
+    | Do not accidentally treat an incomplete custom range as All Time.
+    |
+    */
+
+    if (
+        $filter === 'custom'
+        && ! $dateRange
+    ) {
+        $this->logComplete(
+            'paymentLocationMapData empty custom range',
+            $startedAt,
+            [
+                'team_id' => $team->id,
+                'filter' => $filter,
+            ]
+        );
+
+        return [
+            'type' => 'FeatureCollection',
+
+            'features' => [],
+
+            'meta' => [
+                'payment_count' => 0,
+                'customer_count' => 0,
+                'mapped_revenue' => 0,
+            ],
+        ];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Load Locations
+    |--------------------------------------------------------------------------
+    */
+
+    $locations = $query->get();
+
+    /*
+    |--------------------------------------------------------------------------
+    | Build GeoJSON
+    |--------------------------------------------------------------------------
+    */
+
+    $features = $locations
+        ->map(
+            function (
+                CustomerPaymentLocation $location
+            ): ?array {
+                $latitude = $location->latitude !== null
+                    ? (float) $location->latitude
+                    : null;
+
+                $longitude = $location->longitude !== null
+                    ? (float) $location->longitude
+                    : null;
+
+                if (
+                    $latitude === null
+                    || $longitude === null
+                ) {
+                    return null;
+                }
+
+                $transaction = $location->transaction;
+
+                if (! $transaction) {
+                    return null;
+                }
+
+                $customer = $location->customer;
+
+                $customerName =
+                    $customer?->name
+                    ?: $customer?->email
+                    ?: 'Unknown customer';
+
+                $paidAt = $transaction->paid_at
+                    ?? $transaction->created_at;
+
+                if (
+                    $paidAt
+                    && ! $paidAt instanceof Carbon
+                ) {
+                    $paidAt = Carbon::parse($paidAt);
+                }
+
+                $state = $location->state_name
+                    ?: $location->state_code;
+
+                $country = $location->country_name
+                    ?: $location->country_code;
+
+                $locationParts = collect([
+                    $location->city,
+                    $state,
+                    $country,
+                ])
+                    ->filter()
+                    ->values()
+                    ->all();
+
+                return [
+                    'type' => 'Feature',
+
+                    'geometry' => [
+                        'type' => 'Point',
+
+                        'coordinates' => [
+                            $longitude,
+                            $latitude,
+                        ],
+                    ],
+
+                    'properties' => [
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Safe frontend fields
+                        |--------------------------------------------------------------------------
+                        */
+
+                        'customer_name' => $customerName,
+
+                        'amount' => max(
+                            (int) (
+                                $transaction->amount
+                                ?? 0
+                            ),
+                            0
+                        ),
+
+                        'city' => $location->city,
+
+                        'state' => $state,
+
+                        'country' => $country,
+
+                        'location_label' =>
+                            implode(
+                                ', ',
+                                $locationParts
+                            ),
+
+                        'paid_at' => $paidAt
+                            ? $paidAt->format(
+                                'M j, Y g:i A'
+                            )
+                            : null,
+
+                        'payment_method' =>
+                            $transaction
+                                ->payment_method_type
+                            ?: 'Payment',
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Accuracy is useful for interpretation.
+                        |--------------------------------------------------------------------------
+                        */
+
+                        'accuracy_radius' =>
+                            $location->accuracy_radius,
+                    ],
+                ];
+            }
+        )
+        ->filter()
+        ->values();
+
+    /*
+    |--------------------------------------------------------------------------
+    | Summary
+    |--------------------------------------------------------------------------
+    */
+
+    $mappedRevenue = (int) $features
+        ->sum(
+            fn (array $feature): int =>
+                max(
+                    (int) (
+                        $feature['properties']['amount']
+                        ?? 0
+                    ),
+                    0
+                )
+        );
+
+    $customerCount = $features
+        ->pluck(
+            'properties.customer_name'
+        )
+        ->filter()
+        ->unique()
+        ->count();
+
+    $result = [
+        'type' => 'FeatureCollection',
+
+        'features' => $features->all(),
+
+        'meta' => [
+            'payment_count' => $features->count(),
+
+            'customer_count' => $customerCount,
+
+            'mapped_revenue' => $mappedRevenue,
+        ],
+    ];
+
+    $this->logComplete(
+        'paymentLocationMapData',
+        $startedAt,
+        [
+            'team_id' => $team->id,
+            'filter' => $filter,
+            'location_count' => $features->count(),
+            'customer_count' => $customerCount,
+            'mapped_revenue' => $mappedRevenue,
+        ]
+    );
+
+    return $result;
+}
 
     /*
     |--------------------------------------------------------------------------
@@ -1778,15 +1999,13 @@ class TeamDashboardService
 
         return $invoices
             ->groupBy(
-                fn (Invoice $invoice): string =>
-                    $this->subscriptionKey($invoice)
+                fn (Invoice $invoice): string => $this->subscriptionKey($invoice)
             )
             ->map(
                 function (Collection $subscriptionInvoices) {
                     return $subscriptionInvoices
                         ->sortByDesc(
-                            fn (Invoice $invoice) =>
-                                $invoice->updated_at
+                            fn (Invoice $invoice) => $invoice->updated_at
                                 ?? $invoice->created_at
                         )
                         ->first();
@@ -1806,18 +2025,18 @@ class TeamDashboardService
         Invoice $invoice
     ): string {
         if (
-            !empty(
+            ! empty(
                 $invoice->stripe_subscription_id
             )
         ) {
             return 'stripe-subscription:'
-                . trim(
+                .trim(
                     (string) $invoice->stripe_subscription_id
                 );
         }
 
         return 'invoice:'
-            . (string) $invoice->id;
+            .(string) $invoice->id;
     }
 
     /*
@@ -1861,7 +2080,7 @@ class TeamDashboardService
         object $transaction
     ): string {
         if (
-            !empty(
+            ! empty(
                 $transaction->stripe_payment_intent_id
             )
         ) {
@@ -1870,14 +2089,14 @@ class TeamDashboardService
         }
 
         if (
-            !empty(
+            ! empty(
                 $transaction->invoice_id
             )
         ) {
             return 'invoice:'
-                . (string) $transaction->invoice_id
-                . ':'
-                . (string) ($transaction->id ?? '');
+                .(string) $transaction->invoice_id
+                .':'
+                .(string) ($transaction->id ?? '');
         }
 
         $amount = (string) (
@@ -1895,10 +2114,10 @@ class TeamDashboardService
         );
 
         return $customerId
-            . '-'
-            . $amount
-            . '-'
-            . $timestamp;
+            .'-'
+            .$amount
+            .'-'
+            .$timestamp;
     }
 
     /*
@@ -1940,7 +2159,7 @@ class TeamDashboardService
                     */
 
                     if (
-                        !$customer
+                        ! $customer
                         && $customerId
                     ) {
                         $customer =
@@ -1949,20 +2168,16 @@ class TeamDashboardService
                     }
 
                     return [
-                        'customer_id' =>
-                            $customerId,
+                        'customer_id' => $customerId,
 
-                        'name' =>
-                            $customer?->name
+                        'name' => $customer?->name
                             ?: $customer?->email
                             ?: 'Unknown',
 
-                        'email' =>
-                            $customer?->email,
+                        'email' => $customer?->email,
 
-                        'amount' =>
-                            (int) $transactions
-                                ->sum('amount'),
+                        'amount' => (int) $transactions
+                            ->sum('amount'),
                     ];
                 }
             )
@@ -1979,7 +2194,7 @@ class TeamDashboardService
     protected function monthlyRevenue(
         Collection $successfulTransactions,
         string $filter = 'max',
-        ?string $customStartDate = null, 
+        ?string $customStartDate = null,
         ?string $customEndDate = null
     ): Collection {
         $startedAt = microtime(true);
@@ -1992,8 +2207,7 @@ class TeamDashboardService
             'TeamDashboardService: monthlyRevenue START',
             [
                 'filter' => $filter,
-                'transaction_count' =>
-                    $successfulTransactions->count(),
+                'transaction_count' => $successfulTransactions->count(),
             ]
         );
 
@@ -2013,18 +2227,18 @@ class TeamDashboardService
                 $transaction->paid_at
                 ?? $transaction->created_at;
 
-            if (!$date) {
+            if (! $date) {
                 return now()->format('Y-m');
             }
 
-            if (!$date instanceof Carbon) {
+            if (! $date instanceof Carbon) {
                 $date = Carbon::parse($date);
             }
 
             return $date->format('Y-m');
         };
 
-            /*
+        /*
 |--------------------------------------------------------------------------
 | Custom / Rolling Range
 |--------------------------------------------------------------------------
@@ -2099,12 +2313,10 @@ class TeamDashboardService
         if ($filter === 'mtd') {
             $result = collect([
                 [
-                    'month' =>
-                        now()->format('M Y'),
+                    'month' => now()->format('M Y'),
 
-                    'value' =>
-                        (int) $successfulTransactions
-                            ->sum('amount'),
+                    'value' => (int) $successfulTransactions
+                        ->sum('amount'),
                 ],
             ]);
 
@@ -2112,12 +2324,10 @@ class TeamDashboardService
                 'monthlyRevenue MTD',
                 $startedAt,
                 [
-                    'result_count' =>
-                        $result->count(),
+                    'result_count' => $result->count(),
 
-                    'value' =>
-                        $result
-                            ->first()['value']
+                    'value' => $result
+                        ->first()['value']
                             ?? 0,
                 ]
             );
@@ -2146,14 +2356,11 @@ class TeamDashboardService
             Log::debug(
                 'TeamDashboardService: monthlyRevenue YTD grouping',
                 [
-                    'start' =>
-                        $start->toDateTimeString(),
+                    'start' => $start->toDateTimeString(),
 
-                    'now' =>
-                        $now->toDateTimeString(),
+                    'now' => $now->toDateTimeString(),
 
-                    'transaction_count' =>
-                        $successfulTransactions->count(),
+                    'transaction_count' => $successfulTransactions->count(),
                 ]
             );
 
@@ -2170,14 +2377,12 @@ class TeamDashboardService
                 'monthlyRevenue YTD groupBy',
                 $stepStartedAt,
                 [
-                    'group_count' =>
-                        $grouped->count(),
+                    'group_count' => $grouped->count(),
 
-                    'grouped_keys' =>
-                        $grouped
-                            ->keys()
-                            ->values()
-                            ->all(),
+                    'grouped_keys' => $grouped
+                        ->keys()
+                        ->values()
+                        ->all(),
                 ]
             );
 
@@ -2202,14 +2407,11 @@ class TeamDashboardService
                     Log::critical(
                         'TeamDashboardService: monthlyRevenue YTD safety break triggered',
                         [
-                            'current' =>
-                                $current->toDateTimeString(),
+                            'current' => $current->toDateTimeString(),
 
-                            'now' =>
-                                $now->toDateTimeString(),
+                            'now' => $now->toDateTimeString(),
 
-                            'iterations' =>
-                                $iteration,
+                            'iterations' => $iteration,
                         ]
                     );
 
@@ -2222,14 +2424,11 @@ class TeamDashboardService
                 Log::debug(
                     'TeamDashboardService: monthlyRevenue YTD month',
                     [
-                        'iteration' =>
-                            $iteration,
+                        'iteration' => $iteration,
 
-                        'month_key' =>
-                            $monthKey,
+                        'month_key' => $monthKey,
 
-                        'month_label' =>
-                            $current->format('M'),
+                        'month_label' => $current->format('M'),
                     ]
                 );
 
@@ -2242,14 +2441,11 @@ class TeamDashboardService
                         ->sum('amount');
 
                 $months->push([
-                    'month' =>
-                        $current->format('M'),
+                    'month' => $current->format('M'),
 
-                    'month_key' =>
-                        $monthKey,
+                    'month_key' => $monthKey,
 
-                    'value' =>
-                        (int) $amount,
+                    'value' => (int) $amount,
                 ]);
 
                 $current =
@@ -2263,11 +2459,9 @@ class TeamDashboardService
                 'monthlyRevenue YTD',
                 $startedAt,
                 [
-                    'result_count' =>
-                        $months->count(),
+                    'result_count' => $months->count(),
 
-                    'months' =>
-                        $months->all(),
+                    'months' => $months->all(),
                 ]
             );
 
@@ -2297,14 +2491,11 @@ class TeamDashboardService
                         );
 
                 return [
-                    'label' =>
-                        $month->format('M'),
+                    'label' => $month->format('M'),
 
-                    'amount' =>
-                        0,
+                    'amount' => 0,
 
-                    'month' =>
-                        $month->format('Y-m'),
+                    'month' => $month->format('Y-m'),
                 ];
             }
         );
@@ -2316,11 +2507,9 @@ class TeamDashboardService
                 $monthlySeries
                     ->map(
                         fn ($entry) => [
-                            'month' =>
-                                $entry['label'],
+                            'month' => $entry['label'],
 
-                            'value' =>
-                                0,
+                            'value' => 0,
                         ]
                     );
 
@@ -2328,8 +2517,7 @@ class TeamDashboardService
                 'monthlyRevenue MAX empty',
                 $startedAt,
                 [
-                    'result_count' =>
-                        $result->count(),
+                    'result_count' => $result->count(),
                 ]
             );
 
@@ -2349,8 +2537,7 @@ class TeamDashboardService
             'monthlyRevenue MAX groupBy',
             $stepStartedAt,
             [
-                'group_count' =>
-                    $grouped->count(),
+                'group_count' => $grouped->count(),
             ]
         );
 
@@ -2369,11 +2556,9 @@ class TeamDashboardService
                             ->sum('amount');
 
                     return [
-                        'month' =>
-                            $entry['label'],
+                        'month' => $entry['label'],
 
-                        'value' =>
-                            (int) $amount,
+                        'value' => (int) $amount,
                     ];
                 }
             );
@@ -2382,8 +2567,7 @@ class TeamDashboardService
             'monthlyRevenue MAX',
             $startedAt,
             [
-                'result_count' =>
-                    $result->count(),
+                'result_count' => $result->count(),
             ]
         );
 
@@ -2429,8 +2613,7 @@ class TeamDashboardService
         $total = 0;
 
         foreach (
-            $successfulTransactions
-            as $transaction
+            $successfulTransactions as $transaction
         ) {
             $subscriptionAmount =
                 $this->transactionRecurringAmount(
@@ -2455,14 +2638,11 @@ class TeamDashboardService
 
             $amountForPaymentType =
                 match ($paymentType) {
-                    PaymentType::Subscription =>
-                        $subscriptionAmount,
+                    PaymentType::Subscription => $subscriptionAmount,
 
-                    PaymentType::OneTime =>
-                        $oneTimeAmount,
+                    PaymentType::OneTime => $oneTimeAmount,
 
-                    default =>
-                        0,
+                    default => 0,
                 };
 
             if ($invert) {
@@ -2495,8 +2675,8 @@ class TeamDashboardService
             ?? null;
 
         if (
-            !$invoice
-            && !empty($transaction->invoice_id)
+            ! $invoice
+            && ! empty($transaction->invoice_id)
         ) {
             $invoice =
                 Invoice::query()
@@ -2506,7 +2686,7 @@ class TeamDashboardService
                     );
         }
 
-        if (!$invoice) {
+        if (! $invoice) {
             return 0;
         }
 
@@ -2598,8 +2778,8 @@ class TeamDashboardService
             ?? null;
 
         if (
-            !$invoice
-            && !empty($transaction->invoice_id)
+            ! $invoice
+            && ! empty($transaction->invoice_id)
         ) {
             $invoice =
                 Invoice::query()
@@ -2608,7 +2788,7 @@ class TeamDashboardService
                     );
         }
 
-        if (!$invoice) {
+        if (! $invoice) {
             return PaymentType::OneTime;
         }
 
@@ -2761,60 +2941,46 @@ class TeamDashboardService
                 'stripeRevenueForTeam local transaction ledger',
                 $startedAt,
                 [
-                    'team_id' =>
-                        $team->id,
+                    'team_id' => $team->id,
 
-                    'invoice_count' =>
-                        $teamInvoiceIds->count(),
+                    'invoice_count' => $teamInvoiceIds->count(),
 
-                    'transaction_count' =>
-                        $transactions->count(),
+                    'transaction_count' => $transactions->count(),
 
-                    'total_revenue' =>
-                        $totalRevenue,
+                    'total_revenue' => $totalRevenue,
                 ]
             );
 
             return [
-                'transactions' =>
-                    $transactions,
+                'transactions' => $transactions,
 
-                'revenue' =>
-                    $totalRevenue,
+                'revenue' => $totalRevenue,
             ];
         } catch (Throwable $e) {
             Log::error(
                 'TeamDashboardService: local transaction ledger FAILED',
                 [
-                    'team_id' =>
-                        $team->id ?? null,
+                    'team_id' => $team->id ?? null,
 
-                    'team_slug' =>
-                        $team->slug ?? null,
+                    'team_slug' => $team->slug ?? null,
 
-                    'exception_class' =>
-                        get_class($e),
+                    'exception_class' => get_class($e),
 
-                    'message' =>
-                        $e->getMessage(),
+                    'message' => $e->getMessage(),
 
-                    'file' =>
-                        $e->getFile(),
+                    'file' => $e->getFile(),
 
-                    'line' =>
-                        $e->getLine(),
+                    'line' => $e->getLine(),
 
-                    'duration_ms' =>
-                        round(
-                            (
-                                microtime(true)
-                                - $startedAt
-                            ) * 1000,
-                            2
-                        ),
+                    'duration_ms' => round(
+                        (
+                            microtime(true)
+                            - $startedAt
+                        ) * 1000,
+                        2
+                    ),
 
-                    'trace' =>
-                        $e->getTraceAsString(),
+                    'trace' => $e->getTraceAsString(),
                 ]
             );
 
@@ -2924,7 +3090,7 @@ class TeamDashboardService
             */
 
             if (
-                !empty(
+                ! empty(
                     $invoice->stripe_subscription_id
                 )
             ) {
@@ -2966,29 +3132,23 @@ class TeamDashboardService
         } catch (Throwable $e) {
             Log::warning(
                 __CLASS__
-                . ' failed to resolve invoice payment type',
+                .' failed to resolve invoice payment type',
                 [
-                    'invoice_id' =>
-                        $invoice->id
+                    'invoice_id' => $invoice->id
                         ?? null,
 
-                    'stripe_invoice_id' =>
-                        $invoice->stripe_invoice_id
+                    'stripe_invoice_id' => $invoice->stripe_invoice_id
                         ?? null,
 
-                    'stripe_subscription_id' =>
-                        $invoice->stripe_subscription_id
+                    'stripe_subscription_id' => $invoice->stripe_subscription_id
                         ?? null,
 
-                    'payment_type' =>
-                        $invoice->payment_type
+                    'payment_type' => $invoice->payment_type
                         ?? null,
 
-                    'message' =>
-                        $e->getMessage(),
+                    'message' => $e->getMessage(),
 
-                    'exception_class' =>
-                        get_class($e),
+                    'exception_class' => get_class($e),
                 ]
             );
 
@@ -3023,17 +3183,13 @@ class TeamDashboardService
             $successfulTransactions->isEmpty()
         ) {
             return [
-                'pabloCommission' =>
-                    0,
+                'pabloCommission' => 0,
 
-                'teamShareAfterPablo' =>
-                    0,
+                'teamShareAfterPablo' => 0,
 
-                'ownerShare' =>
-                    0,
+                'ownerShare' => 0,
 
-                'partnerShare' =>
-                    0,
+                'partnerShare' => 0,
             ];
         }
 
@@ -3055,7 +3211,7 @@ class TeamDashboardService
                         $transaction
                     ): string {
                         if (
-                            !empty(
+                            ! empty(
                                 $transaction->invoice_id
                             )
                         ) {
@@ -3064,13 +3220,12 @@ class TeamDashboardService
                         }
 
                         return 'transaction:'
-                            . (string) $transaction->id;
+                            .(string) $transaction->id;
                     }
                 );
 
         foreach (
-            $transactionsByInvoice
-            as $invoiceTransactions
+            $transactionsByInvoice as $invoiceTransactions
         ) {
             /*
             |--------------------------------------------------------------------------
@@ -3187,17 +3342,13 @@ class TeamDashboardService
         }
 
         return [
-            'pabloCommission' =>
-                (int) $pabloCommission,
+            'pabloCommission' => (int) $pabloCommission,
 
-            'teamShareAfterPablo' =>
-                (int) $teamShareAfterPablo,
+            'teamShareAfterPablo' => (int) $teamShareAfterPablo,
 
-            'ownerShare' =>
-                (int) $ownerShare,
+            'ownerShare' => (int) $ownerShare,
 
-            'partnerShare' =>
-                (int) $partnerShare,
+            'partnerShare' => (int) $partnerShare,
         ];
     }
 }

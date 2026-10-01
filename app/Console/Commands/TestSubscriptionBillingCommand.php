@@ -46,7 +46,7 @@ class TestSubscriptionBillingCommand extends Command
         $invoice = Invoice::create([
             'customer_id' => $customer->id,
             'ticket_id' => null,
-            'checkout_token' => 'test-' . bin2hex(random_bytes(10)),
+            'checkout_token' => 'test-'.bin2hex(random_bytes(10)),
             'total_amount' => $baseAmount + array_sum($addonAmounts),
             'status' => 'paid',
             'payment_type' => PaymentType::Subscription,
@@ -64,10 +64,10 @@ class TestSubscriptionBillingCommand extends Command
 
         foreach ($addonAmounts as $index => $addonAmount) {
             $invoice->items()->create([
-                'description' => 'Addon ' . ($index + 1),
+                'description' => 'Addon '.($index + 1),
                 'amount' => $addonAmount,
                 'is_subscription' => true,
-                'stripe_price_id' => 'price_addon_' . ($index + 1) . '_test',
+                'stripe_price_id' => 'price_addon_'.($index + 1).'_test',
             ]);
         }
 
@@ -101,11 +101,11 @@ class TestSubscriptionBillingCommand extends Command
                 ],
                 [
                     'Monthly recurring',
-                    '$' . number_format($monthlyRecurring / 100, 2),
+                    '$'.number_format($monthlyRecurring / 100, 2),
                 ],
                 [
                     '12-month minimum total',
-                    '$' . number_format($twelveMonthMinimum / 100, 2),
+                    '$'.number_format($twelveMonthMinimum / 100, 2),
                 ],
                 [
                     'Has recurring addons',
@@ -120,7 +120,7 @@ class TestSubscriptionBillingCommand extends Command
 
         $this->newLine();
 
-        if (!$hasCompletedMinimum) {
+        if (! $hasCompletedMinimum) {
             $this->error(
                 'The invoice does not meet the 12-month minimum requirement.'
             );

@@ -10,10 +10,10 @@ use App\Services\StripeService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
-use Illuminate\Support\Str;
 
 class ChargeCustomerModal extends Component
 {
@@ -48,9 +48,9 @@ class ChargeCustomerModal extends Component
         }
 
         return Invoice::query()
-        ->where('ticket_id', $this->ticket->id)
-        ->latest('id')
-        ->first();
+            ->where('ticket_id', $this->ticket->id)
+            ->latest('id')
+            ->first();
     }
 
     #[Computed]
@@ -66,7 +66,7 @@ class ChargeCustomerModal extends Component
                 } catch (\Exception $e) {
                     Log::error(
                         'Failed to fetch Stripe add-ons: '
-                        . $e->getMessage()
+                        .$e->getMessage()
                     );
 
                     return [];
@@ -110,7 +110,7 @@ class ChargeCustomerModal extends Component
      * - the base charge
      * - the first month's addon charges
      */
-   #[Computed]
+    #[Computed]
     public function totalAmountInCents(): int
     {
         $monthlyBase = $this->isSubscription
@@ -200,7 +200,7 @@ class ChargeCustomerModal extends Component
 
         $this->description =
             'Development Services - Ticket #'
-            . ($this->ticket?->ticket_number ?? 'N/A');
+            .($this->ticket?->ticket_number ?? 'N/A');
 
         $this->isSubscription = false;
 
@@ -217,11 +217,9 @@ class ChargeCustomerModal extends Component
         );
 
         $this->validate([
-            'amount' =>
-                'required|numeric|min:1',
+            'amount' => 'required|numeric|min:1',
 
-            'description' =>
-                'required|string|min:1|max:255',
+            'description' => 'required|string|min:1|max:255',
         ]);
 
         try {
@@ -254,7 +252,7 @@ class ChargeCustomerModal extends Component
             $invoicePaymentType =
                 $this->resolveInvoicePaymentType();
 
-            $invoice = new Invoice();
+            $invoice = new Invoice;
 
             $invoice->ticket_id =
                 $this->ticket->id;
@@ -315,9 +313,8 @@ class ChargeCustomerModal extends Component
             */
 
             $baseItem = $invoice->items()->create([
-                'description' =>
-                    $this->description
-                    . (
+                'description' => $this->description
+                    .(
                         $this->isSubscription
                             ? ' (Monthly - 12 Mo. Minimum)'
                             : ' (One-Time)'
@@ -330,8 +327,7 @@ class ChargeCustomerModal extends Component
                 /*
                  * Base charge's own billing type.
                  */
-                'is_subscription' =>
-                    $this->isSubscription,
+                'is_subscription' => $this->isSubscription,
 
                 /*
                  * This is the BASE item, never an addon.
@@ -375,11 +371,9 @@ class ChargeCustomerModal extends Component
                 $selectedAddonDetails[] = $addon;
 
                 $addonItem = $invoice->items()->create([
-                    'description' =>
-                        $addon['name'],
+                    'description' => $addon['name'],
 
-                    'amount' =>
-                        $addon['price_in_cents'],
+                    'amount' => $addon['price_in_cents'],
 
                     /*
                      * Addons are ALWAYS recurring.
@@ -415,8 +409,7 @@ class ChargeCustomerModal extends Component
             $customCheckoutUrl = route(
                 'checkout.show',
                 [
-                    'token' =>
-                        $invoice->checkout_token,
+                    'token' => $invoice->checkout_token,
                 ]
             );
 
@@ -435,32 +428,23 @@ class ChargeCustomerModal extends Component
 
             Mail::to($customer->email)->send(
                 new InvoiceCheckoutMail(
-                    checkoutUrl:
-                        $customCheckoutUrl,
+                    checkoutUrl: $customCheckoutUrl,
 
-                    ticket:
-                        $this->ticket,
+                    ticket: $this->ticket,
 
-                    baseAmount:
-                        (float) $this->amount,
+                    baseAmount: (float) $this->amount,
 
-                    description:
-                        $this->description,
+                    description: $this->description,
 
-                    isSubscription:
-                        $this->isSubscription,
+                    isSubscription: $this->isSubscription,
 
-                    selectedAddons:
-                        $selectedAddonDetails,
+                    selectedAddons: $selectedAddonDetails,
 
-                    totalAmountInCents:
-                        $this->totalAmountInCents,
+                    totalAmountInCents: $this->totalAmountInCents,
 
-                    monthlyRecurringAmountInCents:
-                        $this->monthlyRecurringAmountInCents,
+                    monthlyRecurringAmountInCents: $this->monthlyRecurringAmountInCents,
 
-                    subscriptionMonths:
-                        $this->isSubscription
+                    subscriptionMonths: $this->isSubscription
                             ? 12
                             : null,
                 )
@@ -478,26 +462,22 @@ class ChargeCustomerModal extends Component
         } catch (\Exception $e) {
             Log::error(
                 'Invoice generation error: '
-                . $e->getMessage(),
+                .$e->getMessage(),
                 [
-                    'ticket_id' =>
-                        $this->ticket?->id,
+                    'ticket_id' => $this->ticket?->id,
 
-                    'amount' =>
-                        $this->amount,
+                    'amount' => $this->amount,
 
-                    'base_is_subscription' =>
-                        $this->isSubscription,
+                    'base_is_subscription' => $this->isSubscription,
 
-                    'selected_addons' =>
-                        $this->selectedAddonPriceIds,
+                    'selected_addons' => $this->selectedAddonPriceIds,
                 ]
             );
 
             $this->addError(
                 'submit',
                 'An error occurred: '
-                . $e->getMessage()
+                .$e->getMessage()
             );
         }
     }
@@ -507,8 +487,7 @@ class ChargeCustomerModal extends Component
         return view(
             'livewire.teams.tickets.charge-customer-modal',
             [
-                'availableAddons' =>
-                    $this->availableAddons(),
+                'availableAddons' => $this->availableAddons(),
             ]
         );
     }

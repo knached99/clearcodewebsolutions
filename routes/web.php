@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\TransactionStatus;
 use App\Http\Controllers\GuestTicketAttachmentController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\Teams\TicketAttachmentController;
@@ -13,13 +12,11 @@ use App\Livewire\Home\Tickets\TicketSearch;
 use App\Livewire\RequiredOnboarding;
 use App\Livewire\Teams\Invoices\InvoiceShow;
 use App\Livewire\Teams\Projects\Index as AdminWorksIndex;
+use App\Livewire\Teams\TeamDashboard;
 use App\Livewire\Teams\Testimonials\Index as AdminTestimonialsIndex;
 use App\Livewire\Teams\Tickets\Index as TeamTicketsIndex;
-use App\Livewire\Teams\TeamDashboard; 
-use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Team;
-use App\Models\Transaction;
 use Illuminate\Support\Facades\Route;
 
 /*

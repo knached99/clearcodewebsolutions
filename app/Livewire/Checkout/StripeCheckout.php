@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Checkout;
 
-use App\Enums\InvoiceStatus;
 use App\Enums\PaymentType;
 use App\Mail\PaymentReceived;
 use App\Mail\PaymentReceivedAdmin;
@@ -23,17 +22,29 @@ use Throwable;
 class StripeCheckout extends Component
 {
     public Invoice $invoice;
+
     public string $billingName = '';
+
     public string $billingEmail = '';
+
     public ?string $clientSecret = null;
+
     public ?string $paymentIntentId = null;
+
     public ?string $paymentStatus = null;
+
     public ?string $checkoutError = null;
+
     public bool $checkoutSuccessful = false;
+
     public bool $signatureRequired = false;
+
     public bool $hasSignedAgreement = false;
+
     public string $signatureData = '';
+
     public int $totalInCents = 0;
+
     public string $formattedTotal = '0.00';
 
     public function mount(string $token): void
@@ -95,6 +106,7 @@ class StripeCheckout extends Component
 
         if ($returnedPaymentIntentId !== '') {
             $this->restoreReturnedPaymentIntent($returnedPaymentIntentId);
+
             return;
         }
 
@@ -102,6 +114,7 @@ class StripeCheckout extends Component
 
         if ($successfulPaymentIntent !== null) {
             $this->applySuccessfulPaymentIntent($successfulPaymentIntent);
+
             return;
         }
 
@@ -157,6 +170,7 @@ class StripeCheckout extends Component
 
         if ($this->signatureData === '') {
             $this->checkoutError = 'Please sign the agreement before continuing.';
+
             return;
         }
 
@@ -207,10 +221,11 @@ class StripeCheckout extends Component
                 'amount' => $this->totalInCents,
                 'currency' => 'usd',
                 'automatic_payment_methods' => ['enabled' => true],
-                'description' => 'Invoice #' . $this->invoice->id,
+                'description' => 'Invoice #'.$this->invoice->id,
                 'metadata' => [
                     'invoice_id' => (string) $this->invoice->id,
                     'checkout_token' => (string) $this->invoice->checkout_token,
+                    'checkout_ip' => request()->ip(),
                 ],
             ];
 
@@ -229,7 +244,7 @@ class StripeCheckout extends Component
             $paymentIntent = $stripe->paymentIntents->create(
                 $paymentIntentData,
                 [
-                    'idempotency_key' => 'checkout-payment-intent-v2-' . $this->invoice->id,
+                    'idempotency_key' => 'checkout-payment-intent-v2-'.$this->invoice->id,
                 ]
             );
 
@@ -298,25 +313,25 @@ class StripeCheckout extends Component
                 if ($isSubscriptionItem) {
                     if ($stripePriceId === '') {
                         throw new \RuntimeException(
-                            'Subscription item "' . $description . '" is missing its existing Stripe recurring Price ID.'
+                            'Subscription item "'.$description.'" is missing its existing Stripe recurring Price ID.'
                         );
                     }
 
                     $stripePrice = $stripe->prices->retrieve($stripePriceId, []);
 
                     if (($stripePrice->active ?? false) !== true) {
-                        throw new \RuntimeException('Stripe price ' . $stripePriceId . ' is inactive.');
+                        throw new \RuntimeException('Stripe price '.$stripePriceId.' is inactive.');
                     }
 
                     if (($stripePrice->type ?? null) !== 'recurring') {
-                        throw new \RuntimeException('Stripe price ' . $stripePriceId . ' is not a recurring price.');
+                        throw new \RuntimeException('Stripe price '.$stripePriceId.' is not a recurring price.');
                     }
 
                     if (
                         isset($stripePrice->currency)
                         && strtolower((string) $stripePrice->currency) !== 'usd'
                     ) {
-                        throw new \RuntimeException('Stripe price ' . $stripePriceId . ' is not configured in USD.');
+                        throw new \RuntimeException('Stripe price '.$stripePriceId.' is not configured in USD.');
                     }
 
                     $subscriptionItems[] = [
@@ -358,7 +373,7 @@ class StripeCheckout extends Component
             $subscription = $stripe->subscriptions->create(
                 $subscriptionData,
                 [
-                    'idempotency_key' => 'checkout-subscription-' . $this->invoice->id,
+                    'idempotency_key' => 'checkout-subscription-'.$this->invoice->id,
                 ]
             );
 
@@ -413,13 +428,14 @@ class StripeCheckout extends Component
                 $this->clientSecret = null;
                 $this->paymentStatus = 'succeeded';
                 $this->checkoutError = null;
+
                 return;
             }
 
             if ($paymentIntent === null) {
                 throw new \RuntimeException(
-                    'Stripe created the subscription and initial invoice, but no initial PaymentIntent was returned. Invoice: ' .
-                    ($latestInvoice->id ?? 'unknown') . ', amount_due: ' . $amountDue
+                    'Stripe created the subscription and initial invoice, but no initial PaymentIntent was returned. Invoice: '.
+                    ($latestInvoice->id ?? 'unknown').', amount_due: '.$amountDue
                 );
             }
 
@@ -476,6 +492,7 @@ class StripeCheckout extends Component
 
         if (is_object($confirmationSecret)) {
             $clientSecret = $confirmationSecret->client_secret ?? null;
+
             return is_string($clientSecret) && trim($clientSecret) !== ''
                 ? trim($clientSecret)
                 : null;
@@ -483,6 +500,7 @@ class StripeCheckout extends Component
 
         if (is_array($confirmationSecret)) {
             $clientSecret = $confirmationSecret['client_secret'] ?? null;
+
             return is_string($clientSecret) && trim($clientSecret) !== ''
                 ? trim($clientSecret)
                 : null;
@@ -576,6 +594,7 @@ class StripeCheckout extends Component
                 && ($paymentIntent->status ?? null) === 'succeeded'
             ) {
                 $this->applySuccessfulPaymentIntent($paymentIntent);
+
                 return true;
             }
 
@@ -665,7 +684,7 @@ class StripeCheckout extends Component
 
             $customer = $stripe->customers->create(
                 $customerData,
-                ['idempotency_key' => 'checkout-customer-' . $this->invoice->id]
+                ['idempotency_key' => 'checkout-customer-'.$this->invoice->id]
             );
 
             return (string) $customer->id;
@@ -673,7 +692,7 @@ class StripeCheckout extends Component
 
         $customer = $stripe->customers->create(
             ['name' => $name],
-            ['idempotency_key' => 'checkout-customer-' . $this->invoice->id]
+            ['idempotency_key' => 'checkout-customer-'.$this->invoice->id]
         );
 
         return (string) $customer->id;
@@ -748,7 +767,7 @@ class StripeCheckout extends Component
 
     protected function successfulCheckoutSessionKey(): string
     {
-        return 'checkout.success.' . $this->invoice->id;
+        return 'checkout.success.'.$this->invoice->id;
     }
 
     protected function findSuccessfulPaymentIntent(): mixed
@@ -849,6 +868,7 @@ class StripeCheckout extends Component
             Log::info('No Stripe recurring add-ons to subscribe.', [
                 'invoice_id' => $this->invoice->id,
             ]);
+
             return;
         }
 
@@ -885,7 +905,7 @@ class StripeCheckout extends Component
         $subscription = $stripe->subscriptions->create(
             $subscriptionData,
             [
-                'idempotency_key' => 'checkout-addon-subscription-' . $this->invoice->id,
+                'idempotency_key' => 'checkout-addon-subscription-'.$this->invoice->id,
             ]
         );
 
@@ -1003,7 +1023,7 @@ class StripeCheckout extends Component
         }
 
         $lock = Cache::lock(
-            'checkout-email:' . $this->invoice->id . ':' . $paymentIntentId,
+            'checkout-email:'.$this->invoice->id.':'.$paymentIntentId,
             60
         );
 

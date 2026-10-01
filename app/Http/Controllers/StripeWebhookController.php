@@ -12,8 +12,7 @@ class StripeWebhookController extends Controller
 {
     public function __construct(
         protected StripeWebhookService $stripeWebhookService
-    ) {
-    }
+    ) {}
 
     /**
      * Handle incoming Stripe webhook requests.

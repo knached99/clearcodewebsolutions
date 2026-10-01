@@ -11,7 +11,7 @@ use Laravel\Cashier\Billable; // Added Cashier Trait
 
 class Customer extends Model
 {
-    use HasFactory, HasUuids, Billable; 
+    use Billable, HasFactory, HasUuids;
 
     protected $fillable = [
         'user_id',
@@ -25,12 +25,12 @@ class Customer extends Model
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class); //[cite: 10]
+        return $this->belongsTo(User::class); // [cite: 10]
     }
 
     public function tickets(): HasMany
     {
-        return $this->hasMany(Ticket::class); //[cite: 10]
+        return $this->hasMany(Ticket::class); // [cite: 10]
     }
 
     // REMOVED: custom paymentMethods(), invoices(), transactions(), defaultPaymentMethod()[cite: 10]
@@ -43,7 +43,7 @@ class Customer extends Model
         );
 
         if (! $customer->user_id) {
-            $customer->linkExistingUser(); //[cite: 10]
+            $customer->linkExistingUser(); // [cite: 10]
         }
 
         // Ensure the Stripe Customer exists immediately via Cashier
@@ -60,20 +60,20 @@ class Customer extends Model
             return;
         }
 
-        $user = User::where('email', $this->email)->first(); //[cite: 10]
+        $user = User::where('email', $this->email)->first(); // [cite: 10]
 
         if (! $user) {
             return;
         }
 
-        $this->update(['user_id' => $user->id]); //[cite: 10]
-        $this->backfillTickets(); //[cite: 10]
+        $this->update(['user_id' => $user->id]); // [cite: 10]
+        $this->backfillTickets(); // [cite: 10]
     }
 
     public function backfillTickets(): void
     {
-        Ticket::where('email', $this->email) //[cite: 10]
-            ->whereNull('customer_id') //[cite: 10]
-            ->update(['customer_id' => $this->id]); //[cite: 10]
+        Ticket::where('email', $this->email) // [cite: 10]
+            ->whereNull('customer_id') // [cite: 10]
+            ->update(['customer_id' => $this->id]); // [cite: 10]
     }
 }

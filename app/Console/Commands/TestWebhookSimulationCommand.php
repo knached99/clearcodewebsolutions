@@ -89,7 +89,7 @@ class TestWebhookSimulationCommand extends Command
                     ])
                     ->find($invoiceId);
 
-            if (!$invoice) {
+            if (! $invoice) {
                 $this->error(
                     "Invoice {$invoiceId} was not found."
                 );
@@ -100,32 +100,23 @@ class TestWebhookSimulationCommand extends Command
             $invoice =
                 Invoice::query()
                     ->create([
-                        'customer_id' =>
-                            $customer->id,
+                        'customer_id' => $customer->id,
 
-                        'ticket_id' =>
-                            null,
+                        'ticket_id' => null,
 
-                        'stripe_invoice_id' =>
-                            null,
+                        'stripe_invoice_id' => null,
 
-                        'stripe_subscription_id' =>
-                            $subscriptionId,
+                        'stripe_subscription_id' => $subscriptionId,
 
-                        'total_amount' =>
-                            2500,
+                        'total_amount' => 2500,
 
-                        'total_paid' =>
-                            2500,
+                        'total_paid' => 2500,
 
-                        'status' =>
-                            'paid',
+                        'status' => 'paid',
 
-                        'payment_type' =>
-                            PaymentType::Subscription,
+                        'payment_type' => PaymentType::Subscription,
 
-                        'subscription_months' =>
-                            12,
+                        'subscription_months' => 12,
                     ]);
         }
 
@@ -140,8 +131,7 @@ class TestWebhookSimulationCommand extends Command
             !== $subscriptionId
         ) {
             $invoice->update([
-                'stripe_subscription_id' =>
-                    $subscriptionId,
+                'stripe_subscription_id' => $subscriptionId,
             ]);
         }
 
@@ -154,23 +144,17 @@ class TestWebhookSimulationCommand extends Command
         $invoice->items()->delete();
 
         $invoice->items()->create([
-            'description' =>
-                'Base recurring plan',
+            'description' => 'Base recurring plan',
 
-            'amount' =>
-                2000,
+            'amount' => 2000,
 
-            'is_subscription' =>
-                true,
+            'is_subscription' => true,
 
-            'is_addon' =>
-                false,
+            'is_addon' => false,
 
-            'stripe_price_id' =>
-                'price_base_test',
+            'stripe_price_id' => 'price_base_test',
 
-            'stripe_subscription_item_id' =>
-                null,
+            'stripe_subscription_item_id' => null,
         ]);
 
         /*
@@ -203,7 +187,7 @@ class TestWebhookSimulationCommand extends Command
             default:
                 $this->error(
                     "Unsupported event type: {$eventType}. "
-                    . 'Use invoice.upcoming or invoice.payment_succeeded.'
+                    .'Use invoice.upcoming or invoice.payment_succeeded.'
                 );
 
                 return self::FAILURE;
@@ -217,17 +201,17 @@ class TestWebhookSimulationCommand extends Command
 
         $this->info(
             'Webhook event simulated: '
-            . $eventType
+            .$eventType
         );
 
         $this->info(
             'Invoice ID: '
-            . $invoice->id
+            .$invoice->id
         );
 
         $this->info(
             'Stripe subscription ID: '
-            . (
+            .(
                 $invoice->stripe_subscription_id
                 ?? 'none'
             )

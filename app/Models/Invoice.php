@@ -154,14 +154,11 @@ class Invoice extends Model
             ? InvoiceStatus::Void
             : match (true) {
                 $this->total_amount > 0
-                    && $totalPaid >= (int) $this->total_amount
-                    => InvoiceStatus::Paid,
+                    && $totalPaid >= (int) $this->total_amount => InvoiceStatus::Paid,
 
-                $totalPaid > 0
-                    => InvoiceStatus::Partial,
+                $totalPaid > 0 => InvoiceStatus::Partial,
 
-                default
-                    => InvoiceStatus::Pending,
+                default => InvoiceStatus::Pending,
             };
 
         $this->update([
@@ -431,8 +428,8 @@ class Invoice extends Model
 
     public function hasSignedAgreement(): bool
     {
-        return !empty($this->signature_data)
-            && !empty($this->signature_signed_at);
+        return ! empty($this->signature_data)
+            && ! empty($this->signature_signed_at);
     }
 
     /*

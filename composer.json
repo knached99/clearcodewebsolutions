@@ -11,6 +11,7 @@
     "require": {
         "php": "^8.3",
         "barryvdh/laravel-dompdf": "*",
+        "geoip2/geoip2": "*",
         "laravel/cashier": "*",
         "laravel/chisel": "^0.1.0",
         "laravel/fortify": "^1.37.2",

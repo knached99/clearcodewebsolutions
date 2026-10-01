@@ -5,12 +5,17 @@ namespace Tests\Feature\Teams;
 use App\Enums\InvoiceStatus;
 use App\Enums\PaymentType;
 use App\Enums\TeamRole;
+use App\Http\Controllers\StripeWebhookController;
+use App\Livewire\Checkout\StripeCheckout;
+use App\Livewire\Teams\Tickets\ChargeCustomerModal;
+use App\Mail\PaymentReceivedAdmin;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Team;
 use App\Models\Ticket;
 use App\Models\User;
+use App\Services\TeamDashboardService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Livewire\Livewire;
@@ -93,7 +98,7 @@ class TeamTest extends TestCase
 
     public function test_recurring_addons_force_subscription_invoice_type(): void
     {
-        $modal = new \App\Livewire\Teams\Tickets\ChargeCustomerModal();
+        $modal = new ChargeCustomerModal;
         $modal->amount = '100';
         $modal->isSubscription = false;
         $modal->selectedAddonPriceIds = ['price_recurring_addon'];
@@ -129,11 +134,13 @@ class TeamTest extends TestCase
         $stripe = new class
         {
             public object $customers;
+
             public object $paymentIntents;
 
             public function __construct()
             {
-                $this->customers = new class {
+                $this->customers = new class
+                {
                     public function search(array $params): object
                     {
                         return (object) [
@@ -144,7 +151,8 @@ class TeamTest extends TestCase
                     }
                 };
 
-                $this->paymentIntents = new class {
+                $this->paymentIntents = new class
+                {
                     public function search(array $params): object
                     {
                         return (object) [
@@ -181,7 +189,7 @@ class TeamTest extends TestCase
             }
         };
 
-        $service = new \App\Services\TeamDashboardService($stripe);
+        $service = new TeamDashboardService($stripe);
         $data = $service->dashboardData($team);
 
         $this->assertSame(25000, $data['grossProfit']);
@@ -234,11 +242,13 @@ class TeamTest extends TestCase
         $stripe = new class($oneTimeInvoice, $subscriptionInvoice)
         {
             public object $customers;
+
             public object $paymentIntents;
 
             public function __construct($oneTimeInvoice, $subscriptionInvoice)
             {
-                $this->customers = new class {
+                $this->customers = new class
+                {
                     public function search(array $params): object
                     {
                         return (object) [
@@ -249,7 +259,8 @@ class TeamTest extends TestCase
                     }
                 };
 
-                $this->paymentIntents = new class($oneTimeInvoice, $subscriptionInvoice) {
+                $this->paymentIntents = new class($oneTimeInvoice, $subscriptionInvoice)
+                {
                     public function __construct($oneTimeInvoice, $subscriptionInvoice)
                     {
                         $this->oneTimeInvoice = $oneTimeInvoice;
@@ -301,7 +312,7 @@ class TeamTest extends TestCase
             }
         };
 
-        $service = new \App\Services\TeamDashboardService($stripe);
+        $service = new TeamDashboardService($stripe);
         $data = $service->dashboardData($team);
 
         $this->assertSame(25000, $data['oneTimeRevenue']);
@@ -344,11 +355,13 @@ class TeamTest extends TestCase
         $stripe = new class
         {
             public object $customers;
+
             public object $paymentIntents;
 
             public function __construct()
             {
-                $this->customers = new class {
+                $this->customers = new class
+                {
                     public function search(array $params): object
                     {
                         return (object) [
@@ -359,7 +372,8 @@ class TeamTest extends TestCase
                     }
                 };
 
-                $this->paymentIntents = new class {
+                $this->paymentIntents = new class
+                {
                     public function search(array $params): object
                     {
                         return (object) [
@@ -396,7 +410,7 @@ class TeamTest extends TestCase
             }
         };
 
-        $service = new \App\Services\TeamDashboardService($stripe);
+        $service = new TeamDashboardService($stripe);
         $data = $service->dashboardData($team);
 
         $this->assertSame(550700, $data['grossProfit']);
@@ -438,18 +452,21 @@ class TeamTest extends TestCase
         $stripe = new class
         {
             public object $customers;
+
             public object $paymentIntents;
 
             public function __construct()
             {
-                $this->customers = new class {
+                $this->customers = new class
+                {
                     public function search(array $params): object
                     {
                         return (object) ['data' => []];
                     }
                 };
 
-                $this->paymentIntents = new class {
+                $this->paymentIntents = new class
+                {
                     public function search(array $params): object
                     {
                         return (object) ['data' => []];
@@ -463,7 +480,7 @@ class TeamTest extends TestCase
             }
         };
 
-        $service = new \App\Services\TeamDashboardService($stripe);
+        $service = new TeamDashboardService($stripe);
         $data = $service->dashboardData($team);
 
         $this->assertSame(0, $data['grossProfit']);
@@ -508,7 +525,7 @@ class TeamTest extends TestCase
             'is_subscription' => true,
         ]);
 
-        $component = Livewire::test(\App\Livewire\Checkout\StripeCheckout::class, ['token' => $invoice->checkout_token]);
+        $component = Livewire::test(StripeCheckout::class, ['token' => $invoice->checkout_token]);
 
         $component->assertSet('signatureRequired', true)
             ->assertSet('hasSignedAgreement', false)
@@ -592,8 +609,8 @@ class TeamTest extends TestCase
             'subscription_months' => 12,
         ]);
 
-        $controller = app(\App\Http\Controllers\StripeWebhookController::class);
-        $method = new \ReflectionMethod(\App\Http\Controllers\StripeWebhookController::class, 'handleInvoicePaymentSucceeded');
+        $controller = app(StripeWebhookController::class);
+        $method = new \ReflectionMethod(StripeWebhookController::class, 'handleInvoicePaymentSucceeded');
         $method->setAccessible(true);
 
         $method->invoke($controller, (object) [
@@ -610,7 +627,7 @@ class TeamTest extends TestCase
             ],
         ]);
 
-        Mail::assertSent(\App\Mail\PaymentReceivedAdmin::class);
+        Mail::assertSent(PaymentReceivedAdmin::class);
     }
 
     public function test_personal_team_returns_the_team_owned_by_the_user(): void

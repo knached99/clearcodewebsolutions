@@ -12,6 +12,8 @@ use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Models\CustomerPaymentLocation;
+use App\Services\CustomerLocationService; 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -34,7 +36,7 @@ class StripeWebhookService
 
     protected StripeClient $stripe;
 
-    public function __construct()
+    public function __construct(CustomerLocationService $customerLocationService)
     {
         $secret = trim(
             (string) config('services.stripe.secret', '')
@@ -47,6 +49,8 @@ class StripeWebhookService
         }
 
         $this->stripe = new StripeClient($secret);
+
+        $this->customerLocationService = $customerLocationService;
     }
 
     /*
@@ -987,75 +991,93 @@ class StripeWebhookService
         |--------------------------------------------------------------------------
         */
 
-        [$transaction, $wasAlreadySucceeded] = DB::transaction(
-            function () use (
-                $invoice,
-                $paymentIntentId,
-                $paymentMethodData,
-                $amount,
-                $processingFee,
-                $netAmount,
-                $charge,
-                $balanceTransactionId,
-                $paidAt
-            ): array {
-                $existingTransaction = Transaction::query()
-                    ->where(
-                        'stripe_payment_intent_id',
-                        $paymentIntentId
-                    )
-                    ->lockForUpdate()
-                    ->first();
+       [$transaction, $wasAlreadySucceeded] = DB::transaction(
+    function () use (
+        $invoice,
+        $paymentIntentId,
+        $paymentMethodData,
+        $amount,
+        $processingFee,
+        $netAmount,
+        $charge,
+        $balanceTransactionId,
+        $paidAt
+    ): array {
+        $existingTransaction = Transaction::query()
+            ->where(
+                'stripe_payment_intent_id',
+                $paymentIntentId
+            )
+            ->lockForUpdate()
+            ->first();
 
-                $wasAlreadySucceeded =
-                    $existingTransaction
-                    && $this->isTransactionSucceeded(
-                        $existingTransaction
-                    );
+        $wasAlreadySucceeded =
+            $existingTransaction
+            && $this->isTransactionSucceeded(
+                $existingTransaction
+            );
 
-                $values = [
-                    'invoice_id' => $invoice->id,
-                    'customer_id' => $invoice->customer_id,
-                    'stripe_payment_intent_id' => $paymentIntentId,
-                    'stripe_charge_id' => $charge->id ?? null,
-                    'stripe_balance_transaction_id' => $balanceTransactionId,
-                    'stripe_payment_method_id' => $paymentMethodData['payment_method_id'],
-                    'amount' => $amount,
-                    'processing_fee' => $processingFee,
-                    'net_amount' => $netAmount,
-                    'status' => TransactionStatus::Succeeded,
-                    'paid_at' => $paidAt,
-                    'payment_method_type' => $paymentMethodData['payment_method_type'],
-                    'brand' => $paymentMethodData['brand'],
-                    'last4' => $paymentMethodData['last4'],
-                    'error_message' => null,
-                ];
+        $values = [
+            'invoice_id' => $invoice->id,
+            'customer_id' => $invoice->customer_id,
+            'stripe_payment_intent_id' => $paymentIntentId,
+            'stripe_charge_id' => $charge->id ?? null,
+            'stripe_balance_transaction_id' => $balanceTransactionId,
+            'stripe_payment_method_id' => $paymentMethodData['payment_method_id'],
+            'amount' => $amount,
+            'processing_fee' => $processingFee,
+            'net_amount' => $netAmount,
+            'status' => TransactionStatus::Succeeded,
+            'paid_at' => $paidAt,
+            'payment_method_type' => $paymentMethodData['payment_method_type'],
+            'brand' => $paymentMethodData['brand'],
+            'last4' => $paymentMethodData['last4'],
+            'error_message' => null,
+        ];
 
-                if ($existingTransaction) {
-                    $existingTransaction->update($values);
-                    $transaction = $existingTransaction->fresh([
-                        'invoice',
-                        'customer',
-                    ]);
-                } else {
-                    $transaction = Transaction::create($values);
-                }
+        if ($existingTransaction) {
+            $existingTransaction->update($values);
 
-                return [
-                    $transaction,
-                    (bool) $wasAlreadySucceeded,
-                ];
-            }
-        );
+            $transaction = $existingTransaction->fresh([
+                'invoice',
+                'customer',
+            ]);
+        } else {
+            $transaction = Transaction::create($values);
+        }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Sync invoice totals from successful transaction ledger
-        |--------------------------------------------------------------------------
-        */
+        return [
+            $transaction,
+            (bool) $wasAlreadySucceeded,
+        ];
+    }
+);
 
-        $invoice->refresh();
-        $invoice->syncPaymentTotals();
+
+/*
+|--------------------------------------------------------------------------
+| Capture Customer Payment Location
+|--------------------------------------------------------------------------
+*/
+ $checkoutIp = data_get($paymentIntent, 'metadata.checkout_ip');
+
+ if(is_string($checkoutIp) && trim($checkoutIp) !== '') {
+    $this->capturePaymentLocation(
+        customer: $invoice->customer, 
+        transaction: $transaction, 
+        ipAddress: trim($checkoutIp),
+    );
+ }
+
+
+/*
+|--------------------------------------------------------------------------
+| Sync invoice totals from successful transaction ledger
+|--------------------------------------------------------------------------
+*/
+
+$invoice->refresh();
+$invoice->syncPaymentTotals();
 
         $invoice->load([
             'customer',
@@ -2274,4 +2296,99 @@ class StripeWebhookService
 
         return null;
     }
+
+   /*
+|--------------------------------------------------------------------------
+| Customer Payment Location
+|--------------------------------------------------------------------------
+*/
+
+/**
+ * Capture the customer's location for a successful payment.
+ *
+ * This method is intentionally idempotent because Stripe can deliver
+ * the same successful payment through multiple webhook events and can
+ * retry webhook deliveries.
+ */
+protected function capturePaymentLocation(
+    Customer $customer,
+    Transaction $transaction,
+    string $ipAddress
+): void {
+    $ipAddress = trim($ipAddress);
+
+    if ($ipAddress === '') {
+        return;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Already captured?
+    |--------------------------------------------------------------------------
+    |
+    | A single transaction should only have one payment-location record.
+    | This prevents duplicate records when Stripe sends:
+    |
+    | - payment_intent.succeeded
+    | - charge.succeeded
+    | - invoice.payment_succeeded
+    |
+    | or retries any of those events.
+    |
+    */
+
+    $alreadyCaptured = CustomerPaymentLocation::query()
+        ->where('transaction_id', $transaction->id)
+        ->exists();
+
+    if ($alreadyCaptured) {
+        return;
+    }
+
+    try {
+        $location = $this->customerLocationService
+            ->recordForPayment(
+                customer: $customer,
+                transaction: $transaction,
+                ipAddress: $ipAddress,
+            );
+
+        if (!$location) {
+            Log::warning(
+                'Customer payment location could not be recorded.',
+                [
+                    'customer_id' => $customer->id,
+                    'transaction_id' => $transaction->id,
+                    'payment_intent_id' =>
+                        $transaction->stripe_payment_intent_id,
+                    'ip_address' => $ipAddress,
+                ]
+            );
+        }
+    } catch (Throwable $e) {
+        /*
+        |--------------------------------------------------------------------------
+        | Location failure must NOT invalidate a successful payment.
+        |--------------------------------------------------------------------------
+        |
+        | Stripe payment synchronization has already succeeded. A GeoIP
+        | provider failure, malformed IP, timeout, etc. should not cause
+        | the webhook to fail and potentially trigger unnecessary Stripe
+        | retries.
+        |
+        */
+
+        Log::error(
+            'Customer payment location capture failed.',
+            [
+                'customer_id' => $customer->id,
+                'transaction_id' => $transaction->id,
+                'payment_intent_id' =>
+                    $transaction->stripe_payment_intent_id,
+                'ip_address' => $ipAddress,
+                'message' => $e->getMessage(),
+            ]
+        );
+    }
+}
 }

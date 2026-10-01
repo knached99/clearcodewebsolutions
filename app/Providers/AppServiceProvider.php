@@ -10,13 +10,13 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Laravel\Cashier\Cashier;
 use Livewire\Livewire;
-use Illuminate\Support\Facades\Log;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -45,7 +45,7 @@ class AppServiceProvider extends ServiceProvider
             Testimonials::class,
             TestimonialPolicy::class
         );
-        
+
         Cashier::useCustomerModel(Customer::class);
 
         /*
