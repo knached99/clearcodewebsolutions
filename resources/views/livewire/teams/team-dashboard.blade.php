@@ -88,7 +88,7 @@
         </div>
 
 
-         <div
+        <div
             class="dashboard-filter-wrap"
             x-data="dashboardDatePicker({
                 showCustom: @js($filter === 'custom'),
@@ -104,9 +104,12 @@
 
                 <div class="dashboard-select-shell">
 
-                    <select id="dashboard-filter" class="metric-select dashboard-period-select"
+                    <select
+                        id="dashboard-filter"
+                        class="metric-select dashboard-period-select"
                         wire:change="setFilter($event.target.value)"
-                        x-on:change="handleFilterChange($event.target.value)">
+                        x-on:change="handleFilterChange($event.target.value)"
+                    >
                         <option value="max">
                             All Time
                         </option>
@@ -132,22 +135,38 @@
                         </option>
                     </select>
 
-                    <svg class="dashboard-select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6" />
+                    <svg
+                        class="dashboard-select-chevron"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="m6 9 6 6 6-6"
+                        />
                     </svg>
 
                 </div>
 
+
                 {{-- Custom range picker --}}
 
-                <div x-show="showCustom" x-cloak x-transition:enter="custom-range-enter"
-                    x-transition:enter-start="custom-range-enter-start" x-transition:enter-end="custom-range-enter-end"
-                    class="custom-range-panel">
+                <div
+                    x-show="showCustom"
+                    x-cloak
+                    x-transition:enter="custom-range-enter"
+                    x-transition:enter-start="custom-range-enter-start"
+                    x-transition:enter-end="custom-range-enter-end"
+                    class="custom-range-panel"
+                >
 
                     <div class="custom-range-header">
 
                         <div>
+
                             <span class="custom-range-eyebrow">
                                 CUSTOM REPORTING PERIOD
                             </span>
@@ -155,16 +174,31 @@
                             <h4>
                                 Choose your date range
                             </h4>
+
                         </div>
 
-                        <button type="button" class="custom-range-close" x-on:click="closeCustom()"
-                            aria-label="Close date picker">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                        <button
+                            type="button"
+                            class="custom-range-close"
+                            x-on:click="closeCustom()"
+                            aria-label="Close date picker"
+                        >
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M6 18 18 6M6 6l12 12"
+                                />
                             </svg>
                         </button>
 
                     </div>
+
 
                     <div class="custom-range-fields">
 
@@ -174,13 +208,19 @@
                                 FROM
                             </span>
 
-                            <input type="date" x-model="startDate" x-on:change="datesChanged()">
+                            <input
+                                type="date"
+                                x-model="startDate"
+                                x-on:change="datesChanged()"
+                            >
 
                         </div>
+
 
                         <div class="custom-range-arrow">
                             →
                         </div>
+
 
                         <div class="custom-date-field">
 
@@ -188,35 +228,67 @@
                                 TO
                             </span>
 
-                            <input type="date" x-model="endDate" x-on:change="datesChanged()">
+                            <input
+                                type="date"
+                                x-model="endDate"
+                                x-on:change="datesChanged()"
+                            >
 
                         </div>
 
                     </div>
 
-                    <div x-show="dateError" x-transition class="custom-range-error">
+
+                    <div
+                        x-show="dateError"
+                        x-transition
+                        class="custom-range-error"
+                    >
                         Please choose a valid date range.
                     </div>
+
 
                     <div class="custom-range-footer">
 
                         <div class="custom-range-preview">
 
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M8 7V3m8 4V3m-9 4h10m-9 5h4m-4 4h7M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z" />
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M8 7V3m8 4V3m-9 4h10m-9 5h4m-4 4h7M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z"
+                                />
                             </svg>
 
                             <span x-text="formattedRange"></span>
 
                         </div>
 
-                        <button type="button" class="custom-range-apply" x-on:click="applyRange()"
-                            x-bind:disabled="!canApply">
+
+                        <button
+                            type="button"
+                            class="custom-range-apply"
+                            x-on:click="applyRange()"
+                            x-bind:disabled="!canApply"
+                        >
                             Apply Range
 
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6 6 6-6 6" />
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M5 12h14m-6-6 6 6-6 6"
+                                />
                             </svg>
                         </button>
 
@@ -225,6 +297,7 @@
                 </div>
 
             </div>
+
         </div>
 
     </div>
@@ -296,6 +369,7 @@
         <article class="metric-card">
 
             <div class="metric-card-top">
+
                 <span class="metric-label">
                     Stripe fees
                 </span>
@@ -303,9 +377,13 @@
                 <div class="metric-icon metric-icon-orange">
                     %
                 </div>
+
             </div>
 
-            <div class="metric-value" style="{{ ($processingFees ?? 0) != 0 ? 'color: #ff4747;' : '' }}">
+            <div
+                class="metric-value"
+                style="{{ ($processingFees ?? 0) != 0 ? 'color: #ff4747;' : '' }}"
+            >
                 {{ ($processingFees ?? 0) != 0 ? '-' : '' }}{{ $processingFeesDisplay }}
             </div>
 
@@ -733,8 +811,9 @@
 
     </section>
 
+
     {{-- =========================================================
-        PAYMENT MAP
+         PAYMENT MAP
     ========================================================== --}}
 
     <livewire:teams.team-dashboard-map
@@ -743,6 +822,7 @@
         :custom-start-date="$customStartDate"
         :custom-end-date="$customEndDate"
     />
+
 
     {{-- =========================================================
          CHARTS
@@ -772,7 +852,11 @@
 
             </div>
 
-            <div id="revenueChart" class="chart-container" wire:ignore></div>
+            <div
+                id="revenueChart"
+                class="chart-container"
+                wire:ignore
+            ></div>
 
         </article>
 
@@ -801,6 +885,7 @@
 
 
             @if (empty($customerRevenue))
+
                 <div class="chart-empty">
 
                     <div class="empty-icon">
@@ -816,8 +901,15 @@
                     </span>
 
                 </div>
+
             @else
-                <div id="customerChart" class="chart-container" wire:ignore></div>
+
+                <div
+                    id="customerChart"
+                    class="chart-container"
+                    wire:ignore
+                ></div>
+
             @endif
 
         </article>
@@ -854,7 +946,11 @@
 
         <div class="donut-layout">
 
-            <div id="donutChart" class="donut-chart" wire:ignore></div>
+            <div
+                id="donutChart"
+                class="donut-chart"
+                wire:ignore
+            ></div>
 
 
             <div class="donut-legend">
@@ -908,6 +1004,7 @@
     ========================================================== --}}
 
     <style>
+
         .dashboard-shell {
             --dashboard-bg: #f5f7fb;
             --dashboard-surface: #ffffff;
@@ -944,11 +1041,13 @@
 
             width: 100%;
             min-height: 100%;
-
             padding: 32px;
 
-            background: var(--dashboard-bg);
-            color: var(--dashboard-text);
+            background:
+                var(--dashboard-bg);
+
+            color:
+                var(--dashboard-text);
 
             transition:
                 background-color 180ms ease,
@@ -1012,7 +1111,8 @@
         .dashboard-eyebrow {
             margin-bottom: 7px;
 
-            color: var(--dashboard-primary);
+            color:
+                var(--dashboard-primary);
 
             font-size: 12px;
             font-weight: 700;
@@ -1025,9 +1125,12 @@
         .dashboard-header h1 {
             margin: 0;
 
-            color: var(--dashboard-text);
+            color:
+                var(--dashboard-text);
 
-            font-size: clamp(28px, 4vw, 38px);
+            font-size:
+                clamp(28px, 4vw, 38px);
+
             font-weight: 750;
             letter-spacing: -0.035em;
             line-height: 1.1;
@@ -1037,7 +1140,8 @@
         .dashboard-header p {
             margin: 9px 0 0;
 
-            color: var(--dashboard-muted);
+            color:
+                var(--dashboard-muted);
 
             font-size: 14px;
             line-height: 1.5;
@@ -1046,15 +1150,22 @@
 
         .dashboard-filter-wrap {
             min-width: 175px;
+            position: relative;
+
+            display: flex;
+            flex-direction: column;
+
+            gap: 7px;
         }
 
 
         .dashboard-filter-wrap label {
             display: block;
 
-            margin-bottom: 7px;
+            margin-bottom: 0;
 
-            color: var(--dashboard-muted);
+            color:
+                var(--dashboard-muted);
 
             font-size: 11px;
             font-weight: 700;
@@ -1062,31 +1173,15 @@
             text-transform: uppercase;
         }
 
-        /* ==========================================================================
-   Dashboard Reporting Period
-   ========================================================================== */
-
-        .dashboard-filter-wrap {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            gap: 7px;
-        }
-
-        .dashboard-filter-label {
-            color: var(--text-secondary, #8b8f98);
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-        }
 
         .dashboard-filter-control {
             position: relative;
         }
 
+
         .dashboard-select-shell {
             position: relative;
+
             display: flex;
             align-items: center;
         }
@@ -1095,6 +1190,7 @@
         .dashboard-period-select {
             width: 100%;
             height: 46px;
+
             padding: 0 42px 0 42px;
 
             appearance: none;
@@ -1104,17 +1200,19 @@
             border-radius: 13px;
 
             background:
-                linear-gradient(135deg,
+                linear-gradient(
+                    135deg,
                     rgba(139, 92, 246, 0.08),
-                    rgba(139, 92, 246, 0.025));
+                    rgba(139, 92, 246, 0.025)
+                );
 
-            color: var(--text-primary, #f5f5f5);
+            color:
+                var(--dashboard-text);
 
             font-size: 14px;
             font-weight: 600;
 
             outline: none;
-
             cursor: pointer;
 
             transition:
@@ -1123,31 +1221,36 @@
                 background 180ms ease;
         }
 
+
         .dashboard-period-select:hover {
-            border-color: rgba(139, 92, 246, 0.5);
+            border-color:
+                rgba(139, 92, 246, 0.5);
         }
 
+
         .dashboard-period-select:focus {
-            border-color: #8b5cf6;
+            border-color:
+                #8b5cf6;
 
             box-shadow:
                 0 0 0 3px rgba(139, 92, 246, 0.12),
                 0 8px 25px rgba(0, 0, 0, 0.12);
         }
 
+
         .dashboard-select-chevron {
             position: absolute;
+
             right: 14px;
+
             width: 16px;
             height: 16px;
+
             color: #8b8f98;
+
             pointer-events: none;
         }
 
-
-        /* ==========================================================================
-   Custom Range Panel
-   ========================================================================== */
 
         .custom-range-panel {
             position: absolute;
@@ -1156,7 +1259,8 @@
             top: calc(100% + 10px);
             right: 0;
 
-            width: min(460px, calc(100vw - 32px));
+            width:
+                min(460px, calc(100vw - 32px));
 
             padding: 20px;
 
@@ -1164,9 +1268,11 @@
             border-radius: 20px;
 
             background:
-                linear-gradient(145deg,
+                linear-gradient(
+                    145deg,
                     rgba(25, 25, 32, 0.98),
-                    rgba(16, 16, 21, 0.98));
+                    rgba(16, 16, 21, 0.98)
+                );
 
             box-shadow:
                 0 25px 70px rgba(0, 0, 0, 0.4),
@@ -1177,6 +1283,7 @@
             -webkit-backdrop-filter: blur(18px);
         }
 
+
         .custom-range-header {
             display: flex;
             align-items: flex-start;
@@ -1184,6 +1291,7 @@
 
             margin-bottom: 20px;
         }
+
 
         .custom-range-eyebrow {
             display: block;
@@ -1197,6 +1305,7 @@
             letter-spacing: 0.12em;
         }
 
+
         .custom-range-header h4 {
             margin: 0;
 
@@ -1205,6 +1314,7 @@
             font-size: 17px;
             font-weight: 700;
         }
+
 
         .custom-range-close {
             display: flex;
@@ -1229,48 +1339,54 @@
                 border-color 160ms ease;
         }
 
+
         .custom-range-close svg {
             width: 15px;
             height: 15px;
         }
 
-        .custom-range-close:hover {
-            border-color: rgba(139, 92, 246, 0.35);
 
-            background: rgba(139, 92, 246, 0.1);
+        .custom-range-close:hover {
+            border-color:
+                rgba(139, 92, 246, 0.35);
+
+            background:
+                rgba(139, 92, 246, 0.1);
 
             color: #fff;
         }
 
 
-        /* ==========================================================================
-   Date Fields
-   ========================================================================== */
-
         .custom-range-fields {
             display: grid;
 
             grid-template-columns:
-                minmax(0, 1fr) auto minmax(0, 1fr);
+                minmax(0, 1fr)
+                auto
+                minmax(0, 1fr);
 
             align-items: center;
 
             gap: 10px;
         }
 
+
         .custom-date-field {
             display: flex;
             flex-direction: column;
+
             gap: 7px;
         }
 
-        .custom-date-field>span {
+
+        .custom-date-field > span {
             color: #777b85;
 
             font-size: 9px;
             font-weight: 800;
             letter-spacing: 0.1em;
         }
+
 
         .custom-date-field input {
             width: 100%;
@@ -1281,7 +1397,8 @@
             border: 1px solid rgba(255, 255, 255, 0.09);
             border-radius: 11px;
 
-            background: rgba(255, 255, 255, 0.045);
+            background:
+                rgba(255, 255, 255, 0.045);
 
             color: #fff;
 
@@ -1298,18 +1415,24 @@
                 box-shadow 160ms ease;
         }
 
+
         .custom-date-field input:hover {
-            border-color: rgba(139, 92, 246, 0.35);
+            border-color:
+                rgba(139, 92, 246, 0.35);
         }
 
-        .custom-date-field input:focus {
-            border-color: #8b5cf6;
 
-            background: rgba(139, 92, 246, 0.06);
+        .custom-date-field input:focus {
+            border-color:
+                #8b5cf6;
+
+            background:
+                rgba(139, 92, 246, 0.06);
 
             box-shadow:
                 0 0 0 3px rgba(139, 92, 246, 0.1);
         }
+
 
         .custom-range-arrow {
             margin-top: 19px;
@@ -1320,10 +1443,6 @@
         }
 
 
-        /* ==========================================================================
-   Error
-   ========================================================================== */
-
         .custom-range-error {
             margin-top: 10px;
 
@@ -1332,7 +1451,8 @@
             border: 1px solid rgba(239, 68, 68, 0.2);
             border-radius: 9px;
 
-            background: rgba(239, 68, 68, 0.06);
+            background:
+                rgba(239, 68, 68, 0.06);
 
             color: #f87171;
 
@@ -1340,10 +1460,6 @@
             font-weight: 600;
         }
 
-
-        /* ==========================================================================
-   Footer
-   ========================================================================== */
 
         .custom-range-footer {
             display: flex;
@@ -1355,8 +1471,10 @@
             margin-top: 20px;
             padding-top: 16px;
 
-            border-top: 1px solid rgba(255, 255, 255, 0.07);
+            border-top:
+                1px solid rgba(255, 255, 255, 0.07);
         }
+
 
         .custom-range-preview {
             display: flex;
@@ -1372,6 +1490,7 @@
             font-weight: 600;
         }
 
+
         .custom-range-preview svg {
             flex: 0 0 auto;
 
@@ -1381,12 +1500,14 @@
             color: #8b5cf6;
         }
 
+
         .custom-range-preview span {
             overflow: hidden;
 
             text-overflow: ellipsis;
             white-space: nowrap;
         }
+
 
         .custom-range-apply {
             display: inline-flex;
@@ -1405,9 +1526,11 @@
             border-radius: 10px;
 
             background:
-                linear-gradient(135deg,
+                linear-gradient(
+                    135deg,
                     #8b5cf6,
-                    #7c3aed);
+                    #7c3aed
+                );
 
             color: #fff;
 
@@ -1425,10 +1548,12 @@
                 opacity 160ms ease;
         }
 
+
         .custom-range-apply svg {
             width: 14px;
             height: 14px;
         }
+
 
         .custom-range-apply:hover:not(:disabled) {
             transform: translateY(-1px);
@@ -1437,18 +1562,13 @@
                 0 10px 26px rgba(124, 58, 237, 0.3);
         }
 
+
         .custom-range-apply:disabled {
             opacity: 0.4;
-
             cursor: not-allowed;
-
             box-shadow: none;
         }
 
-
-        /* ==========================================================================
-   Animation
-   ========================================================================== */
 
         .custom-range-enter {
             transition:
@@ -1456,55 +1576,16 @@
                 transform 180ms ease;
         }
 
+
         .custom-range-enter-start {
             opacity: 0;
-
             transform: translateY(-7px) scale(0.98);
         }
 
+
         .custom-range-enter-end {
             opacity: 1;
-
             transform: translateY(0) scale(1);
-        }
-
-
-        /* ==========================================================================
-   Mobile
-   ========================================================================== */
-
-        @media (max-width: 640px) {
-            .dashboard-period-select {
-                min-width: 180px;
-            }
-
-            .custom-range-panel {
-                position: fixed;
-
-                top: auto;
-                right: 16px;
-                bottom: 16px;
-                left: 16px;
-
-                width: auto;
-            }
-
-            .custom-range-fields {
-                grid-template-columns: 1fr;
-            }
-
-            .custom-range-arrow {
-                display: none;
-            }
-
-            .custom-range-footer {
-                align-items: stretch;
-                flex-direction: column;
-            }
-
-            .custom-range-apply {
-                width: 100%;
-            }
         }
 
 
@@ -1590,38 +1671,56 @@
 
 
         .status-pill-success {
-            background: var(--dashboard-success-soft);
-            border-color: #a7f3d0;
-            color: #047857;
+            background:
+                var(--dashboard-success-soft);
+
+            border-color:
+                #a7f3d0;
+
+            color:
+                #047857;
         }
 
 
         .dark .status-pill-success {
-            border-color: rgba(52, 211, 153, 0.20);
-            color: #6ee7b7;
+            border-color:
+                rgba(52, 211, 153, 0.20);
+
+            color:
+                #6ee7b7;
         }
 
 
         .status-pill-success .status-dot {
-            background: #10b981;
+            background:
+                #10b981;
         }
 
 
         .status-pill-primary {
-            background: var(--dashboard-primary-soft);
-            border-color: #ddd6fe;
-            color: #6d28d9;
+            background:
+                var(--dashboard-primary-soft);
+
+            border-color:
+                #ddd6fe;
+
+            color:
+                #6d28d9;
         }
 
 
         .dark .status-pill-primary {
-            border-color: rgba(167, 139, 250, 0.20);
-            color: #c4b5fd;
+            border-color:
+                rgba(167, 139, 250, 0.20);
+
+            color:
+                #c4b5fd;
         }
 
 
         .status-pill-primary .status-dot {
-            background: #8b5cf6;
+            background:
+                #8b5cf6;
         }
 
 
@@ -1664,7 +1763,8 @@
             border-color:
                 rgba(124, 58, 237, 0.20);
 
-            box-shadow: var(--dashboard-shadow-hover);
+            box-shadow:
+                var(--dashboard-shadow-hover);
         }
 
 
@@ -1678,7 +1778,8 @@
 
 
         .metric-label {
-            color: var(--dashboard-muted);
+            color:
+                var(--dashboard-muted);
 
             font-size: 12px;
             font-weight: 650;
@@ -1703,38 +1804,56 @@
 
 
         .metric-icon-purple {
-            background: var(--dashboard-primary-soft);
-            color: var(--dashboard-primary);
+            background:
+                var(--dashboard-primary-soft);
+
+            color:
+                var(--dashboard-primary);
         }
 
 
         .metric-icon-orange {
-            background: var(--dashboard-warning-soft);
-            color: var(--dashboard-warning);
+            background:
+                var(--dashboard-warning-soft);
+
+            color:
+                var(--dashboard-warning);
         }
 
 
         .metric-icon-green {
-            background: var(--dashboard-success-soft);
-            color: var(--dashboard-success);
+            background:
+                var(--dashboard-success-soft);
+
+            color:
+                var(--dashboard-success);
         }
 
 
         .metric-icon-blue {
-            background: var(--dashboard-blue-soft);
-            color: var(--dashboard-blue);
+            background:
+                var(--dashboard-blue-soft);
+
+            color:
+                var(--dashboard-blue);
         }
 
 
         .metric-icon-cyan {
-            background: var(--dashboard-cyan-soft);
-            color: var(--dashboard-cyan);
+            background:
+                var(--dashboard-cyan-soft);
+
+            color:
+                var(--dashboard-cyan);
         }
 
 
         .metric-icon-red {
-            background: var(--dashboard-danger-soft);
-            color: var(--dashboard-danger);
+            background:
+                var(--dashboard-danger-soft);
+
+            color:
+                var(--dashboard-danger);
         }
 
 
@@ -1743,9 +1862,12 @@
 
             overflow: hidden;
 
-            color: var(--dashboard-text);
+            color:
+                var(--dashboard-text);
 
-            font-size: clamp(22px, 2.3vw, 29px);
+            font-size:
+                clamp(22px, 2.3vw, 29px);
+
             font-weight: 750;
             letter-spacing: -0.035em;
             line-height: 1.1;
@@ -1765,7 +1887,8 @@
 
             overflow: hidden;
 
-            color: var(--dashboard-subtle);
+            color:
+                var(--dashboard-subtle);
 
             font-size: 11px;
             line-height: 1.45;
@@ -1793,13 +1916,17 @@
             border: 1px solid var(--dashboard-border);
             border-radius: 14px;
 
-            background: var(--dashboard-surface-soft);
-            color: var(--dashboard-text);
+            background:
+                var(--dashboard-surface-soft);
+
+            color:
+                var(--dashboard-text);
         }
 
 
         .secondary-label {
-            color: var(--dashboard-muted);
+            color:
+                var(--dashboard-muted);
 
             font-size: 11px;
             font-weight: 650;
@@ -1809,7 +1936,8 @@
         .secondary-value {
             margin-top: 7px;
 
-            color: var(--dashboard-text);
+            color:
+                var(--dashboard-text);
 
             font-size: 19px;
             font-weight: 750;
@@ -1821,7 +1949,8 @@
             display: grid;
 
             grid-template-columns:
-                minmax(0, 1.35fr) minmax(0, 1fr);
+                minmax(0, 1.35fr)
+                minmax(0, 1fr);
 
             gap: 14px;
 
@@ -1837,10 +1966,14 @@
             border: 1px solid var(--dashboard-border);
             border-radius: 17px;
 
-            background: var(--dashboard-surface);
-            color: var(--dashboard-text);
+            background:
+                var(--dashboard-surface);
 
-            box-shadow: var(--dashboard-shadow);
+            color:
+                var(--dashboard-text);
+
+            box-shadow:
+                var(--dashboard-shadow);
         }
 
 
@@ -1858,7 +1991,8 @@
         .chart-eyebrow {
             margin-bottom: 5px;
 
-            color: var(--dashboard-subtle);
+            color:
+                var(--dashboard-subtle);
 
             font-size: 10px;
             font-weight: 750;
@@ -1870,7 +2004,8 @@
         .chart-header h2 {
             margin: 0;
 
-            color: var(--dashboard-text);
+            color:
+                var(--dashboard-text);
 
             font-size: 16px;
             font-weight: 700;
@@ -1886,8 +2021,11 @@
             border: 1px solid var(--dashboard-border);
             border-radius: 8px;
 
-            background: var(--dashboard-surface-soft);
-            color: var(--dashboard-muted);
+            background:
+                var(--dashboard-surface-soft);
+
+            color:
+                var(--dashboard-muted);
 
             font-size: 10px;
             font-weight: 700;
@@ -1896,7 +2034,14 @@
 
         .chart-container {
             width: 100%;
+            min-width: 0;
             min-height: 320px;
+        }
+
+
+        .chart-container .apexcharts-canvas,
+        .chart-container svg {
+            max-width: 100% !important;
         }
 
 
@@ -1927,8 +2072,11 @@
 
             border-radius: 13px;
 
-            background: var(--dashboard-primary-soft);
-            color: var(--dashboard-primary);
+            background:
+                var(--dashboard-primary-soft);
+
+            color:
+                var(--dashboard-primary);
 
             font-size: 20px;
             font-weight: 800;
@@ -1936,7 +2084,8 @@
 
 
         .chart-empty strong {
-            color: var(--dashboard-text);
+            color:
+                var(--dashboard-text);
 
             font-size: 14px;
         }
@@ -1947,15 +2096,24 @@
 
             margin-top: 6px;
 
-            color: var(--dashboard-muted);
+            color:
+                var(--dashboard-muted);
 
             font-size: 12px;
             line-height: 1.5;
         }
 
 
+        /* =====================================================================
+           DONUT CHART
+        ====================================================================== */
+
         .chart-card-split {
             margin-bottom: 10px;
+
+            min-width: 0;
+
+            overflow: hidden;
         }
 
 
@@ -1963,16 +2121,42 @@
             display: grid;
 
             grid-template-columns:
-                minmax(240px, 1fr) minmax(220px, 0.8fr);
+                minmax(0, 1.15fr)
+                minmax(180px, 0.85fr);
 
             align-items: center;
 
-            gap: 30px;
+            gap: 24px;
+
+            width: 100%;
+            min-width: 0;
         }
 
 
         .donut-chart {
+            width: 100%;
+            min-width: 0;
+
             min-height: 300px;
+
+            max-width: 100%;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            overflow: hidden;
+        }
+
+
+        .donut-chart .apexcharts-canvas {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
+
+        .donut-chart svg {
+            max-width: 100% !important;
         }
 
 
@@ -1981,6 +2165,9 @@
             flex-direction: column;
 
             gap: 18px;
+
+            min-width: 0;
+            width: 100%;
         }
 
 
@@ -1989,6 +2176,8 @@
             align-items: flex-start;
 
             gap: 11px;
+
+            min-width: 0;
         }
 
 
@@ -2005,12 +2194,14 @@
 
 
         .legend-color-subscription {
-            background: #7c3aed;
+            background:
+                #7c3aed;
         }
 
 
         .legend-color-onetime {
-            background: #0ea5e9;
+            background:
+                #0ea5e9;
         }
 
 
@@ -2019,11 +2210,14 @@
             flex-direction: column;
 
             gap: 3px;
+
+            min-width: 0;
         }
 
 
         .legend-item strong {
-            color: var(--dashboard-text);
+            color:
+                var(--dashboard-text);
 
             font-size: 13px;
             font-weight: 650;
@@ -2031,11 +2225,16 @@
 
 
         .legend-item span:not(.legend-color) {
-            color: var(--dashboard-muted);
+            color:
+                var(--dashboard-muted);
 
             font-size: 12px;
         }
 
+
+        /* =====================================================================
+           PROFIT DISTRIBUTION
+        ====================================================================== */
 
         .profit-distribution-card {
             min-width: 0;
@@ -2046,10 +2245,14 @@
             border: 1px solid var(--dashboard-border);
             border-radius: 17px;
 
-            background: var(--dashboard-surface);
-            color: var(--dashboard-text);
+            background:
+                var(--dashboard-surface);
 
-            box-shadow: var(--dashboard-shadow);
+            color:
+                var(--dashboard-text);
+
+            box-shadow:
+                var(--dashboard-shadow);
         }
 
 
@@ -2067,7 +2270,8 @@
         .profit-distribution-header h2 {
             margin: 0;
 
-            color: var(--dashboard-text);
+            color:
+                var(--dashboard-text);
 
             font-size: 19px;
             font-weight: 750;
@@ -2078,7 +2282,8 @@
         .profit-distribution-header p {
             margin: 8px 0 0;
 
-            color: var(--dashboard-muted);
+            color:
+                var(--dashboard-muted);
 
             font-size: 12px;
             line-height: 1.5;
@@ -2089,7 +2294,9 @@
             display: grid;
 
             grid-template-columns:
-                minmax(0, 1fr) auto minmax(0, 1fr);
+                minmax(0, 1fr)
+                auto
+                minmax(0, 1fr);
 
             align-items: center;
 
@@ -2101,7 +2308,8 @@
             border: 1px solid var(--dashboard-border);
             border-radius: 13px;
 
-            background: var(--dashboard-surface-soft);
+            background:
+                var(--dashboard-surface-soft);
         }
 
 
@@ -2117,7 +2325,8 @@
 
 
         .distribution-summary-label {
-            color: var(--dashboard-muted);
+            color:
+                var(--dashboard-muted);
 
             font-size: 11px;
             font-weight: 700;
@@ -2127,9 +2336,12 @@
 
 
         .distribution-summary-value {
-            color: var(--dashboard-text);
+            color:
+                var(--dashboard-text);
 
-            font-size: clamp(22px, 3vw, 30px);
+            font-size:
+                clamp(22px, 3vw, 30px);
+
             font-weight: 800;
             letter-spacing: -0.04em;
             line-height: 1.15;
@@ -2137,7 +2349,8 @@
 
 
         .distribution-summary-description {
-            color: var(--dashboard-subtle);
+            color:
+                var(--dashboard-subtle);
 
             font-size: 11px;
             line-height: 1.4;
@@ -2148,7 +2361,8 @@
             width: 1px;
             height: 65px;
 
-            background: var(--dashboard-border);
+            background:
+                var(--dashboard-border);
         }
 
 
@@ -2170,7 +2384,8 @@
             border: 1px solid var(--dashboard-border);
             border-radius: 14px;
 
-            background: var(--dashboard-surface-soft);
+            background:
+                var(--dashboard-surface-soft);
 
             transition:
                 transform 180ms ease,
@@ -2185,7 +2400,8 @@
             border-color:
                 rgba(124, 58, 237, 0.25);
 
-            box-shadow: var(--dashboard-shadow-hover);
+            box-shadow:
+                var(--dashboard-shadow-hover);
         }
 
 
@@ -2219,7 +2435,8 @@
             border: 1px solid var(--dashboard-border);
             border-radius: 7px;
 
-            color: var(--dashboard-muted);
+            color:
+                var(--dashboard-muted);
 
             font-size: 10px;
             font-weight: 700;
@@ -2229,7 +2446,8 @@
         .distribution-recipient-name {
             margin-top: 19px;
 
-            color: var(--dashboard-muted);
+            color:
+                var(--dashboard-muted);
 
             font-size: 12px;
             font-weight: 700;
@@ -2241,9 +2459,12 @@
 
             overflow: hidden;
 
-            color: var(--dashboard-text);
+            color:
+                var(--dashboard-text);
 
-            font-size: clamp(23px, 3vw, 32px);
+            font-size:
+                clamp(23px, 3vw, 32px);
+
             font-weight: 800;
             letter-spacing: -0.04em;
             line-height: 1.15;
@@ -2256,7 +2477,8 @@
         .distribution-recipient-description {
             margin-top: 8px;
 
-            color: var(--dashboard-muted);
+            color:
+                var(--dashboard-muted);
 
             font-size: 11px;
             line-height: 1.45;
@@ -2267,9 +2489,11 @@
             margin-top: 15px;
             padding-top: 12px;
 
-            border-top: 1px solid var(--dashboard-border);
+            border-top:
+                1px solid var(--dashboard-border);
 
-            color: var(--dashboard-subtle);
+            color:
+                var(--dashboard-subtle);
 
             font-size: 10px;
             line-height: 1.45;
@@ -2277,20 +2501,29 @@
 
 
         .distribution-recipient-pablo .distribution-recipient-icon {
-            background: var(--dashboard-warning-soft);
-            color: var(--dashboard-warning);
+            background:
+                var(--dashboard-warning-soft);
+
+            color:
+                var(--dashboard-warning);
         }
 
 
         .distribution-recipient-khaled .distribution-recipient-icon {
-            background: var(--dashboard-primary-soft);
-            color: var(--dashboard-primary);
+            background:
+                var(--dashboard-primary-soft);
+
+            color:
+                var(--dashboard-primary);
         }
 
 
         .distribution-recipient-karam .distribution-recipient-icon {
-            background: var(--dashboard-blue-soft);
-            color: var(--dashboard-blue);
+            background:
+                var(--dashboard-blue-soft);
+
+            color:
+                var(--dashboard-blue);
         }
 
 
@@ -2305,12 +2538,14 @@
             margin-top: 18px;
             padding-top: 17px;
 
-            border-top: 1px solid var(--dashboard-border);
+            border-top:
+                1px solid var(--dashboard-border);
         }
 
 
         .distribution-footer-label {
-            color: var(--dashboard-muted);
+            color:
+                var(--dashboard-muted);
 
             font-size: 12px;
             font-weight: 700;
@@ -2318,7 +2553,8 @@
 
 
         .distribution-footer-value {
-            color: var(--dashboard-text);
+            color:
+                var(--dashboard-text);
 
             font-size: 17px;
             font-weight: 800;
@@ -2327,11 +2563,16 @@
 
 
         .distribution-footer-description {
-            color: var(--dashboard-subtle);
+            color:
+                var(--dashboard-subtle);
 
             font-size: 11px;
         }
 
+
+        /* =====================================================================
+           RESPONSIVE
+        ====================================================================== */
 
         @media (max-width: 1200px) {
 
@@ -2340,8 +2581,10 @@
                     repeat(3, minmax(0, 1fr));
             }
 
+
             .charts-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns:
+                    1fr;
             }
 
         }
@@ -2354,17 +2597,35 @@
                     repeat(2, minmax(0, 1fr));
             }
 
+
             .secondary-grid {
                 grid-template-columns:
                     repeat(2, minmax(0, 1fr));
             }
 
+
             .donut-layout {
-                grid-template-columns: 1fr;
+                grid-template-columns:
+                    1fr;
+
+                gap: 18px;
             }
 
+
+            .donut-chart {
+                width: 100%;
+                min-height: 280px;
+            }
+
+
+            .donut-legend {
+                width: 100%;
+            }
+
+
             .distribution-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns:
+                    1fr;
             }
 
         }
@@ -2373,1447 +2634,2163 @@
         @media (max-width: 640px) {
 
             .dashboard-shell {
-                padding: 20px 14px;
+                padding:
+                    20px 14px;
             }
+
 
             .dashboard-header {
                 align-items: stretch;
                 flex-direction: column;
             }
 
+
             .dashboard-filter-wrap {
                 width: 100%;
+                min-width: 0;
             }
+
+
+            .dashboard-period-select {
+                min-width: 0;
+            }
+
 
             .metrics-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns:
+                    1fr;
             }
 
+
             .secondary-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns:
+                    1fr;
             }
+
 
             .chart-card {
                 padding: 16px;
             }
 
+
+            .chart-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+
+            .chart-badge {
+                align-self: flex-start;
+            }
+
+
             .chart-container {
                 min-height: 270px;
             }
 
-            .donut-chart {
-                min-height: 270px;
+
+            .donut-layout {
+                display: flex;
+
+                flex-direction: column;
+
+                align-items: stretch;
+
+                width: 100%;
+
+                gap: 16px;
             }
+
+
+            .donut-chart {
+                width: 100%;
+
+                height: 250px;
+
+                min-height: 250px;
+
+                max-height: 250px;
+
+                display: flex;
+
+                align-items: center;
+                justify-content: center;
+
+                overflow: hidden;
+            }
+
+
+            .donut-chart .apexcharts-canvas {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+
+
+            .donut-chart svg {
+                max-width: 100% !important;
+            }
+
+
+            .donut-legend {
+                width: 100%;
+
+                gap: 8px;
+            }
+
+
+            .legend-item {
+                width: 100%;
+
+                padding:
+                    8px 0;
+            }
+
+
+            .legend-item strong {
+                font-size: 12px;
+            }
+
+
+            .legend-item span:not(.legend-color) {
+                font-size: 11px;
+            }
+
 
             .profit-distribution-card {
                 padding: 17px;
             }
 
+
             .profit-distribution-header {
                 flex-direction: column;
+
                 gap: 13px;
             }
 
+
             .distribution-summary {
-                grid-template-columns: 1fr;
+                grid-template-columns:
+                    1fr;
+
                 gap: 16px;
             }
+
 
             .distribution-summary-divider {
                 width: 100%;
                 height: 1px;
             }
 
+
             .distribution-summary-value {
                 font-size: 27px;
             }
+
 
             .distribution-recipient {
                 padding: 17px;
             }
 
+
             .distribution-recipient-amount {
                 font-size: 28px;
             }
 
+
+            .custom-range-panel {
+                position: fixed;
+
+                top: auto;
+                right: 16px;
+                bottom: 16px;
+                left: 16px;
+
+                width: auto;
+            }
+
+
+            .custom-range-fields {
+                grid-template-columns:
+                    1fr;
+            }
+
+
+            .custom-range-arrow {
+                display: none;
+            }
+
+
+            .custom-range-footer {
+                align-items: stretch;
+
+                flex-direction: column;
+            }
+
+
+            .custom-range-apply {
+                width: 100%;
+            }
+
         }
+
     </style>
 
-{{-- =========================================================
-     APEXCHARTS / LIVEWIRE BRIDGE
 
-     Designed for:
-     - Livewire 3/4
-     - wire:navigate
-     - Alpine
-     - Livewire component updates
-     - Dark/light mode
-     - ApexCharts loaded once per page
+    {{-- =========================================================
+         APEXCHARTS ASSET
+    ========================================================== --}}
 
-     IMPORTANT:
-     - Do not wrap this in alpine:init.
-     - Do not use DOMContentLoaded here.
-     - Do not add another copy of this script elsewhere.
-========================================================== --}}
+    @assets
 
-@assets
-<script
-    src="https://cdn.jsdelivr.net/npm/apexcharts"
-    defer
-></script>
-@endassets
+        <script
+            src="https://cdn.jsdelivr.net/npm/apexcharts"
+            defer
+        ></script>
+
+    @endassets
 
 
-{{-- =========================================================
-     APEXCHARTS
-========================================================== --}}
+    {{-- =========================================================
+         APEXCHARTS / LIVEWIRE BRIDGE
+    ========================================================== --}}
 
-@script
-<script>
-    (() => {
-        const initialData = {
-            revenue: {
-                labels: @js($revenueLabels),
-                values: @js($revenueValues),
-            },
+    @script
 
-            customers: {
-                labels: @js($customerChartLabels),
-                values: @js($customerChartValues),
-            },
+        <script>
+            (() => {
 
-            donut: {
-                subscription: {{ (int) ($subscriptionRevenue ?? 0) }},
-                oneTime: {{ (int) ($oneTimeRevenue ?? 0) }},
-            },
-        };
+                const initialData = {
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Create the global chart manager once
-        |--------------------------------------------------------------------------
-        */
-
-        if (!window.TeamDashboardCharts) {
-
-            window.TeamDashboardCharts = (() => {
-
-                let dashboardData = {
                     revenue: {
-                        labels: [],
-                        values: [],
+
+                        labels:
+                            @js($revenueLabels),
+
+                        values:
+                            @js($revenueValues),
+
                     },
+
 
                     customers: {
-                        labels: [],
-                        values: [],
+
+                        labels:
+                            @js($customerChartLabels),
+
+                        values:
+                            @js($customerChartValues),
+
                     },
 
+
                     donut: {
-                        subscription: 0,
-                        oneTime: 0,
+
+                        subscription:
+                            {{ (int) ($subscriptionRevenue ?? 0) }},
+
+                        oneTime:
+                            {{ (int) ($oneTimeRevenue ?? 0) }},
+
                     },
+
                 };
 
 
-                let renderFrameOne = null;
-
-                let renderFrameTwo = null;
-
-
                 /*
                 |--------------------------------------------------------------------------
-                | Theme
+                | Global chart manager
                 |--------------------------------------------------------------------------
                 */
 
-                function isDarkMode() {
-                    return document.documentElement
-                        .classList
-                        .contains('dark');
-                }
+                if (!window.TeamDashboardCharts) {
+
+                    window.TeamDashboardCharts = (() => {
+
+                        let dashboardData = {
+
+                            revenue: {
+                                labels: [],
+                                values: [],
+                            },
+
+                            customers: {
+                                labels: [],
+                                values: [],
+                            },
+
+                            donut: {
+                                subscription: 0,
+                                oneTime: 0,
+                            },
+
+                        };
 
 
-                function chartTheme() {
-                    return isDarkMode()
-                        ? 'dark'
-                        : 'light';
-                }
+                        let renderFrameOne = null;
+                        let renderFrameTwo = null;
+                        let apexWaitTimer = null;
+                        let resizeTimeout = null;
 
 
-                function chartTextColor() {
-                    return isDarkMode()
-                        ? '#94a3b8'
-                        : '#64748b';
-                }
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Theme
+                        |--------------------------------------------------------------------------
+                        */
 
+                        function isDarkMode() {
 
-                function chartPrimaryTextColor() {
-                    return isDarkMode()
-                        ? '#f1f5f9'
-                        : '#0f172a';
-                }
+                            return document.documentElement
+                                .classList
+                                .contains('dark');
 
-
-                function chartGridColor() {
-                    return isDarkMode()
-                        ? 'rgba(148, 163, 184, 0.14)'
-                        : '#e5e7eb';
-                }
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Data
-                |--------------------------------------------------------------------------
-                */
-
-                function setData(data) {
-
-                    if (!data) {
-                        return;
-                    }
-
-
-                    dashboardData = {
-
-                        revenue: {
-
-                            labels: Array.isArray(
-                                data.revenue?.labels
-                            )
-                                ? data.revenue.labels
-                                : [],
-
-                            values: Array.isArray(
-                                data.revenue?.values
-                            )
-                                ? data.revenue.values
-                                : [],
-                        },
-
-
-                        customers: {
-
-                            labels: Array.isArray(
-                                data.customers?.labels
-                            )
-                                ? data.customers.labels
-                                : [],
-
-                            values: Array.isArray(
-                                data.customers?.values
-                            )
-                                ? data.customers.values
-                                : [],
-                        },
-
-
-                        donut: {
-
-                            subscription: Number(
-                                data.donut?.subscription ?? 0
-                            ),
-
-                            oneTime: Number(
-                                data.donut?.oneTime ?? 0
-                            ),
-                        },
-                    };
-                }
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Destroy one ApexChart
-                |--------------------------------------------------------------------------
-                */
-
-                function destroyChart(id) {
-
-                    const element =
-                        document.getElementById(id);
-
-
-                    if (!element) {
-                        return;
-                    }
-
-
-                    if (element.__apexChart) {
-
-                        try {
-
-                            element.__apexChart.destroy();
-
-                        } catch (error) {
-
-                            console.warn(
-                                `Unable to destroy ${id}`,
-                                error
-                            );
                         }
 
 
-                        element.__apexChart = null;
-                    }
+                        function chartTheme() {
+
+                            return isDarkMode()
+                                ? 'dark'
+                                : 'light';
+
+                        }
 
 
-                    element.innerHTML = '';
-                }
+                        function chartTextColor() {
+
+                            return isDarkMode()
+                                ? '#94a3b8'
+                                : '#64748b';
+
+                        }
 
 
-                /*
-                |--------------------------------------------------------------------------
-                | Revenue Chart
-                |--------------------------------------------------------------------------
-                */
+                        function chartPrimaryTextColor() {
 
-                function renderRevenueChart() {
+                            return isDarkMode()
+                                ? '#f1f5f9'
+                                : '#0f172a';
 
-                    const element =
-                        document.getElementById(
-                            'revenueChart'
-                        );
+                        }
 
 
-                    if (
-                        !element ||
-                        typeof window.ApexCharts === 'undefined'
-                    ) {
-                        return;
-                    }
+                        function chartGridColor() {
+
+                            return isDarkMode()
+                                ? 'rgba(148, 163, 184, 0.14)'
+                                : '#e5e7eb';
+
+                        }
 
 
-                    destroyChart('revenueChart');
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Data
+                        |--------------------------------------------------------------------------
+                        */
+
+                        function setData(data) {
+
+                            if (!data) {
+                                return;
+                            }
 
 
-                    const labels =
-                        dashboardData.revenue?.labels ?? [];
+                            dashboardData = {
+
+                                revenue: {
+
+                                    labels:
+                                        Array.isArray(
+                                            data.revenue?.labels
+                                        )
+                                            ? data.revenue.labels
+                                            : [],
 
 
-                    const values =
-                        dashboardData.revenue?.values ?? [];
+                                    values:
+                                        Array.isArray(
+                                            data.revenue?.values
+                                        )
+                                            ? data.revenue.values
+                                            : [],
 
-
-                    const textColor =
-                        chartTextColor();
-
-
-                    const gridColor =
-                        chartGridColor();
-
-
-                    const chart =
-                        new window.ApexCharts(
-                            element,
-                            {
-
-                                chart: {
-                                    type: 'area',
-
-                                    height: 320,
-
-                                    toolbar: {
-                                        show: false,
-                                    },
-
-                                    zoom: {
-                                        enabled: false,
-                                    },
-
-                                    fontFamily: 'inherit',
-
-                                    background: 'transparent',
-
-                                    animations: {
-                                        enabled: true,
-                                    },
                                 },
 
 
-                                theme: {
-                                    mode: chartTheme(),
+                                customers: {
+
+                                    labels:
+                                        Array.isArray(
+                                            data.customers?.labels
+                                        )
+                                            ? data.customers.labels
+                                            : [],
+
+
+                                    values:
+                                        Array.isArray(
+                                            data.customers?.values
+                                        )
+                                            ? data.customers.values
+                                            : [],
+
                                 },
 
 
-                                series: [
-                                    {
-                                        name: 'Revenue',
+                                donut: {
 
-                                        data: values.map(
-                                            value =>
-                                                Number(value) / 100
+                                    subscription:
+                                        Number(
+                                            data.donut?.subscription ?? 0
                                         ),
-                                    },
-                                ],
 
 
-                                xaxis: {
+                                    oneTime:
+                                        Number(
+                                            data.donut?.oneTime ?? 0
+                                        ),
 
-                                    categories: labels,
-
-                                    labels: {
-                                        style: {
-                                            colors: textColor,
-                                            fontSize: '11px',
-                                        },
-                                    },
-
-                                    axisBorder: {
-                                        show: false,
-                                    },
-
-                                    axisTicks: {
-                                        show: false,
-                                    },
                                 },
 
+                            };
 
-                                yaxis: {
-
-                                    labels: {
-
-                                        formatter: value =>
-                                            '$' +
-                                            Number(value).toLocaleString(
-                                                undefined,
-                                                {
-                                                    maximumFractionDigits: 0,
-                                                }
-                                            ),
-
-                                        style: {
-                                            colors: textColor,
-                                            fontSize: '11px',
-                                        },
-                                    },
-                                },
+                        }
 
 
-                                colors: [
-                                    isDarkMode()
-                                        ? '#a78bfa'
-                                        : '#7c3aed',
-                                ],
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Wait for ApexCharts
+                        |--------------------------------------------------------------------------
+                        */
 
+                        function waitForApexCharts(callback) {
 
-                                stroke: {
+                            if (
+                                typeof window.ApexCharts !==
+                                'undefined'
+                            ) {
 
-                                    curve: 'smooth',
+                                callback();
 
-                                    width: 3,
-                                },
+                                return;
 
-
-                                fill: {
-
-                                    type: 'gradient',
-
-                                    gradient: {
-
-                                        shadeIntensity: 1,
-
-                                        opacityFrom:
-                                            isDarkMode()
-                                                ? 0.24
-                                                : 0.28,
-
-                                        opacityTo: 0.03,
-
-                                        stops: [
-                                            0,
-                                            100,
-                                        ],
-                                    },
-                                },
-
-
-                                grid: {
-
-                                    borderColor: gridColor,
-
-                                    strokeDashArray: 4,
-
-                                    xaxis: {
-                                        lines: {
-                                            show: false,
-                                        },
-                                    },
-                                },
-
-
-                                dataLabels: {
-                                    enabled: false,
-                                },
-
-
-                                tooltip: {
-
-                                    theme: chartTheme(),
-
-                                    y: {
-
-                                        formatter: value =>
-                                            '$' +
-                                            Number(value).toLocaleString(
-                                                undefined,
-                                                {
-                                                    minimumFractionDigits: 2,
-                                                    maximumFractionDigits: 2,
-                                                }
-                                            ),
-                                    },
-                                },
-
-
-                                noData: {
-                                    text: 'No revenue data',
-                                },
                             }
-                        );
 
 
-                    chart.render();
+                            clearTimeout(
+                                apexWaitTimer
+                            );
 
 
-                    element.__apexChart = chart;
-                }
+                            apexWaitTimer =
+                                setTimeout(() => {
+
+                                    if (
+                                        typeof window.ApexCharts !==
+                                        'undefined'
+                                    ) {
+
+                                        callback();
+
+                                        return;
+
+                                    }
 
 
-                /*
-                |--------------------------------------------------------------------------
-                | Customer Chart
-                |--------------------------------------------------------------------------
-                */
+                                    waitForApexCharts(
+                                        callback
+                                    );
 
-                function renderCustomerChart() {
+                                }, 50);
 
-                    const element =
-                        document.getElementById(
-                            'customerChart'
-                        );
+                        }
 
 
-                    if (
-                        !element ||
-                        typeof window.ApexCharts === 'undefined'
-                    ) {
-                        return;
-                    }
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Destroy chart
+                        |--------------------------------------------------------------------------
+                        */
+
+                        function destroyChart(id) {
+
+                            const element =
+                                document.getElementById(
+                                    id
+                                );
 
 
-                    destroyChart('customerChart');
+                            if (!element) {
+                                return;
+                            }
 
 
-                    const categories =
-                        dashboardData.customers?.labels ?? [];
+                            if (
+                                element.__apexChart &&
+                                typeof element.__apexChart.destroy ===
+                                    'function'
+                            ) {
+
+                                try {
+
+                                    element.__apexChart.destroy();
+
+                                } catch (error) {
+                                    // Ignore cleanup errors.
+                                }
+
+                            }
 
 
-                    const values =
-                        dashboardData.customers?.values ?? [];
+                            element.__apexChart =
+                                null;
 
 
-                    const chartValues =
-                        values.map(
-                            value =>
-                                Number(value) / 100
-                        );
+                            element.innerHTML =
+                                '';
+
+                        }
 
 
-                    const textColor =
-                        chartTextColor();
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Revenue Chart
+                        |--------------------------------------------------------------------------
+                        */
+
+                        function renderRevenueChart() {
+
+                            const element =
+                                document.getElementById(
+                                    'revenueChart'
+                                );
 
 
-                    const gridColor =
-                        chartGridColor();
+                            if (
+                                !element ||
+                                typeof window.ApexCharts ===
+                                    'undefined'
+                            ) {
+                                return;
+                            }
 
 
-                    const chart =
-                        new window.ApexCharts(
-                            element,
-                            {
-
-                                chart: {
-
-                                    type: 'bar',
-
-                                    height: 320,
-
-                                    toolbar: {
-                                        show: false,
-                                    },
-
-                                    fontFamily: 'inherit',
-
-                                    background: 'transparent',
-
-                                    animations: {
-                                        enabled: true,
-                                    },
-                                },
+                            destroyChart(
+                                'revenueChart'
+                            );
 
 
-                                theme: {
-                                    mode: chartTheme(),
-                                },
+                            const labels =
+                                dashboardData.revenue?.labels ??
+                                [];
 
 
-                                series: [
+                            const values =
+                                dashboardData.revenue?.values ??
+                                [];
+
+
+                            const textColor =
+                                chartTextColor();
+
+
+                            const gridColor =
+                                chartGridColor();
+
+
+                            const chart =
+                                new window.ApexCharts(
+                                    element,
                                     {
-                                        name: 'Revenue',
 
-                                        data: chartValues,
-                                    },
-                                ],
+                                        chart: {
 
+                                            type:
+                                                'area',
 
-                                plotOptions: {
+                                            height:
+                                                320,
 
-                                    bar: {
+                                            width:
+                                                '100%',
 
-                                        borderRadius: 7,
+                                            toolbar: {
+                                                show:
+                                                    false,
+                                            },
 
-                                        horizontal: true,
+                                            zoom: {
+                                                enabled:
+                                                    false,
+                                            },
 
-                                        barHeight: '55%',
-                                    },
-                                },
+                                            redrawOnWindowResize:
+                                                true,
 
+                                            redrawOnParentResize:
+                                                true,
 
-                                colors: [
-                                    isDarkMode()
-                                        ? '#60a5fa'
-                                        : '#2563eb',
-                                ],
+                                            parentHeightOffset:
+                                                0,
 
+                                            fontFamily:
+                                                'inherit',
 
-                                xaxis: {
+                                            background:
+                                                'transparent',
 
-                                    categories: categories,
+                                            animations: {
+                                                enabled:
+                                                    true,
+                                            },
 
-                                    labels: {
-
-                                        formatter: value =>
-                                            '$' +
-                                            Number(value).toLocaleString(
-                                                undefined,
-                                                {
-                                                    maximumFractionDigits: 0,
-                                                }
-                                            ),
-
-                                        style: {
-                                            colors: textColor,
-                                            fontSize: '11px',
                                         },
-                                    },
-
-                                    axisBorder: {
-                                        show: false,
-                                    },
-
-                                    axisTicks: {
-                                        show: false,
-                                    },
-                                },
 
 
-                                yaxis: {
+                                        theme: {
 
-                                    labels: {
+                                            mode:
+                                                chartTheme(),
 
-                                        style: {
-                                            colors: textColor,
-                                            fontSize: '11px',
                                         },
-                                    },
-                                },
 
 
-                                grid: {
+                                        series: [
 
-                                    borderColor: gridColor,
+                                            {
 
-                                    strokeDashArray: 4,
-                                },
+                                                name:
+                                                    'Revenue',
 
+                                                data:
+                                                    values.map(
+                                                        value =>
+                                                            Number(
+                                                                value
+                                                            ) / 100
+                                                    ),
 
-                                dataLabels: {
-                                    enabled: false,
-                                },
+                                            },
 
+                                        ],
 
-                                tooltip: {
 
-                                    theme: chartTheme(),
+                                        xaxis: {
 
-                                    y: {
-
-                                        formatter: value =>
-                                            '$' +
-                                            Number(value).toLocaleString(
-                                                undefined,
-                                                {
-                                                    minimumFractionDigits: 2,
-                                                    maximumFractionDigits: 2,
-                                                }
-                                            ),
-                                    },
-                                },
-
-
-                                noData: {
-                                    text: 'No customer data',
-                                },
-                            }
-                        );
-
-
-                    chart.render();
-
-
-                    element.__apexChart = chart;
-                }
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Donut Chart
-                |--------------------------------------------------------------------------
-                */
-
-                function renderDonutChart() {
-
-                    const element =
-                        document.getElementById(
-                            'donutChart'
-                        );
-
-
-                    if (
-                        !element ||
-                        typeof window.ApexCharts === 'undefined'
-                    ) {
-                        return;
-                    }
-
-
-                    destroyChart('donutChart');
-
-
-                    const subscriptionRevenue =
-                        Number(
-                            dashboardData.donut?.subscription ?? 0
-                        ) / 100;
-
-
-                    const oneTimeRevenue =
-                        Number(
-                            dashboardData.donut?.oneTime ?? 0
-                        ) / 100;
-
-
-                    const textColor =
-                        chartTextColor();
-
-
-                    const primaryTextColor =
-                        chartPrimaryTextColor();
-
-
-                    const chart =
-                        new window.ApexCharts(
-                            element,
-                            {
-
-                                chart: {
-
-                                    type: 'donut',
-
-                                    height: 300,
-
-                                    fontFamily: 'inherit',
-
-                                    background: 'transparent',
-
-                                    animations: {
-                                        enabled: true,
-                                    },
-                                },
-
-
-                                theme: {
-                                    mode: chartTheme(),
-                                },
-
-
-                                series: [
-                                    subscriptionRevenue,
-                                    oneTimeRevenue,
-                                ],
-
-
-                                labels: [
-                                    'Subscription',
-                                    'One-time',
-                                ],
-
-
-                                colors: [
-
-                                    isDarkMode()
-                                        ? '#a78bfa'
-                                        : '#7c3aed',
-
-                                    isDarkMode()
-                                        ? '#38bdf8'
-                                        : '#0ea5e9',
-                                ],
-
-
-                                stroke: {
-
-                                    width: 4,
-
-                                    colors: [
-                                        isDarkMode()
-                                            ? '#0f172a'
-                                            : '#ffffff',
-                                    ],
-                                },
-
-
-                                legend: {
-                                    show: false,
-                                },
-
-
-                                dataLabels: {
-                                    enabled: false,
-                                },
-
-
-                                plotOptions: {
-
-                                    pie: {
-
-                                        donut: {
-
-                                            size: '72%',
-
+                                            categories:
+                                                labels,
 
                                             labels: {
 
-                                                show: true,
+                                                style: {
 
+                                                    colors:
+                                                        textColor,
 
-                                                name: {
+                                                    fontSize:
+                                                        '11px',
 
-                                                    show: true,
-
-                                                    color: textColor,
-
-                                                    fontSize: '12px',
                                                 },
 
-
-                                                value: {
-
-                                                    show: true,
-
-                                                    color: primaryTextColor,
-
-                                                    fontSize: '20px',
-
-                                                    fontWeight: 700,
+                                            },
 
 
-                                                    formatter: value =>
+                                            axisBorder: {
+                                                show:
+                                                    false,
+                                            },
+
+
+                                            axisTicks: {
+                                                show:
+                                                    false,
+                                            },
+
+                                        },
+
+
+                                        yaxis: {
+
+                                            labels: {
+
+                                                formatter:
+                                                    value =>
                                                         '$' +
-                                                        Number(value).toLocaleString(
+                                                        Number(
+                                                            value
+                                                        ).toLocaleString(
                                                             undefined,
                                                             {
-                                                                maximumFractionDigits: 0,
+                                                                maximumFractionDigits:
+                                                                    0,
                                                             }
                                                         ),
+
+
+                                                style: {
+
+                                                    colors:
+                                                        textColor,
+
+                                                    fontSize:
+                                                        '11px',
+
                                                 },
 
-
-                                                total: {
-
-                                                    show: true,
-
-                                                    label: 'Total',
-
-                                                    color: textColor,
-
-
-                                                    formatter: w => {
-
-                                                        const total =
-                                                            w.globals
-                                                                .seriesTotals
-                                                                .reduce(
-                                                                    (
-                                                                        a,
-                                                                        b
-                                                                    ) =>
-                                                                        a + b,
-                                                                    0
-                                                                );
-
-
-                                                        return '$' +
-                                                            Number(total).toLocaleString(
-                                                                undefined,
-                                                                {
-                                                                    maximumFractionDigits: 0,
-                                                                }
-                                                            );
-                                                    },
-                                                },
                                             },
+
                                         },
-                                    },
-                                },
 
 
-                                tooltip: {
+                                        colors: [
 
-                                    theme: chartTheme(),
+                                            isDarkMode()
+                                                ? '#a78bfa'
+                                                : '#7c3aed',
 
-                                    y: {
-
-                                        formatter: value =>
-                                            '$' +
-                                            Number(value).toLocaleString(
-                                                undefined,
-                                                {
-                                                    minimumFractionDigits: 2,
-                                                    maximumFractionDigits: 2,
-                                                }
-                                            ),
-                                    },
-                                },
+                                        ],
 
 
-                                noData: {
-                                    text: 'No revenue data',
-                                },
+                                        stroke: {
+
+                                            curve:
+                                                'smooth',
+
+                                            width:
+                                                3,
+
+                                        },
+
+
+                                        fill: {
+
+                                            type:
+                                                'gradient',
+
+                                            gradient: {
+
+                                                shadeIntensity:
+                                                    1,
+
+                                                opacityFrom:
+                                                    isDarkMode()
+                                                        ? 0.24
+                                                        : 0.28,
+
+                                                opacityTo:
+                                                    0.03,
+
+                                                stops:
+                                                    [
+                                                        0,
+                                                        100,
+                                                    ],
+
+                                            },
+
+                                        },
+
+
+                                        grid: {
+
+                                            borderColor:
+                                                gridColor,
+
+                                            strokeDashArray:
+                                                4,
+
+                                            xaxis: {
+
+                                                lines: {
+
+                                                    show:
+                                                        false,
+
+                                                },
+
+                                            },
+
+                                        },
+
+
+                                        dataLabels: {
+                                            enabled:
+                                                false,
+                                        },
+
+
+                                        tooltip: {
+
+                                            theme:
+                                                chartTheme(),
+
+                                            y: {
+
+                                                formatter:
+                                                    value =>
+                                                        '$' +
+                                                        Number(
+                                                            value
+                                                        ).toLocaleString(
+                                                            undefined,
+                                                            {
+                                                                minimumFractionDigits:
+                                                                    2,
+
+                                                                maximumFractionDigits:
+                                                                    2,
+                                                            }
+                                                        ),
+
+                                            },
+
+                                        },
+
+
+                                        noData: {
+
+                                            text:
+                                                'No revenue data',
+
+                                        },
+
+                                    }
+                                );
+
+
+                            chart.render();
+
+
+                            element.__apexChart =
+                                chart;
+
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Customer Chart
+                        |--------------------------------------------------------------------------
+                        */
+
+                        function renderCustomerChart() {
+
+                            const element =
+                                document.getElementById(
+                                    'customerChart'
+                                );
+
+
+                            if (
+                                !element ||
+                                typeof window.ApexCharts ===
+                                    'undefined'
+                            ) {
+                                return;
                             }
-                        );
 
 
-                    chart.render();
+                            destroyChart(
+                                'customerChart'
+                            );
 
 
-                    element.__apexChart = chart;
-                }
+                            const categories =
+                                dashboardData.customers?.labels ??
+                                [];
 
 
-                /*
-                |--------------------------------------------------------------------------
-                | Render all charts
-                |--------------------------------------------------------------------------
-                */
-
-                function renderAll() {
-
-                    if (
-                        typeof window.ApexCharts ===
-                        'undefined'
-                    ) {
-                        console.warn(
-                            'ApexCharts is not available.'
-                        );
-
-                        return;
-                    }
+                            const values =
+                                dashboardData.customers?.values ??
+                                [];
 
 
-                    renderRevenueChart();
-
-                    renderCustomerChart();
-
-                    renderDonutChart();
-                }
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Schedule render safely
-                |
-                | Two animation frames give Livewire/DOM time to finish
-                | navigation/morphing before ApexCharts touches the elements.
-                |--------------------------------------------------------------------------
-                */
-
-                function refreshAfterLivewire() {
-
-                    if (renderFrameOne !== null) {
-                        cancelAnimationFrame(
-                            renderFrameOne
-                        );
-                    }
+                            const chartValues =
+                                values.map(
+                                    value =>
+                                        Number(
+                                            value
+                                        ) / 100
+                                );
 
 
-                    if (renderFrameTwo !== null) {
-                        cancelAnimationFrame(
-                            renderFrameTwo
-                        );
-                    }
+                            const textColor =
+                                chartTextColor();
 
 
-                    renderFrameOne =
-                        requestAnimationFrame(() => {
+                            const gridColor =
+                                chartGridColor();
 
-                            renderFrameTwo =
+
+                            const chart =
+                                new window.ApexCharts(
+                                    element,
+                                    {
+
+                                        chart: {
+
+                                            type:
+                                                'bar',
+
+                                            height:
+                                                320,
+
+                                            width:
+                                                '100%',
+
+                                            toolbar: {
+                                                show:
+                                                    false,
+                                            },
+
+                                            redrawOnWindowResize:
+                                                true,
+
+                                            redrawOnParentResize:
+                                                true,
+
+                                            parentHeightOffset:
+                                                0,
+
+                                            fontFamily:
+                                                'inherit',
+
+                                            background:
+                                                'transparent',
+
+                                            animations: {
+                                                enabled:
+                                                    true,
+                                            },
+
+                                        },
+
+
+                                        theme: {
+
+                                            mode:
+                                                chartTheme(),
+
+                                        },
+
+
+                                        series: [
+
+                                            {
+
+                                                name:
+                                                    'Revenue',
+
+                                                data:
+                                                    chartValues,
+
+                                            },
+
+                                        ],
+
+
+                                        plotOptions: {
+
+                                            bar: {
+
+                                                borderRadius:
+                                                    7,
+
+                                                horizontal:
+                                                    true,
+
+                                                barHeight:
+                                                    '55%',
+
+                                            },
+
+                                        },
+
+
+                                        colors: [
+
+                                            isDarkMode()
+                                                ? '#60a5fa'
+                                                : '#2563eb',
+
+                                        ],
+
+
+                                        xaxis: {
+
+                                            categories:
+                                                categories,
+
+                                            labels: {
+
+                                                formatter:
+                                                    value =>
+                                                        '$' +
+                                                        Number(
+                                                            value
+                                                        ).toLocaleString(
+                                                            undefined,
+                                                            {
+                                                                maximumFractionDigits:
+                                                                    0,
+                                                            }
+                                                        ),
+
+
+                                                style: {
+
+                                                    colors:
+                                                        textColor,
+
+                                                    fontSize:
+                                                        '11px',
+
+                                                },
+
+                                            },
+
+
+                                            axisBorder: {
+                                                show:
+                                                    false,
+                                            },
+
+
+                                            axisTicks: {
+                                                show:
+                                                    false,
+                                            },
+
+                                        },
+
+
+                                        yaxis: {
+
+                                            labels: {
+
+                                                style: {
+
+                                                    colors:
+                                                        textColor,
+
+                                                    fontSize:
+                                                        '11px',
+
+                                                },
+
+                                            },
+
+                                        },
+
+
+                                        grid: {
+
+                                            borderColor:
+                                                gridColor,
+
+                                            strokeDashArray:
+                                                4,
+
+                                        },
+
+
+                                        dataLabels: {
+                                            enabled:
+                                                false,
+                                        },
+
+
+                                        tooltip: {
+
+                                            theme:
+                                                chartTheme(),
+
+                                            y: {
+
+                                                formatter:
+                                                    value =>
+                                                        '$' +
+                                                        Number(
+                                                            value
+                                                        ).toLocaleString(
+                                                            undefined,
+                                                            {
+                                                                minimumFractionDigits:
+                                                                    2,
+
+                                                                maximumFractionDigits:
+                                                                    2,
+                                                            }
+                                                        ),
+
+                                            },
+
+                                        },
+
+
+                                        noData: {
+
+                                            text:
+                                                'No customer data',
+
+                                        },
+
+                                    }
+                                );
+
+
+                            chart.render();
+
+
+                            element.__apexChart =
+                                chart;
+
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Donut Chart
+                        |--------------------------------------------------------------------------
+                        */
+
+                        function renderDonutChart() {
+
+                            const element =
+                                document.getElementById(
+                                    'donutChart'
+                                );
+
+
+                            if (
+                                !element ||
+                                typeof window.ApexCharts ===
+                                    'undefined'
+                            ) {
+                                return;
+                            }
+
+
+                            destroyChart(
+                                'donutChart'
+                            );
+
+
+                            const subscriptionRevenue =
+                                Number(
+                                    dashboardData.donut?.subscription ??
+                                    0
+                                ) / 100;
+
+
+                            const oneTimeRevenue =
+                                Number(
+                                    dashboardData.donut?.oneTime ??
+                                    0
+                                ) / 100;
+
+
+                            const textColor =
+                                chartTextColor();
+
+
+                            const primaryTextColor =
+                                chartPrimaryTextColor();
+
+
+                            const mobile =
+                                window.innerWidth <= 640;
+
+
+                            const tablet =
+                                window.innerWidth <= 900;
+
+
+                            const chartHeight =
+                                mobile
+                                    ? 250
+                                    : tablet
+                                        ? 280
+                                        : 300;
+
+
+                            const customScale =
+                                mobile
+                                    ? 0.78
+                                    : tablet
+                                        ? 0.88
+                                        : 1;
+
+
+                            const chart =
+                                new window.ApexCharts(
+                                    element,
+                                    {
+
+                                        chart: {
+
+                                            type:
+                                                'donut',
+
+                                            width:
+                                                '100%',
+
+                                            height:
+                                                chartHeight,
+
+                                            toolbar: {
+                                                show:
+                                                    false,
+                                            },
+
+                                            parentHeightOffset:
+                                                0,
+
+                                            redrawOnWindowResize:
+                                                true,
+
+                                            redrawOnParentResize:
+                                                true,
+
+                                            fontFamily:
+                                                'inherit',
+
+                                            background:
+                                                'transparent',
+
+                                            animations: {
+                                                enabled:
+                                                    true,
+                                            },
+
+                                        },
+
+
+                                        theme: {
+
+                                            mode:
+                                                chartTheme(),
+
+                                        },
+
+
+                                        series: [
+
+                                            subscriptionRevenue,
+
+                                            oneTimeRevenue,
+
+                                        ],
+
+
+                                        labels: [
+
+                                            'Subscription',
+
+                                            'One-time',
+
+                                        ],
+
+
+                                        colors: [
+
+                                            isDarkMode()
+                                                ? '#a78bfa'
+                                                : '#7c3aed',
+
+                                            isDarkMode()
+                                                ? '#38bdf8'
+                                                : '#0ea5e9',
+
+                                        ],
+
+
+                                        stroke: {
+
+                                            width:
+                                                4,
+
+                                            colors: [
+
+                                                isDarkMode()
+                                                    ? '#0f172a'
+                                                    : '#ffffff',
+
+                                            ],
+
+                                        },
+
+
+                                        legend: {
+
+                                            show:
+                                                false,
+
+                                        },
+
+
+                                        dataLabels: {
+
+                                            enabled:
+                                                false,
+
+                                        },
+
+
+                                        plotOptions: {
+
+                                            pie: {
+
+                                                expandOnClick:
+                                                    false,
+
+                                                customScale:
+                                                    customScale,
+
+
+                                                donut: {
+
+                                                    size:
+                                                        '72%',
+
+
+                                                    labels: {
+
+                                                        show:
+                                                            true,
+
+
+                                                        name: {
+
+                                                            show:
+                                                                true,
+
+                                                            color:
+                                                                textColor,
+
+                                                            fontSize:
+                                                                mobile
+                                                                    ? '11px'
+                                                                    : '12px',
+
+                                                        },
+
+
+                                                        value: {
+
+                                                            show:
+                                                                true,
+
+                                                            color:
+                                                                primaryTextColor,
+
+                                                            fontSize:
+                                                                mobile
+                                                                    ? '18px'
+                                                                    : '20px',
+
+                                                            fontWeight:
+                                                                700,
+
+
+                                                            formatter:
+                                                                value =>
+                                                                    '$' +
+                                                                    Number(
+                                                                        value
+                                                                    ).toLocaleString(
+                                                                        undefined,
+                                                                        {
+                                                                            maximumFractionDigits:
+                                                                                0,
+                                                                        }
+                                                                    ),
+
+                                                        },
+
+
+                                                        total: {
+
+                                                            show:
+                                                                true,
+
+                                                            label:
+                                                                'Total',
+
+                                                            color:
+                                                                textColor,
+
+
+                                                            formatter:
+                                                                w => {
+
+                                                                    const total =
+                                                                        w.globals
+                                                                            .seriesTotals
+                                                                            .reduce(
+                                                                                (
+                                                                                    a,
+                                                                                    b
+                                                                                ) =>
+                                                                                    a +
+                                                                                    b,
+
+                                                                                0
+                                                                            );
+
+
+                                                                    return (
+                                                                        '$' +
+                                                                        Number(
+                                                                            total
+                                                                        ).toLocaleString(
+                                                                            undefined,
+                                                                            {
+                                                                                maximumFractionDigits:
+                                                                                    0,
+                                                                            }
+                                                                        )
+                                                                    );
+
+                                                                },
+
+                                                        },
+
+                                                    },
+
+                                                },
+
+                                            },
+
+                                        },
+
+
+                                        tooltip: {
+
+                                            theme:
+                                                chartTheme(),
+
+                                            y: {
+
+                                                formatter:
+                                                    value =>
+                                                        '$' +
+                                                        Number(
+                                                            value
+                                                        ).toLocaleString(
+                                                            undefined,
+                                                            {
+                                                                minimumFractionDigits:
+                                                                    2,
+
+                                                                maximumFractionDigits:
+                                                                    2,
+                                                            }
+                                                        ),
+
+                                            },
+
+                                        },
+
+
+                                        responsive: [
+
+                                            {
+
+                                                breakpoint:
+                                                    640,
+
+                                                options: {
+
+                                                    chart: {
+
+                                                        height:
+                                                            250,
+
+                                                    },
+
+
+                                                    plotOptions: {
+
+                                                        pie: {
+
+                                                            customScale:
+                                                                0.78,
+
+                                                        },
+
+                                                    },
+
+                                                },
+
+                                            },
+
+
+                                            {
+
+                                                breakpoint:
+                                                    900,
+
+                                                options: {
+
+                                                    chart: {
+
+                                                        height:
+                                                            280,
+
+                                                    },
+
+
+                                                    plotOptions: {
+
+                                                        pie: {
+
+                                                            customScale:
+                                                                0.88,
+
+                                                        },
+
+                                                    },
+
+                                                },
+
+                                            },
+
+                                        ],
+
+
+                                        noData: {
+
+                                            text:
+                                                'No revenue data',
+
+                                        },
+
+                                    }
+                                );
+
+
+                            chart.render();
+
+
+                            element.__apexChart =
+                                chart;
+
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Render all
+                        |--------------------------------------------------------------------------
+                        */
+
+                        function renderAll() {
+
+                            if (
+                                typeof window.ApexCharts ===
+                                'undefined'
+                            ) {
+                                return;
+                            }
+
+
+                            renderRevenueChart();
+
+                            renderCustomerChart();
+
+                            renderDonutChart();
+
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Safe refresh
+                        |--------------------------------------------------------------------------
+                        */
+
+                        function refreshAfterLivewire() {
+
+                            if (
+                                renderFrameOne !==
+                                null
+                            ) {
+
+                                cancelAnimationFrame(
+                                    renderFrameOne
+                                );
+
+                            }
+
+
+                            if (
+                                renderFrameTwo !==
+                                null
+                            ) {
+
+                                cancelAnimationFrame(
+                                    renderFrameTwo
+                                );
+
+                            }
+
+
+                            renderFrameOne =
                                 requestAnimationFrame(() => {
 
-                                    renderAll();
+                                    renderFrameTwo =
+                                        requestAnimationFrame(() => {
+
+                                            waitForApexCharts(
+                                                renderAll
+                                            );
+
+                                        });
 
                                 });
 
-                        });
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Resize
+                        |--------------------------------------------------------------------------
+                        */
+
+                        function refreshAfterResize() {
+
+                            clearTimeout(
+                                resizeTimeout
+                            );
+
+
+                            resizeTimeout =
+                                setTimeout(() => {
+
+                                    refreshAfterLivewire();
+
+                                }, 100);
+
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Public API
+                        |--------------------------------------------------------------------------
+                        */
+
+                        return {
+
+                            setData,
+
+                            refreshAfterLivewire,
+
+                            refreshAfterResize,
+
+                        };
+
+                    })();
+
                 }
 
 
                 /*
                 |--------------------------------------------------------------------------
-                | Public API
+                | Initial data
                 |--------------------------------------------------------------------------
                 */
 
-                return {
-
-                    setData,
-
-                    refreshAfterLivewire,
-
-                };
-
-            })();
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Update chart data for this dashboard instance
-        |--------------------------------------------------------------------------
-        */
-
-        window.TeamDashboardCharts
-            .setData(initialData);
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Livewire dashboard-updated event
-        |--------------------------------------------------------------------------
-        */
-
-        if (!window.__teamDashboardFilterListener) {
-
-            window.__teamDashboardFilterListener = true;
-
-
-            window.addEventListener(
-                'dashboard-updated',
-                event => {
-
-                    const data =
-                        event.detail?.data ?? null;
-
-
-                    if (!data) {
-                        return;
-                    }
-
-
-                    if (!window.TeamDashboardCharts) {
-                        return;
-                    }
-
-
-                    window.TeamDashboardCharts
-                        .setData(data);
-
-
-                    window.TeamDashboardCharts
-                        .refreshAfterLivewire();
-
-                }
-            );
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Dark mode observer
-        |--------------------------------------------------------------------------
-        */
-
-        if (!window.__teamDashboardThemeObserver) {
-
-            window.__teamDashboardThemeObserver =
-                new MutationObserver(() => {
-
-                    clearTimeout(
-                        window.__teamDashboardThemeTimeout
+                window.TeamDashboardCharts
+                    .setData(
+                        initialData
                     );
 
 
-                    window.__teamDashboardThemeTimeout =
-                        setTimeout(() => {
+                /*
+                |--------------------------------------------------------------------------
+                | Livewire update event
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    !window.__teamDashboardFilterListener
+                ) {
+
+                    window.__teamDashboardFilterListener =
+                        true;
+
+
+                    window.addEventListener(
+                        'dashboard-updated',
+                        event => {
+
+                            const data =
+                                event.detail?.data ??
+                                null;
+
+
+                            if (!data) {
+                                return;
+                            }
+
+
+                            window.TeamDashboardCharts
+                                .setData(
+                                    data
+                                );
+
+
+                            window.TeamDashboardCharts
+                                .refreshAfterLivewire();
+
+                        }
+                    );
+
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Theme observer
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    !window.__teamDashboardThemeObserver
+                ) {
+
+                    window.__teamDashboardThemeObserver =
+                        new MutationObserver(
+                            () => {
+
+                                clearTimeout(
+                                    window.__teamDashboardThemeTimeout
+                                );
+
+
+                                window.__teamDashboardThemeTimeout =
+                                    setTimeout(() => {
+
+                                        window.TeamDashboardCharts
+                                            ?.refreshAfterLivewire();
+
+                                    }, 50);
+
+                            }
+                        );
+
+
+                    window.__teamDashboardThemeObserver
+                        .observe(
+                            document.documentElement,
+                            {
+                                attributes:
+                                    true,
+
+                                attributeFilter: [
+                                    'class',
+                                    'data-theme',
+                                ],
+                            }
+                        );
+
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Resize listener
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    !window.__teamDashboardChartsResizeListener
+                ) {
+
+                    window.__teamDashboardChartsResizeListener =
+                        true;
+
+
+                    window.addEventListener(
+                        'resize',
+                        () => {
+
+                            window.TeamDashboardCharts
+                                ?.refreshAfterResize();
+
+                        }
+                    );
+
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Initial render
+                |--------------------------------------------------------------------------
+                */
+
+                window.TeamDashboardCharts
+                    .refreshAfterLivewire();
+
+            })();
+        </script>
+
+    @endscript
+
+
+    {{-- =========================================================
+         ALPINE DATE PICKER
+    ========================================================== --}}
+
+    @script
+
+        <script>
+
+            if (
+                !window.__teamDashboardDatePickerRegistered
+            ) {
+
+                Alpine.data(
+                    'dashboardDatePicker',
+                    (
+                        initial = {}
+                    ) => ({
+
+                        showCustom:
+                            Boolean(
+                                initial.showCustom
+                            ),
+
+                        startDate:
+                            initial.startDate ??
+                            '',
+
+                        endDate:
+                            initial.endDate ??
+                            '',
+
+                        dateError:
+                            false,
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Init
+                        |--------------------------------------------------------------------------
+                        */
+
+                        init() {
+
+                            this.$watch(
+                                'startDate',
+                                () => {
+
+                                    this.validateDates();
+
+                                }
+                            );
+
+
+                            this.$watch(
+                                'endDate',
+                                () => {
+
+                                    this.validateDates();
+
+                                }
+                            );
+
+
+                            this.validateDates();
+
+                        },
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Filter changed
+                        |--------------------------------------------------------------------------
+                        */
+
+                        handleFilterChange(
+                            value
+                        ) {
+
+                            this.showCustom =
+                                value ===
+                                'custom';
+
 
                             if (
-                                window.TeamDashboardCharts
+                                value !==
+                                'custom'
                             ) {
 
-                                window.TeamDashboardCharts
-                                    .refreshAfterLivewire();
+                                this.dateError =
+                                    false;
 
                             }
 
-                        }, 50);
-
-                });
+                        },
 
 
-            window.__teamDashboardThemeObserver
-                .observe(
-                    document.documentElement,
-                    {
-                        attributes: true,
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Close custom range
+                        |--------------------------------------------------------------------------
+                        */
 
-                        attributeFilter: [
-                            'class',
-                            'data-theme',
-                        ],
-                    }
+                        closeCustom() {
+
+                            this.showCustom =
+                                false;
+
+
+                            const select =
+                                document.getElementById(
+                                    'dashboard-filter'
+                                );
+
+
+                            if (select) {
+
+                                select.value =
+                                    @js($filter);
+
+                            }
+
+                        },
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Dates changed
+                        |--------------------------------------------------------------------------
+                        */
+
+                        datesChanged() {
+
+                            this.validateDates();
+
+                        },
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Validate dates
+                        |--------------------------------------------------------------------------
+                        */
+
+                        validateDates() {
+
+                            this.dateError =
+                                false;
+
+
+                            if (
+                                !this.startDate ||
+                                !this.endDate
+                            ) {
+
+                                return false;
+
+                            }
+
+
+                            const start =
+                                new Date(
+                                    this.startDate +
+                                    'T00:00:00'
+                                );
+
+
+                            const end =
+                                new Date(
+                                    this.endDate +
+                                    'T00:00:00'
+                                );
+
+
+                            if (
+                                Number.isNaN(
+                                    start.getTime()
+                                ) ||
+                                Number.isNaN(
+                                    end.getTime()
+                                )
+                            ) {
+
+                                this.dateError =
+                                    true;
+
+                                return false;
+
+                            }
+
+
+                            if (
+                                start >
+                                end
+                            ) {
+
+                                this.dateError =
+                                    true;
+
+                                return false;
+
+                            }
+
+
+                            return true;
+
+                        },
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Can apply
+                        |--------------------------------------------------------------------------
+                        */
+
+                        get canApply() {
+
+                            return Boolean(
+
+                                this.startDate &&
+
+                                this.endDate &&
+
+                                !this.dateError
+
+                            );
+
+                        },
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Formatted range
+                        |--------------------------------------------------------------------------
+                        */
+
+                        get formattedRange() {
+
+                            if (
+                                !this.startDate ||
+                                !this.endDate
+                            ) {
+
+                                return 'Select your dates';
+
+                            }
+
+
+                            const start =
+                                new Date(
+                                    this.startDate +
+                                    'T00:00:00'
+                                );
+
+
+                            const end =
+                                new Date(
+                                    this.endDate +
+                                    'T00:00:00'
+                                );
+
+
+                            if (
+                                Number.isNaN(
+                                    start.getTime()
+                                ) ||
+                                Number.isNaN(
+                                    end.getTime()
+                                )
+                            ) {
+
+                                return 'Select your dates';
+
+                            }
+
+
+                            const options = {
+
+                                month:
+                                    'short',
+
+                                day:
+                                    'numeric',
+
+                                year:
+                                    'numeric',
+
+                            };
+
+
+                            return (
+
+                                start.toLocaleDateString(
+                                    'en-US',
+                                    options
+                                ) +
+
+                                ' – ' +
+
+                                end.toLocaleDateString(
+                                    'en-US',
+                                    options
+                                )
+
+                            );
+
+                        },
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Apply custom range
+                        |--------------------------------------------------------------------------
+                        */
+
+                        async applyRange() {
+
+                            if (
+                                !this.validateDates()
+                            ) {
+
+                                return;
+
+                            }
+
+
+                            this.showCustom =
+                                false;
+
+
+                            await this.$wire
+                                .setCustomRange(
+                                    this.startDate,
+                                    this.endDate
+                                );
+
+                        },
+
+                    })
                 );
-        }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | Initial render / SPA navigation render
-        |
-        | Unlike the old initialize() function, this ALWAYS schedules a render.
-        | That matters because the global chart manager survives wire:navigate.
-        |--------------------------------------------------------------------------
-        */
+                window.__teamDashboardDatePickerRegistered =
+                    true;
 
-        window.TeamDashboardCharts
-            .refreshAfterLivewire();
+            }
 
-    })();
-</script>
-@endscript
+        </script>
 
+    @endscript
 
-{{-- =========================================================
-     ALPINE DATE PICKER
-========================================================== --}}
-
-@script
-<script>
-    /*
-    |--------------------------------------------------------------------------
-    | Register the Alpine component exactly once.
-    |
-    | IMPORTANT:
-    | We intentionally do NOT use:
-    |
-    | document.addEventListener('alpine:init', ...)
-    |
-    | because this Blade can be inserted after Alpine has already initialized
-    | during wire:navigate.
-    |--------------------------------------------------------------------------
-    */
-
-    if (!window.__teamDashboardDatePickerRegistered) {
-
-        Alpine.data(
-            'dashboardDatePicker',
-            (initial = {}) => ({
-
-                showCustom:
-                    Boolean(
-                        initial.showCustom
-                    ),
-
-                startDate:
-                    initial.startDate ?? '',
-
-                endDate:
-                    initial.endDate ?? '',
-
-                dateError: false,
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Alpine automatically calls init()
-                |--------------------------------------------------------------------------
-                */
-
-                init() {
-
-                    this.$watch(
-                        'startDate',
-                        () => {
-                            this.validateDates();
-                        }
-                    );
-
-
-                    this.$watch(
-                        'endDate',
-                        () => {
-                            this.validateDates();
-                        }
-                    );
-
-
-                    this.validateDates();
-                },
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Standard reporting-period select
-                |--------------------------------------------------------------------------
-                */
-
-                handleFilterChange(value) {
-
-                    this.showCustom =
-                        value === 'custom';
-
-
-                    if (value !== 'custom') {
-
-                        this.dateError = false;
-
-                    }
-                },
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Close custom range
-                |--------------------------------------------------------------------------
-                */
-
-                closeCustom() {
-
-                    this.showCustom = false;
-
-
-                    const select =
-                        document.getElementById(
-                            'dashboard-filter'
-                        );
-
-
-                    if (select) {
-
-                        select.value =
-                            @js($filter);
-
-                    }
-                },
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Date input changed
-                |--------------------------------------------------------------------------
-                */
-
-                datesChanged() {
-
-                    this.validateDates();
-
-                },
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Validate dates
-                |--------------------------------------------------------------------------
-                */
-
-                validateDates() {
-
-                    this.dateError = false;
-
-
-                    if (
-                        !this.startDate ||
-                        !this.endDate
-                    ) {
-                        return false;
-                    }
-
-
-                    const start =
-                        new Date(
-                            this.startDate +
-                            'T00:00:00'
-                        );
-
-
-                    const end =
-                        new Date(
-                            this.endDate +
-                            'T00:00:00'
-                        );
-
-
-                    if (
-                        Number.isNaN(
-                            start.getTime()
-                        ) ||
-                        Number.isNaN(
-                            end.getTime()
-                        )
-                    ) {
-
-                        this.dateError = true;
-
-                        return false;
-                    }
-
-
-                    if (start > end) {
-
-                        this.dateError = true;
-
-                        return false;
-                    }
-
-
-                    return true;
-                },
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Apply button state
-                |--------------------------------------------------------------------------
-                */
-
-                get canApply() {
-
-                    return Boolean(
-                        this.startDate &&
-                        this.endDate &&
-                        !this.dateError
-                    );
-                },
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Human-readable date range
-                |--------------------------------------------------------------------------
-                */
-
-                get formattedRange() {
-
-                    if (
-                        !this.startDate ||
-                        !this.endDate
-                    ) {
-
-                        return 'Select your dates';
-                    }
-
-
-                    const start =
-                        new Date(
-                            this.startDate +
-                            'T00:00:00'
-                        );
-
-
-                    const end =
-                        new Date(
-                            this.endDate +
-                            'T00:00:00'
-                        );
-
-
-                    if (
-                        Number.isNaN(
-                            start.getTime()
-                        ) ||
-                        Number.isNaN(
-                            end.getTime()
-                        )
-                    ) {
-
-                        return 'Select your dates';
-                    }
-
-
-                    const options = {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                    };
-
-
-                    return (
-                        start.toLocaleDateString(
-                            'en-US',
-                            options
-                        ) +
-                        ' – ' +
-                        end.toLocaleDateString(
-                            'en-US',
-                            options
-                        )
-                    );
-                },
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Apply custom range
-                |--------------------------------------------------------------------------
-                */
-
-                async applyRange() {
-
-                    if (
-                        !this.validateDates()
-                    ) {
-                        return;
-                    }
-
-
-                    this.showCustom = false;
-
-
-                    await this.$wire
-                        .setCustomRange(
-                            this.startDate,
-                            this.endDate
-                        );
-                },
-
-            })
-        );
-
-
-        window.__teamDashboardDatePickerRegistered =
-            true;
-    }
-</script>
-@endscript
 </div>
