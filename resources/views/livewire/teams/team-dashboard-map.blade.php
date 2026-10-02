@@ -95,200 +95,38 @@
     </div>
 
 
- <div class="dashboard-map-wrapper">
+    <div class="dashboard-map-wrapper">
 
-    <div
-        id="teamDashboardPaymentMap"
-        class="dashboard-map"
-        wire:ignore
-    ></div>
-
-
-    {{-- =========================================================
-         UNSUPPORTED BROWSER / WEBGL 2 FALLBACK
-    ========================================================== --}}
-
-    <div
-        id="teamDashboardMapUnsupported"
-        class="dashboard-map-unsupported"
-        wire:ignore
-        hidden
-    >
-        <div class="dashboard-map-unsupported-icon">
-            ◉
-        </div>
-
-        <strong class="dashboard-map-unsupported-title">
-            Map unavailable
-        </strong>
-
-        <p class="dashboard-map-unsupported-message">
-            This interactive map requires WebGL 2, which is not
-            available in your current browser or computer settings.
-        </p>
+        <div
+            id="teamDashboardPaymentMap"
+            class="dashboard-map"
+            wire:ignore
+        ></div>
 
 
-        <div class="dashboard-map-unsupported-card">
+        @if (empty($mapFeatures))
 
-            <div class="dashboard-map-unsupported-card-title">
-                Recommended: Google Chrome
-            </div>
+            <div class="dashboard-map-empty">
 
-            <div class="dashboard-map-unsupported-card-text">
-                For the easiest fix, use the latest version of
-                Google Chrome.
-            </div>
+                <div class="dashboard-map-empty-icon">
+                    ◉
+                </div>
 
-            <ol class="dashboard-map-help-steps">
-                <li>
-                    Open <strong>Chrome</strong>.
-                </li>
+                <strong>
+                    No payment locations
+                </strong>
 
-                <li>
-                    Click the <strong>three dots ⋮</strong> in the
-                    top-right corner.
-                </li>
-
-                <li>
-                    Open <strong>Settings</strong>.
-                </li>
-
-                <li>
-                    Open <strong>System</strong>.
-                </li>
-
-                <li>
-                    Turn on
-                    <strong>
-                        Use graphics acceleration when available
-                    </strong>.
-                </li>
-
-                <li>
-                    Click <strong>Relaunch</strong>.
-                </li>
-
-                <li>
-                    Return to this page.
-                </li>
-            </ol>
-
-        </div>
-
-
-        <details class="dashboard-map-browser-help">
-
-            <summary>
-                I use Firefox
-            </summary>
-
-            <div class="dashboard-map-browser-help-content">
-
-                <p>
-                    Open Firefox → <strong>Settings</strong> →
-                    <strong>General</strong>.
-                </p>
-
-                <p>
-                    Scroll to <strong>Performance</strong>.
-                </p>
-
-                <p>
-                    Make sure Firefox can use
-                    <strong>hardware acceleration</strong>.
-                    You may need to turn off
-                    <strong>Use recommended performance settings</strong>
-                    to see that option.
-                </p>
-
-                <p>
-                    Restart Firefox and return to this page.
-                </p>
+                <span>
+                    No successful payments with available
+                    geolocation data exist for this reporting period.
+                </span>
 
             </div>
 
-        </details>
-
-
-        <details class="dashboard-map-browser-help">
-
-            <summary>
-                I use Microsoft Edge
-            </summary>
-
-            <div class="dashboard-map-browser-help-content">
-
-                <p>
-                    Open Edge → <strong>Settings</strong> →
-                    <strong>System and performance</strong>.
-                </p>
-
-                <p>
-                    Make sure
-                    <strong>
-                        Use graphics acceleration when available
-                    </strong>
-                    is turned on.
-                </p>
-
-                <p>
-                    Relaunch Edge and return to this page.
-                </p>
-
-            </div>
-
-        </details>
-
-
-        <div class="dashboard-map-unsupported-actions">
-
-            <button
-                type="button"
-                class="dashboard-map-reload-button"
-                onclick="window.location.reload()"
-            >
-                Reload page
-            </button>
-
-        </div>
-
-
-        <span class="dashboard-map-unsupported-note">
-            If the map still does not appear after using a modern
-            browser with graphics acceleration enabled, your
-            computer may not support WebGL 2.
-        </span>
+        @endif
 
     </div>
 
-
-    {{-- =========================================================
-         NO PAYMENT DATA
-    ========================================================== --}}
-
-    @if (empty($mapFeatures))
-
-        <div
-            id="teamDashboardMapEmpty"
-            class="dashboard-map-empty"
-        >
-            <div class="dashboard-map-empty-icon">
-                ◉
-            </div>
-
-            <strong>
-                No payment locations
-            </strong>
-
-            <span>
-                No successful payments with available
-                geolocation data exist for this reporting period.
-            </span>
-        </div>
-
-    @endif
-
-</div>
 
     <div class="dashboard-map-footer">
 
@@ -482,364 +320,6 @@
             pointer-events: none;
         }
 
-        /* ==========================================================================
-   Unsupported Browser / WebGL 2
-   ========================================================================== */
-
-.dashboard-map-unsupported {
-    position: absolute;
-    inset: 0;
-    z-index: 20;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    flex-direction: column;
-
-    padding: 30px;
-
-    overflow-y: auto;
-
-    background:
-        color-mix(
-            in srgb,
-            var(--dashboard-surface) 95%,
-            var(--dashboard-primary) 5%
-        );
-
-    text-align: center;
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Icon
-|--------------------------------------------------------------------------
-*/
-
-.dashboard-map-unsupported-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    width: 58px;
-    height: 58px;
-
-    margin-bottom: 15px;
-
-    border: 1px solid var(--dashboard-border);
-    border-radius: 16px;
-
-    background:
-        var(--dashboard-primary-soft);
-
-    color:
-        var(--dashboard-primary);
-
-    font-size: 24px;
-    font-weight: 800;
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Title
-|--------------------------------------------------------------------------
-*/
-
-.dashboard-map-unsupported-title {
-    color:
-        var(--dashboard-text);
-
-    font-size: 16px;
-    font-weight: 800;
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Description
-|--------------------------------------------------------------------------
-*/
-
-.dashboard-map-unsupported-message {
-    max-width: 520px;
-
-    margin: 7px 0 18px;
-
-    color:
-        var(--dashboard-muted);
-
-    font-size: 12px;
-
-    line-height: 1.55;
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Main instruction card
-|--------------------------------------------------------------------------
-*/
-
-.dashboard-map-unsupported-card {
-    width: min(520px, 100%);
-
-    padding: 17px 18px;
-
-    border: 1px solid var(--dashboard-border);
-    border-radius: 13px;
-
-    background:
-        var(--dashboard-surface-soft);
-
-    text-align: left;
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Card title
-|--------------------------------------------------------------------------
-*/
-
-.dashboard-map-unsupported-card-title {
-    color:
-        var(--dashboard-text);
-
-    font-size: 13px;
-    font-weight: 750;
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Card description
-|--------------------------------------------------------------------------
-*/
-
-.dashboard-map-unsupported-card-text {
-    margin-top: 4px;
-
-    color:
-        var(--dashboard-muted);
-
-    font-size: 11px;
-
-    line-height: 1.5;
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Steps
-|--------------------------------------------------------------------------
-*/
-
-.dashboard-map-help-steps {
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 7px;
-
-    margin: 13px 0 0;
-    padding-left: 21px;
-
-    color:
-        var(--dashboard-muted);
-
-    font-size: 11px;
-
-    line-height: 1.5;
-}
-
-
-.dashboard-map-help-steps strong {
-    color:
-        var(--dashboard-text);
-
-    font-weight: 700;
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Browser alternatives
-|--------------------------------------------------------------------------
-*/
-
-.dashboard-map-browser-help {
-    width: min(520px, 100%);
-
-    margin-top: 8px;
-
-    border: 1px solid var(--dashboard-border);
-    border-radius: 11px;
-
-    background:
-        var(--dashboard-surface-soft);
-
-    text-align: left;
-}
-
-
-.dashboard-map-browser-help summary {
-    padding: 12px 14px;
-
-    color:
-        var(--dashboard-text);
-
-    font-size: 11px;
-    font-weight: 700;
-
-    cursor: pointer;
-
-    user-select: none;
-}
-
-
-.dashboard-map-browser-help-content {
-    padding: 0 14px 13px;
-
-    color:
-        var(--dashboard-muted);
-
-    font-size: 11px;
-
-    line-height: 1.5;
-}
-
-
-.dashboard-map-browser-help-content p {
-    margin: 8px 0 0;
-}
-
-
-.dashboard-map-browser-help-content strong {
-    color:
-        var(--dashboard-text);
-
-    font-weight: 700;
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Reload button
-|--------------------------------------------------------------------------
-*/
-
-.dashboard-map-unsupported-actions {
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    margin-top: 15px;
-}
-
-
-.dashboard-map-reload-button {
-    display: inline-flex;
-
-    align-items: center;
-    justify-content: center;
-
-    min-height: 38px;
-
-    padding: 0 15px;
-
-    border: 0;
-    border-radius: 10px;
-
-    background:
-        linear-gradient(
-            135deg,
-            #8b5cf6,
-            #7c3aed
-        );
-
-    color: #fff;
-
-    font-size: 12px;
-    font-weight: 700;
-
-    cursor: pointer;
-
-    box-shadow:
-        0 7px 20px rgba(124, 58, 237, 0.20);
-
-    transition:
-        transform 160ms ease,
-        box-shadow 160ms ease,
-        opacity 160ms ease;
-}
-
-
-.dashboard-map-reload-button:hover {
-    transform: translateY(-1px);
-
-    box-shadow:
-        0 10px 25px rgba(124, 58, 237, 0.28);
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Small note
-|--------------------------------------------------------------------------
-*/
-
-.dashboard-map-unsupported-note {
-    display: block;
-
-    max-width: 520px;
-
-    margin-top: 13px;
-
-    color:
-        var(--dashboard-subtle);
-
-    font-size: 10px;
-
-    line-height: 1.5;
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Mobile
-|--------------------------------------------------------------------------
-*/
-
-@media (max-width: 640px) {
-
-    .dashboard-map-unsupported {
-        padding: 20px 16px;
-    }
-
-
-    .dashboard-map-unsupported-icon {
-        width: 50px;
-        height: 50px;
-
-        margin-bottom: 12px;
-    }
-
-
-    .dashboard-map-unsupported-message {
-        font-size: 11px;
-    }
-
-
-    .dashboard-map-unsupported-card {
-        padding: 15px;
-    }
-
-}
-
 
         .dashboard-map-empty-icon {
             display: flex;
@@ -1000,20 +480,6 @@
         }
     </style>
 
-
-@assets
-    <link
-        rel="stylesheet"
-        href="https://api.mapbox.com/mapbox-gl-js/v3.30.0/mapbox-gl.css"
-    >
-
-    <script
-        src="https://api.mapbox.com/mapbox-gl-js/v3.30.0/mapbox-gl.js"
-        defer
-    ></script>
-@endassets
-
-  @script
 <script>
     (() => {
         const initialData = @js($mapData);
@@ -1022,549 +488,522 @@
             config('services.mapbox.public_token')
         );
 
+        const sourceId = 'team-payment-locations';
+
+        const clusterLayerId = 'team-payment-clusters';
+        const clusterCountLayerId = 'team-payment-cluster-count';
+        const pointLayerId = 'team-payment-points';
+
+        const clusterImageId = 'team-payment-cluster-image';
+        const pointImageId = 'team-payment-point-image';
+
+        const PURPLE = '#a78bfa';
+
+        /*
+        |--------------------------------------------------------------------------
+        | Remove previous map manager / map instance
+        |--------------------------------------------------------------------------
+        */
+
+        try {
+            if (
+                window.TeamDashboardMapManager &&
+                typeof window.TeamDashboardMapManager.destroy === 'function'
+            ) {
+                window.TeamDashboardMapManager.destroy();
+            }
+        } catch (error) {
+            // Ignore cleanup errors.
+        }
+
+        try {
+            if (
+                window.__teamDashboardMap &&
+                typeof window.__teamDashboardMap.remove === 'function'
+            ) {
+                window.__teamDashboardMap.remove();
+            }
+        } catch (error) {
+            // Ignore cleanup errors.
+        }
+
+        delete window.TeamDashboardMapManager;
+        delete window.__teamDashboardMap;
 
         /*
         |--------------------------------------------------------------------------
         | Map Manager
         |--------------------------------------------------------------------------
-        |
-        | The manager intentionally lives on window so it can survive
-        | Livewire SPA navigation.
-        |
-        | IMPORTANT:
-        |
-        | The Mapbox MAP INSTANCE does NOT survive navigation.
-        |
-        | The DOM container is replaced during wire:navigate, so we detect
-        | when the current container is different and create a new Mapbox
-        | instance for it.
-        |--------------------------------------------------------------------------
         */
 
-        if (!window.TeamDashboardMapManager) {
+        window.TeamDashboardMapManager = (() => {
+            let map = null;
+            let initialized = false;
+            let mapboxLoadPromise = null;
+            let interactionsBound = false;
 
-            window.TeamDashboardMapManager = (() => {
+            let mapData = {
+                type: 'FeatureCollection',
+                features: [],
+                meta: {},
+            };
 
-                let map = null;
+            /*
+            |--------------------------------------------------------------------------
+            | Helpers
+            |--------------------------------------------------------------------------
+            */
 
-                let mapContainer = null;
+            function isDarkMode() {
+                return document.documentElement.classList.contains('dark');
+            }
 
-                let mapData = {
-                    type: 'FeatureCollection',
-                    features: [],
-                    meta: {},
-                };
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Helpers
-                |--------------------------------------------------------------------------
-                */
-
-                function isDarkMode() {
-                    return document.documentElement
-                        .classList
-                        .contains('dark');
-                }
-
-
-                function normalizeData(data) {
-
-                    if (
-                        !data ||
-                        data.type !== 'FeatureCollection'
-                    ) {
-                        return {
-                            type: 'FeatureCollection',
-                            features: [],
-                            meta: {},
-                        };
-                    }
-
-
+            function normalizeData(data) {
+                if (
+                    !data ||
+                    data.type !== 'FeatureCollection'
+                ) {
                     return {
                         type: 'FeatureCollection',
-
-                        features:
-                            Array.isArray(data.features)
-                                ? data.features
-                                : [],
-
-                        meta:
-                            data.meta ?? {},
+                        features: [],
+                        meta: {},
                     };
                 }
 
+                return {
+                    type: 'FeatureCollection',
+                    features: Array.isArray(data.features)
+                        ? data.features
+                        : [],
+                    meta: data.meta ?? {},
+                };
+            }
 
-                function escapeHtml(value) {
+            function escapeHtml(value) {
+                return String(value ?? '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
 
-                    return String(value ?? '')
-                        .replace(/&/g, '&amp;')
-                        .replace(/</g, '&lt;')
-                        .replace(/>/g, '&gt;')
-                        .replace(/"/g, '&quot;')
-                        .replace(/'/g, '&#039;');
+            function formatMoney(cents) {
+                return (
+                    '$' +
+                    (
+                        Number(cents ?? 0) / 100
+                    ).toLocaleString(
+                        undefined,
+                        {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                        }
+                    )
+                );
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Mapbox Loader
+            |--------------------------------------------------------------------------
+            */
+
+            function ensureMapbox() {
+                if (
+                    typeof window.mapboxgl !== 'undefined'
+                ) {
+                    return Promise.resolve();
                 }
 
+                if (mapboxLoadPromise) {
+                    return mapboxLoadPromise;
+                }
 
-                function formatMoney(cents) {
+                mapboxLoadPromise = new Promise(
+                    (resolve, reject) => {
+                        const existingScript =
+                            document.querySelector(
+                                'script[data-team-dashboard-mapbox]'
+                            );
 
-                    return (
-                        '$' +
-                        (
-                            Number(cents ?? 0) / 100
-                        ).toLocaleString(
-                            undefined,
-                            {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
+                        const existingCss =
+                            document.querySelector(
+                                'link[data-team-dashboard-mapbox-css]'
+                            );
+
+                        if (!existingCss) {
+                            const css =
+                                document.createElement('link');
+
+                            css.rel = 'stylesheet';
+
+                            css.href =
+                                'https://api.mapbox.com/mapbox-gl-js/v3.30.0/mapbox-gl.css';
+
+                            css.dataset.teamDashboardMapboxCss =
+                                'true';
+
+                            document.head.appendChild(css);
+                        }
+
+                        if (existingScript) {
+                            if (
+                                typeof window.mapboxgl !==
+                                'undefined'
+                            ) {
+                                resolve();
+                                return;
                             }
-                        )
+
+                            existingScript.addEventListener(
+                                'load',
+                                resolve,
+                                { once: true }
+                            );
+
+                            existingScript.addEventListener(
+                                'error',
+                                reject,
+                                { once: true }
+                            );
+
+                            return;
+                        }
+
+                        const script =
+                            document.createElement('script');
+
+                        script.src =
+                            'https://api.mapbox.com/mapbox-gl-js/v3.30.0/mapbox-gl.js';
+
+                        script.dataset.teamDashboardMapbox =
+                            'true';
+
+                        script.onload = resolve;
+                        script.onerror = reject;
+
+                        document.head.appendChild(script);
+                    }
+                );
+
+                return mapboxLoadPromise;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Marker Image Creation
+            |--------------------------------------------------------------------------
+            */
+
+            function createCircleImage(
+                size,
+                fillColor,
+                strokeColor,
+                strokeWidth
+            ) {
+                const canvas =
+                    document.createElement('canvas');
+
+                canvas.width = size;
+                canvas.height = size;
+
+                const context =
+                    canvas.getContext('2d');
+
+                if (!context) {
+                    throw new Error(
+                        'Unable to create canvas context.'
                     );
                 }
 
+                const center = size / 2;
+                const radius = (size / 2) - strokeWidth;
+
+                context.clearRect(
+                    0,
+                    0,
+                    size,
+                    size
+                );
+
+                context.beginPath();
+
+                context.arc(
+                    center,
+                    center,
+                    radius,
+                    0,
+                    Math.PI * 2
+                );
+
+                context.fillStyle =
+                    fillColor;
+
+                context.fill();
+
+                context.lineWidth =
+                    strokeWidth;
+
+                context.strokeStyle =
+                    strokeColor;
+
+                context.stroke();
+
+                return {
+                    width: size,
+                    height: size,
+                    data: context.getImageData(
+                        0,
+                        0,
+                        size,
+                        size
+                    ).data,
+                };
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Register Marker Images
+            |--------------------------------------------------------------------------
+            */
+
+            function ensureMarkerImages() {
+                if (!map) {
+                    return;
+                }
 
                 /*
-                |--------------------------------------------------------------------------
-                | Destroy the current Mapbox instance
-                |--------------------------------------------------------------------------
+                | Individual payment marker
                 */
 
-                function destroy() {
+                if (!map.hasImage(pointImageId)) {
+                    const pointImage =
+                        createCircleImage(
+                            64,
+                            PURPLE,
+                            '#ffffff',
+                            5
+                        );
 
-                    if (map) {
+                    map.addImage(
+                        pointImageId,
+                        pointImage,
+                        {
+                            pixelRatio: 2,
+                        }
+                    );
+                }
 
-                        try {
+                /*
+                | Cluster marker
+                */
 
-                            map.remove();
+                if (!map.hasImage(clusterImageId)) {
+                    const clusterImage =
+                        createCircleImage(
+                            96,
+                            PURPLE,
+                            '#ffffff',
+                            6
+                        );
 
-                        } catch (error) {
+                    map.addImage(
+                        clusterImageId,
+                        clusterImage,
+                        {
+                            pixelRatio: 2,
+                        }
+                    );
+                }
+            }
 
-                            console.warn(
-                                'Unable to remove previous Team Dashboard map.',
-                                error
+            /*
+            |--------------------------------------------------------------------------
+            | Fit Map
+            |--------------------------------------------------------------------------
+            */
+
+            function fitToData() {
+                if (
+                    !map ||
+                    !mapData.features.length
+                ) {
+                    return;
+                }
+
+                const bounds =
+                    new mapboxgl.LngLatBounds();
+
+                mapData.features.forEach(
+                    (feature) => {
+                        const coordinates =
+                            feature?.geometry?.coordinates;
+
+                        if (
+                            Array.isArray(coordinates) &&
+                            coordinates.length === 2
+                        ) {
+                            bounds.extend(
+                                coordinates
                             );
                         }
                     }
+                );
 
-
-                    map = null;
-
-                    mapContainer = null;
-                }
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Get current DOM container
-                |--------------------------------------------------------------------------
-                */
-
-                function getContainer() {
-
-                    return document.getElementById(
-                        'teamDashboardPaymentMap'
-                    );
-                }
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Detect whether the existing Map belongs to the current page
-                |--------------------------------------------------------------------------
-                */
-
-                function hasCurrentContainer() {
-
-                    const container =
-                        getContainer();
-
-
-                    if (!container) {
-                        return false;
-                    }
-
-
-                    if (!map) {
-                        return false;
-                    }
-
-
-                    if (!mapContainer) {
-                        return false;
-                    }
-
-
-                    /*
-                    | The most important check.
-                    |
-                    | wire:navigate creates a new DOM node.
-                    |
-                    | Even though the ID is identical:
-                    |
-                    | oldContainer !== newContainer
-                    |
-                    |--------------------------------------------------------------------------
-                    */
-
-
-                    if (mapContainer !== container) {
-                        return false;
-                    }
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Make sure the old container is still actually in the document.
-                    |--------------------------------------------------------------------------
-                    */
-
-                    if (!document.documentElement.contains(
-                        mapContainer
-                    )) {
-                        return false;
-                    }
-
-
-                    return true;
-                }
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Fit map to payment data
-                |--------------------------------------------------------------------------
-                */
-
-                function fitToData() {
-
-                    if (
-                        !map ||
-                        !mapData.features.length
-                    ) {
-                        return;
-                    }
-
-
-                    if (
-                        typeof mapboxgl === 'undefined'
-                    ) {
-                        return;
-                    }
-
-
-                    const bounds =
-                        new mapboxgl.LngLatBounds();
-
-
-                    mapData.features.forEach(
-                        feature => {
-
-                            const coordinates =
-                                feature
-                                    ?.geometry
-                                    ?.coordinates;
-
-
-                            if (
-                                Array.isArray(
-                                    coordinates
-                                ) &&
-                                coordinates.length === 2
-                            ) {
-
-                                bounds.extend(
-                                    coordinates
-                                );
-                            }
-
+                if (!bounds.isEmpty()) {
+                    map.fitBounds(
+                        bounds,
+                        {
+                            padding: {
+                                top: 70,
+                                bottom: 70,
+                                left: 70,
+                                right: 70,
+                            },
+                            maxZoom: 12,
+                            duration: 700,
                         }
                     );
-
-
-                    if (
-                        !bounds.isEmpty()
-                    ) {
-
-                        map.fitBounds(
-                            bounds,
-                            {
-                                padding: {
-                                    top: 70,
-                                    bottom: 70,
-                                    left: 70,
-                                    right: 70,
-                                },
-
-                                maxZoom: 12,
-
-                                duration: 700,
-                            }
-                        );
-                    }
                 }
+            }
 
+            /*
+            |--------------------------------------------------------------------------
+            | Popup
+            |--------------------------------------------------------------------------
+            */
 
-                /*
-                |--------------------------------------------------------------------------
-                | Popup HTML
-                |--------------------------------------------------------------------------
-                */
+            function createPopup(feature) {
+                const properties =
+                    feature?.properties ?? {};
 
-                function createPopup(feature) {
+                const name =
+                    escapeHtml(
+                        properties.customer_name ||
+                        'Unknown customer'
+                    );
 
-                    const properties =
-                        feature?.properties ?? {};
+                const amount =
+                    formatMoney(
+                        properties.amount
+                    );
 
+                const location =
+                    escapeHtml(
+                        properties.location_label ||
+                        'Location unavailable'
+                    );
 
-                    const name =
-                        escapeHtml(
-                            properties.customer_name
-                                || 'Unknown customer'
-                        );
+                const paidAt =
+                    escapeHtml(
+                        properties.paid_at ||
+                        'Unknown'
+                    );
 
+                const paymentMethod =
+                    escapeHtml(
+                        properties.payment_method ||
+                        'Payment'
+                    );
 
-                    const amount =
-                        formatMoney(
-                            properties.amount
-                        );
+                const accuracy =
+                    properties.accuracy_radius
+                        ? `~${escapeHtml(
+                              properties.accuracy_radius
+                          )} km radius`
+                        : 'Approximate location';
 
-
-                    const location =
-                        escapeHtml(
-                            properties.location_label
-                                || 'Location unavailable'
-                        );
-
-
-                    const paidAt =
-                        escapeHtml(
-                            properties.paid_at
-                                || 'Unknown'
-                        );
-
-
-                    const paymentMethod =
-                        escapeHtml(
-                            properties.payment_method
-                                || 'Payment'
-                        );
-
-
-                    const accuracy =
-                        properties.accuracy_radius
-                            ? `~${escapeHtml(
-                                properties.accuracy_radius
-                            )} km radius`
-                            : 'Approximate location';
-
-
-                    return `
-                        <div class="dashboard-map-popup">
-
-                            <div class="dashboard-map-popup-title">
-                                ${name}
-                            </div>
-
-                            <div class="dashboard-map-popup-amount">
-                                ${amount}
-                            </div>
-
-                            <div class="dashboard-map-popup-location">
-                                ${location}
-                            </div>
-
-                            <div class="dashboard-map-popup-row">
-                                <span>
-                                    Paid
-                                </span>
-
-                                <strong>
-                                    ${paidAt}
-                                </strong>
-                            </div>
-
-                            <div class="dashboard-map-popup-row">
-                                <span>
-                                    Method
-                                </span>
-
-                                <strong>
-                                    ${paymentMethod}
-                                </strong>
-                            </div>
-
-                            <div class="dashboard-map-popup-row">
-                                <span>
-                                    GeoIP
-                                </span>
-
-                                <strong>
-                                    ${accuracy}
-                                </strong>
-                            </div>
-
+                return `
+                    <div class="dashboard-map-popup">
+                        <div class="dashboard-map-popup-title">
+                            ${name}
                         </div>
-                    `;
-                }
 
+                        <div class="dashboard-map-popup-amount">
+                            ${amount}
+                        </div>
+
+                        <div class="dashboard-map-popup-location">
+                            ${location}
+                        </div>
+
+                        <div class="dashboard-map-popup-row">
+                            <span>Paid</span>
+                            <strong>${paidAt}</strong>
+                        </div>
+
+                        <div class="dashboard-map-popup-row">
+                            <span>Method</span>
+                            <strong>${paymentMethod}</strong>
+                        </div>
+
+                        <div class="dashboard-map-popup-row">
+                            <span>GeoIP</span>
+                            <strong>${accuracy}</strong>
+                        </div>
+                    </div>
+                `;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Add Sources / Layers
+            |--------------------------------------------------------------------------
+            */
+
+            function addMapData() {
+                if (
+                    !map ||
+                    !map.isStyleLoaded()
+                ) {
+                    return;
+                }
 
                 /*
                 |--------------------------------------------------------------------------
-                | Add GeoJSON source + layers
+                | GeoJSON Source
                 |--------------------------------------------------------------------------
                 */
 
-                function addMapData() {
-
-                    if (!map) {
-                        return;
-                    }
-
-
-                    if (
-                        typeof map.isStyleLoaded !== 'function' ||
-                        !map.isStyleLoaded()
-                    ) {
-                        return;
-                    }
-
-
-                    const sourceId =
-                        'team-payment-locations';
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Update existing source
-                    |--------------------------------------------------------------------------
-                    */
-
-                    const existingSource =
-                        map.getSource(
-                            sourceId
-                        );
-
-
-                    if (existingSource) {
-
-                        existingSource.setData(
-                            mapData
-                        );
-
-                        fitToData();
-
-                        return;
-                    }
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | GeoJSON source
-                    |--------------------------------------------------------------------------
-                    */
-
+                if (!map.getSource(sourceId)) {
                     map.addSource(
                         sourceId,
                         {
                             type: 'geojson',
-
                             data: mapData,
-
                             cluster: true,
-
                             clusterMaxZoom: 14,
-
                             clusterRadius: 50,
                         }
                     );
+                } else {
+                    map.getSource(sourceId).setData(
+                        mapData
+                    );
+                }
 
+                /*
+                |--------------------------------------------------------------------------
+                | Marker Images
+                |--------------------------------------------------------------------------
+                */
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Cluster circles
-                    |--------------------------------------------------------------------------
-                    */
+                ensureMarkerImages();
 
+                /*
+                |--------------------------------------------------------------------------
+                | Cluster Marker
+                |--------------------------------------------------------------------------
+                |
+                | Image-based symbol instead of a circle layer.
+                |
+                */
+
+                if (!map.getLayer(clusterLayerId)) {
                     map.addLayer({
-
                         id:
-                            'team-payment-clusters',
-
-                        type:
-                            'circle',
-
-                        source:
-                            sourceId,
-
-                        filter: [
-                            'has',
-                            'point_count',
-                        ],
-
-                        paint: {
-
-                            'circle-color': [
-                                'step',
-
-                                [
-                                    'get',
-                                    'point_count',
-                                ],
-
-                                '#7c3aed',
-
-                                10,
-
-                                '#2563eb',
-
-                                50,
-
-                                '#0891b2',
-                            ],
-
-                            'circle-radius': [
-                                'step',
-
-                                [
-                                    'get',
-                                    'point_count',
-                                ],
-
-                                18,
-
-                                10,
-
-                                22,
-
-                                50,
-
-                                27,
-                            ],
-
-                            'circle-stroke-width':
-                                2,
-
-                            'circle-stroke-color':
-                                '#ffffff',
-
-                            'circle-opacity':
-                                0.90,
-                        },
-                    });
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Cluster count
-                    |--------------------------------------------------------------------------
-                    */
-
-                    map.addLayer({
-
-                        id:
-                            'team-payment-cluster-count',
+                            clusterLayerId,
 
                         type:
                             'symbol',
@@ -1578,6 +1017,31 @@
                         ],
 
                         layout: {
+                            'icon-image':
+                                clusterImageId,
+
+                            'icon-size': [
+                                'step',
+
+                                [
+                                    'get',
+                                    'point_count',
+                                ],
+
+                                0.72,
+
+                                10,
+                                0.85,
+
+                                50,
+                                1.00,
+                            ],
+
+                            'icon-allow-overlap':
+                                true,
+
+                            'icon-ignore-placement':
+                                true,
 
                             'text-field':
                                 '{point_count_abbreviated}',
@@ -1587,30 +1051,81 @@
                             ],
 
                             'text-size':
-                                11,
+                                12,
+
+                            'text-allow-overlap':
+                                true,
+
+                            'text-ignore-placement':
+                                true,
                         },
 
                         paint: {
-
                             'text-color':
                                 '#ffffff',
+
+                            'text-halo-color':
+                                PURPLE,
+
+                            'text-halo-width':
+                                0.5,
                         },
                     });
+                }
 
+                /*
+                |--------------------------------------------------------------------------
+                | Cluster Count
+                |--------------------------------------------------------------------------
+                |
+                | Kept for compatibility. Hidden visually because the cluster
+                | layer above already contains the count.
+                |
+                */
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Individual payment points
-                    |--------------------------------------------------------------------------
-                    */
-
+                if (
+                    !map.getLayer(
+                        clusterCountLayerId
+                    )
+                ) {
                     map.addLayer({
-
                         id:
-                            'team-payment-points',
+                            clusterCountLayerId,
 
                         type:
-                            'circle',
+                            'symbol',
+
+                        source:
+                            sourceId,
+
+                        filter: [
+                            'has',
+                            'point_count',
+                        ],
+
+                        layout: {
+                            'text-field':
+                                '',
+
+                            'text-size':
+                                1,
+                        },
+                    });
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Individual Payment Marker
+                |--------------------------------------------------------------------------
+                */
+
+                if (!map.getLayer(pointLayerId)) {
+                    map.addLayer({
+                        id:
+                            pointLayerId,
+
+                        type:
+                            'symbol',
 
                         source:
                             sourceId,
@@ -1623,997 +1138,559 @@
                             ],
                         ],
 
-                        paint: {
+                        layout: {
+                            'icon-image':
+                                pointImageId,
 
-                            'circle-color':
-                                isDarkMode()
-                                    ? '#a78bfa'
-                                    : '#7c3aed',
+                            'icon-size':
+                                0.70,
 
-                            'circle-radius': [
-                                'interpolate',
+                            'icon-allow-overlap':
+                                true,
 
-                                ['linear'],
+                            'icon-ignore-placement':
+                                true,
+                        },
+                    });
+                }
 
-                                [
-                                    'get',
-                                    'amount',
-                                ],
+                /*
+                |--------------------------------------------------------------------------
+                | Interactions
+                |--------------------------------------------------------------------------
+                */
 
-                                0,
-                                5,
+                bindInteractions();
 
-                                10000,
-                                7,
+                fitToData();
+            }
 
-                                100000,
+            /*
+            |--------------------------------------------------------------------------
+            | Interactions
+            |--------------------------------------------------------------------------
+            */
+
+            function bindInteractions() {
+                if (
+                    !map ||
+                    interactionsBound
+                ) {
+                    return;
+                }
+
+                interactionsBound = true;
+
+                /*
+                |--------------------------------------------------------------------------
+                | Cluster Click
+                |--------------------------------------------------------------------------
+                */
+
+                map.on(
+                    'click',
+                    clusterLayerId,
+                    (event) => {
+                        const features =
+                            map.queryRenderedFeatures(
+                                event.point,
+                                {
+                                    layers: [
+                                        clusterLayerId,
+                                    ],
+                                }
+                            );
+
+                        const clusterId =
+                            features[0]
+                                ?.properties
+                                ?.cluster_id;
+
+                        if (
+                            clusterId === undefined
+                        ) {
+                            return;
+                        }
+
+                        const coordinates =
+                            features[0]
+                                ?.geometry
+                                ?.coordinates;
+
+                        if (!coordinates) {
+                            return;
+                        }
+
+                        const source =
+                            map.getSource(
+                                sourceId
+                            );
+
+                        if (
+                            !source ||
+                            typeof source.getClusterExpansionZoom !==
+                                'function'
+                        ) {
+                            return;
+                        }
+
+                        source.getClusterExpansionZoom(
+                            clusterId,
+                            (
+                                error,
+                                zoom
+                            ) => {
+                                if (error) {
+                                    return;
+                                }
+
+                                map.easeTo({
+                                    center:
+                                        coordinates,
+
+                                    zoom:
+                                        zoom,
+                                });
+                            }
+                        );
+                    }
+                );
+
+                /*
+                |--------------------------------------------------------------------------
+                | Individual Point Click
+                |--------------------------------------------------------------------------
+                */
+
+                map.on(
+                    'click',
+                    pointLayerId,
+                    (event) => {
+                        const feature =
+                            event.features?.[0];
+
+                        if (!feature) {
+                            return;
+                        }
+
+                        new mapboxgl.Popup({
+                            offset:
                                 10,
-                            ],
 
-                            'circle-stroke-width':
-                                2,
+                            closeButton:
+                                true,
 
-                            'circle-stroke-color':
-                                '#ffffff',
+                            closeOnClick:
+                                true,
+                        })
+                            .setLngLat(
+                                feature.geometry
+                                    .coordinates
+                            )
+                            .setHTML(
+                                createPopup(
+                                    feature
+                                )
+                            )
+                            .addTo(map);
+                    }
+                );
 
-                            'circle-opacity':
-                                0.92,
+                /*
+                |--------------------------------------------------------------------------
+                | Cluster Cursor
+                |--------------------------------------------------------------------------
+                */
+
+                map.on(
+                    'mouseenter',
+                    clusterLayerId,
+                    () => {
+                        map.getCanvas()
+                            .style
+                            .cursor =
+                            'pointer';
+                    }
+                );
+
+                map.on(
+                    'mouseleave',
+                    clusterLayerId,
+                    () => {
+                        map.getCanvas()
+                            .style
+                            .cursor =
+                            '';
+                    }
+                );
+
+                /*
+                |--------------------------------------------------------------------------
+                | Point Cursor
+                |--------------------------------------------------------------------------
+                */
+
+                map.on(
+                    'mouseenter',
+                    pointLayerId,
+                    () => {
+                        map.getCanvas()
+                            .style
+                            .cursor =
+                            'pointer';
+                    }
+                );
+
+                map.on(
+                    'mouseleave',
+                    pointLayerId,
+                    () => {
+                        map.getCanvas()
+                            .style
+                            .cursor =
+                            '';
+                    }
+                );
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Theme
+            |--------------------------------------------------------------------------
+            */
+
+            function updateTheme() {
+                if (
+                    !map ||
+                    !map.isStyleLoaded()
+                ) {
+                    return;
+                }
+
+                if (
+                    typeof map.setConfigProperty ===
+                    'function'
+                ) {
+                    map.setConfigProperty(
+                        'basemap',
+                        'lightPreset',
+                        isDarkMode()
+                            ? 'night'
+                            : 'day'
+                    );
+                }
+
+                requestAnimationFrame(() => {
+                    ensureMarkerImages();
+                });
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Initialize
+            |--------------------------------------------------------------------------
+            */
+
+            async function initialize() {
+                if (initialized) {
+                    return;
+                }
+
+                if (!mapboxToken) {
+                    console.error(
+                        'Mapbox public token is not configured.'
+                    );
+
+                    return;
+                }
+
+                try {
+                    await ensureMapbox();
+                } catch (error) {
+                    console.error(
+                        'Failed to load Mapbox GL JS.',
+                        error
+                    );
+
+                    return;
+                }
+
+                if (
+                    typeof window.mapboxgl ===
+                    'undefined'
+                ) {
+                    console.error(
+                        'Mapbox GL JS is unavailable.'
+                    );
+
+                    return;
+                }
+
+                mapboxgl.accessToken =
+                    mapboxToken;
+
+                const container =
+                    document.getElementById(
+                        'teamDashboardPaymentMap'
+                    );
+
+                if (!container) {
+                    return;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Create Map
+                |--------------------------------------------------------------------------
+                */
+
+                map =
+                    new mapboxgl.Map({
+                        container,
+
+                        style:
+                            'mapbox://styles/mapbox/standard',
+
+                        center: [
+                            -95.3698,
+                            29.7604,
+                        ],
+
+                        zoom:
+                            4,
+
+                        config: {
+                            basemap: {
+                                lightPreset:
+                                    isDarkMode()
+                                        ? 'night'
+                                        : 'day',
+                            },
                         },
                     });
 
+                window.__teamDashboardMap =
+                    map;
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Cluster click
-                    |--------------------------------------------------------------------------
-                    */
+                /*
+                |--------------------------------------------------------------------------
+                | Navigation Control
+                |--------------------------------------------------------------------------
+                */
 
-                    map.on(
-                        'click',
-                        'team-payment-clusters',
-                        event => {
+                map.addControl(
+                    new mapboxgl.NavigationControl({
+                        visualizePitch:
+                            true,
+                    }),
+                    'top-right'
+                );
 
-                            const features =
-                                map.queryRenderedFeatures(
-                                    event.point,
-                                    {
-                                        layers: [
-                                            'team-payment-clusters',
-                                        ],
-                                    }
-                                );
+                /*
+                |--------------------------------------------------------------------------
+                | Map Load
+                |--------------------------------------------------------------------------
+                */
 
+                map.on(
+                    'load',
+                    () => {
+                        ensureMarkerImages();
 
-                            const clusterId =
-                                features[0]
-                                    ?.properties
-                                    ?.cluster_id;
+                        addMapData();
 
+                        updateTheme();
 
-                            if (
-                                clusterId ===
-                                undefined
-                            ) {
-                                return;
-                            }
+                        bindInteractions();
+                    }
+                );
 
+                /*
+                |--------------------------------------------------------------------------
+                | Style Changes
+                |--------------------------------------------------------------------------
+                */
 
-                            const source =
-                                map.getSource(
-                                    sourceId
-                                );
+                map.on(
+                    'styledata',
+                    () => {
+                        if (
+                            !map ||
+                            !map.isStyleLoaded()
+                        ) {
+                            return;
+                        }
 
+                        ensureMarkerImages();
 
-                            if (
-                                !source ||
-                                typeof source.getClusterExpansionZoom !==
-                                    'function'
-                            ) {
-                                return;
-                            }
-
-
-                            source.getClusterExpansionZoom(
-                                clusterId,
-                                (
-                                    error,
-                                    zoom
-                                ) => {
-
-                                    if (error) {
-                                        return;
-                                    }
-
-
-                                    const coordinates =
-                                        features[0]
-                                            ?.geometry
-                                            ?.coordinates;
-
-
-                                    if (
-                                        !coordinates
-                                    ) {
-                                        return;
-                                    }
-
-
-                                    map.easeTo({
-                                        center:
-                                            coordinates,
-
-                                        zoom:
-                                            zoom,
-                                    });
-                                }
+                        const sourceExists =
+                            !!map.getSource(
+                                sourceId
                             );
+
+                        const pointLayerExists =
+                            !!map.getLayer(
+                                pointLayerId
+                            );
+
+                        const clusterLayerExists =
+                            !!map.getLayer(
+                                clusterLayerId
+                            );
+
+                        if (
+                            !sourceExists ||
+                            !pointLayerExists ||
+                            !clusterLayerExists
+                        ) {
+                            addMapData();
                         }
-                    );
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Point click
-                    |--------------------------------------------------------------------------
-                    */
-
-                    map.on(
-                        'click',
-                        'team-payment-points',
-                        event => {
-
-                            const feature =
-                                event
-                                    .features
-                                    ?.[0];
-
-
-                            if (!feature) {
-                                return;
-                            }
-
-
-                            new mapboxgl.Popup({
-                                offset: 10,
-
-                                closeButton: true,
-
-                                closeOnClick: true,
-                            })
-                                .setLngLat(
-                                    feature
-                                        .geometry
-                                        .coordinates
-                                )
-                                .setHTML(
-                                    createPopup(
-                                        feature
-                                    )
-                                )
-                                .addTo(
-                                    map
-                                );
-                        }
-                    );
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Cluster cursor
-                    |--------------------------------------------------------------------------
-                    */
-
-                    map.on(
-                        'mouseenter',
-                        'team-payment-clusters',
-                        () => {
-
-                            map.getCanvas()
-                                .style
-                                .cursor =
-                                'pointer';
-                        }
-                    );
-
-
-                    map.on(
-                        'mouseleave',
-                        'team-payment-clusters',
-                        () => {
-
-                            map.getCanvas()
-                                .style
-                                .cursor =
-                                '';
-                        }
-                    );
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Point cursor
-                    |--------------------------------------------------------------------------
-                    */
-
-                    map.on(
-                        'mouseenter',
-                        'team-payment-points',
-                        () => {
-
-                            map.getCanvas()
-                                .style
-                                .cursor =
-                                'pointer';
-                        }
-                    );
-
-
-                    map.on(
-                        'mouseleave',
-                        'team-payment-points',
-                        () => {
-
-                            map.getCanvas()
-                                .style
-                                .cursor =
-                                '';
-                        }
-                    );
-
-
-                    fitToData();
-                }
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Update Mapbox basemap theme
-                |--------------------------------------------------------------------------
-                */
-
-                function updateTheme() {
-
-                    if (
-                        !map ||
-                        !map.isStyleLoaded()
-                    ) {
-                        return;
                     }
+                );
 
-
-                    if (
-                        typeof map.setConfigProperty ===
-                        'function'
-                    ) {
-
-                        map.setConfigProperty(
-                            'basemap',
-                            'lightPreset',
-
-                            isDarkMode()
-                                ? 'night'
-                                : 'day'
-                        );
-                    }
-
-
-                    if (
-                        map.getLayer(
-                            'team-payment-points'
-                        )
-                    ) {
-
-                        map.setPaintProperty(
-                            'team-payment-points',
-
-                            'circle-color',
-
-                            isDarkMode()
-                                ? '#a78bfa'
-                                : '#7c3aed'
-                        );
-                    }
-                }
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Initialize / Re-initialize
-                |--------------------------------------------------------------------------
-                */
-
-               async function initialize() {
-
-    /*
-    |--------------------------------------------------------------------------
-    | Mapbox token
-    |--------------------------------------------------------------------------
-    */
-
-    if (!mapboxToken) {
-
-        console.error(
-            'Mapbox public token is not configured.'
-        );
-
-        return;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Mapbox library
-    |--------------------------------------------------------------------------
-    */
-
-    if (
-        typeof window.mapboxgl ===
-        'undefined'
-    ) {
-
-        console.error(
-            'Mapbox GL JS is not available.'
-        );
-
-        return;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Current page container
-    |--------------------------------------------------------------------------
-    */
-
-    const container =
-        getContainer();
-
-
-    if (!container) {
-
-        return;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Fallback elements
-    |--------------------------------------------------------------------------
-    */
-
-    const unsupportedElement =
-        document.getElementById(
-            'teamDashboardMapUnsupported'
-        );
-
-
-    const emptyElement =
-        document.getElementById(
-            'teamDashboardMapEmpty'
-        );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | WebGL 2 / Mapbox support
-    |--------------------------------------------------------------------------
-    |
-    | Mapbox GL JS v3 requires WebGL 2.
-    |
-    | mapboxgl.supported() is the official Mapbox compatibility check.
-    |--------------------------------------------------------------------------
-    */
-
-    if (
-        typeof window.mapboxgl.supported !==
-        'function' ||
-        !window.mapboxgl.supported()
-    ) {
-
-        console.warn(
-            'Mapbox GL JS is not supported in this browser.'
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Make sure an old map is not left behind
-        |--------------------------------------------------------------------------
-        */
-
-        destroy();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Hide normal empty-data message
-        |--------------------------------------------------------------------------
-        */
-
-        if (emptyElement) {
-            emptyElement.hidden = true;
-            emptyElement.style.display = 'none';
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Hide map container
-        |--------------------------------------------------------------------------
-        */
-
-        container.style.display = 'none';
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Show browser instructions
-        |--------------------------------------------------------------------------
-        */
-
-        if (unsupportedElement) {
-
-            unsupportedElement.hidden = false;
-
-            unsupportedElement.style.display =
-                'flex';
-        }
-
-
-        return;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Browser is supported
-    |--------------------------------------------------------------------------
-    */
-
-    if (unsupportedElement) {
-
-        unsupportedElement.hidden = true;
-
-        unsupportedElement.style.display =
-            'none';
-    }
-
-
-    container.style.display =
-        'block';
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | If there is no map data, let the normal "No payment locations"
-    | overlay remain visible.
-    |--------------------------------------------------------------------------
-    */
-
-    if (
-        emptyElement &&
-        !emptyElement.hidden
-    ) {
-
-        emptyElement.style.display =
-            'flex';
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | IMPORTANT:
-    |
-    | If this exact DOM container already owns the current map,
-    | keep the map instead of recreating it.
-    |--------------------------------------------------------------------------
-    */
-
-    if (
-        hasCurrentContainer()
-    ) {
-
-        requestAnimationFrame(() => {
-
-            if (
-                map &&
-                mapContainer ===
-                    getContainer()
-            ) {
-
-                try {
-
-                    map.resize();
-
-                } catch (error) {
-
-                    console.warn(
-                        'Unable to resize Team Dashboard map.',
-                        error
-                    );
-                }
-            }
-        });
-
-
-        return;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | SPA navigation replaced the map container.
-    |
-    | Destroy the old Mapbox instance.
-    |--------------------------------------------------------------------------
-    */
-
-    destroy();
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Associate manager with NEW container
-    |--------------------------------------------------------------------------
-    */
-
-    mapContainer =
-        container;
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Mapbox token
-    |--------------------------------------------------------------------------
-    */
-
-    mapboxgl.accessToken =
-        mapboxToken;
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Create map
-    |--------------------------------------------------------------------------
-    */
-
-    const newMap =
-        new mapboxgl.Map({
-            container:
-
-                container,
-
-            style:
-                'mapbox://styles/mapbox/standard',
-
-            center: [
-                -95.3698,
-                29.7604,
-            ],
-
-            zoom: 4,
-
-            config: {
-
-                basemap: {
-
-                    lightPreset:
-                        isDarkMode()
-                            ? 'night'
-                            : 'day',
-                },
-            },
-        });
-
-
-    map =
-        newMap;
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Navigation control
-    |--------------------------------------------------------------------------
-    */
-
-    newMap.addControl(
-        new mapboxgl.NavigationControl({
-            visualizePitch: true,
-        }),
-        'top-right'
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Mapbox error handling
-    |--------------------------------------------------------------------------
-    */
-
-    newMap.on(
-        'error',
-        event => {
-
-            console.error(
-                'Mapbox error:',
-                event?.error ?? event
-            );
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Wait for style
-    |--------------------------------------------------------------------------
-    */
-
-    newMap.once(
-        'load',
-        () => {
-
-            /*
-            |--------------------------------------------------------------------------
-            | Ignore stale map instances
-            |--------------------------------------------------------------------------
-            */
-
-            if (
-                map !== newMap
-            ) {
-                return;
+                initialized =
+                    true;
             }
 
-
             /*
             |--------------------------------------------------------------------------
-            | Make sure this is still the current SPA DOM container
+            | Update Data
             |--------------------------------------------------------------------------
             */
 
-            if (
-                mapContainer !==
-                getContainer()
-            ) {
-                return;
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Add payment data
-            |--------------------------------------------------------------------------
-            */
-
-            addMapData();
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Apply current theme
-            |--------------------------------------------------------------------------
-            */
-
-            updateTheme();
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Resize after layout settles
-            |--------------------------------------------------------------------------
-            */
-
-            requestAnimationFrame(() => {
+            function setData(data) {
+                mapData =
+                    normalizeData(data);
 
                 if (
-                    map === newMap
+                    !map ||
+                    !map.isStyleLoaded()
                 ) {
-
-                    try {
-
-                        newMap.resize();
-
-                    } catch (error) {
-
-                        console.warn(
-                            'Unable to resize Team Dashboard map.',
-                            error
-                        );
-                    }
+                    return;
                 }
-            });
-        }
-    );
-}
 
-                /*
-                |--------------------------------------------------------------------------
-                | Update data
-                |--------------------------------------------------------------------------
-                */
+                const source =
+                    map.getSource(
+                        sourceId
+                    );
 
-                function setData(data) {
+                if (source) {
+                    source.setData(
+                        mapData
+                    );
 
-                    mapData =
-                        normalizeData(
-                            data
-                        );
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Update currently displayed map
-                    |--------------------------------------------------------------------------
-                    */
-
-                    if (
-                        !map ||
-                        !mapContainer
-                    ) {
-                        return;
-                    }
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | If navigation has replaced the container, don't attempt
-                    | to modify the old map.
-                    |--------------------------------------------------------------------------
-                    */
-
-                    const currentContainer =
-                        getContainer();
-
-
-                    if (
-                        mapContainer !==
-                        currentContainer
-                    ) {
-                        return;
-                    }
-
-
-                    if (
-                        !document.documentElement.contains(
-                            mapContainer
-                        )
-                    ) {
-                        return;
-                    }
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Map style isn't ready yet.
-                    |
-                    | The load handler will consume the latest mapData.
-                    |--------------------------------------------------------------------------
-                    */
-
-                    if (
-                        !map.isStyleLoaded()
-                    ) {
-                        return;
-                    }
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Existing source
-                    |--------------------------------------------------------------------------
-                    */
-
-                    const source =
-                        map.getSource(
-                            'team-payment-locations'
-                        );
-
-
-                    if (source) {
-
-                        source.setData(
-                            mapData
-                        );
-
-                        fitToData();
-
-                        return;
-                    }
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Source doesn't exist yet
-                    |--------------------------------------------------------------------------
-                    */
-
+                    fitToData();
+                } else {
                     addMapData();
                 }
+            }
 
+            /*
+            |--------------------------------------------------------------------------
+            | Destroy
+            |--------------------------------------------------------------------------
+            */
 
-                /*
-                |--------------------------------------------------------------------------
-                | Public API
-                |--------------------------------------------------------------------------
-                */
+            function destroy() {
+                if (map) {
+                    try {
+                        map.remove();
+                    } catch (error) {
+                        // Ignore cleanup errors.
+                    }
+                }
 
-                return {
+                map = null;
+                initialized = false;
+                interactionsBound = false;
+            }
 
-                    initialize,
-
-                    setData,
-
-                    updateTheme,
-
-                    destroy,
-
-                };
-
-            })();
-        }
-
+            return {
+                initialize,
+                setData,
+                updateTheme,
+                destroy,
+            };
+        })();
 
         /*
         |--------------------------------------------------------------------------
-        | Pass initial server data to manager
+        | Initial Data
         |--------------------------------------------------------------------------
         */
 
-        window.TeamDashboardMapManager
-            .setData(initialData);
-
+        window.TeamDashboardMapManager.setData(
+            initialData
+        );
 
         /*
         |--------------------------------------------------------------------------
-        | Initialize for THIS page/component instance
-        |--------------------------------------------------------------------------
-        |
-        | This runs again when Livewire brings the component onto the page.
-        | initialize() determines whether the current DOM container is new.
+        | Initialize
         |--------------------------------------------------------------------------
         */
 
-        window.TeamDashboardMapManager
-            .initialize();
-
+        window.TeamDashboardMapManager.initialize();
 
         /*
         |--------------------------------------------------------------------------
-        | Dashboard map data updates
+        | Livewire Map Updates
         |--------------------------------------------------------------------------
         */
 
         if (
             !window.__teamDashboardMapListener
         ) {
-
             window.__teamDashboardMapListener =
                 true;
 
-
             window.addEventListener(
                 'dashboard-map-updated',
-                event => {
-
+                (event) => {
                     const data =
                         event.detail?.data ??
                         null;
-
 
                     if (!data) {
                         return;
                     }
 
-
-                    if (
-                        !window.TeamDashboardMapManager
-                    ) {
-                        return;
-                    }
-
-
                     window.TeamDashboardMapManager
-                        .setData(
+                        ?.setData(
                             data
                         );
                 }
             );
         }
 
-
         /*
         |--------------------------------------------------------------------------
-        | Theme updates
+        | Dashboard Theme Updates
         |--------------------------------------------------------------------------
         */
 
         if (
             !window.__teamDashboardMapThemeObserver
         ) {
-
             window.__teamDashboardMapThemeObserver =
                 new MutationObserver(
                     () => {
-
-                        if (
-                            window.TeamDashboardMapManager
-                        ) {
-
-                            window.TeamDashboardMapManager
-                                .updateTheme();
-                        }
+                        window.TeamDashboardMapManager
+                            ?.updateTheme();
                     }
                 );
 
+            window.__teamDashboardMapThemeObserver.observe(
+                document.documentElement,
+                {
+                    attributes: true,
 
-            window.__teamDashboardMapThemeObserver
-                .observe(
-                    document.documentElement,
-                    {
-                        attributes: true,
-
-                        attributeFilter: [
-                            'class',
-                            'data-theme',
-                        ],
-                    }
-                );
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Explicit SPA navigation recovery
-        |--------------------------------------------------------------------------
-        |
-        | Livewire fires "livewire:navigated" after navigation completes.
-        |
-        | This provides an additional safety net for cached/back-forward
-        | navigations where the global manager already exists.
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            !window.__teamDashboardMapNavigateListener
-        ) {
-
-            window.__teamDashboardMapNavigateListener =
-                true;
-
-
-            document.addEventListener(
-                'livewire:navigated',
-                () => {
-
-                    if (
-                        !window.TeamDashboardMapManager
-                    ) {
-                        return;
-                    }
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Give Livewire one frame to finish the final DOM swap.
-                    |--------------------------------------------------------------------------
-                    */
-
-                    requestAnimationFrame(() => {
-
-                        requestAnimationFrame(() => {
-
-                            window.TeamDashboardMapManager
-                                .initialize();
-
-                        });
-
-                    });
+                    attributeFilter: [
+                        'class',
+                    ],
                 }
             );
         }
-
     })();
 </script>
-@endscript
 
 </div>
