@@ -15,8 +15,17 @@
 
                 <h2>
                     <span style="white-space: nowrap;">Have an idea?</span>
-                    <span>Let's build it.</span>
+                    <span
+                        style="
+                    background: linear-gradient(135deg, #a855f7 0%, #c084fc 45%, #f472b6 100%);
+                    -webkit-background-clip: text;
+                    background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    color: transparent;
+                ">Let's
+                        build it.</span>
                 </h2>
+
 
                 <p>
                     Tell us what you're working on and we'll
@@ -262,13 +271,13 @@
 @push('styles')
     <style>
         /* ==========================================================================
-                               RECAPTCHA
-                               ========================================================================== */
+                                       RECAPTCHA
+                                       ========================================================================== */
 
         /*
-                             * reCAPTCHA v3 badge is hidden because the required disclosure
-                             * is displayed directly beneath the contact form submit button.
-                             */
+                                     * reCAPTCHA v3 badge is hidden because the required disclosure
+                                     * is displayed directly beneath the contact form submit button.
+                                     */
         .grecaptcha-badge {
             visibility: hidden !important;
         }
