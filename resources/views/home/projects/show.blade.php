@@ -2,13 +2,13 @@
 
 @section('title', $work->title . ' — Clear Code Web Solutions')
 
-@section('description', Str::limit(strip_tags($work->description ?? ''), 155))
+@section('description', \Illuminate\Support\Str::limit(strip_tags($work->description ?? ''), 155))
 
 @push('styles')
     <style>
         /* ============================================================
-           PROJECT SHOW PAGE
-        ============================================================ */
+               PROJECT SHOW PAGE
+            ============================================================ */
 
         .cc-project {
             --lime: #ADD322;
@@ -40,8 +40,8 @@
         }
 
         /* ============================================================
-           HERO
-           ============================================================ */
+               HERO
+            ============================================================ */
 
         .cc-project-hero {
             padding-top: 145px;
@@ -54,7 +54,6 @@
             gap: 9px;
 
             color: rgba(255, 255, 255, .38);
-
             font-size: 12px;
             font-weight: 600;
 
@@ -81,7 +80,6 @@
         .cc-project-hero-content {
             display: grid;
             grid-template-columns: minmax(0, 1fr) 280px;
-
             gap: 70px;
 
             margin-top: 60px;
@@ -95,10 +93,8 @@
             margin-bottom: 18px;
 
             color: var(--lime);
-
             font-size: 10px;
             font-weight: 700;
-
             letter-spacing: .24em;
             text-transform: uppercase;
         }
@@ -119,27 +115,153 @@
 
         .cc-project-title {
             margin: 0;
-
             max-width: 800px;
 
             font-size: clamp(42px, 6vw, 76px);
             line-height: .95;
-
             letter-spacing: -.055em;
-
             font-weight: 800;
         }
+
+        /* ============================================================
+               PROJECT DESCRIPTION
+            ============================================================ */
 
         .cc-project-summary {
             margin-top: 28px;
             max-width: 680px;
-            color: rgba(255, 255, 255, 0.9);
+
+            color: rgba(255, 255, 255, .9);
             font-size: 20px;
             font-weight: 600;
             line-height: 1.85;
         }
 
-        /* Project meta */
+        .cc-project-summary>* {
+            margin: 0 0 1rem;
+        }
+
+        .cc-project-summary>*:last-child {
+            margin-bottom: 0;
+        }
+
+        .cc-project-summary p {
+            margin-bottom: 1.25rem;
+        }
+
+        .cc-project-summary h1,
+        .cc-project-summary h2,
+        .cc-project-summary h3,
+        .cc-project-summary h4,
+        .cc-project-summary h5,
+        .cc-project-summary h6 {
+            color: #fff;
+            font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: -.02em;
+        }
+
+        .cc-project-summary h1 {
+            margin-top: 2rem;
+            font-size: 2rem;
+        }
+
+        .cc-project-summary h2 {
+            margin-top: 2rem;
+            font-size: 1.75rem;
+        }
+
+        .cc-project-summary h3 {
+            margin-top: 1.75rem;
+            font-size: 1.4rem;
+        }
+
+        .cc-project-summary h4 {
+            margin-top: 1.5rem;
+            font-size: 1.2rem;
+        }
+
+        .cc-project-summary h5 {
+            margin-top: 1.25rem;
+            font-size: 1.05rem;
+        }
+
+        .cc-project-summary h6 {
+            margin-top: 1rem;
+            font-size: .95rem;
+        }
+
+        .cc-project-summary ul,
+        .cc-project-summary ol {
+            margin-bottom: 1.25rem;
+            padding-left: 1.5rem;
+        }
+
+        .cc-project-summary ul {
+            list-style: disc;
+        }
+
+        .cc-project-summary ol {
+            list-style: decimal;
+        }
+
+        .cc-project-summary li {
+            margin-bottom: .5rem;
+        }
+
+        .cc-project-summary strong {
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .cc-project-summary em {
+            font-style: italic;
+        }
+
+        .cc-project-summary u {
+            text-underline-offset: 3px;
+        }
+
+        .cc-project-summary s {
+            opacity: .8;
+        }
+
+        .cc-project-summary blockquote {
+            margin: 1.5rem 0;
+            padding: 1rem 1.25rem;
+
+            border-left: 3px solid var(--lime);
+
+            background: rgba(255, 255, 255, .035);
+
+            color: rgba(255, 255, 255, .7);
+            font-style: italic;
+        }
+
+        .cc-project-summary a {
+            color: var(--lime);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        .cc-project-summary a:hover {
+            color: #c4ec35;
+        }
+
+        .cc-project-summary mark {
+            padding: .08em .2em;
+            border-radius: .2em;
+        }
+
+        .cc-project-summary hr {
+            margin: 2rem 0;
+            border: 0;
+            border-top: 1px solid rgba(255, 255, 255, .10);
+        }
+
+        /* ============================================================
+               PROJECT META
+            ============================================================ */
 
         .cc-project-meta {
             padding-top: 6px;
@@ -147,7 +269,6 @@
 
         .cc-project-meta-item {
             padding: 18px 0;
-
             border-top: 1px solid rgba(255, 255, 255, .08);
         }
 
@@ -159,17 +280,14 @@
             margin-bottom: 7px;
 
             color: rgba(255, 255, 255, .25);
-
             font-size: 9px;
             font-weight: 700;
-
             letter-spacing: .2em;
             text-transform: uppercase;
         }
 
         .cc-project-meta-value {
             color: rgba(255, 255, 255, .78);
-
             font-size: 13px;
             line-height: 1.5;
         }
@@ -180,10 +298,8 @@
             gap: 8px;
 
             color: #fff;
-
             font-size: 13px;
             font-weight: 600;
-
             text-decoration: none;
 
             transition: color .2s ease;
@@ -198,8 +314,8 @@
         }
 
         /* ============================================================
-           GALLERY
-           ============================================================ */
+               GALLERY
+            ============================================================ */
 
         .cc-project-gallery {
             padding-bottom: 120px;
@@ -215,10 +331,8 @@
 
         .cc-project-eyebrow {
             color: var(--lime);
-
             font-size: 10px;
             font-weight: 700;
-
             letter-spacing: .25em;
             text-transform: uppercase;
         }
@@ -228,35 +342,30 @@
 
             font-size: 27px;
             line-height: 1.2;
-
             letter-spacing: -.035em;
-
             font-weight: 650;
         }
 
         .cc-project-gallery-count {
             color: rgba(255, 255, 255, .25);
-
             font-size: 11px;
         }
 
-        /* GRID */
+        /* ============================================================
+               GRID
+            ============================================================ */
 
         .cc-project-grid {
             display: grid;
-
             grid-template-columns: repeat(2, minmax(0, 1fr));
-
             gap: 18px;
         }
 
         .cc-project-card {
             position: relative;
-
             overflow: hidden;
 
             aspect-ratio: 16 / 11;
-
             padding: 0;
 
             border: 1px solid rgba(255, 255, 255, .08);
@@ -265,16 +374,11 @@
             background: #080808;
 
             cursor: zoom-in;
-
             isolation: isolate;
         }
 
-        /*
-         * Every 3rd image gets a little more visual weight.
-         */
         .cc-project-card:nth-child(3n) {
             grid-column: span 2;
-
             aspect-ratio: 16 / 8;
         }
 
@@ -297,7 +401,6 @@
 
             position: absolute;
             inset: 0;
-
             z-index: 1;
 
             background:
@@ -324,7 +427,6 @@
 
             left: 18px;
             bottom: 16px;
-
             z-index: 2;
 
             display: flex;
@@ -342,7 +444,6 @@
             backdrop-filter: blur(10px);
 
             color: rgba(255, 255, 255, .75);
-
             font-size: 9px;
 
             opacity: 0;
@@ -358,7 +459,9 @@
             transform: translateY(0);
         }
 
-        /* Empty gallery */
+        /* ============================================================
+               EMPTY GALLERY
+            ============================================================ */
 
         .cc-project-empty {
             display: flex;
@@ -379,16 +482,14 @@
 
         .cc-project-empty span {
             color: rgba(173, 211, 34, .12);
-
             font-size: 100px;
             font-weight: 800;
-
             letter-spacing: -.08em;
         }
 
         /* ============================================================
-           CTA
-           ============================================================ */
+               CTA
+            ============================================================ */
 
         .cc-project-cta {
             padding-bottom: 120px;
@@ -396,7 +497,6 @@
 
         .cc-project-cta-box {
             position: relative;
-
             overflow: hidden;
 
             padding: 60px;
@@ -415,7 +515,6 @@
             content: "";
 
             position: absolute;
-
             right: -100px;
             bottom: -140px;
 
@@ -437,19 +536,31 @@
         }
 
         .cc-project-cta-title {
-            margin: 12px 0 0;
+        margin: 12px 0 0;
+        font-size: clamp(32px, 4vw, 52px);
+        line-height: 1.12;
+        letter-spacing: -.045em;
+        font-weight: 750;
+    }
 
-            font-size: clamp(32px, 4vw, 52px);
-            line-height: 1;
-
-            letter-spacing: -.045em;
-
-            font-weight: 750;
-        }
+        /* Purple / pink gradient */
 
         .cc-project-cta-title span {
-            color: rgba(255, 255, 255, .3);
-        }
+        display: inline;
+
+        background: linear-gradient(
+            135deg,
+            #a855f7 0%,
+            #c084fc 40%,
+            #f472b6 100%
+        );
+
+        -webkit-background-clip: text;
+        background-clip: text;
+
+        -webkit-text-fill-color: transparent;
+        color: transparent;
+    }
 
         .cc-project-cta-text {
             max-width: 520px;
@@ -457,7 +568,6 @@
             margin-top: 17px;
 
             color: rgba(255, 255, 255, .38);
-
             font-size: 14px;
             line-height: 1.8;
         }
@@ -468,12 +578,12 @@
             gap: 12px;
 
             margin-top: 28px;
-
             padding: 12px 18px;
 
             border-radius: 999px;
 
             background: var(--lime);
+
             color: #050505;
 
             font-size: 12px;
@@ -498,14 +608,12 @@
         }
 
         /* ============================================================
-           LIGHTBOX
-           ============================================================ */
+               LIGHTBOX
+            ============================================================ */
 
         .cc-lightbox {
             position: fixed;
-
             inset: 0;
-
             z-index: 99999;
 
             display: flex;
@@ -547,7 +655,9 @@
                 0 40px 120px rgba(0, 0, 0, .65);
         }
 
-        /* Close */
+        /* ============================================================
+               LIGHTBOX CLOSE
+            ============================================================ */
 
         .cc-lightbox-close {
             position: fixed;
@@ -568,7 +678,6 @@
             background: rgba(255, 255, 255, .05);
 
             color: #fff;
-
             font-size: 22px;
 
             cursor: pointer;
@@ -585,7 +694,9 @@
             color: var(--lime);
         }
 
-        /* Navigation */
+        /* ============================================================
+               LIGHTBOX NAVIGATION
+            ============================================================ */
 
         .cc-lightbox-nav {
             position: fixed;
@@ -597,7 +708,6 @@
 
             width: 48px;
             height: 48px;
-
             margin-top: -24px;
 
             border: 1px solid rgba(255, 255, 255, .1);
@@ -606,7 +716,6 @@
             background: rgba(255, 255, 255, .04);
 
             color: white;
-
             font-size: 20px;
 
             cursor: pointer;
@@ -647,14 +756,13 @@
             transform: translateX(-50%);
 
             color: rgba(255, 255, 255, .4);
-
             font-size: 11px;
             letter-spacing: .12em;
         }
 
         /* ============================================================
-           RESPONSIVE
-           ============================================================ */
+               RESPONSIVE
+            ============================================================ */
 
         @media (max-width: 900px) {
 
@@ -664,14 +772,12 @@
 
             .cc-project-hero-content {
                 grid-template-columns: 1fr;
-
                 gap: 35px;
             }
 
             .cc-project-meta {
                 display: grid;
                 grid-template-columns: repeat(2, 1fr);
-
                 gap: 0 25px;
             }
 
@@ -710,6 +816,19 @@
 
             .cc-project-summary {
                 font-size: 14px;
+                line-height: 1.75;
+            }
+
+            .cc-project-summary h1 {
+                font-size: 1.55rem;
+            }
+
+            .cc-project-summary h2 {
+                font-size: 1.4rem;
+            }
+
+            .cc-project-summary h3 {
+                font-size: 1.2rem;
             }
 
             .cc-project-meta {
@@ -803,13 +922,27 @@
     </style>
 @endpush
 
-
 @section('content')
 
     @php
         $images = $work->image_urls;
-    @endphp
 
+        /*
+         * CKEditor can create empty paragraphs at the beginning:
+         *
+         * <p>&nbsp;</p>
+         * <p>&nbsp;</p>
+         * <p>&nbsp;</p>
+         * <h2>Actual heading</h2>
+         *
+         * Remove only those leading empty elements.
+         */
+        $description = preg_replace(
+        '/^(?:\s*(?:<p>\s*(?:(?:&nbsp;|\x{A0}|<br\s*\/@endphp)\s*)*<\/p>|<br\s*\/?>)\s*)+/iu',
+    '',
+    (string) $work->description,
+);
+?>
 
     <main class="cc-project" x-data="{
         images: @js($images),
@@ -828,14 +961,18 @@
         },
     
         next() {
-            if (!this.images.length) return;
+            if (!this.images.length) {
+                return;
+            }
     
             this.current =
                 (this.current + 1) % this.images.length;
         },
     
         prev() {
-            if (!this.images.length) return;
+            if (!this.images.length) {
+                return;
+            }
     
             this.current =
                 (this.current - 1 + this.images.length) %
@@ -844,22 +981,23 @@
     }" @keydown.escape.window="close()"
         @keydown.arrow-right.window="open && next()" @keydown.arrow-left.window="open && prev()">
 
-        {{-- ========================================================
+        {{-- ============================================================
              HERO
-        ========================================================= --}}
+        ============================================================ --}}
 
         <section class="cc-project-hero">
 
             <div class="cc-project-container">
 
                 <a href="{{ request()->routeIs('work.show') ? url('/#work') : url('/projects') }}" class="cc-project-back">
+
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19 12H5m7 7-7-7 7-7" />
                     </svg>
 
                     Back to Projects
-                </a>
 
+                </a>
 
                 <div class="cc-project-hero-content">
 
@@ -876,13 +1014,12 @@
                         </h1>
 
                         @if ($work->description)
-                            <p class="cc-project-summary">
-                                {{ $work->description }}
-                            </p>
+                            <div class="cc-project-summary">
+                                {!! $description !!}
+                            </div>
                         @endif
 
                     </div>
-
 
                     <div class="cc-project-meta">
 
@@ -900,7 +1037,6 @@
                             </div>
                         @endif
 
-
                         <div class="cc-project-meta-item">
 
                             <div class="cc-project-meta-label">
@@ -913,7 +1049,6 @@
 
                         </div>
 
-
                         @if ($work->url)
                             <div class="cc-project-meta-item">
 
@@ -924,7 +1059,6 @@
                                 <a href="{{ $work->url }}" target="_blank" rel="noopener noreferrer"
                                     class="cc-project-visit">
                                     Visit Website
-
                                     <span>↗</span>
                                 </a>
 
@@ -939,10 +1073,9 @@
 
         </section>
 
-
-        {{-- ========================================================
+        {{-- ============================================================
              GALLERY
-        ========================================================= --}}
+        ============================================================ --}}
 
         <section class="cc-project-gallery">
 
@@ -964,13 +1097,15 @@
 
                     @if (count($images))
                         <div class="cc-project-gallery-count">
+
                             {{ count($images) }}
-                            {{ Str::plural('image', count($images)) }}
+
+                            {{ \Illuminate\Support\Str::plural('image', count($images)) }}
+
                         </div>
                     @endif
 
                 </div>
-
 
                 @if (count($images))
 
@@ -1006,10 +1141,9 @@
 
         </section>
 
-
-        {{-- ========================================================
+        {{-- ============================================================
              CTA
-        ========================================================= --}}
+        ============================================================ --}}
 
         <section class="cc-project-cta">
 
@@ -1024,8 +1158,11 @@
                         </div>
 
                         <h2 class="cc-project-cta-title">
+
                             Let's create something
+
                             <span>great.</span>
+
                         </h2>
 
                         <p class="cc-project-cta-text">
@@ -1047,46 +1184,46 @@
 
         </section>
 
-
-        {{-- ========================================================
+        {{-- ============================================================
              LIGHTBOX
-        ========================================================= --}}
+        ============================================================ --}}
 
         <template x-teleport="body">
 
             <div x-show="open" x-cloak x-transition.opacity.duration.200ms class="cc-lightbox" @click.self="close()"
                 role="dialog" aria-modal="true" aria-label="Project image viewer">
 
-                {{-- Close --}}
+                {{-- CLOSE --}}
+
                 <button type="button" class="cc-lightbox-close" @click="close()" aria-label="Close image viewer">
                     ×
                 </button>
 
+                {{-- PREVIOUS --}}
 
-                {{-- Previous --}}
                 <button type="button" class="cc-lightbox-nav cc-lightbox-prev" @click.stop="prev()"
                     x-show="images.length > 1" aria-label="Previous image">
                     ‹
                 </button>
 
+                {{-- IMAGE --}}
 
-                {{-- Image --}}
                 <div class="cc-lightbox-image-wrap">
 
-                    <img :src="images[current]" :alt="'{{ addslashes($work->title) }} — image ' + (current + 1)"
+                    <img :src="images[current]" :alt="@js($work->title) + ' — image ' + (current + 1)"
                         class="cc-lightbox-image">
 
                 </div>
 
+                {{-- NEXT --}}
 
-                {{-- Next --}}
                 <button type="button" class="cc-lightbox-nav cc-lightbox-next" @click.stop="next()"
                     x-show="images.length > 1" aria-label="Next image">
                     ›
                 </button>
 
+                {{-- COUNTER --}}
 
-                {{-- Counter --}}
                 <div class="cc-lightbox-counter" x-text="(current + 1) + ' / ' + images.length"></div>
 
             </div>
@@ -1094,6 +1231,5 @@
         </template>
 
     </main>
-
 
 @endsection
