@@ -1,18 +1,11 @@
 <div>
-    <flux:modal
-        name="charge-customer"
-        wire:model="show"
-        class="md:w-11/12 md:max-w-3xl"
-    >
-        <div
-            class="p-6"
-            x-data="{
-                close() {
-                    $wire.show = false;
-                    $wire.closeModal();
-                }
-            }"
-        >
+    <flux:modal name="charge-customer" wire:model="show" class="md:w-11/12 md:max-w-3xl">
+        <div class="p-6" x-data="{
+            close() {
+                $wire.show = false;
+                $wire.closeModal();
+            }
+        }">
             <div class="flex items-start justify-between">
                 <div>
                     <h2 class="text-lg font-semibold text-zinc-900 dark:text-white">
@@ -28,19 +21,13 @@
                     </p>
                 </div>
 
-                <flux:button
-                    variant="subtle"
-                    size="sm"
-                    icon="x-mark"
-                    @click="close()"
-                />
+
             </div>
 
             {{-- Submission Error --}}
             @if ($errors->has('submit'))
                 <div
-                    class="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-500/10 dark:text-red-400"
-                >
+                    class="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-500/10 dark:text-red-400">
                     {{ $errors->first('submit') }}
                 </div>
             @endif
@@ -52,16 +39,11 @@
 
                     {{-- Invoice Status --}}
                     <div
-                        class="space-y-3 rounded-xl border border-zinc-200 bg-zinc-50 p-6 text-center dark:border-zinc-800 dark:bg-zinc-900/50"
-                    >
+                        class="space-y-3 rounded-xl border border-zinc-200 bg-zinc-50 p-6 text-center dark:border-zinc-800 dark:bg-zinc-900/50">
                         @if ($this->existingInvoice->isPaid())
-
                             <div
-                                class="mx-auto flex size-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30"
-                            >
-                                <flux:icon.check-circle
-                                    class="size-6 text-green-600 dark:text-green-400"
-                                />
+                                class="mx-auto flex size-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
+                                <flux:icon.check-circle class="size-6 text-green-600 dark:text-green-400" />
                             </div>
 
                             <h3 class="text-lg font-medium text-zinc-900 dark:text-white">
@@ -71,15 +53,10 @@
                             <p class="text-sm text-zinc-500 dark:text-zinc-400">
                                 The customer has completed payment for this ticket.
                             </p>
-
                         @else
-
                             <div
-                                class="mx-auto flex size-12 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30"
-                            >
-                                <flux:icon.clock
-                                    class="size-6 text-amber-600 dark:text-amber-400"
-                                />
+                                class="mx-auto flex size-12 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
+                                <flux:icon.clock class="size-6 text-amber-600 dark:text-amber-400" />
                             </div>
 
                             <h3 class="text-lg font-medium text-zinc-900 dark:text-white">
@@ -89,50 +66,36 @@
                             <p class="text-sm text-zinc-500 dark:text-zinc-400">
                                 An invoice was sent to the customer and is currently pending processing.
                             </p>
-
                         @endif
                     </div>
 
                     {{-- Invoice Details --}}
-                    <div
-                        class="space-y-3 rounded-xl border border-zinc-200 p-4 dark:border-zinc-800"
-                    >
-                        <h4
-                            class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400"
-                        >
+                    <div class="space-y-3 rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
+                        <h4 class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                             Invoice Details
                         </h4>
 
-                        <div
-                            class="divide-y divide-zinc-100 space-y-2 text-sm dark:divide-zinc-800"
-                        >
+                        <div class="divide-y divide-zinc-100 space-y-2 text-sm dark:divide-zinc-800">
                             @foreach ($this->existingInvoice->items as $item)
-
-                                <div
-                                    class="flex items-center justify-between pt-2 first:pt-0"
-                                >
+                                <div class="flex items-center justify-between pt-2 first:pt-0">
                                     <div>
                                         <p class="font-medium text-zinc-900 dark:text-white">
                                             {{ $item->description }}
                                         </p>
 
                                         @if ($item->is_addon)
-                                        <span
-                                            class="inline-flex items-center rounded bg-purple-50 px-2 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-950/50 dark:text-purple-300"
-                                        >
-                                            Add-on · Monthly
-                                        </span>
-
+                                            <span
+                                                class="inline-flex items-center rounded bg-purple-50 px-2 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-950/50 dark:text-purple-300">
+                                                Add-on · Monthly
+                                            </span>
                                         @elseif ($item->is_subscription)
                                             <span
-                                                class="inline-flex items-center rounded bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300"
-                                            >
+                                                class="inline-flex items-center rounded bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300">
                                                 Recurring Monthly
                                             </span>
                                         @else
                                             <span
-                                                class="inline-flex items-center rounded bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
-                                            >
+                                                class="inline-flex items-center rounded bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
                                                 One Time
                                             </span>
                                         @endif
@@ -142,13 +105,11 @@
                                         ${{ number_format($item->amount / 100, 2) }}
                                     </span>
                                 </div>
-
                             @endforeach
                         </div>
 
                         <div
-                            class="flex items-center justify-between border-t border-zinc-200 pt-3 font-bold text-zinc-900 dark:border-zinc-800 dark:text-white"
-                        >
+                            class="flex items-center justify-between border-t border-zinc-200 pt-3 font-bold text-zinc-900 dark:border-zinc-800 dark:text-white">
                             <span>Total Charged</span>
 
                             <span class="text-base">
@@ -160,31 +121,20 @@
                     {{-- Existing Invoice Actions --}}
                     <div class="flex justify-end gap-3 pt-2">
 
-                        <flux:button
-                            @click="close()"
-                            variant="subtle"
-                        >
+                        <flux:button @click="close()" variant="subtle">
                             Close
                         </flux:button>
 
-                        <flux:button
-                            href="{{ route('invoices.show', $this->existingInvoice) }}"
-                            variant="primary"
-                            class="bg-indigo-600 text-white hover:bg-indigo-700"
-                        >
+                        <flux:button href="{{ route('invoices.show', $this->existingInvoice) }}" variant="primary"
+                            class="bg-indigo-600 text-white hover:bg-indigo-700">
                             View Full Invoice
                         </flux:button>
 
                     </div>
                 </div>
-
             @else
-
                 {{-- Create Invoice --}}
-                <form
-                    wire:submit="submit"
-                    class="mt-6 space-y-6"
-                >
+                <form wire:submit="submit" class="mt-6 space-y-6">
 
                     {{-- ================================================== --}}
                     {{-- BASE CHARGE --}}
@@ -203,37 +153,21 @@
 
                         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 
-                            <flux:input
-                                wire:model.live.debounce.300ms="amount"
-                                label="Amount ($)"
-                                type="number"
-                                step="0.01"
-                                min="1"
-                                placeholder="0.00"
-                                required
-                            />
+                            <flux:input wire:model.live.debounce.300ms="amount" label="Amount ($)" type="number"
+                                step="0.01" min="1" placeholder="0.00" required />
 
-                            <flux:input
-                                wire:model="description"
-                                label="Description"
-                                placeholder="Development Services"
-                                required
-                            />
+                            <flux:input wire:model="description" label="Description" placeholder="Development Services"
+                                required />
 
                         </div>
 
                         {{-- Base Charge Billing Type --}}
                         <div
-                            class="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50"
-                        >
-                            <flux:checkbox
-                                wire:model.live="isSubscription"
-                                label="This base charge is a recurring monthly subscription (12 month minimum)"
-                            />
+                            class="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
+                            <flux:checkbox wire:model.live="isSubscription"
+                                label="This base charge is a recurring monthly subscription (12 month minimum)" />
 
-                            <div
-                                class="mt-2 text-xs text-zinc-500 dark:text-zinc-400"
-                            >
+                            <div class="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
                                 @if ($this->isSubscription)
                                     The base charge will be billed monthly for a
                                     minimum of 12 months.
@@ -247,9 +181,7 @@
                     {{-- ================================================== --}}
                     {{-- MONTHLY ADDONS --}}
                     {{-- ================================================== --}}
-                    <div
-                        class="space-y-4 border-t border-zinc-200 pt-4 dark:border-zinc-800"
-                    >
+                    <div class="space-y-4 border-t border-zinc-200 pt-4 dark:border-zinc-800">
 
                         <div>
                             <h3 class="text-sm font-medium text-zinc-900 dark:text-white">
@@ -265,23 +197,15 @@
                         @if (empty($availableAddons))
 
                             <div
-                                class="rounded-xl border border-dashed border-zinc-300 p-6 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400"
-                            >
+                                class="rounded-xl border border-dashed border-zinc-300 p-6 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
                                 No monthly add-ons are currently available.
                             </div>
-
                         @else
-
                             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
                                 @foreach ($availableAddons as $key => $addon)
-
                                     @php
-                                        $isSelected = in_array(
-                                            $key,
-                                            $selectedAddonPriceIds,
-                                            true
-                                        );
+                                        $isSelected = in_array($key, $selectedAddonPriceIds, true);
                                     @endphp
 
                                     <label
@@ -291,35 +215,23 @@
                                             transition-all duration-150
                                             {{ $isSelected
                                                 ? 'border-indigo-500 bg-indigo-50/50 dark:border-indigo-500 dark:bg-indigo-500/10'
-                                                : 'border-zinc-200 bg-white hover:border-indigo-600 dark:border-zinc-800 dark:bg-zinc-900/50 dark:hover:border-indigo-600'
-                                            }}
-                                        "
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            value="{{ $key }}"
-                                            wire:model.live="selectedAddonPriceIds"
-                                            class="sr-only"
-                                        />
+                                                : 'border-zinc-200 bg-white hover:border-indigo-600 dark:border-zinc-800 dark:bg-zinc-900/50 dark:hover:border-indigo-600' }}
+                                        ">
+                                        <input type="checkbox" value="{{ $key }}"
+                                            wire:model.live="selectedAddonPriceIds" class="sr-only" />
 
                                         <div class="flex items-start justify-between">
 
                                             <span
                                                 class="
                                                     text-sm font-medium
-                                                    {{ $isSelected
-                                                        ? 'text-indigo-900 dark:text-indigo-200'
-                                                        : 'text-zinc-900 dark:text-white'
-                                                    }}
-                                                "
-                                            >
+                                                    {{ $isSelected ? 'text-indigo-900 dark:text-indigo-200' : 'text-zinc-900 dark:text-white' }}
+                                                ">
                                                 {{ $addon['name'] }}
                                             </span>
 
                                             @if ($isSelected)
-                                                <flux:icon.check-circle
-                                                    class="size-5 text-indigo-500"
-                                                />
+                                                <flux:icon.check-circle class="size-5 text-indigo-500" />
                                             @endif
 
                                         </div>
@@ -327,12 +239,8 @@
                                         <div
                                             class="
                                                 mt-2 text-lg font-bold
-                                                {{ $isSelected
-                                                    ? 'text-indigo-700 dark:text-indigo-300'
-                                                    : 'text-zinc-700 dark:text-zinc-300'
-                                                }}
-                                            "
-                                        >
+                                                {{ $isSelected ? 'text-indigo-700 dark:text-indigo-300' : 'text-zinc-700 dark:text-zinc-300' }}
+                                            ">
                                             ${{ number_format($addon['price'], 2) }}
 
                                             <span class="text-sm font-normal opacity-70">
@@ -344,7 +252,6 @@
                                             Recurring monthly • 12-month minimum
                                         </div>
                                     </label>
-
                                 @endforeach
 
                             </div>
@@ -355,9 +262,7 @@
                     {{-- ================================================== --}}
                     {{-- BILLING SUMMARY --}}
                     {{-- ================================================== --}}
-                    <div
-                        class="border-t border-zinc-200 pt-6 dark:border-zinc-800"
-                    >
+                    <div class="border-t border-zinc-200 pt-6 dark:border-zinc-800">
                         <div class="flex flex-col items-center justify-between gap-4 sm:flex-row">
 
                             <div class="w-full space-y-2 text-sm">
@@ -380,18 +285,14 @@
                                     </span>
 
                                     @if ($this->isSubscription)
-
                                         <span class="font-medium text-indigo-600 dark:text-indigo-400">
-                                            ${{ number_format(($this->baseAmountInCents / 12) / 100, 2) }}/month
+                                            ${{ number_format($this->baseAmountInCents / 12 / 100, 2) }}/month
                                         </span>
-
                                     @else
-
                                         <span class="font-medium text-zinc-700 dark:text-zinc-300">
                                             ${{ number_format($this->baseAmountInCents / 100, 2) }}
                                             one time
                                         </span>
-
                                     @endif
                                 </div>
 
@@ -399,7 +300,6 @@
                                 <div class="text-xs text-zinc-500 dark:text-zinc-400">
 
                                     @if ($this->monthlyRecurringAmountInCents > 0)
-
                                         Recurring:
                                         <strong>
                                             ${{ number_format($this->monthlyRecurringAmountInCents / 100, 2) }}/month
@@ -408,11 +308,8 @@
                                         <span>
                                             (12-month minimum)
                                         </span>
-
                                     @else
-
                                         No recurring charges
-
                                     @endif
 
                                 </div>
@@ -421,34 +318,18 @@
                             {{-- Actions --}}
                             <div class="flex w-full gap-3 sm:w-auto">
 
-                                <flux:button
-                                    type="button"
-                                    @click="close()"
-                                    variant="subtle"
-                                    class="w-full sm:w-auto"
-                                >
+                                <flux:button type="button" @click="close()" variant="subtle" class="w-full sm:w-auto">
                                     Cancel
                                 </flux:button>
 
-                                <flux:button
-                                    type="submit"
-                                    variant="primary"
+                                <flux:button type="submit" variant="primary"
                                     class="w-full bg-indigo-600 text-white hover:bg-indigo-700 sm:w-auto"
-                                    wire:loading.attr="disabled"
-                                    wire:target="submit"
-                                >
-                                    <span
-                                        wire:loading.remove
-                                        wire:target="submit"
-                                    >
+                                    wire:loading.attr="disabled" wire:target="submit">
+                                    <span wire:loading.remove wire:target="submit">
                                         Generate & Email Link
                                     </span>
 
-                                    <span
-                                        wire:loading
-                                        wire:target="submit"
-                                        class="flex items-center gap-2"
-                                    >
+                                    <span wire:loading wire:target="submit" class="flex items-center gap-2">
                                         <flux:icon.arrow-path class="inline-block size-4 animate-spin" />
                                         Processing...
                                     </span>
