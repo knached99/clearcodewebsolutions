@@ -41,7 +41,7 @@
         this.deleteTitle = '';
     },
 }" :class="{ 'light': isLightMode }"
-    class="cc-admin-projects min-h-screen transition-colors duration-300">
+    class="cc-admin-projects min-h-screen overflow-x-hidden transition-colors duration-300">
 
     <style>
         /* =========================================================
@@ -60,7 +60,9 @@
             --violet: #6d28d9;
             --bg: #050408;
             --panel: #0d0b13;
+
             color: #fff;
+
             background:
                 radial-gradient(900px circle at 8% -5%,
                     rgba(139, 92, 246, .20),
@@ -80,7 +82,14 @@
                     #0a0711 52%,
                     #06050a 78%,
                     #030305 100%);
+
             isolation: isolate;
+        }
+
+        .cc-admin-projects *,
+        .cc-admin-projects *::before,
+        .cc-admin-projects *::after {
+            box-sizing: border-box;
         }
 
         /* =========================================================
@@ -92,6 +101,7 @@
             inset: 0;
             z-index: -1;
             pointer-events: none;
+
             background:
                 radial-gradient(550px circle at 25% 18%,
                     rgba(139, 92, 246, .12),
@@ -114,10 +124,13 @@
                 linear-gradient(145deg,
                     rgba(255, 255, 255, .045),
                     rgba(255, 255, 255, .018));
+
             border: 1px solid rgba(255, 255, 255, .075);
+
             box-shadow:
                 0 25px 80px rgba(0, 0, 0, .28),
                 inset 0 1px 0 rgba(255, 255, 255, .035);
+
             backdrop-filter: blur(18px);
             -webkit-backdrop-filter: blur(18px);
         }
@@ -131,12 +144,16 @@
                 linear-gradient(145deg,
                     rgba(255, 255, 255, .045),
                     rgba(255, 255, 255, .012));
+
             border: 1px solid rgba(255, 255, 255, .075);
+
             box-shadow:
                 0 25px 70px rgba(0, 0, 0, .28),
                 inset 0 1px 0 rgba(255, 255, 255, .025);
+
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
+
             transition:
                 transform .35s ease,
                 border-color .35s ease,
@@ -145,7 +162,9 @@
 
         .cc-admin-projects .project-card:hover {
             transform: translateY(-5px);
+
             border-color: rgba(173, 211, 34, .22);
+
             box-shadow:
                 0 35px 90px rgba(0, 0, 0, .42),
                 0 0 0 1px rgba(173, 211, 34, .025),
@@ -184,12 +203,16 @@
            ========================================================= */
 
         .cc-project-input {
+            min-width: 0;
+
             background:
                 linear-gradient(180deg,
                     rgba(255, 255, 255, .028),
                     rgba(255, 255, 255, .012));
+
             border: 1px solid rgba(255, 255, 255, .075);
             color: white;
+
             transition:
                 border-color .25s ease,
                 background .25s ease,
@@ -204,9 +227,11 @@
         .cc-project-input:focus {
             border-color: rgba(173, 211, 34, .45);
             background: rgba(0, 0, 0, .28);
+
             box-shadow:
                 0 0 0 3px rgba(173, 211, 34, .045),
                 0 10px 35px rgba(0, 0, 0, .15);
+
             outline: none;
         }
 
@@ -233,6 +258,7 @@
                     rgba(139, 92, 246, .14),
                     transparent 35%),
                 rgba(0, 0, 0, .82);
+
             backdrop-filter: blur(18px);
             -webkit-backdrop-filter: blur(18px);
         }
@@ -242,14 +268,21 @@
                 linear-gradient(145deg,
                     rgba(20, 17, 28, .98),
                     rgba(8, 7, 12, .99));
+
             box-shadow:
                 0 40px 120px rgba(0, 0, 0, .65),
                 0 0 0 1px rgba(255, 255, 255, .035);
+
+            min-width: 0;
+            max-width: 100%;
         }
 
         .cc-input {
+            min-width: 0;
+
             background: rgba(0, 0, 0, .24);
             border: 1px solid rgba(255, 255, 255, .09);
+
             transition:
                 border-color .2s ease,
                 box-shadow .2s ease,
@@ -259,9 +292,29 @@
         .cc-input:focus {
             background: rgba(0, 0, 0, .34);
             border-color: rgba(173, 211, 34, .65);
+
             box-shadow:
                 0 0 0 3px rgba(173, 211, 34, .08);
+
             outline: none;
+        }
+
+        /*
+         * ========================================================
+         * CREATE / EDIT MODAL — SIDEBAR SAFE
+         * ========================================================
+         *
+         * Sidebar is assumed to be fixed with Tailwind w-64
+         * which equals 16rem.
+         *
+         * We do NOT move the page itself.
+         * Only this modal begins after the sidebar.
+         */
+
+        @media (min-width: 1024px) {
+            .cc-admin-projects>.cc-modal-backdrop {
+                left: 16rem !important;
+            }
         }
 
         /* =========================================================
@@ -299,8 +352,11 @@
 
         .cc-image-preview {
             position: relative;
+            min-width: 0;
             overflow: hidden;
+
             border-radius: .75rem;
+
             background: #000;
             border: 1px solid rgba(255, 255, 255, .08);
         }
@@ -308,6 +364,7 @@
         .cc-image-preview img {
             display: block;
             width: 100%;
+
             aspect-ratio: 4 / 3;
             object-fit: cover;
         }
@@ -318,10 +375,13 @@
 
         .cc-admin-projects .description-preview {
             position: relative;
+
             max-height: 4.5rem;
             overflow: hidden;
+
             font-size: .875rem;
             line-height: 1.5rem;
+
             color: #d1d5db;
         }
 
@@ -355,27 +415,246 @@
 
         .cc-admin-projects .description-preview::after {
             content: '';
+
             position: absolute;
             left: 0;
             right: 0;
             bottom: 0;
+
             height: 2rem;
+
             pointer-events: none;
-            background: linear-gradient(to bottom,
+
+            background:
+                linear-gradient(to bottom,
                     rgba(13, 11, 19, 0),
                     #0d0b13);
         }
 
         .cc-admin-projects .description-preview::before {
             content: '…';
+
             position: absolute;
             z-index: 2;
+
             right: .15rem;
             bottom: -.1rem;
+
             font-size: 1rem;
             font-weight: 700;
             line-height: 1;
+
             color: rgba(255, 255, 255, .75);
+        }
+
+        /* =========================================================
+           CKEDITOR 5 — CORE
+           ========================================================= */
+
+        .cc-project-editor {
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .cc-project-editor .ck.ck-editor {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+        }
+
+        .cc-project-editor .ck-editor__main {
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+        }
+
+        .cc-project-editor .ck.ck-toolbar {
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+
+            overflow: hidden;
+
+            background: rgba(255, 255, 255, .035) !important;
+            border: 1px solid rgba(255, 255, 255, .09) !important;
+            border-bottom: 0 !important;
+
+            border-radius: .75rem .75rem 0 0 !important;
+
+            box-shadow: none !important;
+        }
+
+        .cc-project-editor .ck.ck-toolbar .ck-toolbar__items {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            align-items: center;
+
+            width: 100%;
+            min-width: 0;
+
+            gap: 2px;
+        }
+
+        .cc-project-editor .ck.ck-toolbar .ck-toolbar__separator {
+            margin-top: 2px;
+            margin-bottom: 2px;
+        }
+
+        .cc-project-editor .ck-editor__editable {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+
+            min-height: 220px;
+            max-height: 360px;
+
+            overflow-x: hidden !important;
+            overflow-y: auto !important;
+
+            background: rgba(255, 255, 255, .018) !important;
+            color: #fff !important;
+
+            border: 1px solid rgba(255, 255, 255, .09) !important;
+            border-radius: 0 0 .75rem .75rem !important;
+
+            box-shadow: none !important;
+        }
+
+        .cc-project-editor .ck-editor__editable.ck-focused {
+            border-color: rgba(173, 211, 34, .55) !important;
+
+            box-shadow:
+                0 0 0 3px rgba(173, 211, 34, .06) !important;
+        }
+
+        .cc-project-editor .ck-content {
+            color: #fff !important;
+            font-size: .875rem;
+            line-height: 1.65;
+        }
+
+        .cc-project-editor .ck-content p {
+            margin: 0 0 .75rem;
+        }
+
+        .cc-project-editor .ck-content h1,
+        .cc-project-editor .ck-content h2,
+        .cc-project-editor .ck-content h3,
+        .cc-project-editor .ck-content h4 {
+            color: #fff !important;
+            font-weight: 700;
+        }
+
+        .cc-project-editor .ck-content ul,
+        .cc-project-editor .ck-content ol {
+            padding-left: 1.5rem;
+        }
+
+        .cc-project-editor .ck-content a {
+            color: #ADD322 !important;
+        }
+
+        .cc-project-editor .ck-content blockquote {
+            border-left-color: rgba(173, 211, 34, .45) !important;
+        }
+
+        .cc-project-editor .ck.ck-button {
+            color: #d1d5db !important;
+        }
+
+        .cc-project-editor .ck.ck-button .ck-button__label {
+            color: inherit !important;
+        }
+
+        .cc-project-editor .ck.ck-button:hover,
+        .cc-project-editor .ck.ck-button:focus,
+        .cc-project-editor .ck.ck-button.ck-on {
+            background: rgba(173, 211, 34, .08) !important;
+            color: #ADD322 !important;
+        }
+
+        .cc-project-editor .ck.ck-dropdown__panel,
+        .cc-project-editor .ck.ck-list {
+            background: #111019 !important;
+            border-color: rgba(255, 255, 255, .09) !important;
+        }
+
+        .cc-project-editor .ck.ck-list__item .ck-button {
+            color: #d1d5db !important;
+        }
+
+        .cc-project-editor .ck.ck-list__item .ck-button:hover,
+        .cc-project-editor .ck.ck-list__item .ck-button.ck-on {
+            background: rgba(173, 211, 34, .08) !important;
+            color: #ADD322 !important;
+        }
+
+        .cc-project-editor .ck.ck-editor__editable::-webkit-scrollbar {
+            width: 7px;
+        }
+
+        .cc-project-editor .ck.ck-editor__editable::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .cc-project-editor .ck.ck-editor__editable::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, .13);
+            border-radius: 999px;
+        }
+
+        /* =========================================================
+           RESTORE IMAGE BUTTON
+           ========================================================= */
+
+        .cc-restore-image-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            width: calc(100% - 1rem);
+
+            margin-inline: .5rem;
+            padding: .55rem .75rem;
+
+            border-radius: .65rem;
+
+            border: 1px solid rgba(255, 255, 255, .16);
+
+            background: rgba(0, 0, 0, .92);
+
+            color: #fff !important;
+
+            font-size: .68rem;
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: .04em;
+
+            text-shadow:
+                0 1px 2px rgba(0, 0, 0, .65);
+
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+
+            transition:
+                color .2s ease,
+                background .2s ease,
+                border-color .2s ease,
+                transform .2s ease;
+        }
+
+        .cc-restore-image-btn:hover {
+            border-color: rgba(173, 211, 34, .45);
+            background: rgba(27, 35, 5, .96);
+            color: #ADD322 !important;
+        }
+
+        .cc-restore-image-btn:focus-visible {
+            outline: none;
+
+            box-shadow:
+                0 0 0 3px rgba(173, 211, 34, .15);
         }
 
         /* =========================================================
@@ -384,6 +663,7 @@
 
         .cc-admin-projects.light {
             color: #171717;
+
             background:
                 radial-gradient(900px circle at 8% -5%,
                     rgba(139, 92, 246, .10),
@@ -401,7 +681,7 @@
                     #f8f8fa 0%,
                     #f2f1f6 30%,
                     #f7f7f9 55%,
-                    #eeeeF2 100%);
+                    #eeeff2 100%);
         }
 
         /* =========================================================
@@ -431,19 +711,19 @@
         }
 
         .cc-admin-projects.light .text-gray-200 {
-            color: #73747a !important;
+            color: #66676d !important;
         }
 
         .cc-admin-projects.light .text-gray-300 {
-            color: #5f6065 !important;
+            color: #56575d !important;
         }
 
         .cc-admin-projects.light .text-gray-500 {
-            color: #77787d !important;
+            color: #66676d !important;
         }
 
         .cc-admin-projects.light .text-gray-600 {
-            color: #686970 !important;
+            color: #5d5e65 !important;
         }
 
         /* Preserve text over project images */
@@ -461,11 +741,11 @@
         }
 
         .cc-admin-projects.light .cc-modal-panel .text-gray-300 {
-            color: #5f6065 !important;
+            color: #56575d !important;
         }
 
         .cc-admin-projects.light .cc-modal-panel .text-gray-200 {
-            color: #73747a !important;
+            color: #66676d !important;
         }
 
         /* =========================================================
@@ -473,7 +753,7 @@
            ========================================================= */
 
         .cc-admin-projects.light .text-\[\#ADD322\] {
-            color: #7fa800 !important;
+            color: #6f9200 !important;
         }
 
         .cc-admin-projects.light .bg-\[\#ADD322\] {
@@ -489,10 +769,13 @@
                 linear-gradient(145deg,
                     rgba(255, 255, 255, .88),
                     rgba(255, 255, 255, .62));
+
             border-color: rgba(0, 0, 0, .075);
+
             box-shadow:
                 0 20px 60px rgba(0, 0, 0, .07),
                 inset 0 1px 0 rgba(255, 255, 255, .95);
+
             backdrop-filter: blur(18px);
             -webkit-backdrop-filter: blur(18px);
         }
@@ -506,7 +789,9 @@
                 linear-gradient(145deg,
                     rgba(255, 255, 255, .92),
                     rgba(255, 255, 255, .72));
+
             border-color: rgba(0, 0, 0, .075);
+
             box-shadow:
                 0 20px 55px rgba(0, 0, 0, .08),
                 inset 0 1px 0 rgba(255, 255, 255, .95);
@@ -514,6 +799,7 @@
 
         .cc-admin-projects.light .project-card:hover {
             border-color: rgba(127, 168, 0, .25);
+
             box-shadow:
                 0 30px 75px rgba(0, 0, 0, .13),
                 0 0 0 1px rgba(127, 168, 0, .035);
@@ -612,8 +898,9 @@
                 linear-gradient(180deg,
                     rgba(255, 255, 255, .88),
                     rgba(248, 248, 250, .9));
+
             border-color: rgba(0, 0, 0, .10);
-            color: #171717;
+            color: #171717 !important;
         }
 
         .cc-admin-projects.light .cc-project-input:hover {
@@ -624,6 +911,7 @@
         .cc-admin-projects.light .cc-project-input:focus {
             border-color: rgba(127, 168, 0, .55);
             background: #fff;
+
             box-shadow:
                 0 0 0 3px rgba(127, 168, 0, .08),
                 0 10px 35px rgba(0, 0, 0, .08);
@@ -657,6 +945,7 @@
         .cc-admin-projects.light .cc-input:focus {
             background: #fff;
             border-color: rgba(127, 168, 0, .6);
+
             box-shadow:
                 0 0 0 3px rgba(127, 168, 0, .08);
         }
@@ -668,7 +957,9 @@
         .cc-admin-projects.light [x-show="open"] {
             background: #fff !important;
             color: #171717;
+
             border-color: rgba(0, 0, 0, .09) !important;
+
             box-shadow:
                 0 25px 60px rgba(0, 0, 0, .14);
         }
@@ -692,10 +983,6 @@
         /* =========================================================
            LIGHT MODE — IMAGE PLACEHOLDERS
            ========================================================= */
-
-        .cc-admin-projects.light .bg-black {
-            background-color: #e9e9e9;
-        }
 
         .cc-admin-projects.light .project-card .bg-black {
             background-color: #000;
@@ -731,11 +1018,12 @@
         }
 
         .cc-admin-projects.light .description-preview a {
-            color: #7fa800;
+            color: #6f9200;
         }
 
         .cc-admin-projects.light .description-preview::after {
-            background: linear-gradient(to bottom,
+            background:
+                linear-gradient(to bottom,
                     rgba(255, 255, 255, 0),
                     rgba(255, 255, 255, .92));
         }
@@ -754,6 +1042,7 @@
                     rgba(139, 92, 246, .10),
                     transparent 35%),
                 rgba(0, 0, 0, .42);
+
             backdrop-filter: blur(18px);
             -webkit-backdrop-filter: blur(18px);
         }
@@ -763,8 +1052,11 @@
                 linear-gradient(145deg,
                     rgba(255, 255, 255, .99),
                     rgba(247, 247, 249, .99));
+
             color: #171717;
+
             border-color: rgba(0, 0, 0, .09);
+
             box-shadow:
                 0 40px 100px rgba(0, 0, 0, .18),
                 0 0 0 1px rgba(255, 255, 255, .75);
@@ -775,8 +1067,11 @@
                 linear-gradient(145deg,
                     rgba(255, 255, 255, .99),
                     rgba(247, 247, 249, .99));
+
             color: #171717;
+
             border-color: rgba(0, 0, 0, .09);
+
             box-shadow:
                 0 40px 100px rgba(0, 0, 0, .18),
                 0 0 0 1px rgba(255, 255, 255, .75);
@@ -832,10 +1127,142 @@
         }
 
         /* =========================================================
+           LIGHT MODE — CKEDITOR 5
+           ========================================================= */
+
+        .cc-admin-projects.light .cc-project-editor {
+            color: #171717;
+        }
+
+        .cc-admin-projects.light .cc-project-editor .ck.ck-editor {
+            color: #171717;
+        }
+
+        .cc-admin-projects.light .cc-project-editor .ck.ck-toolbar {
+            background: #f7f7f9 !important;
+            border-color: rgba(0, 0, 0, .10) !important;
+        }
+
+        .cc-admin-projects.light .cc-project-editor .ck.ck-button {
+            color: #4f5056 !important;
+        }
+
+        .cc-admin-projects.light .cc-project-editor .ck.ck-button .ck-button__label {
+            color: inherit !important;
+        }
+
+        .cc-admin-projects.light .cc-project-editor .ck.ck-button:hover,
+        .cc-admin-projects.light .cc-project-editor .ck.ck-button:focus {
+            background: rgba(111, 146, 0, .08) !important;
+            color: #5f7f00 !important;
+        }
+
+        .cc-admin-projects.light .cc-project-editor .ck.ck-button.ck-on {
+            background: rgba(111, 146, 0, .12) !important;
+            color: #5f7f00 !important;
+        }
+
+        .cc-admin-projects.light .cc-project-editor .ck-editor__editable {
+            background: #fff !important;
+            color: #171717 !important;
+            border-color: rgba(0, 0, 0, .10) !important;
+        }
+
+        .cc-admin-projects.light .cc-project-editor .ck-editor__editable.ck-focused {
+            border-color: rgba(111, 146, 0, .50) !important;
+
+            box-shadow:
+                0 0 0 3px rgba(111, 146, 0, .08) !important;
+        }
+
+        .cc-admin-projects.light .cc-project-editor .ck-content {
+            color: #171717 !important;
+        }
+
+        .cc-admin-projects.light .cc-project-editor .ck-content h1,
+        .cc-admin-projects.light .cc-project-editor .ck-content h2,
+        .cc-admin-projects.light .cc-project-editor .ck-content h3,
+        .cc-admin-projects.light .cc-project-editor .ck-content h4,
+        .cc-admin-projects.light .cc-project-editor .ck-content strong {
+            color: #171717 !important;
+        }
+
+        .cc-admin-projects.light .cc-project-editor .ck-content a {
+            color: #668600 !important;
+        }
+
+        .cc-admin-projects.light .cc-project-editor .ck-content blockquote {
+            border-left-color: rgba(111, 146, 0, .35) !important;
+        }
+
+        .cc-admin-projects.light .cc-project-editor .ck-dropdown__panel,
+        .cc-admin-projects.light .cc-project-editor .ck-list {
+            background: #fff !important;
+            border-color: rgba(0, 0, 0, .10) !important;
+        }
+
+        .cc-admin-projects.light .cc-project-editor .ck-list__item .ck-button {
+            color: #404147 !important;
+        }
+
+        .cc-admin-projects.light .cc-project-editor .ck-list__item .ck-button:hover,
+        .cc-admin-projects.light .cc-project-editor .ck-list__item .ck-button.ck-on {
+            background: rgba(111, 146, 0, .08) !important;
+            color: #5f7f00 !important;
+        }
+
+        .cc-admin-projects.light .cc-project-editor .ck-placeholder::before {
+            color: #8a8b90 !important;
+        }
+
+        .cc-admin-projects.light .cc-project-editor .ck-editor__editable::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, .14);
+        }
+
+        .cc-admin-projects.light .cc-project-editor .ck-editor__editable::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, .22);
+        }
+
+        /* =========================================================
+           LIGHT MODE — RESTORE IMAGE BUTTON
+           ========================================================= */
+
+        .cc-admin-projects.light .cc-restore-image-btn {
+            border-color: rgba(0, 0, 0, .14);
+
+            background: rgba(255, 255, 255, .97);
+
+            color: #171717 !important;
+
+            text-shadow: none;
+
+            box-shadow:
+                0 3px 12px rgba(0, 0, 0, .12);
+        }
+
+        .cc-admin-projects.light .cc-restore-image-btn:hover {
+            border-color: rgba(111, 146, 0, .35);
+            background: #f5f8e9;
+            color: #5f7f00 !important;
+        }
+
+        /* =========================================================
            MOBILE
            ========================================================= */
 
+        @media (max-width: 1023px) {
+
+            .cc-admin-projects .cc-modal-panel {
+                width: 100%;
+            }
+
+            .cc-admin-projects .cc-project-editor .ck.ck-toolbar .ck-toolbar__items {
+                flex-wrap: wrap !important;
+            }
+        }
+
         @media (max-width: 640px) {
+
             .cc-admin-projects .mobile-full {
                 border-radius: 0;
             }
@@ -847,6 +1274,19 @@
             .cc-admin-projects .project-card:hover .project-image {
                 transform: none;
                 filter: none;
+            }
+
+            .cc-project-editor .ck-editor__editable {
+                min-height: 190px;
+                max-height: 300px;
+            }
+
+            .cc-project-editor .ck.ck-toolbar {
+                border-radius: .65rem .65rem 0 0 !important;
+            }
+
+            .cc-project-editor .ck-editor__editable {
+                border-radius: 0 0 .65rem .65rem !important;
             }
         }
 
@@ -873,50 +1313,8 @@
         [x-cloak] {
             display: none !important;
         }
-
-        /* =========================================================
-           CKEDITOR 5
-           ========================================================= */
-
-        .cc-project-editor .ck.ck-editor {
-            width: 100%;
-        }
-
-        .cc-project-editor .ck.ck-toolbar {
-            background: rgba(255, 255, 255, .035) !important;
-            border: 1px solid rgba(255, 255, 255, .09) !important;
-            border-bottom: 0 !important;
-            border-radius: .75rem .75rem 0 0 !important;
-        }
-
-        .cc-project-editor .ck-editor__editable {
-            min-height: 190px;
-            max-height: 350px;
-            overflow-y: auto;
-            background: rgba(255, 255, 255, .018) !important;
-            color: #fff !important;
-            border: 1px solid rgba(255, 255, 255, .09) !important;
-            border-radius: 0 0 .75rem .75rem !important;
-            box-shadow: none !important;
-        }
-
-        .cc-project-editor .ck-editor__editable.ck-focused {
-            border-color: rgba(173, 211, 34, .55) !important;
-            box-shadow:
-                0 0 0 3px rgba(173, 211, 34, .06) !important;
-        }
-
-        .cc-project-editor .ck.ck-button {
-            color: #d1d5db !important;
-        }
-
-        .cc-project-editor .ck.ck-button:hover,
-        .cc-project-editor .ck.ck-button:focus,
-        .cc-project-editor .ck.ck-button.ck-on {
-            background: rgba(173, 211, 34, .08) !important;
-            color: #ADD322 !important;
-        }
     </style>
+
 
     {{-- =========================================================
          BACKGROUND
@@ -925,6 +1323,7 @@
     <div class="pointer-events-none fixed inset-0 -z-10 noise"></div>
 
     <div class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+
         <div class="absolute -left-40 -top-40 h-[650px] w-[650px] rounded-full bg-[#8b5cf6]/10 blur-[140px]"></div>
 
         <div class="absolute right-[-220px] top-[5%] h-[600px] w-[600px] rounded-full bg-[#6d28d9]/10 blur-[150px]">
@@ -933,7 +1332,9 @@
         <div
             class="absolute bottom-[-250px] left-[20%] h-[500px] w-[500px] rounded-full bg-[#ADD322]/[0.025] blur-[150px]">
         </div>
+
     </div>
+
 
     {{-- =========================================================
          CONTENT
@@ -972,22 +1373,27 @@
 
                 </div>
 
+
                 <button type="button" wire:click="create"
                     class="group inline-flex cursor-pointer items-center justify-center gap-3 rounded-2xl bg-[#ADD322] px-5 py-3.5 text-sm font-black text-black shadow-[0_12px_40px_rgba(173,211,34,.12)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_50px_rgba(173,211,34,.2)]">
+
                     <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-black/10 text-lg">
                         +
                     </span>
 
                     Add Project
+
                 </button>
 
             </div>
+
 
             {{-- STATS --}}
 
             <div class="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
 
                 <div class="glass rounded-2xl p-4">
+
                     <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-300">
                         Total
                     </div>
@@ -995,9 +1401,12 @@
                     <div class="mt-2 text-2xl font-black">
                         {{ $works->count() }}
                     </div>
+
                 </div>
 
+
                 <div class="glass rounded-2xl p-4">
+
                     <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-300">
                         Published
                     </div>
@@ -1005,9 +1414,12 @@
                     <div class="mt-2 text-2xl font-black text-[#ADD322]">
                         {{ $works->where('is_published', true)->count() }}
                     </div>
+
                 </div>
 
+
                 <div class="glass rounded-2xl p-4">
+
                     <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-300">
                         Drafts
                     </div>
@@ -1015,9 +1427,12 @@
                     <div class="mt-2 text-2xl font-black text-gray-300">
                         {{ $works->where('is_published', false)->count() }}
                     </div>
+
                 </div>
 
+
                 <div class="glass rounded-2xl p-4">
+
                     <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-300">
                         Portfolio
                     </div>
@@ -1025,11 +1440,13 @@
                     <div class="mt-2 text-2xl font-black">
                         {{ $works->sum(fn($work) => count($work->images ?? [])) }}
                     </div>
+
                 </div>
 
             </div>
 
         </header>
+
 
         {{-- =========================================================
              PROJECT GRID
@@ -1040,6 +1457,7 @@
             <div class="mb-5 flex items-center justify-between">
 
                 <div>
+
                     <h2 class="text-lg font-bold tracking-tight">
                         All Projects
                     </h2>
@@ -1047,15 +1465,21 @@
                     <p class="mt-1 text-xs text-gray-300">
                         Your portfolio collection
                     </p>
+
                 </div>
+
 
                 <span
                     class="rounded-full border border-white/10 bg-white/[0.025] px-3 py-1.5 text-xs font-medium text-gray-300">
+
                     {{ $works->count() }}
+
                     {{ \Illuminate\Support\Str::plural('project', $works->count()) }}
+
                 </span>
 
             </div>
+
 
             <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
 
@@ -1090,9 +1514,11 @@
                                 </div>
                             @endif
 
+
                             <div
                                 class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/10">
                             </div>
+
 
                             {{-- STATUS --}}
 
@@ -1120,6 +1546,7 @@
 
                             </div>
 
+
                             {{-- IMAGE COUNT --}}
 
                             @if (count($work->images ?? []))
@@ -1132,6 +1559,7 @@
 
                                 </div>
                             @endif
+
 
                             {{-- CATEGORY / POSITION --}}
 
@@ -1149,6 +1577,7 @@
 
                         </div>
 
+
                         {{-- =================================================
                              CONTENT
                         ================================================== --}}
@@ -1159,22 +1588,11 @@
                                 {{ $work->title }}
                             </h3>
 
+
                             @if ($work->description)
                                 @php
-                                    /*
-                                     * CKEditor can save empty paragraphs such as:
-                                     *
-                                     * <p>&nbsp;</p>
-                                     * <p>&nbsp;</p>
-                                     * <p>&nbsp;</p>
-                                     * <h2>Actual content...</h2>
-                                     *
-                                     * Remove only the empty paragraphs/br tags at
-                                     * the beginning so the preview starts with
-                                     * actual content.
-                                     */
                                     $description = preg_replace(
-                                    '/^(?:\s*(?:<p>\s*(?:(?:&nbsp;|\x{A0}|<br\s*\/@endphp)\s*)*<\/p>|<br\s*\/?>)\s*)+/iu',
+                                    '~^(?:\s*(?:<p>\s*(?:(?:&nbsp;|\x{A0}|<br\s*/@endphp)\s*)*</p>|<br\s*/?>)\s*)+~iu',
     '',
     (string) $work->description,
 );
@@ -1189,26 +1607,35 @@
                                 </p>
                             @endif
 
+
                             {{-- ACTIONS --}}
 
                             <div class="mt-5 flex items-center justify-between border-t border-white/[0.06] pt-4">
 
                                 <button type="button" wire:click="togglePublished({{ $work->id }})"
                                     class="action-button cursor-pointer text-xs font-semibold text-gray-300 hover:text-[#ADD322]">
+
                                     {{ $work->is_published ? 'Unpublish' : 'Publish' }}
+
                                 </button>
+
 
                                 <div class="flex items-center gap-1">
 
                                     <button type="button" wire:click="edit({{ $work->id }})"
                                         class="action-button cursor-pointer rounded-lg px-3 py-2 text-xs font-bold text-gray-300 hover:bg-white/5 hover:text-white">
+
                                         Edit
+
                                     </button>
+
 
                                     <button type="button"
                                         @click.stop="openDelete({{ $work->id }}, @js($work->title))"
                                         class="action-button cursor-pointer rounded-lg px-3 py-2 text-xs font-bold text-red-400/80 hover:bg-red-500/10 hover:text-red-400">
+
                                         Delete
+
                                     </button>
 
                                 </div>
@@ -1218,6 +1645,7 @@
                         </div>
 
                     </article>
+
 
                 @empty
 
@@ -1239,7 +1667,9 @@
 
                         <button type="button" wire:click="create"
                             class="mt-7 rounded-xl bg-[#ADD322] px-5 py-3 text-sm font-black text-black shadow-[0_12px_40px_rgba(173,211,34,.12)] transition hover:-translate-y-0.5 hover:cursor-pointer hover:shadow-[0_18px_50px_rgba(173,211,34,.2)]">
+
                             Add your first project
+
                         </button>
 
                     </div>
@@ -1251,6 +1681,7 @@
 
     </div>
 
+
     {{-- =============================================================
          GLOBAL DELETE CONFIRMATION MODAL
     ============================================================= --}}
@@ -1258,15 +1689,12 @@
     <template x-teleport="body">
 
         <div x-show="deleteOpen" x-cloak x-transition.opacity.duration.200ms
-            class="fixed inset-0 z-[100000] flex items-center justify-center overflow-y-auto px-4 py-6"
+            class="fixed inset-0 z-[100000] flex items-center justify-center overflow-y-auto overflow-x-hidden px-4 py-6"
             :class="modalModeClass" @keydown.escape.window="closeDelete()">
-
-            {{-- BACKDROP --}}
 
             <div class="absolute inset-0 bg-black/85 backdrop-blur-xl" @click="closeDelete()">
             </div>
 
-            {{-- MODAL --}}
 
             <div x-show="deleteOpen" x-transition:enter="transition ease-out duration-300"
                 x-transition:enter-start="translate-y-4 scale-[.96] opacity-0"
@@ -1284,6 +1712,7 @@
                 <div
                     class="pointer-events-none absolute -bottom-24 -left-20 h-56 w-56 rounded-full bg-[#8b5cf6]/[0.07] blur-[80px]">
                 </div>
+
 
                 <div class="relative p-6 sm:p-7">
 
@@ -1306,6 +1735,7 @@
                         </svg>
 
                     </div>
+
 
                     <div class="mt-5">
 
@@ -1330,6 +1760,7 @@
 
                     </div>
 
+
                     <div class="mt-5 flex gap-3 rounded-xl border border-red-500/10 bg-red-500/[0.035] px-3.5 py-3">
 
                         <svg class="mt-0.5 h-4 w-4 shrink-0 text-red-400/80" viewBox="0 0 24 24" fill="none"
@@ -1344,6 +1775,7 @@
 
                         </svg>
 
+
                         <p class="text-[11px] leading-5 text-gray-300">
                             Any images and project data associated with this
                             project may also be removed.
@@ -1351,12 +1783,16 @@
 
                     </div>
 
+
                     <div class="mt-6 flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-end">
 
                         <button type="button" @click.stop="closeDelete()"
                             class="h-11 rounded-xl border border-white/[0.08] bg-white/[0.02] px-5 text-xs font-bold text-gray-300 transition hover:border-white/[0.14] hover:bg-white/[0.05] hover:text-white">
+
                             Cancel
+
                         </button>
+
 
                         <button type="button"
                             @click="
@@ -1382,9 +1818,11 @@
 
                             </svg>
 
+
                             <span wire:loading.remove>
                                 Delete project
                             </span>
+
 
                             <span wire:loading>
                                 Deleting...
@@ -1402,6 +1840,7 @@
 
     </template>
 
+
     {{-- =============================================================
          CREATE / EDIT MODAL
     ============================================================= --}}
@@ -1409,7 +1848,7 @@
     @if ($showForm)
 
         <div x-data="{ open: true }" x-show="open" x-cloak x-transition.opacity.duration.200ms
-            class="cc-modal-backdrop fixed inset-0 z-[9999] overflow-y-auto px-3 py-4 sm:px-6 sm:py-8"
+            class="cc-modal-backdrop fixed inset-0 z-[9999] overflow-y-auto overflow-x-hidden px-3 py-4 sm:px-6 sm:py-8"
             @click.self="$wire.cancel()" @keydown.escape.window="$wire.cancel()">
 
             <div class="flex min-h-full items-center justify-center">
@@ -1417,7 +1856,7 @@
                 <div x-show="open" x-transition:enter="transition ease-out duration-300"
                     x-transition:enter-start="translate-y-4 scale-[.97] opacity-0"
                     x-transition:enter-end="translate-y-0 scale-100 opacity-100"
-                    class="cc-modal-panel relative w-full max-w-4xl overflow-hidden rounded-[24px] border border-white/[0.09]"
+                    class="cc-modal-panel relative w-full max-w-6xl overflow-hidden rounded-[24px] border border-white/[0.09]"
                     @click.stop>
 
                     <div
@@ -1426,6 +1865,7 @@
 
                     <div class="pointer-events-none absolute right-10 top-0 h-20 w-32 bg-[#ADD322]/[0.04] blur-[50px]">
                     </div>
+
 
                     {{-- HEADER --}}
 
@@ -1458,6 +1898,7 @@
 
                             </div>
 
+
                             <div class="min-w-0">
 
                                 <div class="text-[9px] font-bold uppercase tracking-[0.24em] text-[#ADD322]">
@@ -1471,6 +1912,7 @@
                             </div>
 
                         </div>
+
 
                         <button type="button" wire:click="cancel" @click.stop
                             class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] text-gray-300 transition hover:border-white/15 hover:bg-white/5 hover:text-white">
@@ -1486,21 +1928,24 @@
 
                     </div>
 
+
                     {{-- FORM --}}
 
-                    <form wire:submit="save" class="relative">
+                    <form wire:submit="save" class="relative min-w-0">
 
-                        <div class="cc-scrollbar max-h-[calc(100vh-145px)] overflow-y-auto">
+                        <div class="cc-scrollbar max-h-[calc(100vh-145px)] overflow-x-hidden overflow-y-auto">
 
-                            <div class="grid lg:grid-cols-[1.15fr_.85fr]">
+                            <div class="grid min-w-0 grid-cols-1 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,.92fr)]">
 
-                                {{-- LEFT SIDE --}}
+                                {{-- =================================================
+                                     LEFT SIDE
+                                ================================================== --}}
 
-                                <div class="space-y-5 p-5 sm:p-6 lg:border-r lg:border-white/[0.06]">
+                                <div class="min-w-0 space-y-5 p-5 sm:p-6 lg:border-r lg:border-white/[0.06]">
 
                                     {{-- TITLE --}}
 
-                                    <div>
+                                    <div class="min-w-0">
 
                                         <label class="mb-2 flex items-center justify-between">
 
@@ -1526,6 +1971,7 @@
 
                                     </div>
 
+
                                     {{-- CATEGORY --}}
 
                                     <div x-data="{
@@ -1540,16 +1986,17 @@
                                             'Maintenance & Support',
                                             'Other'
                                         ]
-                                    }" class="relative" @click.outside="open = false"
-                                        @keydown.escape.window="open = false">
+                                    }" class="relative min-w-0"
+                                        @click.outside="open = false" @keydown.escape.window="open = false">
 
                                         <label
                                             class="mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-gray-300">
                                             Project type
                                         </label>
 
+
                                         <button type="button" @click="open = !open"
-                                            class="cc-project-input flex h-12 w-full items-center justify-between rounded-xl px-4 text-left"
+                                            class="cc-project-input flex h-12 w-full min-w-0 items-center justify-between rounded-xl px-4 text-left"
                                             :class="open ? 'border-[#ADD322]/40 shadow-[0_0_0_3px_rgba(173,211,34,.05)]' : ''">
 
                                             <div class="flex min-w-0 items-center gap-3">
@@ -1567,12 +2014,14 @@
 
                                                 </span>
 
-                                                <span class="truncate text-sm"
+
+                                                <span class="min-w-0 truncate text-sm"
                                                     :class="selected ? 'text-white' : 'text-gray-200'"
                                                     x-text="selected || 'Select project type'">
                                                 </span>
 
                                             </div>
+
 
                                             <svg class="h-4 w-4 shrink-0 text-gray-300 transition"
                                                 :class="open ? 'rotate-180 text-[#ADD322]' : ''" viewBox="0 0 24 24"
@@ -1584,6 +2033,7 @@
                                             </svg>
 
                                         </button>
+
 
                                         <div x-show="open" x-cloak x-transition
                                             class="absolute left-0 right-0 z-[100] mt-2 overflow-hidden rounded-xl border border-white/10 bg-[#111019] p-1.5 shadow-2xl shadow-black/60">
@@ -1608,6 +2058,7 @@
 
                                         </div>
 
+
                                         @error('category')
                                             <p class="mt-1.5 text-[11px] text-red-400">
                                                 {{ $message }}
@@ -1616,20 +2067,24 @@
 
                                     </div>
 
+
                                     {{-- DESCRIPTION --}}
 
-                                    <div>
+                                    <div class="min-w-0">
 
                                         <label
                                             class="mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-gray-300">
                                             Description
                                         </label>
 
-                                        <div wire:ignore x-data="projectEditor" class="cc-project-editor">
 
-                                            <div x-ref="editor"></div>
+                                        <div wire:ignore x-data="projectEditor" class="cc-project-editor min-w-0">
+
+                                            <div x-ref="editor" class="min-w-0">
+                                            </div>
 
                                         </div>
+
 
                                         @error('description')
                                             <p class="mt-1.5 text-[11px] text-red-400">
@@ -1639,9 +2094,10 @@
 
                                     </div>
 
+
                                     {{-- URL --}}
 
-                                    <div>
+                                    <div class="min-w-0">
 
                                         <label
                                             class="mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-gray-300">
@@ -1654,17 +2110,20 @@
 
                                         </label>
 
-                                        <div class="relative">
+
+                                        <div class="relative min-w-0">
 
                                             <span
                                                 class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-200">
                                                 ↗
                                             </span>
 
+
                                             <input type="url" wire:model="url" placeholder="https://example.com"
                                                 class="cc-project-input h-12 w-full rounded-xl pl-10 pr-4 text-sm text-white placeholder:text-gray-200">
 
                                         </div>
+
 
                                         @error('url')
                                             <p class="mt-1.5 text-[11px] text-red-400">
@@ -1676,13 +2135,16 @@
 
                                 </div>
 
-                                {{-- RIGHT SIDE --}}
 
-                                <div class="space-y-6 border-t border-white/[0.06] p-5 sm:p-6 lg:border-t-0">
+                                {{-- =================================================
+                                     RIGHT SIDE
+                                ================================================== --}}
+
+                                <div class="min-w-0 space-y-6 border-t border-white/[0.06] p-5 sm:p-6 lg:border-t-0">
 
                                     {{-- IMAGE UPLOAD --}}
 
-                                    <div>
+                                    <div class="min-w-0">
 
                                         <div class="mb-2 flex items-center justify-between">
 
@@ -1697,12 +2159,14 @@
 
                                         </div>
 
+
                                         <label
                                             class="group relative flex min-h-[135px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed border-white/10 bg-white/[0.018] px-5 text-center transition hover:border-[#ADD322]/30 hover:bg-[#ADD322]/[0.025]">
 
                                             <div
                                                 class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(173,211,34,.045),transparent_60%)] opacity-0 transition group-hover:opacity-100">
                                             </div>
+
 
                                             <div
                                                 class="relative flex h-10 w-10 items-center justify-center rounded-xl border border-white/[0.07] bg-white/[0.03] text-gray-300 transition group-hover:border-[#ADD322]/20 group-hover:bg-[#ADD322]/[0.07] group-hover:text-[#ADD322]">
@@ -1720,6 +2184,7 @@
 
                                             </div>
 
+
                                             <span
                                                 class="relative mt-3 text-xs font-semibold text-gray-300 group-hover:text-white">
                                                 Add project images
@@ -1729,10 +2194,12 @@
                                                 PNG · JPG · WEBP
                                             </span>
 
+
                                             <input type="file" wire:model="images" multiple
                                                 accept="image/png,image/jpeg,image/webp" class="hidden">
 
                                         </label>
+
 
                                         <div wire:loading wire:target="images"
                                             class="mt-2 flex items-center gap-2 text-[10px] text-[#ADD322]">
@@ -1751,6 +2218,7 @@
 
                                         </div>
 
+
                                         @error('images')
                                             <p class="mt-1.5 text-[11px] text-red-400">
                                                 {{ $message }}
@@ -1763,15 +2231,16 @@
                                             </p>
                                         @enderror
 
+
                                         {{-- NEW IMAGE PREVIEWS --}}
 
                                         @if (is_array($images) && count($images))
 
-                                            <div class="mt-4">
+                                            <div class="mt-4 min-w-0">
 
                                                 <div class="mb-2 flex items-center justify-between">
 
-                                                    <div>
+                                                    <div class="min-w-0">
 
                                                         <div
                                                             class="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-300">
@@ -1784,14 +2253,18 @@
 
                                                     </div>
 
+
                                                     <span
-                                                        class="rounded-full border border-[#ADD322]/15 bg-[#ADD322]/[0.05] px-2 py-1 text-[9px] font-bold text-[#ADD322]">
+                                                        class="shrink-0 rounded-full border border-[#ADD322]/15 bg-[#ADD322]/[0.05] px-2 py-1 text-[9px] font-bold text-[#ADD322]">
+
                                                         {{ count($images) }}
+
                                                     </span>
 
                                                 </div>
 
-                                                <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+
+                                                <div class="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3">
 
                                                     @foreach ($images as $index => $image)
                                                         <div wire:key="new-image-{{ $index }}-{{ method_exists($image, 'getClientOriginalName') ? md5($image->getClientOriginalName()) : $index }}"
@@ -1800,14 +2273,19 @@
                                                             <img src="{{ $image->temporaryUrl() }}"
                                                                 alt="New image preview">
 
+
                                                             <div
                                                                 class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/10 opacity-0 transition group-hover:opacity-100">
                                                             </div>
 
+
                                                             <span
                                                                 class="absolute bottom-2 left-2 rounded-md border border-[#ADD322]/20 bg-black/75 px-1.5 py-1 text-[8px] font-bold uppercase tracking-wider text-[#ADD322] opacity-0 backdrop-blur-md transition group-hover:opacity-100">
+
                                                                 New
+
                                                             </span>
+
 
                                                             <button type="button"
                                                                 wire:click="removeNewImage({{ $index }})"
@@ -1828,9 +2306,12 @@
 
                                                             </button>
 
+
                                                             <span
                                                                 class="absolute bottom-2 right-2 rounded-md bg-black/70 px-1.5 py-1 text-[8px] font-bold text-white/60">
+
                                                                 #{{ $index + 1 }}
+
                                                             </span>
 
                                                         </div>
@@ -1843,6 +2324,7 @@
                                         @endif
 
                                     </div>
+
 
                                     {{-- EXISTING IMAGES --}}
 
@@ -1858,17 +2340,20 @@
                                             $existingImages = $editingWork?->images ?? [];
                                         @endphp
 
+
                                         @if (count($existingImages))
 
-                                            <div>
+                                            <div class="min-w-0">
 
                                                 <div class="mb-2 flex items-center justify-between">
 
-                                                    <div>
+                                                    <div class="min-w-0">
 
                                                         <label
                                                             class="block text-[10px] font-bold uppercase tracking-[0.18em] text-gray-300">
+
                                                             Existing media
+
                                                         </label>
 
                                                         <p class="mt-1 text-[12px] text-gray-200">
@@ -1877,8 +2362,9 @@
 
                                                     </div>
 
+
                                                     <span
-                                                        class="rounded-full border border-white/10 bg-white/[0.025] px-2 py-1 text-[9px] font-bold text-gray-300">
+                                                        class="shrink-0 rounded-full border border-white/10 bg-white/[0.025] px-2 py-1 text-[9px] font-bold text-gray-300">
 
                                                         {{ count($existingImages) }}
 
@@ -1888,7 +2374,8 @@
 
                                                 </div>
 
-                                                <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+
+                                                <div class="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3">
 
                                                     @foreach ($existingImages as $image)
                                                         @php
@@ -1899,6 +2386,7 @@
                                                             )->url($image);
                                                         @endphp
 
+
                                                         <div wire:key="existing-image-{{ md5($image) }}"
                                                             class="cc-image-preview group transition {{ $removed ? 'border-red-500/30 opacity-50' : '' }}">
 
@@ -1906,15 +2394,20 @@
                                                                 class="{{ $removed ? 'grayscale' : '' }}"
                                                                 alt="{{ $editingWork?->title ?? 'Project image' }}">
 
+
                                                             @if (!$removed)
                                                                 <div
                                                                     class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/10 opacity-0 transition group-hover:opacity-100">
                                                                 </div>
 
+
                                                                 <span
                                                                     class="absolute bottom-2 left-2 rounded-md border border-white/10 bg-black/75 px-1.5 py-1 text-[8px] font-bold uppercase tracking-wider text-gray-300 opacity-0 backdrop-blur-md transition group-hover:opacity-100">
+
                                                                     Existing
+
                                                                 </span>
+
 
                                                                 <button type="button"
                                                                     wire:click="removeExistingImage(@js($image))"
@@ -1936,7 +2429,7 @@
                                                                 </button>
                                                             @else
                                                                 <div
-                                                                    class="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-[2px]">
+                                                                    class="absolute inset-0 flex flex-col items-center justify-center bg-black/60 px-2 text-center backdrop-blur-[2px]">
 
                                                                     <div
                                                                         class="flex h-8 w-8 items-center justify-center rounded-lg border border-red-500/20 bg-red-500/[0.08] text-red-400">
@@ -1953,17 +2446,21 @@
 
                                                                     </div>
 
+
                                                                     <span
-                                                                        class="mt-2 text-[8px] font-bold uppercase tracking-[0.12em] text-red-400">
+                                                                        class="mt-2 text-[9px] font-extrabold uppercase tracking-[0.10em] text-red-400">
+
                                                                         Marked for removal
+
                                                                     </span>
 
                                                                 </div>
 
+
                                                                 <button type="button"
                                                                     wire:click="restoreExistingImage(@js($image))"
                                                                     wire:loading.attr="disabled"
-                                                                    class="absolute inset-x-2 bottom-2 z-20 rounded-lg border border-white/10 bg-black/90 px-2 py-2 text-[9px] font-bold text-white backdrop-blur-md transition hover:border-[#ADD322]/25 hover:bg-[#ADD322]/10 hover:text-[#ADD322]">
+                                                                    class="cc-restore-image-btn absolute inset-x-0 bottom-2 z-20">
 
                                                                     Restore image
 
@@ -1981,25 +2478,29 @@
 
                                     @endif
 
+
                                     {{-- PROJECT OPTIONS --}}
 
-                                    <div class="space-y-5">
+                                    <div class="min-w-0 space-y-5">
 
                                         {{-- PLACEMENT --}}
 
                                         <div x-data="{
                                             open: false,
                                             selected: @entangle('sortAfterId')
-                                        }" class="relative" @click.outside="open = false"
-                                            @keydown.escape.window="open = false">
+                                        }" class="relative min-w-0"
+                                            @click.outside="open = false" @keydown.escape.window="open = false">
 
                                             <label
                                                 class="mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-gray-300">
+
                                                 Project placement
+
                                             </label>
 
+
                                             <button type="button" @click="open = !open"
-                                                class="cc-project-input flex min-h-[52px] w-full items-center justify-between rounded-xl px-3.5 py-2.5 text-left"
+                                                class="cc-project-input flex min-h-[52px] w-full min-w-0 items-center justify-between rounded-xl px-3.5 py-2.5 text-left"
                                                 :class="open ? 'border-[#ADD322]/40 shadow-[0_0_0_3px_rgba(173,211,34,.05)]' :
                                                     ''">
 
@@ -2020,6 +2521,7 @@
                                                         </svg>
 
                                                     </span>
+
 
                                                     <div class="min-w-0">
 
@@ -2045,6 +2547,7 @@
                                                             ">
                                                         </div>
 
+
                                                         <div class="mt-0.5 text-[9px] text-gray-300">
                                                             Choose where this project appears in your portfolio
                                                         </div>
@@ -2052,6 +2555,7 @@
                                                     </div>
 
                                                 </div>
+
 
                                                 <svg class="h-4 w-4 shrink-0 text-gray-300 transition"
                                                     :class="open ? 'rotate-180 text-[#ADD322]' : ''"
@@ -2064,6 +2568,7 @@
                                                 </svg>
 
                                             </button>
+
 
                                             <div x-show="open" x-cloak x-transition
                                                 class="absolute left-0 right-0 z-[100] mt-2 overflow-hidden rounded-2xl border border-white/10 bg-[#111019] shadow-2xl shadow-black/70">
@@ -2097,6 +2602,7 @@
 
                                                         </div>
 
+
                                                         <div class="min-w-0 flex-1">
 
                                                             <div class="text-xs font-semibold text-white">
@@ -2109,6 +2615,7 @@
 
                                                         </div>
 
+
                                                         <span
                                                             x-show="
                                                                 selected === null ||
@@ -2116,10 +2623,13 @@
                                                                 selected === undefined
                                                             "
                                                             class="text-sm text-[#ADD322]">
+
                                                             ✓
+
                                                         </span>
 
                                                     </button>
+
 
                                                     {{-- EXISTING PROJECTS --}}
 
@@ -2131,6 +2641,7 @@
                                                             ->sortBy([['sort_order', 'asc'], ['id', 'asc']])
                                                             ->values();
                                                     @endphp
+
 
                                                     @foreach ($placementWorks as $placementWork)
                                                         <button type="button"
@@ -2167,12 +2678,16 @@
 
                                                             </div>
 
+
                                                             <div class="min-w-0 flex-1">
 
                                                                 <div
                                                                     class="truncate text-xs font-semibold text-gray-300 group-hover:text-white">
+
                                                                     After: {{ $placementWork->title }}
+
                                                                 </div>
+
 
                                                                 <div
                                                                     class="mt-0.5 flex items-center gap-2 text-[9px] text-gray-300">
@@ -2193,14 +2708,18 @@
 
                                                             </div>
 
+
                                                             <span
                                                                 x-show="String(selected) === '{{ $placementWork->id }}'"
                                                                 class="shrink-0 text-sm text-[#ADD322]">
+
                                                                 ✓
+
                                                             </span>
 
                                                         </button>
                                                     @endforeach
+
 
                                                     {{-- END --}}
 
@@ -2209,7 +2728,9 @@
                                                             $lastPlacementWork = $placementWorks->last();
                                                         @endphp
 
+
                                                         <div class="my-1 border-t border-white/[0.06]"></div>
+
 
                                                         <button type="button"
                                                             @click="selected = {{ $lastPlacementWork->id }}; open = false"
@@ -2235,6 +2756,7 @@
 
                                                             </div>
 
+
                                                             <div class="min-w-0 flex-1">
 
                                                                 <div class="text-xs font-semibold text-white">
@@ -2247,10 +2769,13 @@
 
                                                             </div>
 
+
                                                             <span
                                                                 x-show="String(selected) === '{{ $lastPlacementWork->id }}'"
                                                                 class="text-sm text-[#ADD322]">
+
                                                                 ✓
+
                                                             </span>
 
                                                         </button>
@@ -2260,12 +2785,14 @@
 
                                             </div>
 
+
                                             <p class="mt-2 text-[12px] leading-4 text-gray-200">
                                                 The project order determines how projects are displayed across your
                                                 portfolio.
                                             </p>
 
                                         </div>
+
 
                                         {{-- VISIBILITY --}}
 
@@ -2275,6 +2802,7 @@
                                                 class="mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-gray-300">
                                                 Visibility
                                             </label>
+
 
                                             <button type="button"
                                                 wire:click="$set('is_published', {{ $is_published ? 'false' : 'true' }})"
@@ -2286,12 +2814,16 @@
                                                         class="h-1.5 w-1.5 rounded-full {{ $is_published ? 'bg-[#ADD322] shadow-[0_0_10px_#ADD322]' : 'bg-gray-600' }}">
                                                     </span>
 
+
                                                     <span
                                                         class="text-[11px] font-semibold {{ $is_published ? 'text-[#ADD322]' : 'text-gray-300' }}">
+
                                                         {{ $is_published ? 'Published' : 'Draft' }}
+
                                                     </span>
 
                                                 </span>
+
 
                                                 <svg class="h-3.5 w-3.5 {{ $is_published ? 'text-[#ADD322]' : 'text-gray-200' }}"
                                                     viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -2314,6 +2846,7 @@
 
                         </div>
 
+
                         {{-- FOOTER --}}
 
                         <div
@@ -2321,19 +2854,28 @@
 
                             <button type="button" wire:click="cancel" @click.stop
                                 class="rounded-xl px-4 py-2.5 text-xs font-semibold text-gray-300 transition hover:bg-white/5 hover:text-white">
+
                                 Cancel
+
                             </button>
+
 
                             <button type="submit" wire:loading.attr="disabled" wire:target="save"
                                 class="group relative inline-flex h-11 items-center justify-center overflow-hidden rounded-xl bg-[#ADD322] px-6 text-xs font-black text-black shadow-[0_10px_30px_rgba(173,211,34,.1)] transition hover:-translate-y-0.5 hover:shadow-[0_15px_40px_rgba(173,211,34,.18)] disabled:cursor-not-allowed disabled:opacity-50">
 
                                 <span class="relative z-10" wire:loading.remove wire:target="save">
+
                                     {{ $editingId ? 'Save changes' : 'Create project' }}
+
                                 </span>
 
+
                                 <span wire:loading wire:target="save" class="relative z-10">
+
                                     Saving...
+
                                 </span>
+
 
                                 <span
                                     class="absolute inset-0 translate-y-full bg-white/20 transition duration-300 group-hover:translate-y-0">
@@ -2354,6 +2896,7 @@
     @endif
 
 </div>
+
 
 @script
     <script>
