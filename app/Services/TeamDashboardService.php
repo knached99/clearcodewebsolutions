@@ -2126,65 +2126,159 @@ public function paymentLocationMapData(
     |--------------------------------------------------------------------------
     */
 
-    protected function customerRevenue(
-        Collection $successfulTransactions,
-        Collection $paidInvoices
-    ): Collection {
-        if ($successfulTransactions->isEmpty()) {
-            return collect();
-        }
-
-        return $successfulTransactions
-            ->groupBy('customer_id')
-            ->map(
-                function (
-                    Collection $transactions,
-                    $customerId
-                ) {
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Prefer eager-loaded customer.
-                    |--------------------------------------------------------------------------
-                    */
-
-                    $customer =
-                        $transactions
-                            ->first()
-                            ?->customer;
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Fallback query.
-                    |--------------------------------------------------------------------------
-                    */
-
-                    if (
-                        ! $customer
-                        && $customerId
-                    ) {
-                        $customer =
-                            Customer::query()
-                                ->find($customerId);
-                    }
-
-                    return [
-                        'customer_id' => $customerId,
-
-                        'name' => $customer?->name
-                            ?: $customer?->email
-                            ?: 'Unknown',
-
-                        'email' => $customer?->email,
-
-                        'amount' => (int) $transactions
-                            ->sum('amount'),
-                    ];
-                }
-            )
-            ->sortByDesc('amount')
-            ->values();
+  /**
+ * |--------------------------------------------------------------------------
+ * | Customer Revenue
+ * |--------------------------------------------------------------------------
+ */
+/**
+ * |--------------------------------------------------------------------------
+ * | Customer Revenue
+ * |--------------------------------------------------------------------------
+ */
+protected function customerRevenue(
+    Collection $successfulTransactions,
+    Collection $paidInvoices
+): Collection {
+    if ($successfulTransactions->isEmpty()) {
+        return collect();
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Load missing customer relationships in one query.
+    |--------------------------------------------------------------------------
+    */
+
+    $missingCustomerIds = $successfulTransactions
+        ->filter(
+            fn ($transaction) =>
+                $transaction->customer_id !== null
+                && (
+                    ! $transaction->relationLoaded('customer')
+                    || $transaction->getRelation('customer') === null
+                )
+        )
+        ->pluck('customer_id')
+        ->unique()
+        ->values();
+
+    $customersById = $missingCustomerIds->isNotEmpty()
+        ? Customer::query()
+            ->whereIn('id', $missingCustomerIds->all())
+            ->get([
+                'id',
+                'user_id',
+                'name',
+                'email',
+                'stripe_id',
+            ])
+            ->keyBy(
+                fn (Customer $customer) =>
+                    (string) $customer->getKey()
+            )
+        : collect();
+
+    /*
+    |--------------------------------------------------------------------------
+    | Resolve customer identity and transaction amount.
+    |--------------------------------------------------------------------------
+    */
+
+    $customerTransactions = $successfulTransactions
+        ->map(
+            function ($transaction) use ($customersById): array {
+                $customerId = $transaction->customer_id;
+
+                $customer = $transaction->relationLoaded('customer')
+                    ? $transaction->getRelation('customer')
+                    : null;
+
+                $customer ??= $customersById->get(
+                    (string) $customerId
+                );
+
+                $userId = $customer?->user_id;
+
+                $stripeId = trim(
+                    (string) ($customer?->stripe_id ?? '')
+                );
+
+                $email = strtolower(
+                    trim((string) ($customer?->email ?? ''))
+                );
+
+                /*
+                |--------------------------------------------------------------------------
+                | Build a consistent customer identity.
+                |--------------------------------------------------------------------------
+                */
+
+                if ($userId !== null && $userId !== '') {
+                    $identityKey = 'user:' . $userId;
+                } elseif ($stripeId !== '') {
+                    $identityKey = 'stripe:' . $stripeId;
+                } elseif ($email !== '') {
+                    $identityKey = 'email:' . $email;
+                } elseif ($customerId !== null) {
+                    $identityKey = 'customer:' . $customerId;
+                } else {
+                    $identityKey = 'transaction:' . (
+                        $transaction->getKey()
+                        ?? spl_object_id($transaction)
+                    );
+                }
+
+                return [
+                    'identity_key' => $identityKey,
+
+                    'customer_id' => $customer?->getKey()
+                        ?? $customerId,
+
+                    'user_id' => $userId,
+
+                    'stripe_id' => $stripeId ?: null,
+
+                    'name' => $customer?->name
+                        ?: $customer?->email
+                        ?: 'Unknown',
+
+                    'email' => $customer?->email,
+
+                    'amount' => max(
+                        (int) ($transaction->amount ?? 0),
+                        0
+                    ),
+                ];
+            }
+        );
+
+    /*
+    |--------------------------------------------------------------------------
+    | Combine transactions for each customer.
+    |--------------------------------------------------------------------------
+    */
+
+    return $customerTransactions
+        ->groupBy('identity_key')
+        ->map(
+            function (Collection $transactions): array {
+                $customer = $transactions->first();
+
+                return [
+                    'customer_id' => $customer['customer_id'],
+
+                    'name' => $customer['name'],
+
+                    'email' => $customer['email'],
+
+                    'amount' => (int) $transactions->sum('amount'),
+                ];
+            }
+        )
+        ->sortByDesc('amount')
+        ->values();
+}
     /*
     |--------------------------------------------------------------------------
     | Monthly Revenue
