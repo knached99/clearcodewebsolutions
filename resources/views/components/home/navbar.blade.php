@@ -34,6 +34,13 @@
                 <span>Services</span>
             </a>
 
+        
+            <a
+                href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#testimonials' : '#testimonials' }}"
+                class="cc-nav-link"
+            >
+                <span>Testimonials</span>
+            </a>
     
 
             <a
@@ -44,19 +51,13 @@
             </a>
 
 
-            <a
-                href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#testimonials' : '#testimonials' }}"
-                class="cc-nav-link"
-            >
-                <span>Testimonials</span>
-            </a>
 
             <a
-                href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#testimonial-form' : '#testimonial-form' }}"
-                class="cc-nav-link"
-            >
+                href="{{ route('testimonials.submit') }}" class="cc-nav-link {{ request()->routeIs('testimonials.submit') ? 'active' : '' }}">
                 <span>Submit Testimonial</span>
             </a>
+                {{-- href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#testimonial-form' : '#testimonial-form' }}" --}}
+           
 
             <a
                 href="{{ route('home.tickets.ticket-search') }}"
@@ -199,6 +200,26 @@
                 </span>
             </a>
 
+            
+            {{-- Testimonials --}}
+            <a
+                href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#testimonials' : '#testimonials' }}"
+                class="cc-mobile-link"
+            >
+                <span class="cc-mobile-link__number">
+                    04
+                </span>
+
+                <span class="cc-mobile-link__text">
+                    Testimonials
+                </span>
+
+                <span class="cc-mobile-link__arrow">
+                    ↗
+                </span>
+            </a>
+
+
 
 
              {{-- Pricing --}}
@@ -220,29 +241,9 @@
             </a>
 
 
-
-            {{-- Testimonials --}}
-            <a
-                href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#testimonials' : '#testimonials' }}"
-                class="cc-mobile-link"
-            >
-                <span class="cc-mobile-link__number">
-                    04
-                </span>
-
-                <span class="cc-mobile-link__text">
-                    Testimonials
-                </span>
-
-                <span class="cc-mobile-link__arrow">
-                    ↗
-                </span>
-            </a>
-
-
             {{-- Submit Testimonial --}}
             <a
-                href="{{ request()->routeIs('home.tickets.ticket-search') || request()->routeIs('work.show') || request()->routeIs('tickets.show') ? url('/').'#testimonial-form' : '#testimonial-form' }}"
+                href="{{request()->routeIs('testimonials.submit') ? request()->fullUrl() : route('testimonials.submit')}}"
                 class="cc-mobile-link"
             >
                 <span class="cc-mobile-link__number">

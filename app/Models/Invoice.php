@@ -274,42 +274,19 @@ class Invoice extends Model
     |--------------------------------------------------------------------------
     */
 
-    public function pabloCommissionInCents(): int
+    public function ownerShareInCents(): int 
     {
-        $net = $this->netAmountInCents();
+        $netProfit = max($this->netAmountInCents(), 0);
 
-        $rate = $net < 200000
-            ? 0.10
-            : 0.20;
-
-        return (int) round($net * $rate);
+        return intdiv($netProfit, 2); // owner share rounded down to whole cents 
     }
 
-    public function teamShareAfterPabloInCents(): int
+    public function partnerShareInCents(): int 
     {
-        return max(
-            $this->netAmountInCents()
-                - $this->pabloCommissionInCents(),
-            0
-        );
-    }
+        $netProfit = max($this->netAmountInCents(), 0);
 
-    public function ownerShareInCents(): int
-    {
-        return (int) round(
-            $this->teamShareAfterPabloInCents() / 2
-        );
+        return $netProfit - $this->ownerShareInCents(); // partner share is the remainder
     }
-
-    public function partnerShareInCents(): int
-    {
-        return max(
-            $this->teamShareAfterPabloInCents()
-                - $this->ownerShareInCents(),
-            0
-        );
-    }
-
     /*
     |--------------------------------------------------------------------------
     | Subscription
@@ -540,42 +517,17 @@ class Invoice extends Model
         );
     }
 
-    public function monthlyPabloCommissionInCents(): int
+    
+    public function monthlyOwnerShareInCents(): int 
     {
-        $gross = $this->monthlyRecurringAmountInCents();
-
-        $rate = $gross < 200000
-            ? 0.10
-            : 0.20;
-
-        return (int) round(
-            $gross * $rate
-        );
+        $monthlyNetProfit = max($this->monthlyNetAmountInCents(), 0); 
+        return intdiv($monthlyNetProfit, 2);
     }
 
-    public function monthlyTeamShareAfterPabloInCents(): int
+    public function monthlyPartnerShareInCents(): int 
     {
-        return max(
-            $this->monthlyNetAmountInCents()
-                - $this->monthlyPabloCommissionInCents(),
-            0
-        );
-    }
-
-    public function monthlyOwnerShareInCents(): int
-    {
-        return (int) round(
-            $this->monthlyTeamShareAfterPabloInCents() / 2
-        );
-    }
-
-    public function monthlyPartnerShareInCents(): int
-    {
-        return max(
-            $this->monthlyTeamShareAfterPabloInCents()
-                - $this->monthlyOwnerShareInCents(),
-            0
-        );
+        $monthlyNetProfit = max($this->monthlyNetAmountInCents(), 0); 
+        return $monthlyNetProfit - $this->monthlyOwnerShareInCents();
     }
 
     public function nextBillingDate(): Carbon

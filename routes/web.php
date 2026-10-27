@@ -9,6 +9,7 @@ use App\Http\Controllers\WorkController;
 use App\Livewire\Checkout\StripeCheckout;
 use App\Livewire\Home\Projects\Index as ProjectsIndex;
 use App\Livewire\Home\Tickets\TicketSearch;
+use App\Livewire\Home\Testimonials\Form;
 use App\Livewire\RequiredOnboarding;
 use App\Livewire\Teams\Invoices\InvoiceShow;
 use App\Livewire\Teams\Projects\Index as AdminWorksIndex;
@@ -44,6 +45,12 @@ Route::get('/onboarding', RequiredOnboarding::class)
         'verified',
     ])
     ->name('onboarding');
+
+
+// Submit Testimonial 
+
+Route::get('/testimonials/submit', Form::class)
+    ->name('testimonials.submit');
 
 /*
 |--------------------------------------------------------------------------

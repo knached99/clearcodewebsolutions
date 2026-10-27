@@ -1,45 +1,131 @@
 <div class="dashboard-shell">
-
     @php
-        $grossProfitDisplay = '$' . number_format(($grossProfit ?? 0) / 100, 2);
+        /*
+        |--------------------------------------------------------------------------
+        | Revenue and Profit Formatting
+        |--------------------------------------------------------------------------
+        |
+        | All financial amounts are stored in cents.
+        |
+        */
 
-        $processingFeesDisplay = '$' . number_format(abs(($processingFees ?? 0) / 100), 2);
+        $grossProfitDisplay = '$' . number_format(
+            ($grossProfit ?? 0) / 100,
+            2
+        );
 
-        $netProfitDisplay = '$' . number_format(($netProfit ?? 0) / 100, 2);
+        $processingFeesDisplay = '$' . number_format(
+            abs((int) ($processingFees ?? 0)) / 100,
+            2
+        );
 
-        $pabloCommissionDisplay = '$' . number_format(($pabloCommission ?? 0) / 100, 2);
+        $netProfitDisplay = '$' . number_format(
+            ($netProfit ?? 0) / 100,
+            2
+        );
 
-        $ownerShareDisplay = '$' . number_format(($ownerShare ?? ($khaledShare ?? 0)) / 100, 2);
 
-        $partnerShareDisplay = '$' . number_format(($partnerShare ?? ($karamShare ?? 0)) / 100, 2);
+        /*
+        |--------------------------------------------------------------------------
+        | Ownership Distribution
+        |--------------------------------------------------------------------------
+        |
+        | Khaled = Owner
+        | Karam  = Partner
+        |
+        | Net profit is divided 50/50 after Stripe processing fees.
+        | No commission deductions are applied.
+        |
+        */
 
-        $pabloRateDisplay = number_format(($pabloRate ?? 0) * 100, 0) . '%';
+        $ownerShareAmount = (int) (
+            $ownerShare ?? $khaledShare ?? 0
+        );
 
-        $teamShareAfterPabloDisplay = '$' . number_format(($teamShareAfterPablo ?? 0) / 100, 2);
+        $partnerShareAmount = (int) (
+            $partnerShare ?? $karamShare ?? 0
+        );
 
-        $distributionTotalDisplay =
-            '$' .
-            number_format(
-                (($pabloCommission ?? 0) +
-                    ($khaledShare ?? ($ownerShare ?? 0)) +
-                    ($karamShare ?? ($partnerShare ?? 0))) /
-                    100,
-                2,
-            );
+        $distributionTotalAmount = (int) (
+            $distributionTotal
+            ?? ($ownerShareAmount + $partnerShareAmount)
+        );
 
-        $lossDisplay = '$' . number_format(($losses ?? 0) / 100, 2);
 
-        $mrrDisplay = '$' . number_format(($mrr ?? 0) / 100, 2);
+        /*
+        |--------------------------------------------------------------------------
+        | Ownership Display Values
+        |--------------------------------------------------------------------------
+        */
 
-        $arrDisplay = '$' . number_format(($arr ?? 0) / 100, 2);
+        $ownerShareDisplay = '$' . number_format(
+            $ownerShareAmount / 100,
+            2
+        );
 
-        $grossMarginDisplay = number_format($grossMarginPercentage ?? 0, 2) . '%';
+        $partnerShareDisplay = '$' . number_format(
+            $partnerShareAmount / 100,
+            2
+        );
 
-        $highestCustomerName = $highestProfitingCustomer['name'] ?? 'No customer data';
+        $distributionTotalDisplay = '$' . number_format(
+            $distributionTotalAmount / 100,
+            2
+        );
 
-        $highestCustomerAmount = isset($highestProfitingCustomer['amount'])
-            ? '$' . number_format($highestProfitingCustomer['amount'] / 100, 2)
+
+        /*
+        |--------------------------------------------------------------------------
+        | Losses and Recurring Revenue
+        |--------------------------------------------------------------------------
+        */
+
+        $lossDisplay = '$' . number_format(
+            ($losses ?? 0) / 100,
+            2
+        );
+
+        $mrrDisplay = '$' . number_format(
+            ($mrr ?? 0) / 100,
+            2
+        );
+
+        $arrDisplay = '$' . number_format(
+            ($arr ?? 0) / 100,
+            2
+        );
+
+        $grossMarginDisplay = number_format(
+            $grossMarginPercentage ?? 0,
+            2
+        ) . '%';
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Highest Profiting Customer
+        |--------------------------------------------------------------------------
+        */
+
+        $highestCustomerName =
+            $highestProfitingCustomer['name']
+            ?? 'No customer data';
+
+        $highestCustomerAmount = isset(
+            $highestProfitingCustomer['amount']
+        )
+            ? '$' . number_format(
+                $highestProfitingCustomer['amount'] / 100,
+                2
+            )
             : '$0.00';
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Monthly Revenue Chart
+        |--------------------------------------------------------------------------
+        */
 
         $revenueLabels = collect($monthlyRevenue ?? [])
             ->pluck('month')
@@ -48,9 +134,16 @@
 
         $revenueValues = collect($monthlyRevenue ?? [])
             ->pluck('value')
-            ->map(fn($value) => (int) $value)
+            ->map(fn ($value) => (int) $value)
             ->values()
             ->all();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Customer Revenue Chart
+        |--------------------------------------------------------------------------
+        */
 
         $customerChartLabels = collect($customerRevenue ?? [])
             ->pluck('name')
@@ -59,12 +152,11 @@
 
         $customerChartValues = collect($customerRevenue ?? [])
             ->pluck('amount')
-            ->map(fn($value) => (int) $value)
+            ->map(fn ($value) => (int) $value)
             ->values()
             ->all();
+
     @endphp
-
-
     {{-- =========================================================
          HEADER
     ========================================================== --}}
@@ -612,6 +704,8 @@
 
     <section class="profit-distribution-card">
 
+        {{-- Header --}}
+
         <div class="profit-distribution-header">
 
             <div>
@@ -621,36 +715,41 @@
                 </div>
 
                 <h2>
-                    Commission and ownership breakdown
+                    Ownership breakdown
                 </h2>
 
                 <p>
-                    How the net profit is distributed after Stripe processing fees.
+                    Net profit is split equally between Khaled and Karam
+                    after Stripe processing fees.
                 </p>
 
             </div>
 
             <div class="chart-badge">
-                {{ $pabloRateDisplay }} Pablo commission
+                50/50 ownership split
             </div>
 
         </div>
 
 
+        {{-- Summary --}}
+
         <div class="distribution-summary">
+
+            {{-- Distributable Net Profit --}}
 
             <div class="distribution-summary-item">
 
                 <span class="distribution-summary-label">
-                    Pablo's commission
+                    Net profit available
                 </span>
 
                 <strong class="distribution-summary-value">
-                    {{ $pabloCommissionDisplay }}
+                    {{ $distributionTotalDisplay }}
                 </strong>
 
                 <span class="distribution-summary-description">
-                    {{ $pabloRateDisplay }} of net revenue
+                    After Stripe processing fees
                 </span>
 
             </div>
@@ -659,18 +758,20 @@
             <div class="distribution-summary-divider"></div>
 
 
+            {{-- Ownership Split --}}
+
             <div class="distribution-summary-item">
 
                 <span class="distribution-summary-label">
-                    After Pablo's commission
+                    Ownership split
                 </span>
 
                 <strong class="distribution-summary-value">
-                    {{ $teamShareAfterPabloDisplay }}
+                    50% / 50%
                 </strong>
 
                 <span class="distribution-summary-description">
-                    Available for Khaled and Karam
+                    Khaled (owner) and Karam (partner)
                 </span>
 
             </div>
@@ -678,50 +779,15 @@
         </div>
 
 
+        {{-- =====================================================
+             DISTRIBUTION RECIPIENTS
+        ====================================================== --}}
+
         <div class="distribution-grid">
 
-            {{-- Pablo --}}
-
-            <article class="distribution-recipient distribution-recipient-pablo">
-
-                <div class="distribution-recipient-top">
-
-                    <div class="distribution-recipient-icon">
-                        %
-                    </div>
-
-                    <span class="distribution-recipient-badge">
-                        Commission
-                    </span>
-
-                </div>
-
-                <div class="distribution-recipient-name">
-                    Pablo
-                </div>
-
-                <div class="distribution-recipient-amount">
-                    {{ $pabloCommissionDisplay }}
-                </div>
-
-                <div class="distribution-recipient-description">
-                    {{ $pabloRateDisplay }} of net revenue
-                </div>
-
-                <div class="distribution-recipient-rule">
-
-                    @if (($grossProfit ?? 0) < 200000)
-                        Gross revenue below $2,000
-                    @else
-                        Gross revenue of $2,000 or more
-                    @endif
-
-                </div>
-
-            </article>
-
-
-            {{-- Khaled --}}
+            {{-- =================================================
+                 KHALED — OWNER
+            ================================================== --}}
 
             <article class="distribution-recipient distribution-recipient-khaled">
 
@@ -732,31 +798,37 @@
                     </div>
 
                     <span class="distribution-recipient-badge">
-                        Owner share
+                        Owner
                     </span>
 
                 </div>
+
 
                 <div class="distribution-recipient-name">
                     Khaled
                 </div>
 
+
                 <div class="distribution-recipient-amount">
                     {{ $ownerShareDisplay }}
                 </div>
 
+
                 <div class="distribution-recipient-description">
-                    50% of the remaining profit
+                    50% of net profit
                 </div>
 
+
                 <div class="distribution-recipient-rule">
-                    After Pablo's commission
+                    After Stripe processing fees
                 </div>
 
             </article>
 
 
-            {{-- Karam --}}
+            {{-- =================================================
+                 KARAM — PARTNER
+            ================================================== --}}
 
             <article class="distribution-recipient distribution-recipient-karam">
 
@@ -767,25 +839,29 @@
                     </div>
 
                     <span class="distribution-recipient-badge">
-                        Partner share
+                        Partner
                     </span>
 
                 </div>
+
 
                 <div class="distribution-recipient-name">
                     Karam
                 </div>
 
+
                 <div class="distribution-recipient-amount">
                     {{ $partnerShareDisplay }}
                 </div>
 
+
                 <div class="distribution-recipient-description">
-                    50% of the remaining profit
+                    50% of net profit
                 </div>
 
+
                 <div class="distribution-recipient-rule">
-                    After Pablo's commission
+                    After Stripe processing fees
                 </div>
 
             </article>
@@ -793,24 +869,29 @@
         </div>
 
 
+        {{-- =====================================================
+             DISTRIBUTION TOTAL
+        ====================================================== --}}
+
         <div class="distribution-footer">
 
             <div class="distribution-footer-label">
                 Total allocated
             </div>
 
+
             <div class="distribution-footer-value">
                 {{ $distributionTotalDisplay }}
             </div>
 
+
             <div class="distribution-footer-description">
-                Pablo commission + Khaled share + Karam share
+                Khaled's owner share + Karam's partner share
             </div>
 
         </div>
 
     </section>
-
 
     {{-- =========================================================
          PAYMENT MAP

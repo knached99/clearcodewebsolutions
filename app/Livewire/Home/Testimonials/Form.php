@@ -414,6 +414,6 @@ class Form extends Component
     {
         return view(
             'livewire.home.testimonials.form',
-        );
+        )->layout('layouts.home_layout');
     }
 }

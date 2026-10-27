@@ -1,3 +1,9 @@
+@push('styles')
+    <style>
+        body {
+            background: #000 !important; 
+        }
+    </style>
 <section id="testimonial-form" class="cc-testimonial-submit">
 
     <div class="cc-testimonial-submit__orb"></div>

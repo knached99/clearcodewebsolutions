@@ -1020,43 +1020,31 @@
 
                                                 <div class="border-t border-zinc-200 pt-3 dark:border-zinc-800"></div>
 
-                                                <div class="flex items-center justify-between gap-4 text-sm">
-                                                    <span class="text-zinc-500 dark:text-zinc-400">
-                                                        Pablo commission
-                                                        ({{ number_format(
-                                                            $invoice->total_amount > 0 ? ($invoice->pabloCommissionInCents() / $invoice->total_amount) * 100 : 0,
-                                                            0,
-                                                        ) }}%)
-                                                    </span>
-
-                                                    <span
-                                                        class="font-medium tabular-nums text-zinc-900 dark:text-white">
-                                                        ${{ number_format($invoice->pabloCommissionInCents() / 100, 2) }}
-                                                    </span>
-                                                </div>
+                                               {{-- Khaled — Owner Share --}}
 
                                                 <div class="flex items-center justify-between gap-4 text-sm">
                                                     <span class="text-zinc-500 dark:text-zinc-400">
-                                                        Owner share
+                                                        Khaled (owner) share
                                                     </span>
 
-                                                    <span
-                                                        class="font-medium tabular-nums text-zinc-900 dark:text-white">
+                                                    <span class="font-medium tabular-nums text-zinc-900 dark:text-white">
                                                         ${{ number_format($invoice->ownerShareInCents() / 100, 2) }}
                                                     </span>
                                                 </div>
 
+                                                {{-- Karam — Partner Share --}}
+
                                                 <div class="flex items-center justify-between gap-4 text-sm">
                                                     <span class="text-zinc-500 dark:text-zinc-400">
-                                                        Partner share
+                                                        Karam (partner) share
                                                     </span>
 
-                                                    <span
-                                                        class="font-medium tabular-nums text-zinc-900 dark:text-white">
+                                                    <span class="font-medium tabular-nums text-zinc-900 dark:text-white">
                                                         ${{ number_format($invoice->partnerShareInCents() / 100, 2) }}
                                                     </span>
                                                 </div>
-                                            </div>
+
+                                                </div>
                                         </div>
 
                                         {{-- Single signature display --}}
@@ -1269,17 +1257,6 @@
                                                     </div>
                                                 </div>
 
-                                                <div class="rounded-xl bg-white/70 p-3.5 dark:bg-zinc-900/40">
-                                                    <div
-                                                        class="text-[10px] font-bold uppercase tracking-[0.14em] text-violet-700/70 dark:text-violet-300/70">
-                                                        Pablo commission
-                                                    </div>
-
-                                                    <div
-                                                        class="mt-1 text-sm font-semibold tabular-nums text-violet-950 dark:text-white">
-                                                        ${{ number_format($invoice->monthlyPabloCommissionInCents() / 100, 2) }}
-                                                    </div>
-                                                </div>
 
                                                 <div class="rounded-xl bg-white/70 p-3.5 dark:bg-zinc-900/40">
                                                     <div
