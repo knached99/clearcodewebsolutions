@@ -181,13 +181,14 @@
 
 
         <div
-            class="dashboard-filter-wrap"
-            x-data="dashboardDatePicker({
-                showCustom: @js($filter === 'custom'),
-                startDate: @js($customStartDate),
-                endDate: @js($customEndDate),
-            })"
-        >
+        class="dashboard-filter-wrap"
+        x-data="dashboardDatePicker({
+            showCustom: @js($filter === 'custom'),
+            startDate: @js($customStartDate),
+            endDate: @js($customEndDate),
+            filter: @js($filter),
+        })"
+    >
             <label for="dashboard-filter" class="dashboard-filter-label">
                 Reporting period
             </label>
@@ -196,36 +197,42 @@
 
                 <div class="dashboard-select-shell">
 
-                    <select
-                        id="dashboard-filter"
-                        class="metric-select dashboard-period-select"
-                        wire:change="setFilter($event.target.value)"
-                        x-on:change="handleFilterChange($event.target.value)"
-                    >
-                        <option value="max">
-                            All Time
-                        </option>
+               <select
+                id="dashboard-filter"
+                class="metric-select dashboard-period-select"
+                x-on:change="handleFilterChange($event.target.value)"
+                x-bind:disabled="isApplying || isLoadingFilter"
+            >
+                <option value="max">
+                    All Time
+                </option>
 
-                        <option value="mtd">
-                            Month to Date
-                        </option>
+                <option value="mtd">
+                    Month to Date
+                </option>
 
-                        <option value="3m">
-                            Last 3 Months
-                        </option>
+                <option value="3m">
+                    Last 3 Months
+                </option>
 
-                        <option value="6m">
-                            Last 6 Months
-                        </option>
+                <option value="6m">
+                    Last 6 Months
+                </option>
 
-                        <option value="ytd">
-                            Year to Date
-                        </option>
+                <option value="ytd">
+                    Year to Date
+                </option>
 
-                        <option value="custom">
-                            Custom Range
-                        </option>
-                    </select>
+                {{-- Actual option users select to open the date picker --}}
+                <option value="custom">
+                    Custom Range
+                </option>
+
+                {{-- Hidden selected option used after a custom range is applied --}}
+                <option value="custom-active" hidden>
+                    Custom Range
+                </option>
+            </select>
 
                     <svg
                         class="dashboard-select-chevron"
@@ -331,13 +338,21 @@
                     </div>
 
 
-                    <div
-                        x-show="dateError"
-                        x-transition
-                        class="custom-range-error"
-                    >
-                        Please choose a valid date range.
-                    </div>
+                   <div
+                    x-show="dateError || requestError"
+                    x-cloak
+                    x-transition
+                    class="custom-range-error"
+                    role="alert"
+                >
+                    <span
+                        x-text="
+                            requestError
+                                ? 'Unable to update the dashboard. Please try again.'
+                                : 'Please choose a valid date range.'
+                        "
+                    ></span>
+                </div>
 
 
                     <div class="custom-range-footer">
@@ -362,27 +377,53 @@
                         </div>
 
 
-                        <button
-                            type="button"
-                            class="custom-range-apply"
-                            x-on:click="applyRange()"
-                            x-bind:disabled="!canApply"
-                        >
-                            Apply Range
+                       <button
+                    type="button"
+                    class="custom-range-apply"
+                    x-on:click="applyRange()"
+                    x-bind:disabled="!canApply"
+                    x-bind:aria-busy="isApplying"
+                >
+                    <span
+                        x-text="isApplying ? 'Applying...' : 'Apply Range'"
+                    ></span>
 
-                            <svg
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="M5 12h14m-6-6 6 6-6 6"
-                                />
-                            </svg>
-                        </button>
+                    <svg
+                        x-show="!isApplying"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M5 12h14m-6-6 6 6-6 6"
+                        />
+                    </svg>
+
+                    <svg
+                        x-show="isApplying"
+                        x-cloak
+                        class="animate-spin"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <circle
+                            cx="12"
+                            cy="12"
+                            r="9"
+                            stroke-opacity=".25"
+                        />
+
+                        <path
+                            d="M21 12a9 9 0 0 0-9-9"
+                            stroke-linecap="round"
+                        />
+                    </svg>
+                </button>
 
                     </div>
 
@@ -4528,350 +4569,542 @@
          ALPINE DATE PICKER
     ========================================================== --}}
 
-    @script
-
-        <script>
-
-            if (
-                !window.__teamDashboardDatePickerRegistered
-            ) {
-
-                Alpine.data(
-                    'dashboardDatePicker',
-                    (
-                        initial = {}
-                    ) => ({
-
-                        showCustom:
-                            Boolean(
-                                initial.showCustom
-                            ),
-
-                        startDate:
-                            initial.startDate ??
-                            '',
-
-                        endDate:
-                            initial.endDate ??
-                            '',
-
-                        dateError:
-                            false,
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | Init
-                        |--------------------------------------------------------------------------
-                        */
-
-                        init() {
-
-                            this.$watch(
-                                'startDate',
-                                () => {
-
-                                    this.validateDates();
-
-                                }
-                            );
-
-
-                            this.$watch(
-                                'endDate',
-                                () => {
-
-                                    this.validateDates();
-
-                                }
-                            );
-
-
-                            this.validateDates();
-
-                        },
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | Filter changed
-                        |--------------------------------------------------------------------------
-                        */
-
-                        handleFilterChange(
-                            value
-                        ) {
-
-                            this.showCustom =
-                                value ===
-                                'custom';
-
-
-                            if (
-                                value !==
-                                'custom'
-                            ) {
-
-                                this.dateError =
-                                    false;
-
-                            }
-
-                        },
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | Close custom range
-                        |--------------------------------------------------------------------------
-                        */
-
-                        closeCustom() {
-
-                            this.showCustom =
-                                false;
-
-
-                            const select =
-                                document.getElementById(
-                                    'dashboard-filter'
-                                );
-
-
-                            if (select) {
-
-                                select.value =
-                                    @js($filter);
-
-                            }
-
-                        },
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | Dates changed
-                        |--------------------------------------------------------------------------
-                        */
-
-                        datesChanged() {
-
-                            this.validateDates();
-
-                        },
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | Validate dates
-                        |--------------------------------------------------------------------------
-                        */
-
-                        validateDates() {
-
-                            this.dateError =
-                                false;
-
-
-                            if (
-                                !this.startDate ||
-                                !this.endDate
-                            ) {
-
-                                return false;
-
-                            }
-
-
-                            const start =
-                                new Date(
-                                    this.startDate +
-                                    'T00:00:00'
-                                );
-
-
-                            const end =
-                                new Date(
-                                    this.endDate +
-                                    'T00:00:00'
-                                );
-
-
-                            if (
-                                Number.isNaN(
-                                    start.getTime()
-                                ) ||
-                                Number.isNaN(
-                                    end.getTime()
-                                )
-                            ) {
-
-                                this.dateError =
-                                    true;
-
-                                return false;
-
-                            }
-
-
-                            if (
-                                start >
-                                end
-                            ) {
-
-                                this.dateError =
-                                    true;
-
-                                return false;
-
-                            }
-
-
-                            return true;
-
-                        },
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | Can apply
-                        |--------------------------------------------------------------------------
-                        */
-
-                        get canApply() {
-
-                            return Boolean(
-
-                                this.startDate &&
-
-                                this.endDate &&
-
-                                !this.dateError
-
-                            );
-
-                        },
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | Formatted range
-                        |--------------------------------------------------------------------------
-                        */
-
-                        get formattedRange() {
-
-                            if (
-                                !this.startDate ||
-                                !this.endDate
-                            ) {
-
-                                return 'Select your dates';
-
-                            }
-
-
-                            const start =
-                                new Date(
-                                    this.startDate +
-                                    'T00:00:00'
-                                );
-
-
-                            const end =
-                                new Date(
-                                    this.endDate +
-                                    'T00:00:00'
-                                );
-
-
-                            if (
-                                Number.isNaN(
-                                    start.getTime()
-                                ) ||
-                                Number.isNaN(
-                                    end.getTime()
-                                )
-                            ) {
-
-                                return 'Select your dates';
-
-                            }
-
-
-                            const options = {
-
-                                month:
-                                    'short',
-
-                                day:
-                                    'numeric',
-
-                                year:
-                                    'numeric',
-
-                            };
-
-
-                            return (
-
-                                start.toLocaleDateString(
-                                    'en-US',
-                                    options
-                                ) +
-
-                                ' – ' +
-
-                                end.toLocaleDateString(
-                                    'en-US',
-                                    options
-                                )
-
-                            );
-
-                        },
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | Apply custom range
-                        |--------------------------------------------------------------------------
-                        */
-
-                        async applyRange() {
-
-                            if (
-                                !this.validateDates()
-                            ) {
-
-                                return;
-
-                            }
-
-
-                            this.showCustom =
-                                false;
-
-
-                            await this.$wire
-                                .setCustomRange(
-                                    this.startDate,
-                                    this.endDate
-                                );
-
-                        },
-
-                    })
+ @script
+<script>
+    if (!window.__teamDashboardDatePickerRegistered) {
+        Alpine.data('dashboardDatePicker', (initial = {}) => ({
+            /*
+            |--------------------------------------------------------------------------
+            | State
+            |--------------------------------------------------------------------------
+            */
+
+            showCustom: Boolean(initial.showCustom),
+
+            startDate: initial.startDate ?? '',
+
+            endDate: initial.endDate ?? '',
+
+            currentFilter: initial.filter ?? 'max',
+
+            lastNonCustomFilter:
+                initial.filter && initial.filter !== 'custom'
+                    ? initial.filter
+                    : null,
+
+            dateError: false,
+
+            requestError: false,
+
+            isApplying: false,
+
+            isLoadingFilter: false,
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Initialize
+            |--------------------------------------------------------------------------
+            */
+
+            init() {
+                this.$watch('startDate', () => {
+                    this.validateDates();
+                });
+
+                this.$watch('endDate', () => {
+                    this.validateDates();
+                });
+
+                this.validateDates();
+
+                /*
+                 * Synchronize after Alpine has initialized the DOM.
+                 * This also restores the correct dropdown state after
+                 * Livewire updates the component.
+                 */
+
+                this.$nextTick(() => {
+                    this.syncSelectValue(this.currentFilter);
+                });
+            },
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Ensure Reusable Custom Range Option Exists
+            |--------------------------------------------------------------------------
+            |
+            | When custom-active is selected, the dropdown still displays
+            | "Custom Range". The visible "custom" option remains selectable,
+            | allowing the user to open the picker repeatedly.
+            |
+            | Create the hidden option dynamically so the Blade option list
+            | does not need an additional option.
+            |
+            */
+
+            ensureCustomActiveOption() {
+                const select = document.getElementById(
+                    'dashboard-filter'
                 );
 
+                if (!select) {
+                    return null;
+                }
 
-                window.__teamDashboardDatePickerRegistered =
-                    true;
+                let option = select.querySelector(
+                    'option[value="custom-active"]'
+                );
 
-            }
+                if (!option) {
+                    option = document.createElement('option');
 
-        </script>
+                    option.value = 'custom-active';
 
-    @endscript
+                    option.textContent = 'Custom Range';
+
+                    option.hidden = true;
+
+                    option.setAttribute('aria-hidden', 'true');
+
+                    select.appendChild(option);
+                }
+
+                return select;
+            },
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Synchronize Dropdown Value
+            |--------------------------------------------------------------------------
+            */
+
+            syncSelectValue(filter) {
+                const select = this.ensureCustomActiveOption();
+
+                if (!select) {
+                    return;
+                }
+
+                /*
+                 * Use the hidden option when custom reporting is active.
+                 * Its label is still "Custom Range".
+                 */
+
+                select.value = filter === 'custom'
+                    ? 'custom-active'
+                    : filter;
+
+                /*
+                 * If the requested option does not exist, retain a valid
+                 * selection rather than leaving the dropdown inconsistent.
+                 */
+
+                if (select.value === '' && select.options.length > 0) {
+                    select.selectedIndex = 0;
+                }
+            },
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Reporting Period Changed
+            |--------------------------------------------------------------------------
+            |
+            | Custom Range opens the picker without triggering a request.
+            | Standard ranges update the dashboard immediately.
+            |
+            */
+
+            async handleFilterChange(value) {
+                this.dateError = false;
+
+                this.requestError = false;
+
+                /*
+                 * Opening Custom Range must not trigger a Livewire request.
+                 */
+
+                if (value === 'custom') {
+                    if (this.isApplying || this.isLoadingFilter) {
+                        this.syncSelectValue(this.currentFilter);
+
+                        return;
+                    }
+
+                    this.showCustom = true;
+
+                    /*
+                     * Re-arm the native dropdown. The selected value becomes
+                     * custom-active, so selecting the visible custom option
+                     * will fire change again next time.
+                     */
+
+                    this.syncSelectValue('custom');
+
+                    return;
+                }
+
+                /*
+                 * Ignore attempts to change filters while a request is
+                 * already running.
+                 */
+
+                if (this.isLoadingFilter || this.isApplying) {
+                    this.syncSelectValue(this.currentFilter);
+
+                    return;
+                }
+
+                const previousFilter = this.currentFilter;
+
+                const previousLastNonCustomFilter =
+                    this.lastNonCustomFilter;
+
+                this.showCustom = false;
+
+                this.isLoadingFilter = true;
+
+                try {
+                    /*
+                     * Apply the standard reporting period once.
+                     */
+
+                    await this.$wire.setFilter(value);
+
+                    this.currentFilter = value;
+
+                    this.lastNonCustomFilter = value;
+
+                    this.syncSelectValue(value);
+                } catch (error) {
+                    console.error(
+                        'Failed to update the reporting period:',
+                        error
+                    );
+
+                    /*
+                     * Restore the previous dropdown state if the request
+                     * fails.
+                     */
+
+                    this.currentFilter = previousFilter;
+
+                    this.lastNonCustomFilter =
+                        previousLastNonCustomFilter;
+
+                    this.syncSelectValue(previousFilter);
+
+                    this.requestError = true;
+                } finally {
+                    this.isLoadingFilter = false;
+                }
+            },
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Close Custom Range
+            |--------------------------------------------------------------------------
+            */
+
+            closeCustom() {
+                if (this.isApplying) {
+                    return;
+                }
+
+                this.showCustom = false;
+
+                this.dateError = false;
+
+                this.requestError = false;
+
+                /*
+                 * If the picker was opened from a standard range and the
+                 * user cancels, restore that previously selected range.
+                 */
+
+                if (this.lastNonCustomFilter) {
+                    this.currentFilter = this.lastNonCustomFilter;
+
+                    this.syncSelectValue(
+                        this.lastNonCustomFilter
+                    );
+
+                    return;
+                }
+
+                /*
+                 * If a custom range was already applied, keep Custom Range
+                 * selected even though the picker itself is closed.
+                 */
+
+                this.syncSelectValue(this.currentFilter);
+            },
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Dates Changed
+            |--------------------------------------------------------------------------
+            */
+
+            datesChanged() {
+                this.validateDates();
+            },
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Validate Calendar Date
+            |--------------------------------------------------------------------------
+            */
+
+            isValidDateValue(value) {
+                if (
+                    typeof value !== 'string' ||
+                    !/^\d{4}-\d{2}-\d{2}$/.test(value)
+                ) {
+                    return false;
+                }
+
+                const [year, month, day] = value
+                    .split('-')
+                    .map(Number);
+
+                const date = new Date(
+                    year,
+                    month - 1,
+                    day
+                );
+
+                return (
+                    date.getFullYear() === year &&
+                    date.getMonth() === month - 1 &&
+                    date.getDate() === day
+                );
+            },
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Parse Local Date
+            |--------------------------------------------------------------------------
+            */
+
+            parseLocalDate(value) {
+                if (!this.isValidDateValue(value)) {
+                    return null;
+                }
+
+                const [year, month, day] = value
+                    .split('-')
+                    .map(Number);
+
+                return new Date(
+                    year,
+                    month - 1,
+                    day,
+                    12,
+                    0,
+                    0
+                );
+            },
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Validate Date Range
+            |--------------------------------------------------------------------------
+            */
+
+            validateDates() {
+                this.dateError = false;
+
+                this.requestError = false;
+
+                if (!this.startDate || !this.endDate) {
+                    return false;
+                }
+
+                if (
+                    !this.isValidDateValue(this.startDate) ||
+                    !this.isValidDateValue(this.endDate)
+                ) {
+                    this.dateError = true;
+
+                    return false;
+                }
+
+                /*
+                 * YYYY-MM-DD strings can be compared chronologically.
+                 */
+
+                if (this.startDate > this.endDate) {
+                    this.dateError = true;
+
+                    return false;
+                }
+
+                return true;
+            },
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Can Apply
+            |--------------------------------------------------------------------------
+            */
+
+            get canApply() {
+                return Boolean(
+                    this.startDate &&
+                    this.endDate &&
+                    this.isValidDateValue(this.startDate) &&
+                    this.isValidDateValue(this.endDate) &&
+                    this.startDate <= this.endDate &&
+                    !this.isApplying &&
+                    !this.isLoadingFilter
+                );
+            },
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Formatted Range Preview
+            |--------------------------------------------------------------------------
+            */
+
+            get formattedRange() {
+                if (!this.startDate || !this.endDate) {
+                    return 'Select your dates';
+                }
+
+                if (
+                    !this.isValidDateValue(this.startDate) ||
+                    !this.isValidDateValue(this.endDate) ||
+                    this.startDate > this.endDate
+                ) {
+                    return 'Select a valid date range';
+                }
+
+                const start = this.parseLocalDate(this.startDate);
+
+                const end = this.parseLocalDate(this.endDate);
+
+                const options = {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                };
+
+                return (
+                    start.toLocaleDateString('en-US', options) +
+                    ' – ' +
+                    end.toLocaleDateString('en-US', options)
+                );
+            },
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Apply Custom Range
+            |--------------------------------------------------------------------------
+            |
+            | Submit both dates together through one Livewire action.
+            | Close the picker only when the request succeeds.
+            |
+            */
+
+            async applyRange() {
+                if (this.isApplying || this.isLoadingFilter) {
+                    return;
+                }
+
+                if (!this.validateDates()) {
+                    return;
+                }
+
+                /*
+                 * Snapshot the validated values for this request.
+                 */
+
+                const startDate = this.startDate;
+
+                const endDate = this.endDate;
+
+                this.isApplying = true;
+
+                this.requestError = false;
+
+                try {
+                    /*
+                     * The Livewire method must update both dates and the
+                     * reporting filter in this single request.
+                     */
+
+                    await this.$wire.setCustomRange(
+                        startDate,
+                        endDate
+                    );
+
+                    /*
+                     * Mark the custom filter as active.
+                     */
+
+                    this.currentFilter = 'custom';
+
+                    /*
+                     * There is no standard period to restore when closing
+                     * the picker after the custom range has been applied.
+                     */
+
+                    this.lastNonCustomFilter = null;
+
+                    /*
+                     * Keep "Custom Range" displayed while re-arming the
+                     * dropdown for the next selection.
+                     */
+
+                    this.syncSelectValue('custom');
+
+                    /*
+                     * Close only after Livewire completes successfully.
+                     */
+
+                    this.showCustom = false;
+                } catch (error) {
+                    console.error(
+                        'Failed to apply the custom reporting range:',
+                        error
+                    );
+
+                    /*
+                     * Preserve the selected dates and keep the picker open
+                     * so the user can retry.
+                     */
+
+                    this.requestError = true;
+                } finally {
+                    this.isApplying = false;
+
+                    /*
+                     * Ensure the dropdown is correctly synchronized even
+                     * if the component was updated by Livewire.
+                     */
+
+                    this.$nextTick(() => {
+                        this.syncSelectValue(this.currentFilter);
+                    });
+                }
+            },
+        }));
+
+        window.__teamDashboardDatePickerRegistered = true;
+    }
+</script>
+@endscript
 
 </div>

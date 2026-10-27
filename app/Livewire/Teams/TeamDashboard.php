@@ -140,51 +140,40 @@ class TeamDashboard extends Component
     */
 
     public function setCustomRange(
-        ?string $startDate,
-        ?string $endDate
+        string $startDate,
+        string $endDate
     ): void {
-        $this->customStartDate = $this->normalizeDate(
-            $startDate
-        );
+        $validated = validator(
+            [
+                'startDate' => $startDate,
+                'endDate' => $endDate,
+            ],
+            [
+                'startDate' => ['required', 'date_format:Y-m-d'],
+                'endDate' => [
+                    'required',
+                    'date_format:Y-m-d',
+                    'after_or_equal:startDate',
+                ],
+            ]
+        )->validate();
 
-        $this->customEndDate = $this->normalizeDate(
-            $endDate
-        );
+        $this->customStartDate = $validated['startDate'];
 
-        if (
-            ! $this->customStartDate
-            || ! $this->customEndDate
-        ) {
-            return;
-        }
-
-        if (! $this->validCustomDateRange()) {
-            Log::warning(
-                'TeamDashboard: invalid custom date range',
-                [
-                    'start' => $this->customStartDate,
-                    'end' => $this->customEndDate,
-                ]
-            );
-
-            return;
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | Automatically switch to Custom.
-        |--------------------------------------------------------------------------
-        */
+        $this->customEndDate = $validated['endDate'];
 
         $this->filter = 'custom';
 
         $this->loadDashboard();
 
-        $this->dispatch(
-            'dashboard-updated',
-            data: $this->chartData()
-        );
-    }
+                $this->dispatch(
+                    'dashboard-updated',
+                    data: $this->chartData()
+                );
+        }
+
+        
+
 
     protected function normalizeDate(
         ?string $date
